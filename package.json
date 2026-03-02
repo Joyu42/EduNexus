@@ -1,0 +1,18 @@
+{
+  "name": "edunexus",
+  "private": true,
+  "version": "0.1.0",
+  "description": "EduNexus Web 平台（一期实现）",
+  "packageManager": "pnpm@10.24.0",
+  "scripts": {
+    "dev": "pnpm --filter @edunexus/web dev",
+    "build": "pnpm --filter @edunexus/web build",
+    "start": "pnpm --filter @edunexus/web start",
+    "lint": "pnpm --filter @edunexus/web lint",
+    "typecheck": "pnpm --filter @edunexus/web typecheck",
+    "test": "pnpm --filter @edunexus/web test",
+    "test:smoke": "pnpm --filter @edunexus/web test:smoke",
+    "test:unit": "pnpm --filter @edunexus/web test:unit",
+    "test:all": "pnpm --filter @edunexus/web test:all"
+  }
+}

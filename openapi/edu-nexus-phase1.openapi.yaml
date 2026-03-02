@@ -13,6 +13,7 @@ tags:
   - name: Graph
   - name: Path
   - name: KB
+  - name: Teacher
 components:
   securitySchemes:
     bearerAuth:
@@ -55,21 +56,29 @@ components:
           type: string
     WorkspaceSession:
       type: object
-      required: [id, userId, createdAt]
+      required: [id, title, userId, createdAt, updatedAt, lastLevel, messages]
       properties:
         id:
           type: string
           example: ws_123
-        userId:
-          type: string
         title:
           type: string
-        status:
+        userId:
           type: string
-          enum: [active, closed]
         createdAt:
           type: string
           format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lastLevel:
+          type: integer
+          minimum: 1
+          maximum: 4
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionMessage'
     CreateSessionRequest:
       type: object
       properties:
@@ -163,6 +172,52 @@ components:
                 $ref: '#/components/schemas/Citation'
             reason:
               type: string
+        traceId:
+          type: string
+    WorkspaceAgentRunRequest:
+      type: object
+      required: [userInput]
+      properties:
+        sessionId:
+          type: string
+        userInput:
+          type: string
+        currentLevel:
+          type: integer
+          minimum: 1
+          maximum: 4
+    WorkspaceAgentRunResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [intent, nextLevel, guidance, mode, contextRefs, trace, citations]
+          properties:
+            intent:
+              type: string
+            nextLevel:
+              type: integer
+            guidance:
+              type: string
+            mode:
+              type: string
+              enum: [rule, langgraph_model]
+            contextRefs:
+              type: array
+              items:
+                type: string
+            trace:
+              type: array
+              items:
+                type: string
+            citations:
+              type: array
+              items:
+                $ref: '#/components/schemas/Citation'
         traceId:
           type: string
     SaveNoteRequest:
@@ -357,6 +412,15 @@ components:
           properties:
             query:
               type: string
+            filters:
+              type: object
+              properties:
+                type:
+                  type: string
+                domain:
+                  type: string
+                tag:
+                  type: string
             candidates:
               type: array
               items:
@@ -373,6 +437,345 @@ components:
                     type: array
                     items:
                       type: string
+        traceId:
+          type: string
+    UpdateSessionRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+    UpdateSessionResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [id, title, updatedAt]
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            updatedAt:
+              type: string
+              format: date-time
+        traceId:
+          type: string
+    DeleteSessionResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [deleted, id]
+          properties:
+            deleted:
+              type: boolean
+            id:
+              type: string
+        traceId:
+          type: string
+    SessionMessage:
+      type: object
+      required: [role, content, createdAt]
+      properties:
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    SessionSummary:
+      type: object
+      required: [id, title, lastLevel, updatedAt, createdAt, messageCount]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        lastLevel:
+          type: integer
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        messageCount:
+          type: integer
+    SessionListResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [sessions]
+          properties:
+            sessions:
+              type: array
+              items:
+                $ref: '#/components/schemas/SessionSummary'
+        traceId:
+          type: string
+    SessionDetailResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [id, title, userId, createdAt, updatedAt, lastLevel, messages]
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            userId:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+            lastLevel:
+              type: integer
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/SessionMessage'
+        traceId:
+          type: string
+    KbDocResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [id, title, type, domain, tags, links, sourceRefs, owner, backlinks, content]
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            type:
+              type: string
+            domain:
+              type: string
+            tags:
+              type: array
+              items:
+                type: string
+            links:
+              type: array
+              items:
+                type: string
+            sourceRefs:
+              type: array
+              items:
+                type: string
+            owner:
+              type: string
+            updatedAt:
+              type: string
+            backlinks:
+              type: array
+              items:
+                type: string
+            content:
+              type: string
+        traceId:
+          type: string
+    KbIndexRebuildResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [generatedAt, docCount, byType, byDomain]
+          properties:
+            generatedAt:
+              type: string
+            docCount:
+              type: integer
+            byType:
+              type: object
+              additionalProperties:
+                type: integer
+            byDomain:
+              type: object
+              additionalProperties:
+                type: integer
+        traceId:
+          type: string
+    KbTagsResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [tags]
+          properties:
+            tags:
+              type: array
+              items:
+                type: object
+                required: [tag, count]
+                properties:
+                  tag:
+                    type: string
+                  count:
+                    type: integer
+        traceId:
+          type: string
+    KbBacklinkGraphResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [focusDocId, nodes, edges]
+          properties:
+            focusDocId:
+              type: string
+              nullable: true
+            nodes:
+              type: array
+              items:
+                type: object
+                required: [id, label, type, domain]
+                properties:
+                  id:
+                    type: string
+                  label:
+                    type: string
+                  type:
+                    type: string
+                  domain:
+                    type: string
+            edges:
+              type: array
+              items:
+                type: object
+                required: [source, target, weight]
+                properties:
+                  source:
+                    type: string
+                  target:
+                    type: string
+                  weight:
+                    type: number
+        traceId:
+          type: string
+    TeacherWeaknessTemplate:
+      type: object
+      required: [id, label, content, description, scope]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        content:
+          type: string
+        description:
+          type: string
+        scope:
+          type: string
+    TeacherWeaknessTemplateResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [subject, templates]
+          properties:
+            subject:
+              type: string
+            templates:
+              type: array
+              items:
+                $ref: '#/components/schemas/TeacherWeaknessTemplate'
+        traceId:
+          type: string
+    TeacherLessonPlanRequest:
+      type: object
+      required: [subject, topic, grade, difficulty]
+      properties:
+        subject:
+          type: string
+        topic:
+          type: string
+        grade:
+          type: string
+        difficulty:
+          type: string
+          enum: [基础, 中等, 提升]
+        classWeakness:
+          type: string
+    TeacherLessonPlanResponse:
+      type: object
+      required: [success, data, traceId]
+      properties:
+        success:
+          type: boolean
+          const: true
+        data:
+          type: object
+          required: [title, objectives, outline, classAdjustment, homework, reviewChecklist, source]
+          properties:
+            title:
+              type: string
+            objectives:
+              type: array
+              items:
+                type: string
+            outline:
+              type: array
+              items:
+                type: string
+            classAdjustment:
+              type: string
+            homework:
+              type: array
+              items:
+                type: string
+            reviewChecklist:
+              type: array
+              items:
+                type: string
+            source:
+              type: string
+            modelHint:
+              type: string
         traceId:
           type: string
 paths:
@@ -395,6 +798,101 @@ paths:
                 $ref: '#/components/schemas/CreateSessionResponse'
         '400':
           description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /workspace/sessions:
+    get:
+      tags: [Workspace]
+      summary: List workspace sessions for restoration.
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /workspace/session/{id}:
+    get:
+      tags: [Workspace]
+      summary: Get workspace session detail with message history.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDetailResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    patch:
+      tags: [Workspace]
+      summary: Rename a workspace session.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSessionRequest'
+      responses:
+        '200':
+          description: Session renamed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateSessionResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    delete:
+      tags: [Workspace]
+      summary: Delete a workspace session.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteSessionResponse'
+        '404':
+          description: Session not found
           content:
             application/json:
               schema:
@@ -445,6 +943,76 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /workspace/agent/run:
+    post:
+      tags: [Workspace]
+      summary: Run LangGraph-based guided workflow for workspace.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceAgentRunRequest'
+      responses:
+        '200':
+          description: Agent run completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceAgentRunResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /workspace/agent/stream:
+    post:
+      tags: [Workspace]
+      summary: Stream LangGraph workflow progress with node traces and tokens.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceAgentRunRequest'
+      responses:
+        '200':
+          description: Server-sent events stream.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /workspace/session/{id}/stream:
     get:
       tags: [Workspace]
@@ -453,6 +1021,10 @@ paths:
         - name: id
           in: path
           required: true
+          schema:
+            type: string
+        - name: prompt
+          in: query
           schema:
             type: string
       responses:
@@ -586,6 +1158,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Plan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
   /kb/search:
     get:
       tags: [KB]
@@ -594,6 +1178,18 @@ paths:
         - name: q
           in: query
           required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: domain
+          in: query
+          schema:
+            type: string
+        - name: tag
+          in: query
           schema:
             type: string
       responses:
@@ -605,6 +1201,146 @@ paths:
                 $ref: '#/components/schemas/KbSearchResponse'
         '400':
           description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /kb/tags:
+    get:
+      tags: [KB]
+      summary: Get aggregated tag statistics from local vault.
+      responses:
+        '200':
+          description: Tag stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KbTagsResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /kb/backlinks/graph:
+    get:
+      tags: [KB]
+      summary: Get lightweight backlink graph summary.
+      parameters:
+        - name: focusDocId
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Backlink graph
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KbBacklinkGraphResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /kb/doc/{id}:
+    get:
+      tags: [KB]
+      summary: Get detail of a local vault document by id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KbDocResponse'
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /kb/index/rebuild:
+    post:
+      tags: [KB]
+      summary: Rebuild local vault lightweight index files.
+      responses:
+        '200':
+          description: Rebuild summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KbIndexRebuildResponse'
+        '500':
+          description: Rebuild failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /teacher/lesson-plan/templates:
+    get:
+      tags: [Teacher]
+      summary: Get weakness templates for lesson plan generation.
+      parameters:
+        - name: subject
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherWeaknessTemplateResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /teacher/lesson-plan/generate:
+    post:
+      tags: [Teacher]
+      summary: Generate lesson plan draft for teachers.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherLessonPlanRequest'
+      responses:
+        '200':
+          description: Lesson plan generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherLessonPlanResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Server error
           content:
             application/json:
               schema:

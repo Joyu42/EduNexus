@@ -1,6 +1,6 @@
-# EduNexus Local Vault
+# EduNexus 本地知识库（Vault）
 
-本目录是 EduNexus 的本地轻量知识库（Local-first, Markdown-first）。
+本目录是 EduNexus 的本地轻量知识库（Local-first、Markdown-first）。
 
 ## 目录约定
 

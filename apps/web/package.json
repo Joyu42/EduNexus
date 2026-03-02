@@ -1,0 +1,37 @@
+{
+  "name": "@edunexus/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm test:smoke",
+    "test:smoke": "node ./scripts/api-smoke.mjs",
+    "test:unit": "vitest run",
+    "test:all": "pnpm test:unit && pnpm test:smoke"
+  },
+  "dependencies": {
+    "@langchain/langgraph": "^1.1.5",
+    "@langchain/openai": "^1.2.10",
+    "langchain": "^1.2.27",
+    "next": "^14.2.5",
+    "openai": "^4.86.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.5",
+    "fdir": "^6.5.0",
+    "typescript": "^5.8.2",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.0.18"
+  }
+}
