@@ -864,6 +864,38 @@ export function GraphDemo() {
     [relatedNodes, router]
   );
 
+  const handlePushBridgeToWorkspace = useCallback(
+    (bridge: RiskBridgeSuggestion) => {
+      setSelectedBridgeId(bridge.id);
+      writeWorkspaceFocusToStorage(
+        {
+          nodeId: bridge.primary.id,
+          nodeLabel: bridge.primary.label,
+          domain: bridge.primary.domain,
+          mastery: bridge.primary.mastery,
+          risk: bridge.primary.risk,
+          relatedNodes: [
+            bridge.secondary.label,
+            ...relatedNodes.map((item) => item.label)
+          ].slice(0, 5),
+          at: new Date().toISOString(),
+          focusSource: "graph_bridge",
+          bridgePartnerLabel: bridge.secondary.label,
+          bridgeTaskTemplate: buildBridgeTaskTemplate(
+            bridge.primary.label,
+            bridge.secondary.label
+          )
+        },
+        (key, value) => window.localStorage.setItem(key, value)
+      );
+      router.push("/workspace");
+      setPathPushHint(
+        `已推送关系链建议到工作区：${bridge.primary.label} ↔ ${bridge.secondary.label}。`
+      );
+    },
+    [relatedNodes, router]
+  );
+
   const handleFocusGraphActivity = useCallback(
     (event: GraphActivityEvent) => {
       const matchedNode = payload?.nodes.find((item) => item.id === event.nodeId);
@@ -1196,6 +1228,12 @@ export function GraphDemo() {
                           onClick={() => handlePushBridgeToPath(bridge)}
                         >
                           推送路径建议
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handlePushBridgeToWorkspace(bridge)}
+                        >
+                          推送工作区
                         </button>
                       </div>
                     </article>

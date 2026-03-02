@@ -973,6 +973,28 @@ export default function DashboardPage() {
     router.push(`/path?${params.toString()}`);
   }
 
+  function jumpToWorkspaceFromBridge(row: DashboardBridgeRiskRow) {
+    const partnerLabel =
+      row.primaryNodeId === row.sourceId ? row.targetLabel : row.sourceLabel;
+    writeWorkspaceFocusToStorage(
+      {
+        nodeId: row.primaryNodeId,
+        nodeLabel: row.primaryNodeLabel,
+        domain:
+          row.primaryNodeId === row.sourceId ? row.sourceDomain : row.targetDomain,
+        mastery: Number((1 - row.risk).toFixed(2)),
+        risk: row.risk,
+        relatedNodes: [partnerLabel],
+        at: new Date().toISOString(),
+        focusSource: "graph_bridge",
+        bridgePartnerLabel: partnerLabel,
+        bridgeTaskTemplate: buildBridgeTaskTemplate(row.primaryNodeLabel, partnerLabel)
+      },
+      (key, value) => window.localStorage.setItem(key, value)
+    );
+    router.push("/workspace");
+  }
+
   const activeHoverIndex =
     lockedHoverIndex !== null ? lockedHoverIndex : linkedHoverIndex;
 
@@ -1904,6 +1926,9 @@ export default function DashboardPage() {
                     </button>
                     <button type="button" onClick={() => jumpToPathFromBridge(row)}>
                       推送路径
+                    </button>
+                    <button type="button" onClick={() => jumpToWorkspaceFromBridge(row)}>
+                      推送工作区
                     </button>
                   </div>
                 </div>
