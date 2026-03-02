@@ -1063,7 +1063,8 @@ export default function DashboardPage() {
       from: "graph_bridge",
       focusNode: first.primaryNodeId,
       focusLabel: first.primaryNodeLabel,
-      bridgePartner: bridgeFocus.partnerLabel
+      bridgePartner: bridgeFocus.partnerLabel,
+      batchCount: String(selectedBridgeRows.length)
     });
     router.push(`/path?${params.toString()}`);
   }
@@ -1078,7 +1079,10 @@ export default function DashboardPage() {
       window.localStorage.setItem(key, value)
     );
     appendBatchBridgeActivities(selectedBridgeRows, "推送工作区");
-    router.push("/workspace");
+    const params = new URLSearchParams({
+      batchCount: String(selectedBridgeRows.length)
+    });
+    router.push(`/workspace?${params.toString()}`);
   }
 
   const activeHoverIndex =

@@ -241,6 +241,7 @@ export function PathDemo() {
     const focusLabel = searchParams.get("focusLabel");
     const sourceFromQuery = normalizeFocusSource(searchParams.get("from"));
     const bridgePartnerFromQuery = searchParams.get("bridgePartner");
+    const batchCount = Number(searchParams.get("batchCount") ?? "0");
     if (!focusNode && !focusLabel) {
       return;
     }
@@ -297,7 +298,9 @@ export function PathDemo() {
     setFocusHint(
       `已接收图谱焦点：${mergedPayload.nodeLabel}（风险 ${Math.round(
         mergedPayload.risk * 100
-      )}%） · 来源：${formatFocusSourceLabel(mergedPayload.focusSource)}${bridgeHint}`
+      )}%） · 来源：${formatFocusSourceLabel(mergedPayload.focusSource)}${bridgeHint}${
+        Number.isFinite(batchCount) && batchCount > 1 ? ` · 批量推送 ${batchCount} 条` : ""
+      }`
     );
     prefilledRef.current = true;
   }, [searchParams]);

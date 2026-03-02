@@ -507,6 +507,10 @@ export function WorkspaceDemo() {
     () => searchParams.get("sessionId")?.trim() ?? "",
     [searchParams]
   );
+  const queryBatchCount = useMemo(
+    () => Number(searchParams.get("batchCount") ?? "0"),
+    [searchParams]
+  );
 
   const canUnlock = useMemo(() => nextData?.canUnlockFinal ?? false, [nextData]);
   const graphFocusSummary = useMemo(() => {
@@ -850,6 +854,22 @@ export function WorkspaceDemo() {
     void loadSessionDetail(querySessionId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [querySessionId]);
+
+  useEffect(() => {
+    if (!Number.isFinite(queryBatchCount) || queryBatchCount <= 1) {
+      return;
+    }
+    setGraphFocusHint((prev) => {
+      const batchText = `本次批量推送 ${queryBatchCount} 条`;
+      if (!prev.trim()) {
+        return `已接收${batchText}关系链，当前展示首条焦点。`;
+      }
+      if (prev.includes("本次批量推送")) {
+        return prev;
+      }
+      return `${prev}（${batchText}）`;
+    });
+  }, [queryBatchCount]);
 
   async function createSession() {
     setLoading(true);
