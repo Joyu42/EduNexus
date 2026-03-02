@@ -8,6 +8,7 @@ import { RatioRing, TrendSparkCard } from "@/components/dashboard-mini-charts";
 import {
   GRAPH_ACTIVITY_STORAGE_KEY,
   normalizeGraphActivityPayload,
+  pushGraphActivityEventToStorage,
   resolveGraphActivityRiskScore,
   writeGraphActivityFocusIdToStorage,
   type GraphActivityEvent
@@ -526,6 +527,29 @@ function buildDashboardBridgeRiskRows(
     .slice(0, Math.max(1, limit));
 }
 
+function buildBridgeFocusFromRow(row: DashboardBridgeRiskRow): {
+  partnerLabel: string;
+  focusPayload: PathFocusPayload;
+} {
+  const partnerLabel =
+    row.primaryNodeId === row.sourceId ? row.targetLabel : row.sourceLabel;
+  return {
+    partnerLabel,
+    focusPayload: {
+      nodeId: row.primaryNodeId,
+      nodeLabel: row.primaryNodeLabel,
+      domain: row.primaryNodeId === row.sourceId ? row.sourceDomain : row.targetDomain,
+      mastery: Number((1 - row.risk).toFixed(2)),
+      risk: row.risk,
+      relatedNodes: [partnerLabel],
+      at: new Date().toISOString(),
+      focusSource: "graph_bridge",
+      bridgePartnerLabel: partnerLabel,
+      bridgeTaskTemplate: buildBridgeTaskTemplate(row.primaryNodeLabel, partnerLabel)
+    }
+  };
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [period, setPeriod] = useState<PeriodKey>("7d");
@@ -559,6 +583,8 @@ export default function DashboardPage() {
   const [bridgeSortMode, setBridgeSortMode] = useState<BridgeSortMode>("risk_desc");
   const [bridgeRelationMode, setBridgeRelationMode] =
     useState<BridgeRelationMode>("all");
+  const [selectedBridgeIds, setSelectedBridgeIds] = useState<string[]>([]);
+  const [bridgeBatchHint, setBridgeBatchHint] = useState("");
 
   const refreshBridgeRiskRows = useCallback(async () => {
     try {
@@ -874,6 +900,14 @@ export default function DashboardPage() {
     return sortBridgeRiskRows(filtered, bridgeSortMode, bridgeRelationMode);
   }, [bridgeDomainFilter, bridgeRelationMode, bridgeSortMode, graphBridgeRiskRows]);
 
+  const selectedBridgeRows = useMemo(() => {
+    if (selectedBridgeIds.length === 0) {
+      return [];
+    }
+    const selectedSet = new Set(selectedBridgeIds);
+    return filteredBridgeRiskRows.filter((row) => selectedSet.has(row.id));
+  }, [filteredBridgeRiskRows, selectedBridgeIds]);
+
   useEffect(() => {
     if (activityNodeFilter === "all") {
       return;
@@ -891,6 +925,14 @@ export default function DashboardPage() {
       setBridgeDomainFilter("all");
     }
   }, [bridgeDomainFilter, bridgeDomainOptions]);
+
+  useEffect(() => {
+    if (selectedBridgeIds.length === 0) {
+      return;
+    }
+    const validIds = new Set(filteredBridgeRiskRows.map((row) => row.id));
+    setSelectedBridgeIds((prev) => prev.filter((id) => validIds.has(id)));
+  }, [filteredBridgeRiskRows, selectedBridgeIds.length]);
 
   useEffect(() => {
     if (!selectedActivityId) {
@@ -946,52 +988,96 @@ export default function DashboardPage() {
   }
 
   function jumpToPathFromBridge(row: DashboardBridgeRiskRow) {
-    const partnerLabel =
-      row.primaryNodeId === row.sourceId ? row.targetLabel : row.sourceLabel;
-    writePathFocusToStorage(
-      {
-        nodeId: row.primaryNodeId,
-        nodeLabel: row.primaryNodeLabel,
-        domain:
-          row.primaryNodeId === row.sourceId ? row.sourceDomain : row.targetDomain,
-        mastery: Number((1 - row.risk).toFixed(2)),
-        risk: row.risk,
-        relatedNodes: [partnerLabel],
-        at: new Date().toISOString(),
-        focusSource: "graph_bridge",
-        bridgePartnerLabel: partnerLabel,
-        bridgeTaskTemplate: buildBridgeTaskTemplate(row.primaryNodeLabel, partnerLabel)
-      },
-      (key, value) => window.localStorage.setItem(key, value)
+    const bridgeFocus = buildBridgeFocusFromRow(row);
+    writePathFocusToStorage(bridgeFocus.focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
     );
     const params = new URLSearchParams({
       from: "graph_bridge",
       focusNode: row.primaryNodeId,
       focusLabel: row.primaryNodeLabel,
-      bridgePartner: partnerLabel
+      bridgePartner: bridgeFocus.partnerLabel
     });
     router.push(`/path?${params.toString()}`);
   }
 
   function jumpToWorkspaceFromBridge(row: DashboardBridgeRiskRow) {
-    const partnerLabel =
-      row.primaryNodeId === row.sourceId ? row.targetLabel : row.sourceLabel;
-    writeWorkspaceFocusToStorage(
-      {
-        nodeId: row.primaryNodeId,
-        nodeLabel: row.primaryNodeLabel,
-        domain:
-          row.primaryNodeId === row.sourceId ? row.sourceDomain : row.targetDomain,
-        mastery: Number((1 - row.risk).toFixed(2)),
-        risk: row.risk,
-        relatedNodes: [partnerLabel],
-        at: new Date().toISOString(),
-        focusSource: "graph_bridge",
-        bridgePartnerLabel: partnerLabel,
-        bridgeTaskTemplate: buildBridgeTaskTemplate(row.primaryNodeLabel, partnerLabel)
-      },
-      (key, value) => window.localStorage.setItem(key, value)
+    const bridgeFocus = buildBridgeFocusFromRow(row);
+    writeWorkspaceFocusToStorage(bridgeFocus.focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
     );
+    router.push("/workspace");
+  }
+
+  function toggleBridgeSelection(rowId: string) {
+    setSelectedBridgeIds((prev) =>
+      prev.includes(rowId) ? prev.filter((item) => item !== rowId) : [...prev, rowId]
+    );
+  }
+
+  function selectAllVisibleBridges() {
+    setSelectedBridgeIds(filteredBridgeRiskRows.map((row) => row.id));
+    setBridgeBatchHint(`已选择当前筛选下 ${filteredBridgeRiskRows.length} 条关系链。`);
+  }
+
+  function clearBridgeSelection() {
+    setSelectedBridgeIds([]);
+    setBridgeBatchHint("已清空关系链批量选择。");
+  }
+
+  function appendBatchBridgeActivities(
+    rows: DashboardBridgeRiskRow[],
+    action: "推送路径" | "推送工作区"
+  ) {
+    for (const row of rows) {
+      const bridgeFocus = buildBridgeFocusFromRow(row);
+      pushGraphActivityEventToStorage(
+        {
+          source: "workspace",
+          nodeId: row.primaryNodeId,
+          nodeLabel: row.primaryNodeLabel,
+          title: `关系链批量${action}`,
+          detail: `${row.primaryNodeLabel} ↔ ${bridgeFocus.partnerLabel} 已批量${action}`,
+          riskScore: row.risk
+        },
+        {
+          readItem: (key) => window.localStorage.getItem(key),
+          writeItem: (key, value) => window.localStorage.setItem(key, value)
+        },
+        20
+      );
+    }
+  }
+
+  function pushSelectedBridgesToPath() {
+    if (selectedBridgeRows.length === 0) {
+      return;
+    }
+    const first = selectedBridgeRows[0]!;
+    const bridgeFocus = buildBridgeFocusFromRow(first);
+    writePathFocusToStorage(bridgeFocus.focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    appendBatchBridgeActivities(selectedBridgeRows, "推送路径");
+    const params = new URLSearchParams({
+      from: "graph_bridge",
+      focusNode: first.primaryNodeId,
+      focusLabel: first.primaryNodeLabel,
+      bridgePartner: bridgeFocus.partnerLabel
+    });
+    router.push(`/path?${params.toString()}`);
+  }
+
+  function pushSelectedBridgesToWorkspace() {
+    if (selectedBridgeRows.length === 0) {
+      return;
+    }
+    const first = selectedBridgeRows[0]!;
+    const bridgeFocus = buildBridgeFocusFromRow(first);
+    writeWorkspaceFocusToStorage(bridgeFocus.focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    appendBatchBridgeActivities(selectedBridgeRows, "推送工作区");
     router.push("/workspace");
   }
 
@@ -1899,12 +1985,52 @@ export default function DashboardPage() {
             >
               刷新关系榜
             </button>
+            <div className="dashboard-bridge-batch">
+              <span>已选择 {selectedBridgeRows.length} 条</span>
+              <button
+                type="button"
+                onClick={selectAllVisibleBridges}
+                disabled={filteredBridgeRiskRows.length === 0}
+              >
+                全选当前
+              </button>
+              <button
+                type="button"
+                onClick={clearBridgeSelection}
+                disabled={selectedBridgeRows.length === 0}
+              >
+                清空
+              </button>
+              <button
+                type="button"
+                onClick={pushSelectedBridgesToPath}
+                disabled={selectedBridgeRows.length === 0}
+              >
+                批量推送路径
+              </button>
+              <button
+                type="button"
+                onClick={pushSelectedBridgesToWorkspace}
+                disabled={selectedBridgeRows.length === 0}
+              >
+                批量推送工作区
+              </button>
+            </div>
+            {bridgeBatchHint ? <p className="dashboard-bridge-batch-hint">{bridgeBatchHint}</p> : null}
             {filteredBridgeRiskRows.length > 0 ? (
               filteredBridgeRiskRows.map((row) => (
                 <div
                   key={row.id}
                   className={`dashboard-bridge-item risk-${resolveActivityRiskTone(row.risk)}`}
                 >
+                  <label className="dashboard-bridge-select">
+                    <input
+                      type="checkbox"
+                      checked={selectedBridgeIds.includes(row.id)}
+                      onChange={() => toggleBridgeSelection(row.id)}
+                    />
+                    加入批量
+                  </label>
                   <strong>
                     {row.sourceLabel} ↔ {row.targetLabel}
                   </strong>

@@ -647,6 +647,26 @@ html[data-theme="aurora"] .dashboard-bridge-refresh {
   color: #4f719f;
 }
 
+html[data-theme="aurora"] .dashboard-bridge-batch {
+  border-color: rgba(118, 154, 216, 0.4);
+  background: rgba(255, 255, 255, 0.84);
+}
+
+html[data-theme="aurora"] .dashboard-bridge-batch span,
+html[data-theme="aurora"] .dashboard-bridge-batch-hint {
+  color: #5c7fad;
+}
+
+html[data-theme="aurora"] .dashboard-bridge-batch button {
+  border-color: rgba(118, 154, 216, 0.46);
+  background: rgba(255, 255, 255, 0.86);
+  color: #4f719f;
+}
+
+html[data-theme="aurora"] .dashboard-bridge-select {
+  color: #5c7fad;
+}
+
 html[data-theme="aurora"] .dashboard-bridge-item.risk-medium {
   border-color: rgba(236, 172, 92, 0.46);
 }
@@ -834,6 +854,44 @@ html[data-theme="aurora"] .headline-badge {
   cursor: pointer;
 }
 
+.dashboard-bridge-batch {
+  border: 1px solid rgba(97, 132, 178, 0.34);
+  border-radius: 10px;
+  padding: 7px;
+  background: rgba(8, 13, 22, 0.46);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.dashboard-bridge-batch span {
+  font-size: 11px;
+  color: #9fc7ee;
+}
+
+.dashboard-bridge-batch button {
+  border: 1px solid rgba(97, 132, 178, 0.44);
+  border-radius: 8px;
+  background: rgba(10, 16, 27, 0.62);
+  color: #d8efff;
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.dashboard-bridge-batch button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.dashboard-bridge-batch-hint {
+  margin: 0;
+  font-size: 11px;
+  color: #9fc7ee;
+}
+
 .dashboard-bridge-item {
   border: 1px solid rgba(97, 132, 178, 0.32);
   border-radius: 10px;
@@ -846,6 +904,19 @@ html[data-theme="aurora"] .headline-badge {
 .dashboard-bridge-item strong {
   font-size: 12px;
   color: #d8efff;
+}
+
+.dashboard-bridge-select {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.dashboard-bridge-select input[type="checkbox"] {
+  accent-color: #61c7ff;
 }
 
 .dashboard-bridge-item p {
@@ -5127,6 +5198,35 @@ html[data-theme="aurora"] .config-diff-values em {
   color: var(--text-dim);
 }
 
+.graph-bridge-node-trend {
+  margin-top: 2px;
+  min-height: 34px;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.graph-bridge-node-trend i {
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(159, 255, 210, 0.8), rgba(97, 199, 255, 0.62));
+}
+
+.graph-bridge-node-trend b {
+  margin-left: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9fc7ee;
+}
+
+.graph-bridge-node-trend b.up {
+  color: #ffc289;
+}
+
+.graph-bridge-node-trend b.down {
+  color: #8ee9b9;
+}
+
 .graph-bridge-timeline-item {
   border: 1px solid rgba(97, 132, 178, 0.3);
   border-radius: 9px;
@@ -5503,6 +5603,42 @@ html[data-theme="aurora"] .config-diff-values em {
   padding: 4px 8px;
 }
 
+.path-bridge-save-mode small {
+  font-size: 11px;
+  color: #9fc7ee;
+}
+
+.path-bridge-recommend-list {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.path-bridge-recommend-list button {
+  border: 1px solid rgba(97, 132, 178, 0.4);
+  border-radius: 9px;
+  background: rgba(10, 16, 27, 0.56);
+  color: #d8efff;
+  font: inherit;
+  font-size: 11px;
+  padding: 5px 8px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.path-bridge-recommend-list button em {
+  font-style: normal;
+  color: #9fc7ee;
+}
+
+.path-bridge-recommend-list button.active {
+  border-color: rgba(159, 255, 210, 0.56);
+  box-shadow: 0 0 0 1px rgba(159, 255, 210, 0.18);
+}
+
 .path-bridge-checklist-hint {
   font-size: 11px;
   color: #9fc7ee;
@@ -5842,6 +5978,22 @@ html[data-theme="aurora"] .graph-bridge-node-stat em {
   color: #6a8db6;
 }
 
+html[data-theme="aurora"] .graph-bridge-node-trend i {
+  background: linear-gradient(180deg, rgba(64, 174, 138, 0.76), rgba(84, 155, 255, 0.62));
+}
+
+html[data-theme="aurora"] .graph-bridge-node-trend b {
+  color: #5c7fad;
+}
+
+html[data-theme="aurora"] .graph-bridge-node-trend b.up {
+  color: #aa7026;
+}
+
+html[data-theme="aurora"] .graph-bridge-node-trend b.down {
+  color: #2f6850;
+}
+
 html[data-theme="aurora"] .graph-bridge-timeline-item span {
   color: #5c7fad;
 }
@@ -6005,6 +6157,25 @@ html[data-theme="aurora"] .path-bridge-save-mode select {
   border-color: rgba(118, 154, 216, 0.46);
   background: rgba(255, 255, 255, 0.88);
   color: #2f5e8d;
+}
+
+html[data-theme="aurora"] .path-bridge-save-mode small {
+  color: #5c7fad;
+}
+
+html[data-theme="aurora"] .path-bridge-recommend-list button {
+  border-color: rgba(118, 154, 216, 0.46);
+  background: rgba(255, 255, 255, 0.88);
+  color: #4f719f;
+}
+
+html[data-theme="aurora"] .path-bridge-recommend-list button em {
+  color: #5c7fad;
+}
+
+html[data-theme="aurora"] .path-bridge-recommend-list button.active {
+  border-color: rgba(64, 174, 138, 0.46);
+  box-shadow: 0 0 0 1px rgba(64, 174, 138, 0.2);
 }
 
 html[data-theme="aurora"] .path-bridge-checklist-hint {

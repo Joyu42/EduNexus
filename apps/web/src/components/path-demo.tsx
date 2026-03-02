@@ -180,6 +180,39 @@ function downloadMarkdownFile(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+function resolveSessionRecommendScore(
+  session: WorkspaceSessionSummary,
+  focus: PathFocusPayload | null
+) {
+  if (!focus) {
+    return 0;
+  }
+  const title = (session.title || "").toLowerCase();
+  let score = 0;
+  const terms = [
+    focus.nodeLabel,
+    focus.bridgePartnerLabel ?? "",
+    focus.domain,
+    ...focus.relatedNodes.slice(0, 3)
+  ]
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+  for (const term of terms) {
+    if (title.includes(term)) {
+      score += 2;
+    }
+  }
+  if (title.includes("桥接") || title.includes("复盘")) {
+    score += 1;
+  }
+  const updatedAt = Date.parse(session.updatedAt || "");
+  if (Number.isFinite(updatedAt)) {
+    const hourGap = Math.max(1, (Date.now() - updatedAt) / (1000 * 60 * 60));
+    score += Math.max(0, 2 - hourGap / 48);
+  }
+  return Number(score.toFixed(2));
+}
+
 export function PathDemo() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -351,6 +384,17 @@ export function PathDemo() {
       rate: total > 0 ? Math.round((done / total) * 100) : 0
     };
   }, [bridgeChecklist]);
+  const recommendedWorkspaceSessions = useMemo(
+    () =>
+      workspaceSessions
+        .map((session) => ({
+          ...session,
+          recommendScore: resolveSessionRecommendScore(session, focusPayload)
+        }))
+        .sort((a, b) => b.recommendScore - a.recommendScore)
+        .slice(0, 5),
+    [focusPayload, workspaceSessions]
+  );
 
   useEffect(() => {
     if (!focusPayload) {
@@ -441,6 +485,29 @@ export function PathDemo() {
     };
     void loadSessions();
   }, [bridgeChecklist.length]);
+
+  useEffect(() => {
+    if (bridgeSaveMode !== "append_existing") {
+      return;
+    }
+    if (recommendedWorkspaceSessions.length === 0) {
+      return;
+    }
+    const suggested = recommendedWorkspaceSessions[0]!;
+    if (!bridgeTargetSessionId) {
+      setBridgeTargetSessionId(suggested.id);
+      return;
+    }
+    const exists = workspaceSessions.some((item) => item.id === bridgeTargetSessionId);
+    if (!exists) {
+      setBridgeTargetSessionId(suggested.id);
+    }
+  }, [
+    bridgeSaveMode,
+    bridgeTargetSessionId,
+    recommendedWorkspaceSessions,
+    workspaceSessions
+  ]);
 
   function applyBridgeTemplateGoal() {
     if (!focusSummary?.bridgeTaskTemplate) {
@@ -763,15 +830,45 @@ export function PathDemo() {
                       onChange={(event) => setBridgeTargetSessionId(event.target.value)}
                     >
                       <option value="">请选择会话</option>
-                      {workspaceSessions.map((session) => (
-                        <option key={`bridge_session_${session.id}`} value={session.id}>
-                          {session.title}（{session.id}）
-                        </option>
-                      ))}
+                      {workspaceSessions.map((session) => {
+                        const recommended = recommendedWorkspaceSessions.some(
+                          (item) => item.id === session.id
+                        );
+                        return (
+                          <option key={`bridge_session_${session.id}`} value={session.id}>
+                            {recommended ? "推荐 · " : ""}
+                            {session.title}（{session.id}）
+                          </option>
+                        );
+                      })}
                     </select>
+                    {recommendedWorkspaceSessions[0] ? (
+                      <small>
+                        推荐会话：{recommendedWorkspaceSessions[0].title}（匹配度{" "}
+                        {recommendedWorkspaceSessions[0].recommendScore.toFixed(2)}）
+                      </small>
+                    ) : (
+                      <small>暂无可推荐会话，可先在工作区创建会话。</small>
+                    )}
                   </label>
                 ) : null}
               </div>
+              {bridgeSaveMode === "append_existing" &&
+              recommendedWorkspaceSessions.length > 1 ? (
+                <div className="path-bridge-recommend-list">
+                  {recommendedWorkspaceSessions.slice(0, 3).map((session) => (
+                    <button
+                      type="button"
+                      key={`bridge_recommend_${session.id}`}
+                      className={bridgeTargetSessionId === session.id ? "active" : ""}
+                      onClick={() => setBridgeTargetSessionId(session.id)}
+                    >
+                      {session.title}
+                      <em>匹配度 {session.recommendScore.toFixed(2)}</em>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
               <div className="path-bridge-checklist-actions">
                 {bridgeChecklistProgress.done < bridgeChecklistProgress.total ? (
                   <button type="button" onClick={markAllBridgeChecklistDone}>

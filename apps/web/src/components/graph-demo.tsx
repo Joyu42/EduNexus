@@ -98,6 +98,8 @@ type BridgeReplayNodeStat = {
   averageRisk: number;
   maxRisk: number;
   latestAt: string;
+  trendPoints: number[];
+  trendDelta: number;
 };
 
 function resolveRiskTone(risk: number) {
@@ -761,7 +763,13 @@ export function GraphDemo() {
     }
     const map = new Map<
       string,
-      { count: number; riskTotal: number; maxRisk: number; latestAt: string }
+      {
+        count: number;
+        riskTotal: number;
+        maxRisk: number;
+        latestAt: string;
+        points: Array<{ at: string; risk: number }>;
+      }
     >();
     for (const frame of displayedBridgeReplayFrames) {
       const labels = [frame.bridge.sourceLabel, frame.bridge.targetLabel];
@@ -770,7 +778,8 @@ export function GraphDemo() {
           count: 0,
           riskTotal: 0,
           maxRisk: 0,
-          latestAt: ""
+          latestAt: "",
+          points: []
         };
         previous.count += 1;
         previous.riskTotal += frame.bridge.risk;
@@ -778,17 +787,30 @@ export function GraphDemo() {
         if (!previous.latestAt || frame.at > previous.latestAt) {
           previous.latestAt = frame.at;
         }
+        previous.points.push({
+          at: frame.at,
+          risk: frame.bridge.risk
+        });
         map.set(label, previous);
       }
     }
     return Array.from(map.entries())
-      .map(([label, value]) => ({
-        label,
-        count: value.count,
-        averageRisk: Number((value.riskTotal / Math.max(1, value.count)).toFixed(2)),
-        maxRisk: Number(value.maxRisk.toFixed(2)),
-        latestAt: value.latestAt
-      }))
+      .map(([label, value]) => {
+        const sortedPoints = [...value.points]
+          .sort((a, b) => a.at.localeCompare(b.at))
+          .map((item) => Number(item.risk.toFixed(2)));
+        const first = sortedPoints[0] ?? 0;
+        const last = sortedPoints[sortedPoints.length - 1] ?? 0;
+        return {
+          label,
+          count: value.count,
+          averageRisk: Number((value.riskTotal / Math.max(1, value.count)).toFixed(2)),
+          maxRisk: Number(value.maxRisk.toFixed(2)),
+          latestAt: value.latestAt,
+          trendPoints: sortedPoints,
+          trendDelta: Number((last - first).toFixed(2))
+        };
+      })
       .sort((a, b) => b.count - a.count || b.averageRisk - a.averageRisk)
       .slice(0, 6);
   }, [displayedBridgeReplayFrames]);
@@ -1356,6 +1378,17 @@ export function GraphDemo() {
                       <em>
                         峰值 {toPercent(item.maxRisk)} · 最近 {formatDateTime(item.latestAt)}
                       </em>
+                      <div className="graph-bridge-node-trend">
+                        {item.trendPoints.slice(-10).map((point, index) => (
+                          <i
+                            key={`trend_${item.label}_${index}`}
+                            style={{ height: `${Math.max(6, Math.round(point * 28))}px` }}
+                          />
+                        ))}
+                        <b className={item.trendDelta > 0 ? "up" : item.trendDelta < 0 ? "down" : ""}>
+                          {formatDelta(item.trendDelta, { precision: 2 })}
+                        </b>
+                      </div>
                     </button>
                   ))}
                 </div>
