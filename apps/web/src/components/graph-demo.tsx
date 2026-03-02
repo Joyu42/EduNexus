@@ -200,6 +200,7 @@ export function GraphDemo() {
   const [selectedBridgeId, setSelectedBridgeId] = useState("");
   const [bridgeHistory, setBridgeHistory] = useState<BridgeHistorySnapshot[]>([]);
   const [bridgeReplayMode, setBridgeReplayMode] = useState<BridgeReplayMode>("focus");
+  const [bridgeReplayNodeFilter, setBridgeReplayNodeFilter] = useState("all");
   const [riskThresholdPercent, setRiskThresholdPercent] = useState(0);
   const [enableEdgeHeatmap, setEnableEdgeHeatmap] = useState(true);
   const [pathPushHint, setPathPushHint] = useState("");
@@ -720,6 +721,41 @@ export function GraphDemo() {
     [bridgeHistory, bridgeReplayMode, replayTargetBridgeId]
   );
 
+  const bridgeReplayNodeOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          bridgeReplayFrames.flatMap((frame) => [
+            frame.bridge.sourceLabel,
+            frame.bridge.targetLabel
+          ])
+        )
+      )
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, "zh-CN")),
+    [bridgeReplayFrames]
+  );
+
+  const displayedBridgeReplayFrames = useMemo(() => {
+    if (bridgeReplayNodeFilter === "all") {
+      return bridgeReplayFrames;
+    }
+    return bridgeReplayFrames.filter(
+      (frame) =>
+        frame.bridge.sourceLabel === bridgeReplayNodeFilter ||
+        frame.bridge.targetLabel === bridgeReplayNodeFilter
+    );
+  }, [bridgeReplayFrames, bridgeReplayNodeFilter]);
+
+  useEffect(() => {
+    if (bridgeReplayNodeFilter === "all") {
+      return;
+    }
+    if (!bridgeReplayNodeOptions.includes(bridgeReplayNodeFilter)) {
+      setBridgeReplayNodeFilter("all");
+    }
+  }, [bridgeReplayNodeFilter, bridgeReplayNodeOptions]);
+
   const handlePushActiveNodeToPath = useCallback(() => {
     if (!activeNode) {
       return;
@@ -1189,13 +1225,29 @@ export function GraphDemo() {
                   查看全部关系链
                 </button>
                 <span>
-                  当前 {bridgeReplayFrames.length} 条 · 模式
+                  当前 {displayedBridgeReplayFrames.length} 条 · 模式
                   {bridgeReplayMode === "focus" ? " 焦点回放" : " 全量回放"}
                 </span>
               </div>
-              {bridgeReplayFrames.length > 0 ? (
+              <div className="graph-bridge-timeline-filter">
+                <label>
+                  节点筛选
+                  <select
+                    value={bridgeReplayNodeFilter}
+                    onChange={(event) => setBridgeReplayNodeFilter(event.target.value)}
+                  >
+                    <option value="all">全部节点</option>
+                    {bridgeReplayNodeOptions.map((nodeLabel) => (
+                      <option key={`bridge_replay_node_${nodeLabel}`} value={nodeLabel}>
+                        {nodeLabel}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              {displayedBridgeReplayFrames.length > 0 ? (
                 <div className="graph-bridge-timeline-list">
-                  {bridgeReplayFrames.map((frame) => (
+                  {displayedBridgeReplayFrames.map((frame) => (
                     <button
                       type="button"
                       key={`${frame.snapshotId}_${frame.bridge.id}`}

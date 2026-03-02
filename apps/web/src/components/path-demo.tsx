@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { formatErrorMessage, requestJson } from "@/lib/client/api";
 import { pushGraphActivityEventToStorage } from "@/lib/client/graph-activity";
 import {
   buildPathGoalFromFocus,
   readPathFocusFromStorage,
+  writeWorkspaceFocusToStorage,
   type PathFocusPayload
 } from "@/lib/client/path-focus-bridge";
 
@@ -35,6 +36,12 @@ type PathFocusFeedbackPayload = {
 type SaveNoteResponse = {
   noteId: string;
   path: string;
+};
+
+type CreateWorkspaceSessionResponse = {
+  session: {
+    id: string;
+  };
 };
 
 type BridgeChecklistItem = {
@@ -166,6 +173,7 @@ function downloadMarkdownFile(content: string, filename: string) {
 }
 
 export function PathDemo() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [goal, setGoal] = useState("两周内完成等差数列与函数基础复盘");
   const [focusPayload, setFocusPayload] = useState<PathFocusPayload | null>(null);
@@ -174,6 +182,7 @@ export function PathDemo() {
   const [bridgeChecklist, setBridgeChecklist] = useState<BridgeChecklistItem[]>([]);
   const [bridgeExportHint, setBridgeExportHint] = useState("");
   const [savingBridgeNote, setSavingBridgeNote] = useState(false);
+  const [bridgeWorkspaceSessionId, setBridgeWorkspaceSessionId] = useState("");
   const [submittingTaskId, setSubmittingTaskId] = useState("");
   const [data, setData] = useState<PathPayload | null>(null);
   const [error, setError] = useState("");
@@ -397,6 +406,7 @@ export function PathDemo() {
 
   useEffect(() => {
     setBridgeExportHint("");
+    setBridgeWorkspaceSessionId("");
   }, [bridgeChecklistStorageKey]);
 
   function applyBridgeTemplateGoal() {
@@ -437,7 +447,7 @@ export function PathDemo() {
     setBridgeExportHint(`已导出桥接清单：${fileName}`);
   }
 
-  async function saveBridgeChecklistToVault() {
+  async function saveBridgeChecklistToWorkspaceSession() {
     if (!focusPayload || bridgeChecklist.length === 0) {
       return;
     }
@@ -450,11 +460,23 @@ export function PathDemo() {
         goal,
         generatedAt: new Date().toISOString()
       });
+      const sessionPayload = await requestJson<CreateWorkspaceSessionResponse>(
+        "/api/workspace/session",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: `桥接清单-${focusPayload.nodeLabel}`,
+            initialGoal: goal
+          })
+        }
+      );
+      const sessionId = sessionPayload.session.id;
       const response = await requestJson<SaveNoteResponse>("/api/workspace/note/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sessionId: `path_bridge_${focusPayload.nodeId}`,
+          sessionId,
           title: `路径桥接清单-${focusPayload.nodeLabel}`,
           content,
           tags: [
@@ -465,13 +487,44 @@ export function PathDemo() {
           links: focusPayload.relatedNodes.slice(0, 6)
         })
       });
-      setBridgeExportHint(`已写入本地知识库：${response.noteId}`);
+      setBridgeWorkspaceSessionId(sessionId);
+      setBridgeExportHint(`已写入会话沉淀：${response.noteId}（session: ${sessionId}）`);
+      pushGraphActivityEventToStorage(
+        {
+          source: "workspace",
+          nodeId: focusPayload.nodeId,
+          nodeLabel: focusPayload.nodeLabel,
+          title: "桥接清单沉淀完成",
+          detail: `会话 ${sessionId} 已保存桥接清单 ${response.noteId}`,
+          riskScore: focusPayload.risk
+        },
+        {
+          readItem: (key) => window.localStorage.getItem(key),
+          writeItem: (key, value) => window.localStorage.setItem(key, value)
+        },
+        16
+      );
     } catch (err) {
       setBridgeExportHint("");
-      setError(formatErrorMessage(err, "写入本地知识库失败。"));
+      setError(formatErrorMessage(err, "写入会话沉淀失败。"));
     } finally {
       setSavingBridgeNote(false);
     }
+  }
+
+  function jumpToWorkspaceFromBridgeChecklist() {
+    if (!focusPayload) {
+      return;
+    }
+    writeWorkspaceFocusToStorage(focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    if (bridgeWorkspaceSessionId) {
+      const params = new URLSearchParams({ sessionId: bridgeWorkspaceSessionId });
+      router.push(`/workspace?${params.toString()}`);
+      return;
+    }
+    router.push("/workspace");
   }
 
   async function generatePath() {
@@ -656,11 +709,16 @@ export function PathDemo() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => void saveBridgeChecklistToVault()}
+                  onClick={() => void saveBridgeChecklistToWorkspaceSession()}
                   disabled={savingBridgeNote}
                 >
-                  {savingBridgeNote ? "写入中..." : "写入本地知识库"}
+                  {savingBridgeNote ? "写入中..." : "写入会话沉淀"}
                 </button>
+                {bridgeWorkspaceSessionId ? (
+                  <button type="button" onClick={jumpToWorkspaceFromBridgeChecklist}>
+                    进入工作区继续
+                  </button>
+                ) : null}
               </div>
               {bridgeExportHint ? (
                 <span className="path-bridge-checklist-hint">{bridgeExportHint}</span>

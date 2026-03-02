@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { WorkspaceDemo } from "@/components/workspace-demo";
 import { GalaxyHero } from "@/components/galaxy-ui";
 
@@ -27,7 +28,9 @@ export default function WorkspacePage() {
 
         <article className="panel wide">
           <h3>引导式学习演示</h3>
-          <WorkspaceDemo />
+          <Suspense fallback={<div className="result-box">正在加载工作区...</div>}>
+            <WorkspaceDemo />
+          </Suspense>
         </article>
         <article className="panel half">
           <h3>当前策略</h3>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { formatErrorMessage, readApiErrorMessage, requestJson } from "@/lib/client/api";
 import { pushGraphActivityEventToStorage } from "@/lib/client/graph-activity";
 import {
@@ -448,6 +449,7 @@ function buildReplayScriptContent(snapshot: ReplayScriptSnapshot) {
 }
 
 export function WorkspaceDemo() {
+  const searchParams = useSearchParams();
   const [sessionId, setSessionId] = useState<string>("");
   const [sessionTitle, setSessionTitle] = useState("");
   const [sessionQuery, setSessionQuery] = useState("");
@@ -500,6 +502,11 @@ export function WorkspaceDemo() {
   const replaySpeedRef = useRef<ReplaySpeedKey>("1x");
   const autoExportReplaySummaryRef = useRef(true);
   const hasAppliedGraphFocusRef = useRef(false);
+  const appliedQuerySessionIdRef = useRef("");
+  const querySessionId = useMemo(
+    () => searchParams.get("sessionId")?.trim() ?? "",
+    [searchParams]
+  );
 
   const canUnlock = useMemo(() => nextData?.canUnlockFinal ?? false, [nextData]);
   const graphFocusSummary = useMemo(() => {
@@ -833,8 +840,16 @@ export function WorkspaceDemo() {
 
   useEffect(() => {
     void loadSessions("");
+    if (!querySessionId) {
+      return;
+    }
+    if (appliedQuerySessionIdRef.current === querySessionId) {
+      return;
+    }
+    appliedQuerySessionIdRef.current = querySessionId;
+    void loadSessionDetail(querySessionId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [querySessionId]);
 
   async function createSession() {
     setLoading(true);
