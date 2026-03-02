@@ -161,6 +161,26 @@ function buildBridgeTaskTemplate(primaryLabel: string, secondaryLabel: string) {
   return `桥接任务模板：围绕「${primaryLabel}」与「${secondaryLabel}」先做概念映射，再完成“同构例题 + 反例辨析 + 迁移应用”三段训练。`;
 }
 
+function buildNodeInterventionTips(node: GraphNodePlacement) {
+  const tips: string[] = [];
+  if (node.risk >= 0.65) {
+    tips.push("先做错因归类，再进行 2 轮变式迁移训练。");
+  } else if (node.risk >= 0.45) {
+    tips.push("补一轮桥接题，重点验证条件映射是否稳定。");
+  } else {
+    tips.push("保持低频复习，优先支持高风险节点迁移。");
+  }
+  if (node.degree <= 1) {
+    tips.push("该节点关联较弱，建议新增 1 条跨章节连接练习。");
+  } else {
+    tips.push("可作为枢纽节点，带动关联概念的系统复盘。");
+  }
+  if (node.mastery < 0.5) {
+    tips.push("先用结构化提示词拆解解题步骤，避免直接求答案。");
+  }
+  return tips.slice(0, 3);
+}
+
 function buildBridgeHistorySignature(entries: BridgeHistoryEntry[]) {
   if (entries.length === 0) {
     return "empty";
@@ -210,6 +230,7 @@ export function GraphDemo() {
   const [graphActivities, setGraphActivities] = useState<GraphActivityEvent[]>([]);
   const [focusedActivityId, setFocusedActivityId] = useState("");
   const [selectedBridgeId, setSelectedBridgeId] = useState("");
+  const [hoveredNodeId, setHoveredNodeId] = useState("");
   const [bridgeHistory, setBridgeHistory] = useState<BridgeHistorySnapshot[]>([]);
   const [bridgeReplayMode, setBridgeReplayMode] = useState<BridgeReplayMode>("focus");
   const [bridgeReplayNodeFilter, setBridgeReplayNodeFilter] = useState("all");
@@ -773,6 +794,29 @@ export function GraphDemo() {
     }
     return Array.from(degreeMap.values()).filter((value) => value === 0).length;
   }, [canvasEdges, canvasPlacements]);
+  const hoveredNode = useMemo(
+    () => canvasPlacements.find((item) => item.id === hoveredNodeId) ?? null,
+    [canvasPlacements, hoveredNodeId]
+  );
+  const hoveredNodeNeighborCount = useMemo(() => {
+    if (!hoveredNode) {
+      return 0;
+    }
+    const ids = new Set<string>();
+    for (const edge of canvasEdges) {
+      if (edge.source === hoveredNode.id) {
+        ids.add(edge.target);
+      }
+      if (edge.target === hoveredNode.id) {
+        ids.add(edge.source);
+      }
+    }
+    return ids.size;
+  }, [canvasEdges, hoveredNode]);
+  const hoveredNodeTips = useMemo(
+    () => (hoveredNode ? buildNodeInterventionTips(hoveredNode) : []),
+    [hoveredNode]
+  );
 
   const replayTargetBridgeId = useMemo(() => {
     if (selectedBridgeId) {
@@ -1248,12 +1292,18 @@ export function GraphDemo() {
                         key={node.id}
                         className={`graph-node graph-node-${tone}${selected ? " selected" : ""}${related ? " related" : ""}`}
                         onClick={() => setActiveNodeId(node.id)}
+                        onMouseEnter={() => setHoveredNodeId(node.id)}
+                        onMouseLeave={() =>
+                          setHoveredNodeId((prev) => (prev === node.id ? "" : prev))
+                        }
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
                             event.preventDefault();
                             setActiveNodeId(node.id);
                           }
                         }}
+                        onFocus={() => setHoveredNodeId(node.id)}
+                        onBlur={() => setHoveredNodeId((prev) => (prev === node.id ? "" : prev))}
                         role="button"
                         tabIndex={0}
                       >
@@ -1287,6 +1337,26 @@ export function GraphDemo() {
                     </span>
                   ) : null}
                 </div>
+                {hoveredNode ? (
+                  <div className="graph-hover-card">
+                    <header>
+                      <strong>{hoveredNode.label}</strong>
+                      <span>
+                        风险 {toPercent(hoveredNode.risk)} · 掌握度{" "}
+                        {toPercent(hoveredNode.mastery)}
+                      </span>
+                    </header>
+                    <p>
+                      域：{hoveredNode.domain} · 邻接节点 {hoveredNodeNeighborCount} · 关联度{" "}
+                      {hoveredNode.degree}
+                    </p>
+                    <div className="graph-hover-tips">
+                      {hoveredNodeTips.map((tip, index) => (
+                        <span key={`hover_tip_${hoveredNode.id}_${index}`}>{tip}</span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </>
             )}
           </article>

@@ -5153,6 +5153,51 @@ html[data-theme="aurora"] .config-diff-values em {
   color: #aac8e8;
 }
 
+.graph-hover-card {
+  margin-top: 8px;
+  border: 1px solid rgba(97, 132, 178, 0.36);
+  border-radius: 11px;
+  padding: 9px 10px;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(97, 199, 255, 0.14), transparent 42%),
+    rgba(8, 13, 22, 0.62);
+  display: grid;
+  gap: 5px;
+}
+
+.graph-hover-card header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.graph-hover-card header strong {
+  font-size: 13px;
+  color: #dbf1ff;
+}
+
+.graph-hover-card header span,
+.graph-hover-card p {
+  margin: 0;
+  font-size: 11px;
+  color: #9fc7ee;
+}
+
+.graph-hover-tips {
+  display: grid;
+  gap: 5px;
+}
+
+.graph-hover-tips span {
+  border: 1px solid rgba(97, 132, 178, 0.3);
+  border-radius: 9px;
+  padding: 5px 7px;
+  font-size: 11px;
+  color: #cfe6ff;
+  background: rgba(10, 16, 27, 0.58);
+}
+
 .graph-insight-panel {
   display: grid;
   gap: 10px;
@@ -6306,6 +6351,28 @@ html[data-theme="aurora"] .graph-domain-cluster-item.active {
 html[data-theme="aurora"] .graph-legend-item.neutral,
 html[data-theme="aurora"] .graph-neighbor-chip em {
   color: #648ab5;
+}
+
+html[data-theme="aurora"] .graph-hover-card {
+  border-color: rgba(118, 154, 216, 0.4);
+  background:
+    radial-gradient(circle at 88% 10%, rgba(122, 187, 255, 0.2), transparent 42%),
+    rgba(255, 255, 255, 0.84);
+}
+
+html[data-theme="aurora"] .graph-hover-card header strong {
+  color: #2f5f93;
+}
+
+html[data-theme="aurora"] .graph-hover-card header span,
+html[data-theme="aurora"] .graph-hover-card p {
+  color: #5c7fad;
+}
+
+html[data-theme="aurora"] .graph-hover-tips span {
+  border-color: rgba(118, 154, 216, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+  color: #4f719f;
 }
 
 html[data-theme="aurora"] .graph-risk-row.active {
