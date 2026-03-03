@@ -222,7 +222,11 @@ const buildImportAuditRollbackPreview = createImportAuditRollbackPreviewBuilder(
   normalizeBundle
 });
 
+type SettingsViewMode = "basic" | "advanced" | "import";
+
 export default function SettingsPage() {
+  const [settingsViewMode, setSettingsViewMode] =
+    useState<SettingsViewMode>("basic");
   const [bundle, setBundle] = useState<ConfigBundle>(buildDefaultBundle());
   const [configHistory, setConfigHistory] = useState<ConfigHistoryItem[]>([]);
   const [importAuditLog, setImportAuditLog] = useState<ImportAuditItem[]>([]);
@@ -778,7 +782,7 @@ export default function SettingsPage() {
         tags={["模板切换", "JSON 导入导出", "历史回滚", "参数广播"]}
       />
 
-      <div className="panel-grid">
+      <div className="panel-grid settings-layout" data-view={settingsViewMode}>
         <GalaxyHero
           badge="Config Center · Local Persistence"
           title="一处配置，三处联动"
@@ -800,7 +804,40 @@ export default function SettingsPage() {
           ]}
         />
 
-        <article className="panel wide">
+        <article className="panel wide settings-view-switcher">
+          <header>
+            <strong>配置视图</strong>
+            <span>按使用频率切换，减少操作噪声</span>
+          </header>
+          <div className="settings-view-switcher-row">
+            <button
+              type="button"
+              className={settingsViewMode === "basic" ? "active" : ""}
+              onClick={() => setSettingsViewMode("basic")}
+            >
+              常用策略
+              <em>{profileStore.profiles.length} 个画像</em>
+            </button>
+            <button
+              type="button"
+              className={settingsViewMode === "advanced" ? "active" : ""}
+              onClick={() => setSettingsViewMode("advanced")}
+            >
+              高级回滚
+              <em>{configHistory.length} 条历史</em>
+            </button>
+            <button
+              type="button"
+              className={settingsViewMode === "import" ? "active" : ""}
+              onClick={() => setSettingsViewMode("import")}
+            >
+              导入与审计
+              <em>{filteredImportAuditLog.length} 条审计记录</em>
+            </button>
+          </div>
+        </article>
+
+        <article className="panel wide settings-section settings-section-common">
           <h3>全局操作</h3>
           <div className="config-toolbar">
             <button type="button" onClick={handleReloadFromStorage}>
@@ -821,7 +858,7 @@ export default function SettingsPage() {
           </p>
         </article>
 
-        <article className="panel half">
+        <article className="panel half settings-section settings-section-basic">
           <h3>策略画像管理</h3>
           <div className="demo-form">
             <label>切换画像</label>
@@ -956,7 +993,7 @@ export default function SettingsPage() {
           </div>
         </article>
 
-        <article className="panel half">
+        <article className="panel half settings-section settings-section-basic">
           <h3>一键模板包</h3>
           <div className="config-pack-grid">
             {CONFIG_TEMPLATE_PACKS.map((item) => (
@@ -979,7 +1016,7 @@ export default function SettingsPage() {
           </div>
         </article>
 
-        <article className="panel half">
+        <article className="panel half settings-section settings-section-advanced">
           <h3>变更历史与回滚</h3>
           <div className="config-history-head">
             <span>最近 {configHistory.length} 条</span>
@@ -1079,7 +1116,7 @@ export default function SettingsPage() {
           )}
         </article>
 
-        <article className="panel half">
+        <article className="panel half settings-section settings-section-basic">
           <h3>Dashboard 预警参数</h3>
           <div className="demo-form">
             <label>策略档位</label>
@@ -1202,7 +1239,7 @@ export default function SettingsPage() {
           </div>
         </article>
 
-        <article className="panel half">
+        <article className="panel half settings-section settings-section-basic">
           <h3>Workspace 回放参数</h3>
           <div className="demo-form">
             <div className="config-preset-row">
@@ -1302,7 +1339,7 @@ export default function SettingsPage() {
           </div>
         </article>
 
-        <article className="panel half">
+        <article className="panel half settings-section settings-section-basic">
           <h3>KB 章节参数</h3>
           <div className="demo-form">
             <div className="config-preset-row">
@@ -1402,64 +1439,68 @@ export default function SettingsPage() {
           </div>
         </article>
 
-        <JsonImportPanel
-          jsonDraft={jsonDraft}
-          onJsonDraftChange={setJsonDraft}
-          profileImportMode={profileImportMode}
-          onProfileImportModeChange={setProfileImportMode}
-          activateImportedProfile={activateImportedProfile}
-          onActivateImportedProfileChange={setActivateImportedProfile}
-          confirmOverwriteImport={confirmOverwriteImport}
-          onConfirmOverwriteImportChange={setConfirmOverwriteImport}
-          importHint={jsonActionHint}
-          importPreview={jsonImportPreview}
-          profileLimit={CONFIG_PROFILE_LIMIT}
-          showImportConflictDetails={showImportConflictDetails}
-          onToggleImportConflictDetails={() =>
-            setShowImportConflictDetails((prev) => !prev)
-          }
-          filteredImportConflictRows={filteredImportConflictRows}
-          importConflictSearch={importConflictSearch}
-          onImportConflictSearchChange={setImportConflictSearch}
-          importConflictActionFilter={importConflictActionFilter}
-          onImportConflictActionFilterChange={setImportConflictActionFilter}
-          onExportFilteredConflictCsv={handleExportFilteredConflictCsv}
-          formatImportActionLabel={formatImportActionLabel}
-          formatDuplicateStrategyLabel={formatDuplicateStrategyLabel}
-          canApplyBundleFromJson={canApplyBundleFromJson}
-          canImportProfileFromJson={canImportProfileFromJson}
-          canImportProfileStoreFromJson={canImportProfileStoreFromJson}
-          onApplyJson={handleApplyJsonDraft}
-          onImportProfile={handleImportProfileFromJson}
-          onImportProfileStore={handleImportProfileStoreFromJson}
-          onFillCurrentBundleJson={() => setJsonDraft(JSON.stringify(bundle, null, 2))}
-        />
+        <div className="settings-section settings-section-import">
+          <JsonImportPanel
+            jsonDraft={jsonDraft}
+            onJsonDraftChange={setJsonDraft}
+            profileImportMode={profileImportMode}
+            onProfileImportModeChange={setProfileImportMode}
+            activateImportedProfile={activateImportedProfile}
+            onActivateImportedProfileChange={setActivateImportedProfile}
+            confirmOverwriteImport={confirmOverwriteImport}
+            onConfirmOverwriteImportChange={setConfirmOverwriteImport}
+            importHint={jsonActionHint}
+            importPreview={jsonImportPreview}
+            profileLimit={CONFIG_PROFILE_LIMIT}
+            showImportConflictDetails={showImportConflictDetails}
+            onToggleImportConflictDetails={() =>
+              setShowImportConflictDetails((prev) => !prev)
+            }
+            filteredImportConflictRows={filteredImportConflictRows}
+            importConflictSearch={importConflictSearch}
+            onImportConflictSearchChange={setImportConflictSearch}
+            importConflictActionFilter={importConflictActionFilter}
+            onImportConflictActionFilterChange={setImportConflictActionFilter}
+            onExportFilteredConflictCsv={handleExportFilteredConflictCsv}
+            formatImportActionLabel={formatImportActionLabel}
+            formatDuplicateStrategyLabel={formatDuplicateStrategyLabel}
+            canApplyBundleFromJson={canApplyBundleFromJson}
+            canImportProfileFromJson={canImportProfileFromJson}
+            canImportProfileStoreFromJson={canImportProfileStoreFromJson}
+            onApplyJson={handleApplyJsonDraft}
+            onImportProfile={handleImportProfileFromJson}
+            onImportProfileStore={handleImportProfileStoreFromJson}
+            onFillCurrentBundleJson={() => setJsonDraft(JSON.stringify(bundle, null, 2))}
+          />
+        </div>
 
-        <ImportAuditLogPanel
-          log={importAuditLog}
-          filteredLog={filteredImportAuditLog}
-          limit={IMPORT_AUDIT_LIMIT}
-          sourceFilter={importAuditFilters.sourceFilter}
-          modeFilter={importAuditFilters.modeFilter}
-          keyword={importAuditFilters.keyword}
-          dateFrom={importAuditFilters.dateFrom}
-          dateTo={importAuditFilters.dateTo}
-          quickRange={importAuditFilters.quickRange}
-          rollbackSummaryMap={importAuditRollbackSummaryMap}
-          formatTime={formatTime}
-          onSourceFilterChange={importAuditFilters.setSourceFilter}
-          onModeFilterChange={importAuditFilters.setModeFilter}
-          onKeywordChange={importAuditFilters.setKeyword}
-          onDateFromChange={importAuditFilters.setDateFromWithManualOverride}
-          onDateToChange={importAuditFilters.setDateToWithManualOverride}
-          onApplyQuickRange={importAuditFilters.applyQuickRange}
-          onResetFilters={importAuditFilters.resetFilters}
-          onImportFromDraft={handleImportAuditFromJsonDraft}
-          onExportFilteredJson={handleExportImportAuditJson}
-          onClearLog={handleClearImportAuditLog}
-          onExportSingle={handleExportSingleImportAuditJson}
-          onRequestRollback={handleRequestRollbackImportAudit}
-        />
+        <div className="settings-section settings-section-import">
+          <ImportAuditLogPanel
+            log={importAuditLog}
+            filteredLog={filteredImportAuditLog}
+            limit={IMPORT_AUDIT_LIMIT}
+            sourceFilter={importAuditFilters.sourceFilter}
+            modeFilter={importAuditFilters.modeFilter}
+            keyword={importAuditFilters.keyword}
+            dateFrom={importAuditFilters.dateFrom}
+            dateTo={importAuditFilters.dateTo}
+            quickRange={importAuditFilters.quickRange}
+            rollbackSummaryMap={importAuditRollbackSummaryMap}
+            formatTime={formatTime}
+            onSourceFilterChange={importAuditFilters.setSourceFilter}
+            onModeFilterChange={importAuditFilters.setModeFilter}
+            onKeywordChange={importAuditFilters.setKeyword}
+            onDateFromChange={importAuditFilters.setDateFromWithManualOverride}
+            onDateToChange={importAuditFilters.setDateToWithManualOverride}
+            onApplyQuickRange={importAuditFilters.applyQuickRange}
+            onResetFilters={importAuditFilters.resetFilters}
+            onImportFromDraft={handleImportAuditFromJsonDraft}
+            onExportFilteredJson={handleExportImportAuditJson}
+            onClearLog={handleClearImportAuditLog}
+            onExportSingle={handleExportSingleImportAuditJson}
+            onRequestRollback={handleRequestRollbackImportAudit}
+          />
+        </div>
 
         <StatusMessageBox
           message={statusMessage}

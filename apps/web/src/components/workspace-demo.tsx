@@ -96,6 +96,7 @@ type ReplayBookmark = {
 };
 
 type ReplayPanelPreset = "quick" | "balanced" | "deep" | "custom";
+type WorkspaceViewMode = "learn" | "replay" | "sessions";
 
 type ReplayPanelConfig = {
   maxBookmarks: number;
@@ -512,6 +513,8 @@ export function WorkspaceDemo() {
   const [saveResult, setSaveResult] = useState<SaveNoteResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
+  const [workspaceViewMode, setWorkspaceViewMode] =
+    useState<WorkspaceViewMode>("learn");
   const [graphFocus, setGraphFocus] = useState<PathFocusPayload | null>(null);
   const [graphFocusQueue, setGraphFocusQueue] = useState<PathFocusPayload[]>([]);
   const [activeGraphFocusQueueKey, setActiveGraphFocusQueueKey] = useState("");
@@ -986,6 +989,7 @@ export function WorkspaceDemo() {
       return;
     }
     appliedQuerySessionIdRef.current = querySessionId;
+    setWorkspaceViewMode("sessions");
     void loadSessionDetail(querySessionId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [querySessionId]);
@@ -1926,9 +1930,55 @@ export function WorkspaceDemo() {
   }
 
   return (
-    <div className="panel-grid panel-grid-tight">
+    <div
+      className="panel-grid panel-grid-tight workspace-layout"
+      data-view={workspaceViewMode}
+    >
+      <article className="panel wide workspace-view-switcher">
+        <header>
+          <strong>工作区视图</strong>
+          <span>按任务阶段聚焦信息，减少同屏干扰</span>
+        </header>
+        <div className="workspace-view-switcher-row">
+          <button
+            type="button"
+            className={workspaceViewMode === "learn" ? "active" : ""}
+            onClick={() => setWorkspaceViewMode("learn")}
+          >
+            学习对话
+            <em>{messages.length} 条记录</em>
+          </button>
+          <button
+            type="button"
+            className={workspaceViewMode === "replay" ? "active" : ""}
+            onClick={() => setWorkspaceViewMode("replay")}
+          >
+            链路回放
+            <em>{replayBookmarks.length} 个书签</em>
+          </button>
+          <button
+            type="button"
+            className={workspaceViewMode === "sessions" ? "active" : ""}
+            onClick={() => setWorkspaceViewMode("sessions")}
+          >
+            会话管理
+            <em>{sessions.length} 个会话</em>
+          </button>
+        </div>
+        <p className="workspace-view-hint">
+          {workspaceViewMode === "learn"
+            ? "聚焦输入、反馈与证据，连续推进当前学习任务。"
+            : workspaceViewMode === "replay"
+              ? "聚焦流式轨迹与书签复盘，定位策略拐点。"
+              : "聚焦会话检索、恢复与上下文重定位。"}
+        </p>
+      </article>
       {hasGraphContext ? (
-        <div className={`workspace-graph-context${hasMatchedQuerySession ? " ready" : ""}`}>
+        <div
+          className={`workspace-graph-context workspace-section workspace-section-common${
+            hasMatchedQuerySession ? " ready" : ""
+          }`}
+        >
           <strong>
             {queryFrom === "graph_save" ? "图谱沉淀回看上下文已带入" : "图谱回看上下文已带入"}
           </strong>
@@ -2016,7 +2066,7 @@ export function WorkspaceDemo() {
         </div>
       ) : null}
 
-      <div className="panel wide">
+      <div className="panel wide workspace-section workspace-section-sessions">
         <h3>会话历史与恢复</h3>
         <div className="demo-form">
           <label>历史搜索</label>
@@ -2059,7 +2109,7 @@ export function WorkspaceDemo() {
         </div>
       </div>
 
-      <div className="panel half">
+      <div className="panel half workspace-section workspace-section-learn workspace-section-replay">
         <h3>输入与控制</h3>
         {graphFocusHint ? <div className="result-box info">{graphFocusHint}</div> : null}
         {graphFocusSummary ? (
@@ -2223,7 +2273,7 @@ export function WorkspaceDemo() {
         </div>
       </div>
 
-      <div className="panel half">
+      <div className="panel half workspace-section workspace-section-learn workspace-section-replay">
         <h3>会话记录</h3>
         <div className="card-list">
           {messages.length === 0 ? (
@@ -2701,7 +2751,7 @@ export function WorkspaceDemo() {
         ) : null}
       </div>
 
-      <div className="panel wide">
+      <div className="panel wide workspace-section workspace-section-learn workspace-section-replay">
         <h3>证据与策略状态</h3>
         <div className="card-list">
           <div className="card-item">

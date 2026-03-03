@@ -478,6 +478,132 @@ html[data-theme="aurora"] .panel {
   padding: 7px 12px;
 }
 
+.workspace-view-switcher,
+.dashboard-view-switcher,
+.settings-view-switcher {
+  grid-column: span 12;
+  display: grid;
+  gap: 10px;
+}
+
+.workspace-view-switcher header,
+.dashboard-view-switcher header,
+.settings-view-switcher header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.workspace-view-switcher header span,
+.dashboard-view-switcher header span,
+.settings-view-switcher header span {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.workspace-view-switcher-row,
+.dashboard-view-switcher-row,
+.settings-view-switcher-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.workspace-view-switcher-row button,
+.dashboard-view-switcher-row button,
+.settings-view-switcher-row button {
+  border: 1px solid rgba(97, 132, 178, 0.36);
+  border-radius: 12px;
+  background: rgba(10, 16, 27, 0.56);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px;
+  text-align: left;
+  display: grid;
+  gap: 3px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.workspace-view-switcher-row button:hover,
+.dashboard-view-switcher-row button:hover,
+.settings-view-switcher-row button:hover {
+  border-color: rgba(97, 199, 255, 0.52);
+  color: #dbf3ff;
+}
+
+.workspace-view-switcher-row button em,
+.dashboard-view-switcher-row button em,
+.settings-view-switcher-row button em {
+  font-style: normal;
+  font-size: 11px;
+  color: #9ec5e6;
+  font-weight: 500;
+}
+
+.workspace-view-switcher-row button.active,
+.dashboard-view-switcher-row button.active,
+.settings-view-switcher-row button.active {
+  border-color: rgba(159, 255, 210, 0.56);
+  background:
+    radial-gradient(circle at 10% 30%, rgba(97, 199, 255, 0.16), transparent 55%),
+    rgba(97, 199, 255, 0.12);
+  color: #defcf0;
+}
+
+.workspace-view-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.workspace-layout[data-view="learn"] .workspace-section-sessions,
+.workspace-layout[data-view="replay"] .workspace-section-sessions {
+  display: none;
+}
+
+.workspace-layout[data-view="sessions"] .workspace-section-learn,
+.workspace-layout[data-view="sessions"] .workspace-section-replay {
+  display: none;
+}
+
+.dashboard-layout[data-view="decision"] .dashboard-section-bridge,
+.dashboard-layout[data-view="decision"] .dashboard-section-events {
+  display: none;
+}
+
+.dashboard-layout[data-view="bridge"] .dashboard-section-decision,
+.dashboard-layout[data-view="bridge"] .dashboard-section-events {
+  display: none;
+}
+
+.dashboard-layout[data-view="events"] .dashboard-section-decision,
+.dashboard-layout[data-view="events"] .dashboard-section-bridge {
+  display: none;
+}
+
+.settings-layout[data-view="basic"] .settings-section-advanced,
+.settings-layout[data-view="basic"] .settings-section-import {
+  display: none;
+}
+
+.settings-layout[data-view="advanced"] .settings-section-basic,
+.settings-layout[data-view="advanced"] .settings-section-import {
+  display: none;
+}
+
+.settings-layout[data-view="import"] .settings-section-basic,
+.settings-layout[data-view="import"] .settings-section-advanced {
+  display: none;
+}
+
+.settings-section-import {
+  grid-column: span 12;
+}
+
 html[data-theme="aurora"] .page-head-unified {
   border-color: rgba(118, 154, 216, 0.4);
   background:
@@ -496,6 +622,28 @@ html[data-theme="aurora"] .panel-link-btn {
   border-color: rgba(118, 154, 216, 0.46);
   background: rgba(255, 255, 255, 0.88);
   color: #4f719f;
+}
+
+html[data-theme="aurora"] .workspace-view-switcher-row button,
+html[data-theme="aurora"] .dashboard-view-switcher-row button,
+html[data-theme="aurora"] .settings-view-switcher-row button {
+  border-color: rgba(118, 154, 216, 0.46);
+  background: rgba(255, 255, 255, 0.84);
+  color: #4f719f;
+}
+
+html[data-theme="aurora"] .workspace-view-switcher-row button em,
+html[data-theme="aurora"] .dashboard-view-switcher-row button em,
+html[data-theme="aurora"] .settings-view-switcher-row button em {
+  color: #678bb6;
+}
+
+html[data-theme="aurora"] .workspace-view-switcher-row button.active,
+html[data-theme="aurora"] .dashboard-view-switcher-row button.active,
+html[data-theme="aurora"] .settings-view-switcher-row button.active {
+  border-color: rgba(64, 174, 138, 0.46);
+  background: rgba(103, 210, 174, 0.22);
+  color: #245c4a;
 }
 
 html[data-theme="aurora"] .page-head-cta a:first-child {
@@ -8896,6 +9044,12 @@ html[data-theme="aurora"] .stream-guidance {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .workspace-view-switcher-row,
+  .dashboard-view-switcher-row,
+  .settings-view-switcher-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .galaxy-spotlight {
     flex-direction: column;
     align-items: flex-start;
@@ -8961,6 +9115,12 @@ html[data-theme="aurora"] .stream-guidance {
   .trend-alert-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .workspace-view-switcher-row,
+  .dashboard-view-switcher-row,
+  .settings-view-switcher-row {
+    grid-template-columns: 1fr;
   }
 
   .graph-canvas-head {

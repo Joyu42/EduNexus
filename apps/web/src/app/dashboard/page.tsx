@@ -42,6 +42,7 @@ type AlertConfigPreset = "intervene" | "balanced" | "quiet" | "custom";
 type ActivitySourceFilter = "all" | "path_feedback" | "workspace";
 type ActivitySortMode = "latest" | "risk_desc" | "risk_asc";
 type ActivityRiskTone = "low" | "medium" | "high";
+type DashboardViewMode = "decision" | "bridge" | "events";
 
 type GraphViewPayload = {
   nodes: GraphViewNode[];
@@ -570,6 +571,8 @@ function buildBridgeFocusBatchFromRows(rows: DashboardBridgeRiskRow[]) {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [dashboardViewMode, setDashboardViewMode] =
+    useState<DashboardViewMode>("decision");
   const [period, setPeriod] = useState<PeriodKey>("7d");
   const [linkedHoverIndex, setLinkedHoverIndex] = useState<number | null>(null);
   const [lockedHoverIndex, setLockedHoverIndex] = useState<number | null>(null);
@@ -1571,7 +1574,7 @@ export default function DashboardPage() {
         tags={["趋势分析", "风险分级", "事件闭环", "跨页联动"]}
       />
 
-      <div className="panel-grid">
+      <div className="panel-grid dashboard-layout" data-view={dashboardViewMode}>
         <GalaxyHero
           badge="Ecosystem Metrics · Live Snapshot"
           title="用指标追踪“学会了多少”，而不只是“做了多少题”"
@@ -1588,6 +1591,39 @@ export default function DashboardPage() {
             { label: "联动深度", value: "图谱 / 路径 / 工作区", hint: "闭环追踪" }
           ]}
         />
+
+        <article className="panel wide dashboard-view-switcher">
+          <header>
+            <strong>看板视图</strong>
+            <span>按工作目标切换页面密度</span>
+          </header>
+          <div className="dashboard-view-switcher-row">
+            <button
+              type="button"
+              className={dashboardViewMode === "decision" ? "active" : ""}
+              onClick={() => setDashboardViewMode("decision")}
+            >
+              关键决策
+              <em>高风险 {alertSummary.highCount} 项</em>
+            </button>
+            <button
+              type="button"
+              className={dashboardViewMode === "bridge" ? "active" : ""}
+              onClick={() => setDashboardViewMode("bridge")}
+            >
+              关系链干预
+              <em>{filteredBridgeRiskRows.length} 条关系链</em>
+            </button>
+            <button
+              type="button"
+              className={dashboardViewMode === "events" ? "active" : ""}
+              onClick={() => setDashboardViewMode("events")}
+            >
+              闭环事件
+              <em>{graphActivitySummary.displayedCount} 条事件</em>
+            </button>
+          </div>
+        </article>
 
         <article className="panel kpi">
           <h3>学习增益</h3>
@@ -1610,7 +1646,7 @@ export default function DashboardPage() {
           <p>知识类回答附来源引用的覆盖比例。</p>
         </article>
 
-        <article className="panel wide">
+        <article className="panel wide dashboard-section dashboard-section-decision">
           <h3>趋势分析（可切换周期）</h3>
           <div className="period-switch">
             {PERIOD_OPTIONS.map((item) => (
@@ -2087,7 +2123,7 @@ export default function DashboardPage() {
           </div>
         </article>
 
-        <article className="panel half">
+        <article className="panel half dashboard-section dashboard-section-decision">
           <h3>风险提示</h3>
           <div className="card-list">
             <div className="card-item">
@@ -2101,7 +2137,7 @@ export default function DashboardPage() {
           </div>
         </article>
 
-        <article className="panel half">
+        <article className="panel half dashboard-section dashboard-section-bridge">
           <h3>关系链风险榜</h3>
           <div className="dashboard-bridge-list">
             <div className="dashboard-bridge-filter">
@@ -2337,7 +2373,7 @@ export default function DashboardPage() {
           </div>
         </article>
 
-        <article className="panel half">
+        <article className="panel half dashboard-section dashboard-section-decision">
           <h3>系统状态</h3>
           <ul>
             <li>ModelScope API：正常</li>
@@ -2347,7 +2383,7 @@ export default function DashboardPage() {
           </ul>
         </article>
 
-        <article className="panel half">
+        <article className="panel half dashboard-section dashboard-section-events">
           <h3>生态闭环事件</h3>
           <div className="card-list">
             <div className="card-item">
@@ -2492,7 +2528,7 @@ export default function DashboardPage() {
           </div>
         </article>
 
-        <article className="panel half">
+        <article className="panel half dashboard-section dashboard-section-decision">
           <h3>关键比例环图</h3>
           <div className="ring-grid">
             {currentMetrics.rings.map((item) => (
@@ -2506,7 +2542,7 @@ export default function DashboardPage() {
           </div>
         </article>
 
-        <article className="panel wide">
+        <article className="panel wide dashboard-section dashboard-section-decision">
           <h3>运营动作建议</h3>
           <div className="spotlight-list">
             <div className="galaxy-spotlight">
