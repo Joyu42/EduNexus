@@ -115,6 +115,14 @@ type SaveNoteResponse = {
   path: string;
 };
 
+type WorkspaceSessionSummary = {
+  id: string;
+  title: string;
+  updatedAt: string;
+};
+
+type HoverSaveMode = "create_new" | "append_existing";
+
 function resolveRiskTone(risk: number) {
   if (risk >= 0.65) {
     return "high";
@@ -281,6 +289,12 @@ export function GraphDemo() {
   const [graphLensMode, setGraphLensMode] = useState<GraphLensMode>("full");
   const [bridgeLensCrossDomainOnly, setBridgeLensCrossDomainOnly] = useState(false);
   const [savingHoverSuggestion, setSavingHoverSuggestion] = useState(false);
+  const [hoverSaveMode, setHoverSaveMode] = useState<HoverSaveMode>("create_new");
+  const [hoverTargetSessionId, setHoverTargetSessionId] = useState("");
+  const [hoverWorkspaceSessions, setHoverWorkspaceSessions] = useState<
+    WorkspaceSessionSummary[]
+  >([]);
+  const [loadingHoverSessions, setLoadingHoverSessions] = useState(false);
   const [pathPushHint, setPathPushHint] = useState("");
 
   const loadGraph = useCallback(async () => {
@@ -1014,6 +1028,46 @@ export function GraphDemo() {
     setPathPushHint("当前没有满足镜头条件的关系链，已回退到全局图。");
   }, [bridgeLensSuggestionPool.length, graphLensMode]);
 
+  const loadWorkspaceSessionsForHover = useCallback(async () => {
+    setLoadingHoverSessions(true);
+    try {
+      const payload = await requestJson<{ sessions: WorkspaceSessionSummary[] }>(
+        "/api/workspace/sessions"
+      );
+      const sessions = Array.isArray(payload.sessions) ? payload.sessions : [];
+      setHoverWorkspaceSessions(sessions);
+    } catch (err) {
+      setError(formatErrorMessage(err, "加载工作区会话失败。"));
+      setHoverWorkspaceSessions([]);
+    } finally {
+      setLoadingHoverSessions(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hoverSaveMode !== "append_existing") {
+      return;
+    }
+    if (hoverWorkspaceSessions.length > 0) {
+      return;
+    }
+    void loadWorkspaceSessionsForHover();
+  }, [hoverSaveMode, hoverWorkspaceSessions.length, loadWorkspaceSessionsForHover]);
+
+  useEffect(() => {
+    if (hoverSaveMode !== "append_existing") {
+      return;
+    }
+    if (hoverWorkspaceSessions.length === 0) {
+      setHoverTargetSessionId("");
+      return;
+    }
+    const exists = hoverWorkspaceSessions.some((item) => item.id === hoverTargetSessionId);
+    if (!exists) {
+      setHoverTargetSessionId(hoverWorkspaceSessions[0]?.id ?? "");
+    }
+  }, [hoverSaveMode, hoverTargetSessionId, hoverWorkspaceSessions]);
+
   const pushNodeToPath = useCallback((node: GraphNodePlacement) => {
     writePathFocusToStorage(
       {
@@ -1076,18 +1130,27 @@ export function GraphDemo() {
       try {
         const relatedLabels = resolveRelatedNodeLabelsForFocus(node.id, 6);
         const tips = buildNodeInterventionTips(node);
-        const sessionPayload = await requestJson<CreateWorkspaceSessionResponse>(
-          "/api/workspace/session",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              title: `图谱干预-${node.label}`,
-              initialGoal: `降低「${node.label}」的迁移风险`
-            })
+        let sessionId = "";
+        if (hoverSaveMode === "append_existing") {
+          sessionId = hoverTargetSessionId.trim();
+          if (!sessionId) {
+            setError("请选择一个已有工作区会话用于追加沉淀。");
+            return;
           }
-        );
-        const sessionId = sessionPayload.session.id;
+        } else {
+          const sessionPayload = await requestJson<CreateWorkspaceSessionResponse>(
+            "/api/workspace/session",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                title: `图谱干预-${node.label}`,
+                initialGoal: `降低「${node.label}」的迁移风险`
+              })
+            }
+          );
+          sessionId = sessionPayload.session.id;
+        }
         const markdown = buildNodeInterventionMarkdown({
           node,
           relatedLabels,
@@ -1105,7 +1168,9 @@ export function GraphDemo() {
           })
         });
         setPathPushHint(
-          `已沉淀节点干预建议：${saved.noteId}（session: ${sessionId}，节点：${node.label}）`
+          `${hoverSaveMode === "append_existing" ? "已追加会话沉淀" : "已沉淀节点干预建议"}：${
+            saved.noteId
+          }（session: ${sessionId}，节点：${node.label}）`
         );
       } catch (err) {
         setError(formatErrorMessage(err, "写入节点干预建议失败。"));
@@ -1113,7 +1178,7 @@ export function GraphDemo() {
         setSavingHoverSuggestion(false);
       }
     },
-    [resolveRelatedNodeLabelsForFocus]
+    [hoverSaveMode, hoverTargetSessionId, resolveRelatedNodeLabelsForFocus]
   );
 
   const handleFocusBridge = useCallback((bridge: RiskBridgeSuggestion) => {
@@ -1504,6 +1569,49 @@ export function GraphDemo() {
                       {hoveredNodeTips.map((tip, index) => (
                         <span key={`hover_tip_${hoveredNode.id}_${index}`}>{tip}</span>
                       ))}
+                    </div>
+                    <div className="graph-hover-save-mode">
+                      <label>
+                        沉淀方式
+                        <select
+                          value={hoverSaveMode}
+                          onChange={(event) =>
+                            setHoverSaveMode(event.target.value as HoverSaveMode)
+                          }
+                        >
+                          <option value="create_new">新建会话并沉淀</option>
+                          <option value="append_existing">追加到已有会话</option>
+                        </select>
+                      </label>
+                      {hoverSaveMode === "append_existing" ? (
+                        <label>
+                          目标会话
+                          <select
+                            value={hoverTargetSessionId}
+                            onChange={(event) => setHoverTargetSessionId(event.target.value)}
+                            disabled={loadingHoverSessions || hoverWorkspaceSessions.length === 0}
+                          >
+                            {hoverWorkspaceSessions.length === 0 ? (
+                              <option value="">暂无可用会话</option>
+                            ) : null}
+                            {hoverWorkspaceSessions.map((session) => (
+                              <option key={`graph_hover_session_${session.id}`} value={session.id}>
+                                {session.title}（{session.id}）
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      ) : null}
+                      {hoverSaveMode === "append_existing" ? (
+                        <button
+                          type="button"
+                          className="graph-hover-refresh"
+                          onClick={() => void loadWorkspaceSessionsForHover()}
+                          disabled={loadingHoverSessions}
+                        >
+                          {loadingHoverSessions ? "刷新中..." : "刷新会话列表"}
+                        </button>
+                      ) : null}
                     </div>
                     <div className="graph-hover-actions">
                       <button type="button" onClick={() => setActiveNodeId(hoveredNode.id)}>

@@ -5216,6 +5216,49 @@ html[data-theme="aurora"] .config-diff-values em {
   background: rgba(10, 16, 27, 0.58);
 }
 
+.graph-hover-save-mode {
+  display: grid;
+  gap: 6px;
+  border: 1px solid rgba(97, 132, 178, 0.3);
+  border-radius: 9px;
+  padding: 7px;
+  background: rgba(10, 16, 27, 0.5);
+}
+
+.graph-hover-save-mode label {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: #9fc7ee;
+}
+
+.graph-hover-save-mode select {
+  border: 1px solid rgba(97, 132, 178, 0.42);
+  border-radius: 8px;
+  background: rgba(8, 13, 22, 0.76);
+  color: #d8efff;
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.graph-hover-refresh {
+  justify-self: start;
+  border: 1px solid rgba(97, 132, 178, 0.42);
+  border-radius: 8px;
+  background: rgba(10, 16, 27, 0.62);
+  color: #d8efff;
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.graph-hover-refresh:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .graph-hover-actions {
   display: flex;
   flex-wrap: wrap;
@@ -6431,6 +6474,22 @@ html[data-theme="aurora"] .graph-hover-card p {
 
 html[data-theme="aurora"] .graph-hover-tips span {
   border-color: rgba(118, 154, 216, 0.4);
+  background: rgba(255, 255, 255, 0.9);
+  color: #4f719f;
+}
+
+html[data-theme="aurora"] .graph-hover-save-mode {
+  border-color: rgba(118, 154, 216, 0.4);
+  background: rgba(255, 255, 255, 0.86);
+}
+
+html[data-theme="aurora"] .graph-hover-save-mode label {
+  color: #5c7fad;
+}
+
+html[data-theme="aurora"] .graph-hover-save-mode select,
+html[data-theme="aurora"] .graph-hover-refresh {
+  border-color: rgba(118, 154, 216, 0.46);
   background: rgba(255, 255, 255, 0.9);
   color: #4f719f;
 }
