@@ -1475,7 +1475,7 @@ export function WorkspaceDemo() {
           sessionId,
           title: sessionTitle || "工作区会话沉淀",
           content,
-          tags: ["workspace", "socratic", "一期"],
+          tags: ["workspace", "socratic", "core"],
           links: citations.map((item) => item.sourceId)
         })
       });

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GalaxyHero } from "@/components/galaxy-ui";
+import { PageHeader } from "@/components/page-header";
 import { ImportAuditLogPanel } from "@/components/settings/import-audit-log-panel";
 import { ImportExecutionConfirmModal } from "@/components/settings/import-execution-confirm-modal";
 import { JsonImportPanel } from "@/components/settings/json-import-panel";
@@ -760,29 +761,28 @@ export default function SettingsPage() {
   if (!hasMounted) {
     return (
       <section>
-        <header className="page-head">
-          <h2>统一配置中心</h2>
-          <p>正在读取本地配置...</p>
-        </header>
+        <PageHeader
+          title="统一配置中心"
+          description="正在加载配置数据..."
+          tags={["Dashboard", "Workspace", "KB", "策略画像"]}
+        />
       </section>
     );
   }
 
   return (
     <section>
-      <header className="page-head">
-        <h2>统一配置中心</h2>
-        <p>
-          在一个页面统一管理 Dashboard / Workspace / KB 的策略参数。支持模板切换、JSON
-          导入导出与默认值恢复。
-        </p>
-      </header>
+      <PageHeader
+        title="统一配置中心"
+        description="在一个页面管理 Dashboard、Workspace、KB 的策略参数与画像版本。"
+        tags={["模板切换", "JSON 导入导出", "历史回滚", "参数广播"]}
+      />
 
       <div className="panel-grid">
         <GalaxyHero
           badge="Config Center · Local Persistence"
           title="一处配置，三处联动"
-          description="配置会写入 localStorage，适合本地调参与演示环境。支持 schema v1 -> v3 自动迁移，并可导出 JSON 快照。"
+          description="配置写入本地并实时广播到各子系统，支持 schema 迁移、画像管理和配置快照。"
           quote="“把策略参数从代码里拿出来，放进可视化配置中心。”"
           chips={["Dashboard 预警策略", "Workspace 回放策略", "KB 章节策略", "JSON 配置快照"]}
           metrics={[

@@ -69,7 +69,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="brand-mark" />
           <div>
             <h1>EduNexus</h1>
-            <p>思维编织成网</p>
+            <p>学习闭环中枢</p>
           </div>
         </div>
 
@@ -94,11 +94,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         ))}
 
         <div className="nav-progress">
-          <strong>一期能力完成度</strong>
-          <div className="progress-track">
-            <span style={{ width: "78%" }} />
-          </div>
-          <p>LangGraph · KB-Lite · Teacher · CI</p>
+          <strong>当前系统状态</strong>
+          <ul className="nav-status-list">
+            <li>引导引擎：在线</li>
+            <li>知识库索引：可用</li>
+            <li>图谱联动：可用</li>
+          </ul>
         </div>
 
         <div className="theme-switch">
@@ -116,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <div className="nav-foot">
           <p>Web-only · LangGraph · ModelScope</p>
-          <p>一期开发中 · 视觉升级版</p>
+          <p>统一学习、图谱、路径与教学协同</p>
         </div>
       </aside>
 

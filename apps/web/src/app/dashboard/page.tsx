@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { requestJson } from "@/lib/client/api";
 import { GalaxyHero } from "@/components/galaxy-ui";
+import { PageHeader } from "@/components/page-header";
 import { RatioRing, TrendSparkCard } from "@/components/dashboard-mini-charts";
 import {
   GRAPH_ACTIVITY_STORAGE_KEY,
@@ -1564,13 +1565,11 @@ export default function DashboardPage() {
 
   return (
     <section>
-      <header className="page-head">
-        <h2>生态看板（一期轻量版）</h2>
-        <p>
-          本页面用于展示一期核心指标：学习增益、独立完成率、提示依赖率、citation 覆盖率。当前先采用 mock +
-          规则统计，后续接入真实埋点流。
-        </p>
-      </header>
+      <PageHeader
+        title="生态看板"
+        description="统一观察学习效果、提示依赖与风险干预，支持从指标直接联动图谱、路径和工作区。"
+        tags={["趋势分析", "风险分级", "事件闭环", "跨页联动"]}
+      />
 
       <div className="panel-grid">
         <GalaxyHero
@@ -1583,10 +1582,10 @@ export default function DashboardPage() {
             {
               label: "数据口径",
               value: period === "7d" ? "7 日滚动" : period === "14d" ? "14 日滚动" : "30 日滚动",
-              hint: "一期 mock + 规则统计"
+              hint: "统一口径对比"
             },
             { label: "风险追踪", value: "班级 / 节点", hint: "可定位可干预" },
-            { label: "后续计划", value: "事件埋点化", hint: "接入真实行为流" }
+            { label: "联动深度", value: "图谱 / 路径 / 工作区", hint: "闭环追踪" }
           ]}
         />
 
