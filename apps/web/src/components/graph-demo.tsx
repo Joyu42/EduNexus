@@ -520,6 +520,25 @@ export function GraphDemo() {
         .slice(0, 8),
     [connectedNodeIds, placements]
   );
+  const resolveRelatedNodeLabelsForFocus = useCallback(
+    (nodeId: string, limit = 5) => {
+      const connectedIds = new Set<string>();
+      for (const edge of filteredEdges) {
+        if (edge.source === nodeId) {
+          connectedIds.add(edge.target);
+        }
+        if (edge.target === nodeId) {
+          connectedIds.add(edge.source);
+        }
+      }
+      return placements
+        .filter((item) => connectedIds.has(item.id))
+        .sort((a, b) => b.degree - a.degree || b.risk - a.risk)
+        .slice(0, Math.max(1, limit))
+        .map((item) => item.label);
+    },
+    [filteredEdges, placements]
+  );
 
   const highRiskNodes = useMemo(
     () =>
@@ -952,18 +971,15 @@ export function GraphDemo() {
     setPathPushHint("当前没有满足镜头条件的关系链，已回退到全局图。");
   }, [bridgeLensSuggestionPool.length, graphLensMode]);
 
-  const handlePushActiveNodeToPath = useCallback(() => {
-    if (!activeNode) {
-      return;
-    }
+  const pushNodeToPath = useCallback((node: GraphNodePlacement) => {
     writePathFocusToStorage(
       {
-        nodeId: activeNode.id,
-        nodeLabel: activeNode.label,
-        domain: activeNode.domain,
-        mastery: activeNode.mastery,
-        risk: activeNode.risk,
-        relatedNodes: relatedNodes.slice(0, 5).map((node) => node.label),
+        nodeId: node.id,
+        nodeLabel: node.label,
+        domain: node.domain,
+        mastery: node.mastery,
+        risk: node.risk,
+        relatedNodes: resolveRelatedNodeLabelsForFocus(node.id, 5),
         at: new Date().toISOString(),
         focusSource: "graph"
       },
@@ -971,33 +987,44 @@ export function GraphDemo() {
     );
     const params = new URLSearchParams({
       from: "graph",
-      focusNode: activeNode.id,
-      focusLabel: activeNode.label
+      focusNode: node.id,
+      focusLabel: node.label
     });
     router.push(`/path?${params.toString()}`);
-    setPathPushHint(`已将焦点节点「${activeNode.label}」推送到路径页。`);
-  }, [activeNode, relatedNodes, router]);
+    setPathPushHint(`已将焦点节点「${node.label}」推送到路径页。`);
+  }, [resolveRelatedNodeLabelsForFocus, router]);
 
-  const handlePushActiveNodeToWorkspace = useCallback(() => {
-    if (!activeNode) {
-      return;
-    }
+  const pushNodeToWorkspace = useCallback((node: GraphNodePlacement) => {
     writeWorkspaceFocusToStorage(
       {
-        nodeId: activeNode.id,
-        nodeLabel: activeNode.label,
-        domain: activeNode.domain,
-        mastery: activeNode.mastery,
-        risk: activeNode.risk,
-        relatedNodes: relatedNodes.slice(0, 5).map((node) => node.label),
+        nodeId: node.id,
+        nodeLabel: node.label,
+        domain: node.domain,
+        mastery: node.mastery,
+        risk: node.risk,
+        relatedNodes: resolveRelatedNodeLabelsForFocus(node.id, 5),
         at: new Date().toISOString(),
         focusSource: "graph"
       },
       (key, value) => window.localStorage.setItem(key, value)
     );
     router.push("/workspace");
-    setPathPushHint(`已将焦点节点「${activeNode.label}」推送到工作区。`);
-  }, [activeNode, relatedNodes, router]);
+    setPathPushHint(`已将焦点节点「${node.label}」推送到工作区。`);
+  }, [resolveRelatedNodeLabelsForFocus, router]);
+
+  const handlePushActiveNodeToPath = useCallback(() => {
+    if (!activeNode) {
+      return;
+    }
+    pushNodeToPath(activeNode);
+  }, [activeNode, pushNodeToPath]);
+
+  const handlePushActiveNodeToWorkspace = useCallback(() => {
+    if (!activeNode) {
+      return;
+    }
+    pushNodeToWorkspace(activeNode);
+  }, [activeNode, pushNodeToWorkspace]);
 
   const handleFocusBridge = useCallback((bridge: RiskBridgeSuggestion) => {
     setSelectedBridgeId(bridge.id);
@@ -1043,7 +1070,7 @@ export function GraphDemo() {
           risk: bridge.primary.risk,
           relatedNodes: [
             bridge.secondary.label,
-            ...relatedNodes.map((item) => item.label)
+            ...resolveRelatedNodeLabelsForFocus(bridge.primary.id, 5)
           ].slice(0, 5),
           at: new Date().toISOString(),
           focusSource: "graph_bridge",
@@ -1068,7 +1095,7 @@ export function GraphDemo() {
         )}）。`
       );
     },
-    [relatedNodes, router]
+    [resolveRelatedNodeLabelsForFocus, router]
   );
 
   const handlePushBridgeToWorkspace = useCallback(
@@ -1083,7 +1110,7 @@ export function GraphDemo() {
           risk: bridge.primary.risk,
           relatedNodes: [
             bridge.secondary.label,
-            ...relatedNodes.map((item) => item.label)
+            ...resolveRelatedNodeLabelsForFocus(bridge.primary.id, 5)
           ].slice(0, 5),
           at: new Date().toISOString(),
           focusSource: "graph_bridge",
@@ -1100,7 +1127,7 @@ export function GraphDemo() {
         `已推送关系链建议到工作区：${bridge.primary.label} ↔ ${bridge.secondary.label}。`
       );
     },
-    [relatedNodes, router]
+    [resolveRelatedNodeLabelsForFocus, router]
   );
 
   const handleFocusGraphActivity = useCallback(
@@ -1259,9 +1286,22 @@ export function GraphDemo() {
                       activeNode &&
                       (activeNode.id === source.id || activeNode.id === target.id);
                     const bridgeHighlighted = selectedBridgeId === edgeKey;
+                    const bridgeCoreEdge =
+                      graphLensMode === "bridge_focus" && selectedBridgeSuggestion
+                        ? edgeKey === selectedBridgeSuggestion.id ||
+                          edge.source === selectedBridgeSuggestion.source.id ||
+                          edge.source === selectedBridgeSuggestion.target.id ||
+                          edge.target === selectedBridgeSuggestion.source.id ||
+                          edge.target === selectedBridgeSuggestion.target.id
+                        : false;
+                    const bridgeContextEdge =
+                      graphLensMode === "bridge_focus" && !bridgeCoreEdge;
                     const heatOpacity = enableEdgeHeatmap
                       ? Number((0.15 + midRisk * 0.85).toFixed(2))
                       : undefined;
+                    const resolvedOpacity = bridgeContextEdge
+                      ? Number((((heatOpacity ?? 0.46) * 0.58)).toFixed(2))
+                      : heatOpacity;
                     return (
                       <line
                         key={`${edge.source}_${edge.target}_${index}`}
@@ -1269,17 +1309,29 @@ export function GraphDemo() {
                         y1={source.y}
                         x2={target.x}
                         y2={target.y}
-                        className={`graph-edge graph-edge-${tone}${highlighted ? " highlighted" : ""}${bridgeHighlighted ? " bridge-highlighted" : ""}${enableEdgeHeatmap ? " heatmap" : ""}`}
+                        className={`graph-edge graph-edge-${tone}${highlighted ? " highlighted" : ""}${bridgeHighlighted ? " bridge-highlighted" : ""}${bridgeCoreEdge ? " bridge-path-core" : ""}${bridgeContextEdge ? " bridge-path-context" : ""}${enableEdgeHeatmap ? " heatmap" : ""}`}
                         strokeWidth={
                           bridgeHighlighted
                             ? 3.1
+                            : bridgeCoreEdge
+                              ? enableEdgeHeatmap
+                                ? 2 + midRisk * 2.2
+                                : 2.8
+                              : bridgeContextEdge
+                                ? enableEdgeHeatmap
+                                  ? 0.9 + midRisk * 1.2
+                                  : 1.05
                             : enableEdgeHeatmap
                               ? 1.2 + midRisk * 2.6
                             : highlighted
                               ? 2.4
                               : 1.2 + Math.min(1.8, edge.weight ?? 1)
                         }
-                        style={enableEdgeHeatmap ? { opacity: heatOpacity } : undefined}
+                        style={
+                          enableEdgeHeatmap || bridgeContextEdge
+                            ? { opacity: resolvedOpacity ?? 0.42 }
+                            : undefined
+                        }
                       />
                     );
                   })}
@@ -1287,10 +1339,15 @@ export function GraphDemo() {
                     const tone = resolveRiskTone(node.risk);
                     const selected = activeNode?.id === node.id;
                     const related = connectedNodeIds.has(node.id);
+                    const bridgeCoreNode =
+                      graphLensMode === "bridge_focus" &&
+                      selectedBridgeSuggestion &&
+                      (node.id === selectedBridgeSuggestion.source.id ||
+                        node.id === selectedBridgeSuggestion.target.id);
                     return (
                       <g
                         key={node.id}
-                        className={`graph-node graph-node-${tone}${selected ? " selected" : ""}${related ? " related" : ""}`}
+                        className={`graph-node graph-node-${tone}${selected ? " selected" : ""}${related ? " related" : ""}${bridgeCoreNode ? " bridge-core" : ""}`}
                         onClick={() => setActiveNodeId(node.id)}
                         onMouseEnter={() => setHoveredNodeId(node.id)}
                         onMouseLeave={() =>
@@ -1336,6 +1393,9 @@ export function GraphDemo() {
                       关系链聚焦镜头{bridgeLensCrossDomainOnly ? " · 跨域优先" : ""}
                     </span>
                   ) : null}
+                  {graphLensMode === "bridge_focus" ? (
+                    <span className="graph-legend-item medium">核心路径高亮</span>
+                  ) : null}
                 </div>
                 {hoveredNode ? (
                   <div className="graph-hover-card">
@@ -1354,6 +1414,17 @@ export function GraphDemo() {
                       {hoveredNodeTips.map((tip, index) => (
                         <span key={`hover_tip_${hoveredNode.id}_${index}`}>{tip}</span>
                       ))}
+                    </div>
+                    <div className="graph-hover-actions">
+                      <button type="button" onClick={() => setActiveNodeId(hoveredNode.id)}>
+                        设为当前焦点
+                      </button>
+                      <button type="button" onClick={() => pushNodeToPath(hoveredNode)}>
+                        推送到路径
+                      </button>
+                      <button type="button" onClick={() => pushNodeToWorkspace(hoveredNode)}>
+                        推送到工作区
+                      </button>
                     </div>
                   </div>
                 ) : null}

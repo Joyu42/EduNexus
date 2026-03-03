@@ -5064,6 +5064,15 @@ html[data-theme="aurora"] .config-diff-values em {
   filter: drop-shadow(0 0 4px rgba(255, 183, 122, 0.45));
 }
 
+.graph-edge.bridge-path-core {
+  stroke: rgba(255, 183, 122, 0.9);
+  opacity: 0.95;
+}
+
+.graph-edge.bridge-path-context {
+  opacity: 0.3;
+}
+
 .graph-node {
   cursor: pointer;
 }
@@ -5111,6 +5120,15 @@ html[data-theme="aurora"] .config-diff-values em {
 
 .graph-node.related .graph-node-halo {
   fill: rgba(159, 255, 210, 0.12);
+}
+
+.graph-node.bridge-core .graph-node-halo {
+  fill: rgba(255, 183, 122, 0.2);
+}
+
+.graph-node.bridge-core .graph-node-core {
+  stroke: rgba(255, 210, 156, 0.98);
+  stroke-width: 2.1px;
 }
 
 .graph-legend-row {
@@ -5196,6 +5214,29 @@ html[data-theme="aurora"] .config-diff-values em {
   font-size: 11px;
   color: #cfe6ff;
   background: rgba(10, 16, 27, 0.58);
+}
+
+.graph-hover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.graph-hover-actions button {
+  border: 1px solid rgba(97, 132, 178, 0.4);
+  border-radius: 8px;
+  background: rgba(10, 16, 27, 0.6);
+  color: #d8efff;
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.graph-hover-actions button:nth-child(2),
+.graph-hover-actions button:nth-child(3) {
+  border-color: rgba(97, 199, 255, 0.48);
+  background: rgba(97, 199, 255, 0.14);
 }
 
 .graph-insight-panel {
@@ -6321,6 +6362,10 @@ html[data-theme="aurora"] .graph-node text {
   fill: #2b527f;
 }
 
+html[data-theme="aurora"] .graph-edge.bridge-path-core {
+  stroke: rgba(236, 168, 92, 0.94);
+}
+
 html[data-theme="aurora"] .graph-legend-item,
 html[data-theme="aurora"] .graph-risk-row,
 html[data-theme="aurora"] .graph-neighbor-chip {
@@ -6353,6 +6398,10 @@ html[data-theme="aurora"] .graph-neighbor-chip em {
   color: #648ab5;
 }
 
+html[data-theme="aurora"] .graph-node.bridge-core .graph-node-core {
+  stroke: rgba(232, 168, 87, 0.9);
+}
+
 html[data-theme="aurora"] .graph-hover-card {
   border-color: rgba(118, 154, 216, 0.4);
   background:
@@ -6373,6 +6422,19 @@ html[data-theme="aurora"] .graph-hover-tips span {
   border-color: rgba(118, 154, 216, 0.4);
   background: rgba(255, 255, 255, 0.9);
   color: #4f719f;
+}
+
+html[data-theme="aurora"] .graph-hover-actions button {
+  border-color: rgba(118, 154, 216, 0.46);
+  background: rgba(255, 255, 255, 0.9);
+  color: #4f719f;
+}
+
+html[data-theme="aurora"] .graph-hover-actions button:nth-child(2),
+html[data-theme="aurora"] .graph-hover-actions button:nth-child(3) {
+  border-color: rgba(84, 155, 255, 0.52);
+  background: rgba(122, 187, 255, 0.24);
+  color: #285887;
 }
 
 html[data-theme="aurora"] .graph-risk-row.active {
