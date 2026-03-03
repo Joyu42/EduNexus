@@ -76,6 +76,21 @@ describe("kb api", () => {
       searchJson.data.candidates.some((item) => item.docId === "note_seq")
     ).toBe(true);
 
+    const searchByIdRes = await searchKb(
+      new Request("http://localhost/api/kb/search?q=note_seq")
+    );
+    expect(searchByIdRes.status).toBe(200);
+    const searchByIdJson = (await searchByIdRes.json()) as {
+      data: { candidates: Array<{ docId: string; reason: string[] }> };
+    };
+    expect(
+      searchByIdJson.data.candidates.some((item) => item.docId === "note_seq")
+    ).toBe(true);
+    const noteCandidate = searchByIdJson.data.candidates.find(
+      (item) => item.docId === "note_seq"
+    );
+    expect(noteCandidate?.reason).toContain("id_exact");
+
     const docRes = await getDoc(new Request("http://localhost"), {
       params: { id: "source_ch5" }
     });

@@ -1159,6 +1159,26 @@ export function GraphDemo() {
     [router]
   );
 
+  const openKbByNoteId = useCallback(
+    (noteId: string, nodeLabel?: string) => {
+      const normalized = noteId.trim();
+      if (!normalized) {
+        return;
+      }
+      const params = new URLSearchParams({
+        from: "graph_save",
+        noteId: normalized,
+        q: normalized,
+        auto: "1"
+      });
+      if (nodeLabel?.trim()) {
+        params.set("nodeLabel", nodeLabel.trim());
+      }
+      router.push(`/kb?${params.toString()}`);
+    },
+    [router]
+  );
+
   const handlePushActiveNodeToPath = useCallback(() => {
     if (!activeNode) {
       return;
@@ -1491,6 +1511,14 @@ export function GraphDemo() {
           >
             打开对应工作区会话
           </button>
+          <button
+            type="button"
+            onClick={() =>
+              openKbByNoteId(hoverSaveResult.noteId, hoverSaveResult.nodeLabel)
+            }
+          >
+            在知识库查看该笔记
+          </button>
         </div>
       ) : null}
 
@@ -1747,18 +1775,28 @@ export function GraphDemo() {
                         {savingHoverSuggestion ? "正在沉淀..." : "沉淀干预建议"}
                       </button>
                       {hoverSaveResult && hoverSaveResult.nodeId === hoveredNode.id ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            openWorkspaceSessionById(hoverSaveResult.sessionId, {
-                              from: "graph_save",
-                              noteId: hoverSaveResult.noteId,
-                              nodeLabel: hoverSaveResult.nodeLabel
-                            })
-                          }
-                        >
-                          打开对应会话
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openWorkspaceSessionById(hoverSaveResult.sessionId, {
+                                from: "graph_save",
+                                noteId: hoverSaveResult.noteId,
+                                nodeLabel: hoverSaveResult.nodeLabel
+                              })
+                            }
+                          >
+                            打开对应会话
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openKbByNoteId(hoverSaveResult.noteId, hoverSaveResult.nodeLabel)
+                            }
+                          >
+                            查看沉淀笔记
+                          </button>
+                        </>
                       ) : null}
                     </div>
                   </div>

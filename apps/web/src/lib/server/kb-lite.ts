@@ -111,6 +111,14 @@ function computeScore(doc: VaultDoc, query: string): { score: number; reason: st
   let score = 0;
   const reason: string[] = [];
 
+  if (doc.id.toLowerCase() === lower) {
+    score += 6;
+    reason.push("id_exact");
+  } else if (doc.id.toLowerCase().includes(lower)) {
+    score += 3.5;
+    reason.push("id_match");
+  }
+
   if (doc.title.toLowerCase().includes(lower)) {
     score += 3;
     reason.push("title_match");

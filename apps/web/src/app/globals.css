@@ -5099,7 +5099,6 @@ html[data-theme="aurora"] .config-diff-values em {
 }
 
 .graph-hover-save-result button {
-  margin-left: auto;
   border: 1px solid rgba(97, 199, 255, 0.52);
   border-radius: 8px;
   background: rgba(97, 199, 255, 0.16);
@@ -5108,6 +5107,10 @@ html[data-theme="aurora"] .config-diff-values em {
   font-size: 11px;
   padding: 4px 8px;
   cursor: pointer;
+}
+
+.graph-hover-save-result button:first-of-type {
+  margin-left: auto;
 }
 
 .graph-edge {

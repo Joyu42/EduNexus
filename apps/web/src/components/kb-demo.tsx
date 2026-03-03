@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatErrorMessage, requestJson } from "@/lib/client/api";
 
@@ -268,6 +268,7 @@ export function KbDemo() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [externalContextHint, setExternalContextHint] = useState("");
+  const externalContextAppliedRef = useRef("");
   const presetQuery = useMemo(
     () => searchParams.get("q")?.trim() ?? "",
     [searchParams]
@@ -278,6 +279,10 @@ export function KbDemo() {
   );
   const presetFrom = useMemo(
     () => searchParams.get("from")?.trim().toLowerCase() ?? "",
+    [searchParams]
+  );
+  const presetNodeLabel = useMemo(
+    () => searchParams.get("nodeLabel")?.trim() ?? "",
     [searchParams]
   );
   const presetAutoSearch = useMemo(
@@ -1037,36 +1042,11 @@ export function KbDemo() {
     }
   }
 
-  useEffect(() => {
-    const bootstrapQuery = presetQuery || presetNoteId;
-    if (!bootstrapQuery) {
-      return;
-    }
-    setQuery(bootstrapQuery);
-    setTypeFilter("");
-    setDomainFilter("");
-    setTagFilter("");
-    const sourceLabel =
-      presetFrom === "graph_save"
-        ? "图谱沉淀回看"
-        : presetFrom
-          ? presetFrom
-          : "外部上下文";
-    setExternalContextHint(`已从${sourceLabel}带入检索词：${bootstrapQuery}`);
-    if (presetAutoSearch) {
-      void search({
-        query: bootstrapQuery,
-        typeFilter: "",
-        domainFilter: "",
-        tagFilter: ""
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [presetAutoSearch, presetFrom, presetNoteId, presetQuery]);
-
-  async function loadDoc(docId: string) {
+  async function loadDoc(docId: string, options?: { silent?: boolean }) {
     setLoading(true);
-    setError("");
+    if (!options?.silent) {
+      setError("");
+    }
     try {
       const data = await requestJson<DocDetail>(`/api/kb/doc/${encodeURIComponent(docId)}`);
       setSelectedDoc(data);
@@ -1082,13 +1062,72 @@ export function KbDemo() {
       setChapterSubgraphMode(chapterPanelConfig.defaultSubgraphMode);
       setChapterTrendSpan(chapterPanelConfig.defaultTrendSpan);
       await loadGraph(docId, graphLimit);
+      return true;
     } catch (err) {
-      setError(formatErrorMessage(err, "加载文档详情失败。"));
-      console.error(err);
+      if (!options?.silent) {
+        setError(formatErrorMessage(err, "加载文档详情失败。"));
+        console.error(err);
+      }
+      return false;
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const bootstrapQuery = presetQuery || presetNoteId;
+    if (!bootstrapQuery) {
+      return;
+    }
+    const contextKey = `${presetFrom}|${presetNodeLabel}|${presetNoteId}|${presetQuery}|${
+      presetAutoSearch ? "1" : "0"
+    }`;
+    if (externalContextAppliedRef.current === contextKey) {
+      return;
+    }
+    externalContextAppliedRef.current = contextKey;
+
+    setQuery(bootstrapQuery);
+    setTypeFilter("");
+    setDomainFilter("");
+    setTagFilter("");
+    const sourceLabel =
+      presetFrom === "graph_save"
+        ? "图谱沉淀回看"
+        : presetFrom
+          ? presetFrom
+          : "外部上下文";
+    const nodeLabelHint = presetNodeLabel ? ` · 节点：${presetNodeLabel}` : "";
+    setExternalContextHint(`已从${sourceLabel}带入检索词：${bootstrapQuery}${nodeLabelHint}`);
+
+    const bootstrap = async () => {
+      if (!presetAutoSearch) {
+        return;
+      }
+      if (presetNoteId) {
+        const opened = await loadDoc(presetNoteId, { silent: true });
+        if (opened) {
+          setExternalContextHint(
+            `已从${sourceLabel}带入并自动打开笔记：${presetNoteId}${nodeLabelHint}`
+          );
+          return;
+        }
+      }
+      await search({
+        query: bootstrapQuery,
+        typeFilter: "",
+        domainFilter: "",
+        tagFilter: ""
+      });
+      if (presetNoteId) {
+        setExternalContextHint(
+          `未直接命中笔记 ${presetNoteId}，已按上下文自动检索候选${nodeLabelHint}`
+        );
+      }
+    };
+    void bootstrap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetAutoSearch, presetFrom, presetNodeLabel, presetNoteId, presetQuery]);
 
   async function rebuildIndex() {
     setLoading(true);
@@ -1155,7 +1194,37 @@ export function KbDemo() {
       <button type="button" onClick={rebuildIndex} disabled={loading}>
         重建索引摘要
       </button>
-      {externalContextHint ? <div className="result-box info">{externalContextHint}</div> : null}
+      {externalContextHint ? (
+        <div className="result-box info">
+          <strong>外部回看上下文</strong>
+          <p>{externalContextHint}</p>
+          <div className="result-box-actions">
+            {presetNoteId ? (
+              <button
+                type="button"
+                onClick={() => void loadDoc(presetNoteId)}
+                disabled={loading}
+              >
+                打开目标笔记详情
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() =>
+                void search({
+                  query: presetQuery || presetNoteId || query,
+                  typeFilter: "",
+                  domainFilter: "",
+                  tagFilter: ""
+                })
+              }
+              disabled={loading}
+            >
+              按上下文重跑检索
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div className="card-item">
         <strong>沉浸阅读模式</strong>
         <p className="muted">融合 Obsidian 双链结构与 NotebookLM 摘录卡片风格。</p>
