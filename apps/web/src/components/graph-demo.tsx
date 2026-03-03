@@ -123,6 +123,13 @@ type WorkspaceSessionSummary = {
 
 type HoverSaveMode = "create_new" | "append_existing";
 
+type HoverSaveResult = {
+  sessionId: string;
+  noteId: string;
+  nodeId: string;
+  nodeLabel: string;
+};
+
 function resolveRiskTone(risk: number) {
   if (risk >= 0.65) {
     return "high";
@@ -295,6 +302,7 @@ export function GraphDemo() {
     WorkspaceSessionSummary[]
   >([]);
   const [loadingHoverSessions, setLoadingHoverSessions] = useState(false);
+  const [hoverSaveResult, setHoverSaveResult] = useState<HoverSaveResult | null>(null);
   const [pathPushHint, setPathPushHint] = useState("");
 
   const loadGraph = useCallback(async () => {
@@ -1109,6 +1117,18 @@ export function GraphDemo() {
     setPathPushHint(`已将焦点节点「${node.label}」推送到工作区。`);
   }, [resolveRelatedNodeLabelsForFocus, router]);
 
+  const openWorkspaceSessionById = useCallback(
+    (sessionId: string) => {
+      const normalized = sessionId.trim();
+      if (!normalized) {
+        return;
+      }
+      const params = new URLSearchParams({ sessionId: normalized });
+      router.push(`/workspace?${params.toString()}`);
+    },
+    [router]
+  );
+
   const handlePushActiveNodeToPath = useCallback(() => {
     if (!activeNode) {
       return;
@@ -1172,6 +1192,12 @@ export function GraphDemo() {
             saved.noteId
           }（session: ${sessionId}，节点：${node.label}）`
         );
+        setHoverSaveResult({
+          sessionId,
+          noteId: saved.noteId,
+          nodeId: node.id,
+          nodeLabel: node.label
+        });
       } catch (err) {
         setError(formatErrorMessage(err, "写入节点干预建议失败。"));
       } finally {
@@ -1392,6 +1418,20 @@ export function GraphDemo() {
         </div>
       </div>
       {pathPushHint ? <div className="result-box success">{pathPushHint}</div> : null}
+      {hoverSaveResult ? (
+        <div className="graph-hover-save-result">
+          <strong>
+            最近沉淀：{hoverSaveResult.nodeLabel} → {hoverSaveResult.noteId}
+          </strong>
+          <span>会话：{hoverSaveResult.sessionId}</span>
+          <button
+            type="button"
+            onClick={() => openWorkspaceSessionById(hoverSaveResult.sessionId)}
+          >
+            打开对应工作区会话
+          </button>
+        </div>
+      ) : null}
 
       {payload ? (
         <div className="graph-workbench-grid">
@@ -1630,6 +1670,14 @@ export function GraphDemo() {
                       >
                         {savingHoverSuggestion ? "正在沉淀..." : "沉淀干预建议"}
                       </button>
+                      {hoverSaveResult && hoverSaveResult.nodeId === hoveredNode.id ? (
+                        <button
+                          type="button"
+                          onClick={() => openWorkspaceSessionById(hoverSaveResult.sessionId)}
+                        >
+                          打开对应会话
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}

@@ -5036,6 +5036,42 @@ html[data-theme="aurora"] .config-diff-values em {
   font-size: 13px;
 }
 
+.graph-hover-save-result {
+  margin-top: 8px;
+  border: 1px solid rgba(97, 132, 178, 0.36);
+  border-radius: 11px;
+  padding: 8px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background:
+    radial-gradient(circle at 84% 10%, rgba(159, 255, 210, 0.12), transparent 42%),
+    rgba(8, 13, 22, 0.56);
+}
+
+.graph-hover-save-result strong {
+  font-size: 12px;
+  color: #d9efff;
+}
+
+.graph-hover-save-result span {
+  font-size: 11px;
+  color: #9fc7ee;
+}
+
+.graph-hover-save-result button {
+  margin-left: auto;
+  border: 1px solid rgba(97, 199, 255, 0.52);
+  border-radius: 8px;
+  background: rgba(97, 199, 255, 0.16);
+  color: #d8efff;
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
 .graph-edge {
   fill: none;
   opacity: 0.38;
@@ -5286,6 +5322,12 @@ html[data-theme="aurora"] .config-diff-values em {
   border-color: rgba(159, 255, 210, 0.52);
   background: rgba(159, 255, 210, 0.14);
   color: #ddfff0;
+}
+
+.graph-hover-actions button:nth-child(5) {
+  border-color: rgba(255, 201, 126, 0.56);
+  background: rgba(255, 201, 126, 0.16);
+  color: #ffe0b0;
 }
 
 .graph-hover-actions button:disabled {
@@ -6416,6 +6458,27 @@ html[data-theme="aurora"] .graph-node text {
   fill: #2b527f;
 }
 
+html[data-theme="aurora"] .graph-hover-save-result {
+  border-color: rgba(118, 154, 216, 0.4);
+  background:
+    radial-gradient(circle at 84% 10%, rgba(103, 210, 174, 0.18), transparent 42%),
+    rgba(255, 255, 255, 0.84);
+}
+
+html[data-theme="aurora"] .graph-hover-save-result strong {
+  color: #2f5f93;
+}
+
+html[data-theme="aurora"] .graph-hover-save-result span {
+  color: #5c7fad;
+}
+
+html[data-theme="aurora"] .graph-hover-save-result button {
+  border-color: rgba(84, 155, 255, 0.52);
+  background: rgba(122, 187, 255, 0.24);
+  color: #285887;
+}
+
 html[data-theme="aurora"] .graph-edge.bridge-path-core {
   stroke: rgba(236, 168, 92, 0.94);
 }
@@ -6511,6 +6574,12 @@ html[data-theme="aurora"] .graph-hover-actions button:last-child {
   border-color: rgba(64, 174, 138, 0.48);
   background: rgba(103, 210, 174, 0.22);
   color: #2f6850;
+}
+
+html[data-theme="aurora"] .graph-hover-actions button:nth-child(5) {
+  border-color: rgba(232, 168, 87, 0.48);
+  background: rgba(255, 229, 185, 0.48);
+  color: #8b5b28;
 }
 
 html[data-theme="aurora"] .graph-risk-row.active {
