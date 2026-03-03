@@ -5113,6 +5113,57 @@ html[data-theme="aurora"] .config-diff-values em {
   gap: 8px;
 }
 
+.graph-view-switcher {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.graph-view-switcher button {
+  border: 1px solid rgba(97, 132, 178, 0.38);
+  border-radius: 11px;
+  background: rgba(8, 13, 22, 0.54);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 11px;
+  text-align: left;
+  display: grid;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.graph-view-switcher button em {
+  font-style: normal;
+  font-size: 11px;
+  color: #9ec5e6;
+  font-weight: 500;
+}
+
+.graph-view-switcher button.active {
+  border-color: rgba(159, 255, 210, 0.56);
+  background:
+    radial-gradient(circle at 10% 30%, rgba(97, 199, 255, 0.16), transparent 55%),
+    rgba(97, 199, 255, 0.12);
+  color: #defcf0;
+}
+
+.graph-workbench[data-view="overview"] .graph-section-bridge,
+.graph-workbench[data-view="overview"] .graph-section-history {
+  display: none;
+}
+
+.graph-workbench[data-view="bridge"] .graph-section-overview,
+.graph-workbench[data-view="bridge"] .graph-section-history {
+  display: none;
+}
+
+.graph-workbench[data-view="history"] .graph-section-overview,
+.graph-workbench[data-view="history"] .graph-section-bridge {
+  display: none;
+}
+
 .graph-control-bar > button {
   border: 1px solid rgba(97, 199, 255, 0.5);
   border-radius: 10px;
@@ -7273,6 +7324,22 @@ html[data-theme="aurora"] .graph-control-bar > button {
   color: #19406f;
 }
 
+html[data-theme="aurora"] .graph-view-switcher button {
+  border-color: rgba(118, 154, 216, 0.46);
+  background: rgba(255, 255, 255, 0.84);
+  color: #4f719f;
+}
+
+html[data-theme="aurora"] .graph-view-switcher button em {
+  color: #678bb6;
+}
+
+html[data-theme="aurora"] .graph-view-switcher button.active {
+  border-color: rgba(64, 174, 138, 0.46);
+  background: rgba(103, 210, 174, 0.22);
+  color: #245c4a;
+}
+
 html[data-theme="aurora"] .graph-control-bar > input {
   border-color: rgba(118, 154, 216, 0.5);
   background: rgba(255, 255, 255, 0.86);
@@ -9077,6 +9144,10 @@ html[data-theme="aurora"] .stream-guidance {
     grid-template-columns: 1fr;
   }
 
+  .graph-view-switcher {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .graph-workbench-grid {
     grid-template-columns: 1fr;
   }
@@ -9126,6 +9197,10 @@ html[data-theme="aurora"] .stream-guidance {
   .graph-canvas-head {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .graph-view-switcher {
+    grid-template-columns: 1fr;
   }
 
   .graph-legend-row {

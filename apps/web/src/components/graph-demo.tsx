@@ -125,6 +125,7 @@ type BridgeReplayNodeStat = {
 
 type GraphLensMode = "full" | "bridge_focus";
 type BridgeReplaySpeed = "1x" | "1.5x" | "2x";
+type GraphWorkbenchView = "overview" | "bridge" | "history";
 
 type CreateWorkspaceSessionResponse = {
   session: {
@@ -377,6 +378,8 @@ export function GraphDemo() {
   const [enableEdgeHeatmap, setEnableEdgeHeatmap] = useState(true);
   const [canvasZoomPercent, setCanvasZoomPercent] = useState(100);
   const [graphLensMode, setGraphLensMode] = useState<GraphLensMode>("full");
+  const [graphWorkbenchView, setGraphWorkbenchView] =
+    useState<GraphWorkbenchView>("overview");
   const [bridgeLensCrossDomainOnly, setBridgeLensCrossDomainOnly] = useState(false);
   const [savingHoverSuggestion, setSavingHoverSuggestion] = useState(false);
   const [hoverSaveMode, setHoverSaveMode] = useState<HoverSaveMode>("create_new");
@@ -2469,7 +2472,7 @@ export function GraphDemo() {
   );
 
   return (
-    <div className="graph-workbench">
+    <div className="graph-workbench" data-view={graphWorkbenchView}>
       <div className="graph-control-bar">
         <button type="button" onClick={loadGraph} disabled={loading}>
           {loading ? "正在同步图谱..." : "刷新图谱"}
@@ -2586,6 +2589,32 @@ export function GraphDemo() {
             重置图谱筛选
           </button>
         </div>
+      </div>
+      <div className="graph-view-switcher">
+        <button
+          type="button"
+          className={graphWorkbenchView === "overview" ? "active" : ""}
+          onClick={() => setGraphWorkbenchView("overview")}
+        >
+          图谱总览
+          <em>聚类与高风险节点</em>
+        </button>
+        <button
+          type="button"
+          className={graphWorkbenchView === "bridge" ? "active" : ""}
+          onClick={() => setGraphWorkbenchView("bridge")}
+        >
+          关系回放
+          <em>关系链建议与回放时间轴</em>
+        </button>
+        <button
+          type="button"
+          className={graphWorkbenchView === "history" ? "active" : ""}
+          onClick={() => setGraphWorkbenchView("history")}
+        >
+          历史审计
+          <em>批次历史与图谱演化</em>
+        </button>
       </div>
       {pathPushHint ? <div className="result-box success">{pathPushHint}</div> : null}
       {hoverSaveResult ? (
@@ -2901,7 +2930,7 @@ export function GraphDemo() {
           </article>
 
           <aside className="graph-insight-panel">
-            <div className="graph-insight-card">
+            <div className="graph-insight-card graph-section-overview">
               <strong>领域聚类概览</strong>
               <p className="muted">按知识域聚合风险，点击可直接切换到该域深挖。</p>
               {domainClusterOverview.length > 0 ? (
@@ -2935,7 +2964,7 @@ export function GraphDemo() {
               )}
             </div>
 
-            <div className="graph-insight-card">
+            <div className="graph-insight-card graph-section-overview">
               <strong>高风险节点 Top 6</strong>
               <p className="muted">优先复习这些节点，先补关系再做题。</p>
               <div className="graph-risk-list">
@@ -2956,7 +2985,7 @@ export function GraphDemo() {
               </div>
             </div>
 
-            <div className="graph-insight-card">
+            <div className="graph-insight-card graph-section-overview">
               <strong>当前焦点</strong>
               {activeNode ? (
                 <div className="graph-focus-box">
@@ -3002,7 +3031,7 @@ export function GraphDemo() {
               )}
             </div>
 
-            <div className="graph-insight-card">
+            <div className="graph-insight-card graph-section-bridge">
               <strong>高风险关系链建议</strong>
               <p className="muted">优先修复这些关系链，可显著降低“会做单点、不会迁移”的风险。</p>
               {riskBridgeSuggestions.length > 0 ? (
@@ -3049,7 +3078,7 @@ export function GraphDemo() {
               )}
             </div>
 
-            <div className="graph-insight-card">
+            <div className="graph-insight-card graph-section-bridge">
               <strong>关系链回放时间轴</strong>
               <p className="muted">记录每次图谱刷新后的关系链风险波动，用于回看干预是否生效。</p>
               <div className="graph-bridge-timeline-mode">
@@ -3289,7 +3318,7 @@ export function GraphDemo() {
               )}
             </div>
 
-            <div className="graph-insight-card">
+            <div className="graph-insight-card graph-section-history">
               <strong>回放批次历史</strong>
               <p className="muted">记录最近从回放推送的批次，支持一键复推到路径或工作区。</p>
               {replayPushHistory.length > 0 ? (
@@ -3664,7 +3693,7 @@ export function GraphDemo() {
               )}
             </div>
 
-            <div className="graph-insight-card">
+            <div className="graph-insight-card graph-section-history">
               <strong>图谱演化时间轴</strong>
               <p className="muted">持续记录结构变化，便于回看知识网络是否在收敛。</p>
               {activeTimeline ? (
