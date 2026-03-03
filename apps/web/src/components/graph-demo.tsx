@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatErrorMessage, requestJson } from "@/lib/client/api";
 import {
@@ -49,6 +49,11 @@ const GRAPH_RISK_THRESHOLD_STORAGE_KEY = "edunexus_graph_risk_threshold";
 const GRAPH_CANVAS_ZOOM_STORAGE_KEY = "edunexus_graph_canvas_zoom";
 const GRAPH_BRIDGE_HISTORY_STORAGE_KEY = "edunexus_graph_bridge_history_timeline";
 const GRAPH_BRIDGE_HISTORY_LIMIT = 14;
+const BRIDGE_REPLAY_INTERVAL_MS: Record<BridgeReplaySpeed, number> = {
+  "1x": 1300,
+  "1.5x": 950,
+  "2x": 640
+};
 
 type GraphNode = GraphViewNode;
 type GraphEdge = GraphViewEdge;
@@ -104,6 +109,7 @@ type BridgeReplayNodeStat = {
 };
 
 type GraphLensMode = "full" | "bridge_focus";
+type BridgeReplaySpeed = "1x" | "1.5x" | "2x";
 
 type CreateWorkspaceSessionResponse = {
   session: {
@@ -192,6 +198,10 @@ function buildEdgeKey(sourceId: string, targetId: string) {
   return sourceId < targetId
     ? `${sourceId}__${targetId}`
     : `${targetId}__${sourceId}`;
+}
+
+function buildBridgeReplayFrameKey(input: { snapshotId: string; bridgeId: string }) {
+  return `${input.snapshotId}__${input.bridgeId}`;
 }
 
 function buildBridgeTaskTemplate(primaryLabel: string, secondaryLabel: string) {
@@ -302,6 +312,9 @@ export function GraphDemo() {
   const [bridgeHistory, setBridgeHistory] = useState<BridgeHistorySnapshot[]>([]);
   const [bridgeReplayMode, setBridgeReplayMode] = useState<BridgeReplayMode>("focus");
   const [bridgeReplayNodeFilter, setBridgeReplayNodeFilter] = useState("all");
+  const [isBridgeReplayPlaying, setIsBridgeReplayPlaying] = useState(false);
+  const [bridgeReplayCursor, setBridgeReplayCursor] = useState(0);
+  const [bridgeReplaySpeed, setBridgeReplaySpeed] = useState<BridgeReplaySpeed>("1x");
   const [riskThresholdPercent, setRiskThresholdPercent] = useState(0);
   const [enableEdgeHeatmap, setEnableEdgeHeatmap] = useState(true);
   const [canvasZoomPercent, setCanvasZoomPercent] = useState(100);
@@ -316,6 +329,14 @@ export function GraphDemo() {
   const [loadingHoverSessions, setLoadingHoverSessions] = useState(false);
   const [hoverSaveResult, setHoverSaveResult] = useState<HoverSaveResult | null>(null);
   const [pathPushHint, setPathPushHint] = useState("");
+  const bridgeReplayTimerRef = useRef<number | null>(null);
+
+  const clearBridgeReplayTimer = useCallback(() => {
+    if (bridgeReplayTimerRef.current !== null) {
+      window.clearTimeout(bridgeReplayTimerRef.current);
+      bridgeReplayTimerRef.current = null;
+    }
+  }, []);
 
   const loadGraph = useCallback(async () => {
     setLoading(true);
@@ -972,6 +993,48 @@ export function GraphDemo() {
     );
   }, [bridgeReplayFrames, bridgeReplayNodeFilter]);
 
+  const orderedBridgeReplayFrames = useMemo(
+    () =>
+      [...displayedBridgeReplayFrames].sort((a, b) =>
+        a.at.localeCompare(b.at, "zh-CN")
+      ),
+    [displayedBridgeReplayFrames]
+  );
+
+  const activeBridgeReplayFrame = useMemo(() => {
+    if (orderedBridgeReplayFrames.length === 0) {
+      return null;
+    }
+    const index = Math.max(
+      0,
+      Math.min(bridgeReplayCursor, orderedBridgeReplayFrames.length - 1)
+    );
+    return orderedBridgeReplayFrames[index] ?? null;
+  }, [bridgeReplayCursor, orderedBridgeReplayFrames]);
+
+  const bridgeReplayProgressPercent = useMemo(() => {
+    if (orderedBridgeReplayFrames.length === 0) {
+      return 0;
+    }
+    return Number(
+      (
+        ((Math.min(bridgeReplayCursor, orderedBridgeReplayFrames.length - 1) + 1) /
+          orderedBridgeReplayFrames.length) *
+        100
+      ).toFixed(1)
+    );
+  }, [bridgeReplayCursor, orderedBridgeReplayFrames.length]);
+
+  const activeBridgeReplayFrameKey = useMemo(() => {
+    if (!activeBridgeReplayFrame) {
+      return "";
+    }
+    return buildBridgeReplayFrameKey({
+      snapshotId: activeBridgeReplayFrame.snapshotId,
+      bridgeId: activeBridgeReplayFrame.bridge.id
+    });
+  }, [activeBridgeReplayFrame]);
+
   const bridgeReplayNodeStats = useMemo<BridgeReplayNodeStat[]>(() => {
     if (displayedBridgeReplayFrames.length === 0) {
       return [];
@@ -1038,6 +1101,50 @@ export function GraphDemo() {
       setBridgeReplayNodeFilter("all");
     }
   }, [bridgeReplayNodeFilter, bridgeReplayNodeOptions]);
+
+  useEffect(() => {
+    if (orderedBridgeReplayFrames.length === 0) {
+      setBridgeReplayCursor(0);
+      setIsBridgeReplayPlaying(false);
+      clearBridgeReplayTimer();
+      return;
+    }
+    setBridgeReplayCursor((prev) =>
+      Math.max(0, Math.min(prev, orderedBridgeReplayFrames.length - 1))
+    );
+  }, [clearBridgeReplayTimer, orderedBridgeReplayFrames.length]);
+
+  useEffect(() => {
+    if (!isBridgeReplayPlaying) {
+      clearBridgeReplayTimer();
+      return;
+    }
+    if (orderedBridgeReplayFrames.length <= 1) {
+      setIsBridgeReplayPlaying(false);
+      clearBridgeReplayTimer();
+      return;
+    }
+    if (bridgeReplayCursor >= orderedBridgeReplayFrames.length - 1) {
+      setIsBridgeReplayPlaying(false);
+      clearBridgeReplayTimer();
+      return;
+    }
+    clearBridgeReplayTimer();
+    bridgeReplayTimerRef.current = window.setTimeout(() => {
+      setBridgeReplayCursor((prev) =>
+        Math.min(prev + 1, orderedBridgeReplayFrames.length - 1)
+      );
+    }, BRIDGE_REPLAY_INTERVAL_MS[bridgeReplaySpeed]);
+    return clearBridgeReplayTimer;
+  }, [
+    bridgeReplayCursor,
+    bridgeReplaySpeed,
+    clearBridgeReplayTimer,
+    isBridgeReplayPlaying,
+    orderedBridgeReplayFrames.length
+  ]);
+
+  useEffect(() => clearBridgeReplayTimer, [clearBridgeReplayTimer]);
 
   useEffect(() => {
     if (graphLensMode !== "bridge_focus" || !selectedBridgeSuggestion) {
@@ -1259,6 +1366,7 @@ export function GraphDemo() {
 
   const handleFocusBridge = useCallback((bridge: RiskBridgeSuggestion) => {
     setSelectedBridgeId(bridge.id);
+    setGraphLensMode("bridge_focus");
     setDomainFilter(bridge.primary.domain ?? "all");
     setNodeKeyword("");
     setActiveNodeId(bridge.primary.id);
@@ -1267,6 +1375,7 @@ export function GraphDemo() {
   const handleSelectReplayBridge = useCallback(
     (bridgeId: string) => {
       setSelectedBridgeId(bridgeId);
+      setGraphLensMode("bridge_focus");
       const matched = bridgeSuggestionMap.get(bridgeId);
       if (!matched) {
         return;
@@ -1278,6 +1387,64 @@ export function GraphDemo() {
     [bridgeSuggestionMap]
   );
 
+  const handleSelectReplayFrame = useCallback(
+    (snapshotId: string, bridgeId: string) => {
+      const frameKey = buildBridgeReplayFrameKey({
+        snapshotId,
+        bridgeId
+      });
+      const index = orderedBridgeReplayFrames.findIndex(
+        (frame) =>
+          buildBridgeReplayFrameKey({
+            snapshotId: frame.snapshotId,
+            bridgeId: frame.bridge.id
+          }) === frameKey
+      );
+      if (index >= 0) {
+        setBridgeReplayCursor(index);
+      }
+      setIsBridgeReplayPlaying(false);
+      handleSelectReplayBridge(bridgeId);
+    },
+    [handleSelectReplayBridge, orderedBridgeReplayFrames]
+  );
+
+  const handleBridgeReplayStep = useCallback(
+    (offset: number) => {
+      if (orderedBridgeReplayFrames.length === 0) {
+        return;
+      }
+      setIsBridgeReplayPlaying(false);
+      setBridgeReplayCursor((prev) =>
+        Math.max(0, Math.min(prev + offset, orderedBridgeReplayFrames.length - 1))
+      );
+    },
+    [orderedBridgeReplayFrames.length]
+  );
+
+  const toggleBridgeReplayPlay = useCallback(() => {
+    if (orderedBridgeReplayFrames.length <= 1) {
+      return;
+    }
+    setIsBridgeReplayPlaying((prev) => {
+      if (prev) {
+        return false;
+      }
+      if (bridgeReplayCursor >= orderedBridgeReplayFrames.length - 1) {
+        setBridgeReplayCursor(0);
+      }
+      return true;
+    });
+  }, [bridgeReplayCursor, orderedBridgeReplayFrames.length]);
+
+  const restartBridgeReplay = useCallback(() => {
+    if (orderedBridgeReplayFrames.length === 0) {
+      return;
+    }
+    setIsBridgeReplayPlaying(false);
+    setBridgeReplayCursor(0);
+  }, [orderedBridgeReplayFrames.length]);
+
   const handleFocusReplayNode = useCallback((label: string) => {
     setBridgeReplayNodeFilter(label);
     const matched = placements.find((item) => item.label === label);
@@ -1288,6 +1455,13 @@ export function GraphDemo() {
     setNodeKeyword("");
     setActiveNodeId(matched.id);
   }, [placements]);
+
+  useEffect(() => {
+    if (!activeBridgeReplayFrame) {
+      return;
+    }
+    handleSelectReplayBridge(activeBridgeReplayFrame.bridge.id);
+  }, [activeBridgeReplayFrame, handleSelectReplayBridge]);
 
   const handlePushBridgeToPath = useCallback(
     (bridge: RiskBridgeSuggestion) => {
@@ -1961,20 +2135,29 @@ export function GraphDemo() {
                 <button
                   type="button"
                   className={bridgeReplayMode === "focus" ? "active" : ""}
-                  onClick={() => setBridgeReplayMode("focus")}
+                  onClick={() => {
+                    setBridgeReplayMode("focus");
+                    setBridgeReplayCursor(0);
+                    setIsBridgeReplayPlaying(false);
+                  }}
                 >
                   仅看当前关系链
                 </button>
                 <button
                   type="button"
                   className={bridgeReplayMode === "all" ? "active" : ""}
-                  onClick={() => setBridgeReplayMode("all")}
+                  onClick={() => {
+                    setBridgeReplayMode("all");
+                    setBridgeReplayCursor(0);
+                    setIsBridgeReplayPlaying(false);
+                  }}
                 >
                   查看全部关系链
                 </button>
                 <span>
                   当前 {displayedBridgeReplayFrames.length} 条 · 模式
-                  {bridgeReplayMode === "focus" ? " 焦点回放" : " 全量回放"}
+                  {bridgeReplayMode === "focus" ? " 焦点回放" : " 全量回放"} · 进度{" "}
+                  {bridgeReplayProgressPercent}%
                 </span>
               </div>
               <div className="graph-bridge-timeline-filter">
@@ -1993,6 +2176,81 @@ export function GraphDemo() {
                   </select>
                 </label>
               </div>
+              {orderedBridgeReplayFrames.length > 0 ? (
+                <div className="graph-bridge-replay-controller">
+                  <div className="graph-bridge-replay-actions">
+                    <button
+                      type="button"
+                      onClick={() => handleBridgeReplayStep(-1)}
+                      disabled={bridgeReplayCursor <= 0}
+                    >
+                      上一帧
+                    </button>
+                    <button
+                      type="button"
+                      onClick={toggleBridgeReplayPlay}
+                      disabled={orderedBridgeReplayFrames.length <= 1}
+                    >
+                      {isBridgeReplayPlaying ? "暂停回放" : "播放回放"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleBridgeReplayStep(1)}
+                      disabled={
+                        bridgeReplayCursor >= orderedBridgeReplayFrames.length - 1
+                      }
+                    >
+                      下一帧
+                    </button>
+                    <button
+                      type="button"
+                      onClick={restartBridgeReplay}
+                      disabled={bridgeReplayCursor === 0}
+                    >
+                      回到首帧
+                    </button>
+                  </div>
+                  <div className="graph-bridge-replay-speed">
+                    <span>回放速度</span>
+                    {(["1x", "1.5x", "2x"] as BridgeReplaySpeed[]).map((speed) => (
+                      <button
+                        type="button"
+                        key={`bridge_replay_speed_${speed}`}
+                        className={bridgeReplaySpeed === speed ? "active" : ""}
+                        onClick={() => setBridgeReplaySpeed(speed)}
+                      >
+                        {speed}
+                      </button>
+                    ))}
+                  </div>
+                  <label className="graph-bridge-replay-slider">
+                    帧位 {Math.min(bridgeReplayCursor + 1, orderedBridgeReplayFrames.length)}/
+                    {orderedBridgeReplayFrames.length}
+                    <input
+                      type="range"
+                      min={0}
+                      max={Math.max(0, orderedBridgeReplayFrames.length - 1)}
+                      step={1}
+                      value={Math.min(
+                        bridgeReplayCursor,
+                        orderedBridgeReplayFrames.length - 1
+                      )}
+                      onChange={(event) => {
+                        setIsBridgeReplayPlaying(false);
+                        setBridgeReplayCursor(Number(event.target.value));
+                      }}
+                    />
+                  </label>
+                  {activeBridgeReplayFrame ? (
+                    <p className="graph-bridge-replay-current">
+                      当前帧：{activeBridgeReplayFrame.bridge.sourceLabel} ↔{" "}
+                      {activeBridgeReplayFrame.bridge.targetLabel} · 风险{" "}
+                      {toPercent(activeBridgeReplayFrame.bridge.risk)} ·{" "}
+                      {formatDateTime(activeBridgeReplayFrame.at)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
               {bridgeReplayNodeStats.length > 0 ? (
                 <div className="graph-bridge-node-stats">
                   {bridgeReplayNodeStats.map((item) => (
@@ -2026,24 +2284,32 @@ export function GraphDemo() {
               ) : null}
               {displayedBridgeReplayFrames.length > 0 ? (
                 <div className="graph-bridge-timeline-list">
-                  {displayedBridgeReplayFrames.map((frame) => (
-                    <button
-                      type="button"
-                      key={`${frame.snapshotId}_${frame.bridge.id}`}
-                      className={`graph-bridge-timeline-item${
-                        replayTargetBridgeId === frame.bridge.id ? " active" : ""
-                      }`}
-                      onClick={() => handleSelectReplayBridge(frame.bridge.id)}
-                    >
-                      <strong>
-                        {frame.bridge.sourceLabel} ↔ {frame.bridge.targetLabel}
-                      </strong>
-                      <span>
-                        {formatDateTime(frame.at)} · 风险 {toPercent(frame.bridge.risk)}
-                      </span>
-                      <em>关系权重 {frame.bridge.weight.toFixed(2)}</em>
-                    </button>
-                  ))}
+                  {displayedBridgeReplayFrames.map((frame) => {
+                    const frameKey = buildBridgeReplayFrameKey({
+                      snapshotId: frame.snapshotId,
+                      bridgeId: frame.bridge.id
+                    });
+                    return (
+                      <button
+                        type="button"
+                        key={frameKey}
+                        className={`graph-bridge-timeline-item${
+                          activeBridgeReplayFrameKey === frameKey ? " active" : ""
+                        }`}
+                        onClick={() =>
+                          handleSelectReplayFrame(frame.snapshotId, frame.bridge.id)
+                        }
+                      >
+                        <strong>
+                          {frame.bridge.sourceLabel} ↔ {frame.bridge.targetLabel}
+                        </strong>
+                        <span>
+                          {formatDateTime(frame.at)} · 风险 {toPercent(frame.bridge.risk)}
+                        </span>
+                        <em>关系权重 {frame.bridge.weight.toFixed(2)}</em>
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="muted">暂无关系链回放记录，请先刷新图谱或调整筛选。</p>

@@ -5646,6 +5646,74 @@ html[data-theme="aurora"] .config-diff-values em {
   padding: 4px 8px;
 }
 
+.graph-bridge-replay-controller {
+  margin-top: 8px;
+  border: 1px dashed rgba(97, 132, 178, 0.38);
+  border-radius: 10px;
+  padding: 8px;
+  display: grid;
+  gap: 7px;
+  background: rgba(8, 13, 22, 0.34);
+}
+
+.graph-bridge-replay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.graph-bridge-replay-actions button,
+.graph-bridge-replay-speed button {
+  border: 1px solid rgba(97, 132, 178, 0.42);
+  border-radius: 999px;
+  background: rgba(10, 16, 27, 0.56);
+  color: #d8efff;
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+
+.graph-bridge-replay-actions button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.graph-bridge-replay-speed {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.graph-bridge-replay-speed span {
+  font-size: 11px;
+  color: #9fc7ee;
+}
+
+.graph-bridge-replay-speed button.active {
+  border-color: rgba(159, 255, 210, 0.58);
+  box-shadow: 0 0 0 1px rgba(159, 255, 210, 0.18);
+}
+
+.graph-bridge-replay-slider {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: #9fc7ee;
+}
+
+.graph-bridge-replay-slider input[type="range"] {
+  width: 100%;
+  accent-color: #61c7ff;
+}
+
+.graph-bridge-replay-current {
+  margin: 0;
+  font-size: 11px;
+  color: #cfe8ff;
+}
+
 .graph-bridge-node-stats {
   margin-top: 8px;
   display: grid;
@@ -6784,6 +6852,29 @@ html[data-theme="aurora"] .graph-bridge-timeline-filter select {
   border-color: rgba(118, 154, 216, 0.46);
   background: rgba(255, 255, 255, 0.88);
   color: #2f5e8d;
+}
+
+html[data-theme="aurora"] .graph-bridge-replay-controller {
+  border-color: rgba(118, 154, 216, 0.4);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+html[data-theme="aurora"] .graph-bridge-replay-actions button,
+html[data-theme="aurora"] .graph-bridge-replay-speed button {
+  border-color: rgba(118, 154, 216, 0.46);
+  background: rgba(255, 255, 255, 0.88);
+  color: #4f719f;
+}
+
+html[data-theme="aurora"] .graph-bridge-replay-speed span,
+html[data-theme="aurora"] .graph-bridge-replay-slider,
+html[data-theme="aurora"] .graph-bridge-replay-current {
+  color: #5c7fad;
+}
+
+html[data-theme="aurora"] .graph-bridge-replay-speed button.active {
+  border-color: rgba(64, 174, 138, 0.46);
+  box-shadow: 0 0 0 1px rgba(64, 174, 138, 0.2);
 }
 
 html[data-theme="aurora"] .graph-bridge-node-stat {
