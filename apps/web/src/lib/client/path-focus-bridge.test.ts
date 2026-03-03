@@ -23,11 +23,20 @@ describe("path-focus-bridge", () => {
       mastery: 0.33,
       risk: 0.72,
       relatedNodes: ["数列", "导数"],
-      at: "2026-02-28T00:00:00.000Z"
+      at: "2026-02-28T00:00:00.000Z",
+      replayBatchId: "bridge_replay_20260303_01",
+      replayBatchIndex: 2,
+      replayBatchTotal: 6,
+      replayFrameAt: "2026-03-03T10:40:00.000Z",
+      replayMode: "all"
     });
     expect(normalized).not.toBeNull();
     expect(normalized?.nodeLabel).toBe("函数");
     expect(normalized?.relatedNodes).toHaveLength(2);
+    expect(normalized?.replayBatchId).toBe("bridge_replay_20260303_01");
+    expect(normalized?.replayBatchIndex).toBe(2);
+    expect(normalized?.replayBatchTotal).toBe(6);
+    expect(normalized?.replayMode).toBe("all");
   });
 
   it("builds goal from focus payload", () => {

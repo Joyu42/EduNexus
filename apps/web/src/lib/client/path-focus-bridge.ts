@@ -16,6 +16,11 @@ export type PathFocusPayload = {
   focusSource?: PathFocusSource;
   bridgePartnerLabel?: string;
   bridgeTaskTemplate?: string;
+  replayBatchId?: string;
+  replayBatchIndex?: number;
+  replayBatchTotal?: number;
+  replayFrameAt?: string;
+  replayMode?: "focus" | "all";
 };
 
 const DEFAULT_FOCUS_BATCH_LIMIT = 12;
@@ -52,6 +57,11 @@ export function normalizePathFocusPayload(input: unknown): PathFocusPayload | nu
     focusSource?: unknown;
     bridgePartnerLabel?: unknown;
     bridgeTaskTemplate?: unknown;
+    replayBatchId?: unknown;
+    replayBatchIndex?: unknown;
+    replayBatchTotal?: unknown;
+    replayFrameAt?: unknown;
+    replayMode?: unknown;
   };
   if (typeof value.nodeId !== "string" || typeof value.nodeLabel !== "string") {
     return null;
@@ -70,7 +80,22 @@ export function normalizePathFocusPayload(input: unknown): PathFocusPayload | nu
     bridgePartnerLabel:
       typeof value.bridgePartnerLabel === "string" ? value.bridgePartnerLabel : undefined,
     bridgeTaskTemplate:
-      typeof value.bridgeTaskTemplate === "string" ? value.bridgeTaskTemplate : undefined
+      typeof value.bridgeTaskTemplate === "string" ? value.bridgeTaskTemplate : undefined,
+    replayBatchId:
+      typeof value.replayBatchId === "string" ? value.replayBatchId : undefined,
+    replayBatchIndex:
+      typeof value.replayBatchIndex === "number" &&
+      Number.isFinite(value.replayBatchIndex)
+        ? Math.max(1, Math.round(value.replayBatchIndex))
+        : undefined,
+    replayBatchTotal:
+      typeof value.replayBatchTotal === "number" &&
+      Number.isFinite(value.replayBatchTotal)
+        ? Math.max(1, Math.round(value.replayBatchTotal))
+        : undefined,
+    replayFrameAt:
+      typeof value.replayFrameAt === "string" ? value.replayFrameAt : undefined,
+    replayMode: value.replayMode === "focus" || value.replayMode === "all" ? value.replayMode : undefined
   };
 }
 

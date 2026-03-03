@@ -535,6 +535,14 @@ export function WorkspaceDemo() {
     () => Number(searchParams.get("batchCount") ?? "0"),
     [searchParams]
   );
+  const queryReplayBatchId = useMemo(
+    () => searchParams.get("replayBatchId")?.trim() ?? "",
+    [searchParams]
+  );
+  const queryReplayMode = useMemo(
+    () => searchParams.get("replayMode")?.trim() ?? "",
+    [searchParams]
+  );
   const hasGraphContext = queryFrom === "graph" || queryFrom === "graph_save";
   const hasMatchedQuerySession = Boolean(querySessionId) && sessionId === querySessionId;
 
@@ -560,9 +568,19 @@ export function WorkspaceDemo() {
       related:
         graphFocus.relatedNodes.length > 0
           ? graphFocus.relatedNodes.slice(0, 4).join("、")
-          : "暂无"
+          : "暂无",
+      replayBatchId: graphFocus.replayBatchId ?? queryReplayBatchId,
+      replaySlot:
+        graphFocus.replayBatchIndex && graphFocus.replayBatchTotal
+          ? `${graphFocus.replayBatchIndex}/${graphFocus.replayBatchTotal}`
+          : "",
+      replayMode:
+        graphFocus.replayMode ??
+        (queryReplayMode === "focus" || queryReplayMode === "all"
+          ? queryReplayMode
+          : "")
     };
-  }, [graphFocus]);
+  }, [graphFocus, queryReplayBatchId, queryReplayMode]);
   const citations = useMemo(() => {
     const merged = [
       ...(nextData?.citations ?? []),
@@ -698,6 +716,12 @@ export function WorkspaceDemo() {
         activeFocus.risk * 100
       )}%），已预填工作区引导问题。${
         batchFocuses.length > 1 ? `（本次批量推送 ${batchFocuses.length} 条）` : ""
+      }${
+        activeFocus.replayBatchId
+          ? `（回放批次 ${activeFocus.replayBatchId}${
+              activeFocus.replayMode ? ` · 模式 ${activeFocus.replayMode}` : ""
+            }）`
+          : ""
       }`
     );
     setUserInput((prev) => {
@@ -944,14 +968,18 @@ export function WorkspaceDemo() {
       setGraphFocusHint(
         `已切换批量关系链焦点：第 ${index + 1}/${graphFocusQueue.length} 条 · ${
           target.nodeLabel
-        }，并自动应用提示词。`
+        }，并自动应用提示词。${
+          target.replayBatchId ? `（回放批次 ${target.replayBatchId}）` : ""
+        }`
       );
       return;
     }
     setGraphFocusHint(
       `已切换批量关系链焦点：第 ${index + 1}/${graphFocusQueue.length} 条 · ${
         target.nodeLabel
-      }，可手动点击应用提示词。`
+      }，可手动点击应用提示词。${
+        target.replayBatchId ? `（回放批次 ${target.replayBatchId}）` : ""
+      }`
     );
   }, [autoApplyGraphFocusPrompt, graphFocusQueue.length]);
 
@@ -1970,6 +1998,17 @@ export function WorkspaceDemo() {
               节点：{graphFocus?.nodeLabel} · 风险：{graphFocusSummary.risk} · 掌握度：
               {graphFocusSummary.mastery}
             </p>
+            {graphFocusSummary.replayBatchId ? (
+              <p>
+                回放批次：{graphFocusSummary.replayBatchId}
+                {graphFocusSummary.replaySlot
+                  ? `（${graphFocusSummary.replaySlot}）`
+                  : ""}
+                {graphFocusSummary.replayMode
+                  ? ` · 模式 ${graphFocusSummary.replayMode}`
+                  : ""}
+              </p>
+            ) : null}
             {graphFocusQueue.length > 1 ? (
               <div className="workspace-focus-queue">
                 <div className="workspace-focus-queue-head">

@@ -98,9 +98,16 @@ function buildFocusQueueKey(payload: Pick<PathFocusPayload, "nodeId" | "bridgePa
 
 function buildFocusHintText(payload: PathFocusPayload, batchCount: number) {
   const bridgeHint = payload.bridgePartnerLabel ? `，桥接节点：${payload.bridgePartnerLabel}` : "";
+  const replayHint = payload.replayBatchId
+    ? ` · 回放批次 ${payload.replayBatchId}${
+        payload.replayBatchIndex && payload.replayBatchTotal
+          ? `（${payload.replayBatchIndex}/${payload.replayBatchTotal}）`
+          : ""
+      }${payload.replayMode ? ` · 模式 ${payload.replayMode}` : ""}`
+    : "";
   return `已接收图谱焦点：${payload.nodeLabel}（风险 ${Math.round(
     payload.risk * 100
-  )}%） · 来源：${formatFocusSourceLabel(payload.focusSource)}${bridgeHint}${
+  )}%） · 来源：${formatFocusSourceLabel(payload.focusSource)}${bridgeHint}${replayHint}${
     batchCount > 1 ? ` · 批量推送 ${batchCount} 条` : ""
   }`;
 }
@@ -260,6 +267,10 @@ export function PathDemo() {
     const sourceFromQuery = normalizeFocusSource(searchParams.get("from"));
     const bridgePartnerFromQuery = searchParams.get("bridgePartner");
     const batchCount = Number(searchParams.get("batchCount") ?? "0");
+    const replayBatchIdFromQuery = searchParams.get("replayBatchId")?.trim() ?? "";
+    const replayModeRaw = searchParams.get("replayMode")?.trim();
+    const replayModeFromQuery: PathFocusPayload["replayMode"] =
+      replayModeRaw === "focus" || replayModeRaw === "all" ? replayModeRaw : undefined;
     if (!focusNode && !focusLabel) {
       return;
     }
@@ -278,6 +289,11 @@ export function PathDemo() {
             at: new Date().toISOString(),
             focusSource: sourceFromQuery ?? "unknown",
             bridgePartnerLabel: bridgePartnerFromQuery ?? undefined,
+            replayBatchId: replayBatchIdFromQuery || undefined,
+            replayMode:
+              replayModeFromQuery === "focus" || replayModeFromQuery === "all"
+                ? replayModeFromQuery
+                : undefined,
             bridgeTaskTemplate:
               sourceFromQuery === "graph_bridge" &&
               (bridgePartnerFromQuery ?? "").trim().length > 0
@@ -296,6 +312,9 @@ export function PathDemo() {
       ...payload,
       focusSource: payload.focusSource ?? sourceFromQuery ?? "unknown",
       bridgePartnerLabel: payload.bridgePartnerLabel ?? bridgePartnerFromQuery ?? undefined,
+      replayBatchId:
+        payload.replayBatchId ?? (replayBatchIdFromQuery || undefined),
+      replayMode: payload.replayMode ?? replayModeFromQuery,
       bridgeTaskTemplate:
         payload.bridgeTaskTemplate ??
         (payload.focusSource === "graph_bridge" || sourceFromQuery === "graph_bridge"
@@ -343,7 +362,13 @@ export function PathDemo() {
           ? focusPayload.relatedNodes.slice(0, 4).join("、")
           : "暂无",
       bridgeText: focusPayload.bridgePartnerLabel ?? "",
-      bridgeTaskTemplate: focusPayload.bridgeTaskTemplate?.trim() ?? ""
+      bridgeTaskTemplate: focusPayload.bridgeTaskTemplate?.trim() ?? "",
+      replayBatchId: focusPayload.replayBatchId ?? "",
+      replaySlot:
+        focusPayload.replayBatchIndex && focusPayload.replayBatchTotal
+          ? `${focusPayload.replayBatchIndex}/${focusPayload.replayBatchTotal}`
+          : "",
+      replayMode: focusPayload.replayMode ?? ""
     };
   }, [focusPayload]);
   const activeFocusQueueIndex = useMemo(() => {
@@ -889,6 +914,11 @@ export function PathDemo() {
           <p>
             来源：{focusSummary.sourceText}
             {focusSummary.bridgeText ? ` · 桥接节点：${focusSummary.bridgeText}` : ""}
+            {focusSummary.replayBatchId
+              ? ` · 回放批次：${focusSummary.replayBatchId}${
+                  focusSummary.replaySlot ? `（${focusSummary.replaySlot}）` : ""
+                }${focusSummary.replayMode ? ` · 模式 ${focusSummary.replayMode}` : ""}`
+              : ""}
           </p>
           {focusQueue.length > 1 ? (
             <div className="path-focus-queue">

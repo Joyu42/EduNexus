@@ -146,6 +146,14 @@ type OpenWorkspaceSessionOptions = {
   nodeLabel?: string;
 };
 
+type ReplayPushMeta = {
+  replayBatchId?: string;
+  replayBatchIndex?: number;
+  replayBatchTotal?: number;
+  replayFrameAt?: string;
+  replayMode?: BridgeReplayMode;
+};
+
 function resolveRiskTone(risk: number) {
   if (risk >= 0.65) {
     return "high";
@@ -1601,29 +1609,39 @@ export function GraphDemo() {
     handleSelectReplayBridge(activeBridgeReplayFrame.bridge.id);
   }, [activeBridgeReplayFrame, handleSelectReplayBridge]);
 
+  const buildBridgeFocusPayload = useCallback(
+    (bridge: RiskBridgeSuggestion, replayMeta?: ReplayPushMeta): PathFocusPayload => ({
+      nodeId: bridge.primary.id,
+      nodeLabel: bridge.primary.label,
+      domain: bridge.primary.domain,
+      mastery: bridge.primary.mastery,
+      risk: bridge.primary.risk,
+      relatedNodes: [
+        bridge.secondary.label,
+        ...resolveRelatedNodeLabelsForFocus(bridge.primary.id, 5)
+      ].slice(0, 5),
+      at: new Date().toISOString(),
+      focusSource: "graph_bridge",
+      bridgePartnerLabel: bridge.secondary.label,
+      bridgeTaskTemplate: buildBridgeTaskTemplate(
+        bridge.primary.label,
+        bridge.secondary.label
+      ),
+      replayBatchId: replayMeta?.replayBatchId,
+      replayBatchIndex: replayMeta?.replayBatchIndex,
+      replayBatchTotal: replayMeta?.replayBatchTotal,
+      replayFrameAt: replayMeta?.replayFrameAt,
+      replayMode: replayMeta?.replayMode
+    }),
+    [resolveRelatedNodeLabelsForFocus]
+  );
+
   const handlePushBridgeToPath = useCallback(
-    (bridge: RiskBridgeSuggestion) => {
+    (bridge: RiskBridgeSuggestion, replayMeta?: ReplayPushMeta) => {
       setSelectedBridgeId(bridge.id);
-      writePathFocusToStorage(
-        {
-          nodeId: bridge.primary.id,
-          nodeLabel: bridge.primary.label,
-          domain: bridge.primary.domain,
-          mastery: bridge.primary.mastery,
-          risk: bridge.primary.risk,
-          relatedNodes: [
-            bridge.secondary.label,
-            ...resolveRelatedNodeLabelsForFocus(bridge.primary.id, 5)
-          ].slice(0, 5),
-          at: new Date().toISOString(),
-          focusSource: "graph_bridge",
-          bridgePartnerLabel: bridge.secondary.label,
-          bridgeTaskTemplate: buildBridgeTaskTemplate(
-            bridge.primary.label,
-            bridge.secondary.label
-          )
-        },
-        (key, value) => window.localStorage.setItem(key, value)
+      const focusPayload = buildBridgeFocusPayload(bridge, replayMeta);
+      writePathFocusToStorage(focusPayload, (key, value) =>
+        window.localStorage.setItem(key, value)
       );
       const params = new URLSearchParams({
         from: "graph_bridge",
@@ -1631,6 +1649,12 @@ export function GraphDemo() {
         focusLabel: bridge.primary.label,
         bridgePartner: bridge.secondary.label
       });
+      if (focusPayload.replayBatchId) {
+        params.set("replayBatchId", focusPayload.replayBatchId);
+      }
+      if (focusPayload.replayMode) {
+        params.set("replayMode", focusPayload.replayMode);
+      }
       router.push(`/path?${params.toString()}`);
       setPathPushHint(
         `已推送关系链建议：${bridge.primary.label} ↔ ${bridge.secondary.label}（风险 ${toPercent(
@@ -1638,39 +1662,29 @@ export function GraphDemo() {
         )}）。`
       );
     },
-    [resolveRelatedNodeLabelsForFocus, router]
+    [buildBridgeFocusPayload, router]
   );
 
   const handlePushBridgeToWorkspace = useCallback(
-    (bridge: RiskBridgeSuggestion) => {
+    (bridge: RiskBridgeSuggestion, replayMeta?: ReplayPushMeta) => {
       setSelectedBridgeId(bridge.id);
-      writeWorkspaceFocusToStorage(
-        {
-          nodeId: bridge.primary.id,
-          nodeLabel: bridge.primary.label,
-          domain: bridge.primary.domain,
-          mastery: bridge.primary.mastery,
-          risk: bridge.primary.risk,
-          relatedNodes: [
-            bridge.secondary.label,
-            ...resolveRelatedNodeLabelsForFocus(bridge.primary.id, 5)
-          ].slice(0, 5),
-          at: new Date().toISOString(),
-          focusSource: "graph_bridge",
-          bridgePartnerLabel: bridge.secondary.label,
-          bridgeTaskTemplate: buildBridgeTaskTemplate(
-            bridge.primary.label,
-            bridge.secondary.label
-          )
-        },
-        (key, value) => window.localStorage.setItem(key, value)
+      const focusPayload = buildBridgeFocusPayload(bridge, replayMeta);
+      writeWorkspaceFocusToStorage(focusPayload, (key, value) =>
+        window.localStorage.setItem(key, value)
       );
-      router.push("/workspace");
+      const params = new URLSearchParams({ from: "graph" });
+      if (focusPayload.replayBatchId) {
+        params.set("replayBatchId", focusPayload.replayBatchId);
+      }
+      if (focusPayload.replayMode) {
+        params.set("replayMode", focusPayload.replayMode);
+      }
+      router.push(`/workspace?${params.toString()}`);
       setPathPushHint(
         `已推送关系链建议到工作区：${bridge.primary.label} ↔ ${bridge.secondary.label}。`
       );
     },
-    [resolveRelatedNodeLabelsForFocus, router]
+    [buildBridgeFocusPayload, router]
   );
 
   const handlePushActiveReplayBridgeToPath = useCallback(() => {
@@ -1678,24 +1692,58 @@ export function GraphDemo() {
       setError("当前回放帧无法映射到可执行关系链，请切换到可见帧后再试。");
       return;
     }
-    handlePushBridgeToPath(activeReplayBridgeSuggestion);
-  }, [activeReplayBridgeSuggestion, handlePushBridgeToPath]);
+    handlePushBridgeToPath(activeReplayBridgeSuggestion, {
+      replayBatchId: `bridge_replay_single_${Date.now().toString(36)}`,
+      replayBatchIndex: Math.max(1, bridgeReplayCursor + 1),
+      replayBatchTotal: Math.max(1, orderedBridgeReplayFrames.length),
+      replayFrameAt: activeBridgeReplayFrame?.at,
+      replayMode: bridgeReplayMode
+    });
+  }, [
+    activeBridgeReplayFrame?.at,
+    activeReplayBridgeSuggestion,
+    bridgeReplayCursor,
+    bridgeReplayMode,
+    handlePushBridgeToPath,
+    orderedBridgeReplayFrames.length
+  ]);
 
   const handlePushActiveReplayBridgeToWorkspace = useCallback(() => {
     if (!activeReplayBridgeSuggestion) {
       setError("当前回放帧无法映射到可执行关系链，请切换到可见帧后再试。");
       return;
     }
-    handlePushBridgeToWorkspace(activeReplayBridgeSuggestion);
-  }, [activeReplayBridgeSuggestion, handlePushBridgeToWorkspace]);
+    handlePushBridgeToWorkspace(activeReplayBridgeSuggestion, {
+      replayBatchId: `bridge_replay_single_${Date.now().toString(36)}`,
+      replayBatchIndex: Math.max(1, bridgeReplayCursor + 1),
+      replayBatchTotal: Math.max(1, orderedBridgeReplayFrames.length),
+      replayFrameAt: activeBridgeReplayFrame?.at,
+      replayMode: bridgeReplayMode
+    });
+  }, [
+    activeBridgeReplayFrame?.at,
+    activeReplayBridgeSuggestion,
+    bridgeReplayCursor,
+    bridgeReplayMode,
+    handlePushBridgeToWorkspace,
+    orderedBridgeReplayFrames.length
+  ]);
 
   const handlePushReplayBatchToPath = useCallback(() => {
     if (replayBatchFocuses.length === 0) {
       setError("当前回放筛选下暂无可推送的关系链队列。");
       return;
     }
-    const primary = replayBatchFocuses[0]!;
-    writePathFocusBatchToStorage(replayBatchFocuses, (key, value) =>
+    const replayBatchId = `bridge_replay_batch_${Date.now().toString(36)}`;
+    const queue = replayBatchFocuses.map((item, index) => ({
+      ...item,
+      replayBatchId,
+      replayBatchIndex: index + 1,
+      replayBatchTotal: replayBatchFocuses.length,
+      replayMode: bridgeReplayMode
+    }));
+    const primary = queue[0]!;
+    writePathFocusBatchToStorage(queue, (key, value) =>
       window.localStorage.setItem(key, value)
     );
     writePathFocusToStorage(primary, (key, value) =>
@@ -1705,26 +1753,38 @@ export function GraphDemo() {
       from: "graph_bridge",
       focusNode: primary.nodeId,
       focusLabel: primary.nodeLabel,
-      batchCount: String(replayBatchFocuses.length)
+      batchCount: String(queue.length),
+      replayBatchId
     });
     if (primary.bridgePartnerLabel?.trim()) {
       params.set("bridgePartner", primary.bridgePartnerLabel.trim());
     }
+    if (primary.replayMode) {
+      params.set("replayMode", primary.replayMode);
+    }
     router.push(`/path?${params.toString()}`);
     setPathPushHint(
-      `已批量推送回放关系链到路径：${replayBatchFocuses.length} 条（首条 ${primary.nodeLabel} ↔ ${
+      `已批量推送回放关系链到路径：${queue.length} 条（批次 ${replayBatchId}，首条 ${primary.nodeLabel} ↔ ${
         primary.bridgePartnerLabel ?? "关联节点"
       }）。`
     );
-  }, [replayBatchFocuses, router]);
+  }, [bridgeReplayMode, replayBatchFocuses, router]);
 
   const handlePushReplayBatchToWorkspace = useCallback(() => {
     if (replayBatchFocuses.length === 0) {
       setError("当前回放筛选下暂无可推送的关系链队列。");
       return;
     }
-    const primary = replayBatchFocuses[0]!;
-    writeWorkspaceFocusBatchToStorage(replayBatchFocuses, (key, value) =>
+    const replayBatchId = `bridge_replay_batch_${Date.now().toString(36)}`;
+    const queue = replayBatchFocuses.map((item, index) => ({
+      ...item,
+      replayBatchId,
+      replayBatchIndex: index + 1,
+      replayBatchTotal: replayBatchFocuses.length,
+      replayMode: bridgeReplayMode
+    }));
+    const primary = queue[0]!;
+    writeWorkspaceFocusBatchToStorage(queue, (key, value) =>
       window.localStorage.setItem(key, value)
     );
     writeWorkspaceFocusToStorage(primary, (key, value) =>
@@ -1732,15 +1792,19 @@ export function GraphDemo() {
     );
     const params = new URLSearchParams({
       from: "graph",
-      batchCount: String(replayBatchFocuses.length)
+      batchCount: String(queue.length),
+      replayBatchId
     });
+    if (primary.replayMode) {
+      params.set("replayMode", primary.replayMode);
+    }
     router.push(`/workspace?${params.toString()}`);
     setPathPushHint(
-      `已批量推送回放关系链到工作区：${replayBatchFocuses.length} 条（首条 ${primary.nodeLabel} ↔ ${
+      `已批量推送回放关系链到工作区：${queue.length} 条（批次 ${replayBatchId}，首条 ${primary.nodeLabel} ↔ ${
         primary.bridgePartnerLabel ?? "关联节点"
       }）。`
     );
-  }, [replayBatchFocuses, router]);
+  }, [bridgeReplayMode, replayBatchFocuses, router]);
 
   const handleFocusGraphActivity = useCallback(
     (event: GraphActivityEvent) => {
