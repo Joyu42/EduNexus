@@ -5239,6 +5239,17 @@ html[data-theme="aurora"] .config-diff-values em {
   background: rgba(97, 199, 255, 0.14);
 }
 
+.graph-hover-actions button:last-child {
+  border-color: rgba(159, 255, 210, 0.52);
+  background: rgba(159, 255, 210, 0.14);
+  color: #ddfff0;
+}
+
+.graph-hover-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .graph-insight-panel {
   display: grid;
   gap: 10px;
@@ -6435,6 +6446,12 @@ html[data-theme="aurora"] .graph-hover-actions button:nth-child(3) {
   border-color: rgba(84, 155, 255, 0.52);
   background: rgba(122, 187, 255, 0.24);
   color: #285887;
+}
+
+html[data-theme="aurora"] .graph-hover-actions button:last-child {
+  border-color: rgba(64, 174, 138, 0.48);
+  background: rgba(103, 210, 174, 0.22);
+  color: #2f6850;
 }
 
 html[data-theme="aurora"] .graph-risk-row.active {

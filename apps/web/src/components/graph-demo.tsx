@@ -104,6 +104,17 @@ type BridgeReplayNodeStat = {
 
 type GraphLensMode = "full" | "bridge_focus";
 
+type CreateWorkspaceSessionResponse = {
+  session: {
+    id: string;
+  };
+};
+
+type SaveNoteResponse = {
+  noteId: string;
+  path: string;
+};
+
 function resolveRiskTone(risk: number) {
   if (risk >= 0.65) {
     return "high";
@@ -181,6 +192,37 @@ function buildNodeInterventionTips(node: GraphNodePlacement) {
   return tips.slice(0, 3);
 }
 
+function buildNodeInterventionMarkdown(input: {
+  node: GraphNodePlacement;
+  relatedLabels: string[];
+  tips: string[];
+}) {
+  const generatedAt = new Date().toISOString();
+  return [
+    "# 图谱节点干预建议",
+    "",
+    `- 生成时间：${generatedAt}`,
+    `- 节点：${input.node.label}`,
+    `- 域：${input.node.domain}`,
+    `- 风险：${Math.round(input.node.risk * 100)}%`,
+    `- 掌握度：${Math.round(input.node.mastery * 100)}%`,
+    `- 关联度：${input.node.degree}`,
+    "",
+    "## 邻接节点",
+    input.relatedLabels.length > 0
+      ? input.relatedLabels.map((label) => `- ${label}`).join("\n")
+      : "- 暂无可见邻接节点",
+    "",
+    "## 干预建议",
+    input.tips.map((tip) => `- ${tip}`).join("\n"),
+    "",
+    "## 执行动作",
+    "- 使用工作区 Socratic 引导先拆条件再求解。",
+    "- 完成 1 轮桥接任务后回写路径掌握度。",
+    "- 下一次图谱刷新观察风险变化并复盘。"
+  ].join("\n");
+}
+
 function buildBridgeHistorySignature(entries: BridgeHistoryEntry[]) {
   if (entries.length === 0) {
     return "empty";
@@ -238,6 +280,7 @@ export function GraphDemo() {
   const [enableEdgeHeatmap, setEnableEdgeHeatmap] = useState(true);
   const [graphLensMode, setGraphLensMode] = useState<GraphLensMode>("full");
   const [bridgeLensCrossDomainOnly, setBridgeLensCrossDomainOnly] = useState(false);
+  const [savingHoverSuggestion, setSavingHoverSuggestion] = useState(false);
   const [pathPushHint, setPathPushHint] = useState("");
 
   const loadGraph = useCallback(async () => {
@@ -1026,6 +1069,53 @@ export function GraphDemo() {
     pushNodeToWorkspace(activeNode);
   }, [activeNode, pushNodeToWorkspace]);
 
+  const handleSaveNodeInterventionToWorkspace = useCallback(
+    async (node: GraphNodePlacement) => {
+      setSavingHoverSuggestion(true);
+      setError("");
+      try {
+        const relatedLabels = resolveRelatedNodeLabelsForFocus(node.id, 6);
+        const tips = buildNodeInterventionTips(node);
+        const sessionPayload = await requestJson<CreateWorkspaceSessionResponse>(
+          "/api/workspace/session",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: `图谱干预-${node.label}`,
+              initialGoal: `降低「${node.label}」的迁移风险`
+            })
+          }
+        );
+        const sessionId = sessionPayload.session.id;
+        const markdown = buildNodeInterventionMarkdown({
+          node,
+          relatedLabels,
+          tips
+        });
+        const saved = await requestJson<SaveNoteResponse>("/api/workspace/note/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId,
+            title: `图谱干预建议-${node.label}`,
+            content: markdown,
+            tags: ["graph_hover", "intervention", node.domain || "general"],
+            links: relatedLabels.slice(0, 6)
+          })
+        });
+        setPathPushHint(
+          `已沉淀节点干预建议：${saved.noteId}（session: ${sessionId}，节点：${node.label}）`
+        );
+      } catch (err) {
+        setError(formatErrorMessage(err, "写入节点干预建议失败。"));
+      } finally {
+        setSavingHoverSuggestion(false);
+      }
+    },
+    [resolveRelatedNodeLabelsForFocus]
+  );
+
   const handleFocusBridge = useCallback((bridge: RiskBridgeSuggestion) => {
     setSelectedBridgeId(bridge.id);
     setDomainFilter(bridge.primary.domain ?? "all");
@@ -1424,6 +1514,13 @@ export function GraphDemo() {
                       </button>
                       <button type="button" onClick={() => pushNodeToWorkspace(hoveredNode)}>
                         推送到工作区
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleSaveNodeInterventionToWorkspace(hoveredNode)}
+                        disabled={savingHoverSuggestion}
+                      >
+                        {savingHoverSuggestion ? "正在沉淀..." : "沉淀干预建议"}
                       </button>
                     </div>
                   </div>
