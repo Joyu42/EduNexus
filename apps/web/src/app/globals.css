@@ -696,6 +696,12 @@ html[data-theme="aurora"] .panel:hover {
   color: #dbfff0;
 }
 
+.settings-anchor-row button:focus-visible,
+.settings-search-input input:focus-visible {
+  outline: 2px solid rgba(97, 199, 255, 0.58);
+  outline-offset: 1px;
+}
+
 .settings-anchor-empty {
   font-size: 12px;
   color: var(--text-dim);
@@ -7414,6 +7420,31 @@ html[data-theme="aurora"] .config-diff-values em {
   background: rgba(113, 225, 188, 0.14);
 }
 
+.workspace-session-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #9fc7ee;
+}
+
+.workspace-session-score {
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(97, 199, 255, 0.48);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 11px;
+  color: #d8efff;
+  background: rgba(97, 199, 255, 0.14);
+}
+
+.workspace-session-mark {
+  background: rgba(255, 201, 126, 0.26);
+  color: #ffe2b5;
+  border-radius: 4px;
+  padding: 0 3px;
+}
+
 .workspace-graph-context {
   grid-column: 1 / -1;
   border: 1px solid rgba(97, 132, 178, 0.42);
@@ -8697,6 +8728,21 @@ html[data-theme="aurora"] .workspace-graph-context-actions button {
   border-color: rgba(118, 154, 216, 0.46);
   background: rgba(255, 255, 255, 0.88);
   color: #4f719f;
+}
+
+html[data-theme="aurora"] .workspace-session-hint {
+  color: #5c7fad;
+}
+
+html[data-theme="aurora"] .workspace-session-score {
+  border-color: rgba(118, 154, 216, 0.46);
+  background: rgba(255, 255, 255, 0.86);
+  color: #4f719f;
+}
+
+html[data-theme="aurora"] .workspace-session-mark {
+  background: rgba(255, 196, 111, 0.35);
+  color: #8a5a2a;
 }
 
 html[data-theme="aurora"] .workspace-task-card {

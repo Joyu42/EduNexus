@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GalaxyHero } from "@/components/galaxy-ui";
 import { PageHeader } from "@/components/page-header";
 import { ImportAuditLogPanel } from "@/components/settings/import-audit-log-panel";
@@ -295,6 +295,9 @@ export default function SettingsPage() {
   const [noviceMode, setNoviceMode] = useState(true);
   const [settingsSearchKeyword, setSettingsSearchKeyword] = useState("");
   const [activeAnchorId, setActiveAnchorId] = useState("");
+  const [activeAnchorCursor, setActiveAnchorCursor] = useState(-1);
+  const settingsSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const settingsAnchorButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [bundle, setBundle] = useState<ConfigBundle>(buildDefaultBundle());
   const [configHistory, setConfigHistory] = useState<ConfigHistoryItem[]>([]);
   const [importAuditLog, setImportAuditLog] = useState<ImportAuditItem[]>([]);
@@ -875,6 +878,31 @@ export default function SettingsPage() {
     }).slice(0, 12);
   }, [normalizedSettingsSearchKeyword, settingsViewMode]);
 
+  useEffect(() => {
+    settingsAnchorButtonRefs.current = settingsAnchorButtonRefs.current.slice(
+      0,
+      visibleSettingsAnchors.length
+    );
+    if (visibleSettingsAnchors.length === 0) {
+      setActiveAnchorCursor(-1);
+      return;
+    }
+    setActiveAnchorCursor((prev) => {
+      if (prev < 0 || prev >= visibleSettingsAnchors.length) {
+        return 0;
+      }
+      return prev;
+    });
+  }, [visibleSettingsAnchors]);
+
+  useEffect(() => {
+    if (activeAnchorCursor < 0) {
+      return;
+    }
+    const target = settingsAnchorButtonRefs.current[activeAnchorCursor];
+    target?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  }, [activeAnchorCursor]);
+
   const jumpToSettingsAnchor = (anchor: SettingsAnchorItem) => {
     setActiveAnchorId(anchor.id);
     const scrollToAnchor = () => {
@@ -976,28 +1004,77 @@ export default function SettingsPage() {
             <label className="settings-search-input">
               <span>参数搜索</span>
               <input
+                ref={settingsSearchInputRef}
                 value={settingsSearchKeyword}
                 onChange={(event) => setSettingsSearchKeyword(event.target.value)}
                 placeholder="例如：阈值 / 回放 / 导入 / 回滚 / 模板"
+                onKeyDown={(event) => {
+                  if (visibleSettingsAnchors.length === 0) {
+                    return;
+                  }
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    setActiveAnchorCursor((prev) =>
+                      Math.min(
+                        visibleSettingsAnchors.length - 1,
+                        prev < 0 ? 0 : prev + 1
+                      )
+                    );
+                    return;
+                  }
+                  if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setActiveAnchorCursor((prev) => Math.max(0, prev <= 0 ? 0 : prev - 1));
+                    return;
+                  }
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    const target =
+                      visibleSettingsAnchors[
+                        activeAnchorCursor >= 0 ? activeAnchorCursor : 0
+                      ];
+                    if (target) {
+                      jumpToSettingsAnchor(target);
+                    }
+                    return;
+                  }
+                  if (event.key === "Escape" && settingsSearchKeyword.trim()) {
+                    event.preventDefault();
+                    setSettingsSearchKeyword("");
+                    setActiveAnchorCursor(0);
+                  }
+                }}
               />
             </label>
             {settingsSearchKeyword ? (
               <button
                 type="button"
                 className="settings-search-clear"
-                onClick={() => setSettingsSearchKeyword("")}
+                onClick={() => {
+                  setSettingsSearchKeyword("");
+                  setActiveAnchorCursor(0);
+                  settingsSearchInputRef.current?.focus();
+                }}
               >
                 清空
               </button>
             ) : null}
           </div>
           <div className="settings-anchor-row">
-            {visibleSettingsAnchors.map((anchor) => (
+            {visibleSettingsAnchors.map((anchor, index) => (
               <button
                 type="button"
                 key={anchor.id}
-                className={activeAnchorId === anchor.id ? "active" : ""}
-                onClick={() => jumpToSettingsAnchor(anchor)}
+                ref={(node) => {
+                  settingsAnchorButtonRefs.current[index] = node;
+                }}
+                className={
+                  activeAnchorId === anchor.id || activeAnchorCursor === index ? "active" : ""
+                }
+                onClick={() => {
+                  setActiveAnchorCursor(index);
+                  jumpToSettingsAnchor(anchor);
+                }}
               >
                 {anchor.label}
                 <em>

@@ -63,6 +63,7 @@ const GRAPH_HEATMAP_ENABLED_STORAGE_KEY = "edunexus_graph_heatmap_enabled";
 const GRAPH_RISK_THRESHOLD_STORAGE_KEY = "edunexus_graph_risk_threshold";
 const GRAPH_CANVAS_ZOOM_STORAGE_KEY = "edunexus_graph_canvas_zoom";
 const GRAPH_BRIDGE_HISTORY_STORAGE_KEY = "edunexus_graph_bridge_history_timeline";
+const GRAPH_INSIGHT_COLLAPSE_STORAGE_KEY = "edunexus_graph_insight_collapsed_sections";
 const GRAPH_BRIDGE_HISTORY_LIMIT = 14;
 const BRIDGE_REPLAY_INTERVAL_MS: Record<BridgeReplaySpeed, number> = {
   "1x": 1300,
@@ -197,6 +198,16 @@ const GRAPH_INSIGHT_SECTIONS: Array<{
   { key: "replay_history", label: "回放批次历史", view: "history" },
   { key: "graph_timeline", label: "图谱演化", view: "history" }
 ];
+
+const GRAPH_INSIGHT_SECTION_VIEW_MAP: Record<GraphInsightSectionKey, GraphWorkbenchView> = {
+  domain_cluster: "overview",
+  risk_top: "overview",
+  active_focus: "overview",
+  bridge_suggestions: "bridge",
+  bridge_timeline: "bridge",
+  replay_history: "history",
+  graph_timeline: "history"
+};
 
 function resolveRiskTone(risk: number) {
   if (risk >= 0.65) {
@@ -410,9 +421,13 @@ export function GraphDemo() {
   const [graphLensMode, setGraphLensMode] = useState<GraphLensMode>("full");
   const [graphWorkbenchView, setGraphWorkbenchView] =
     useState<GraphWorkbenchView>("overview");
-  const [collapsedInsightSections, setCollapsedInsightSections] = useState<
-    GraphInsightSectionKey[]
-  >([]);
+  const [collapsedInsightSectionsByView, setCollapsedInsightSectionsByView] = useState<
+    Record<GraphWorkbenchView, GraphInsightSectionKey[]>
+  >({
+    overview: [],
+    bridge: [],
+    history: []
+  });
   const [bridgeLensCrossDomainOnly, setBridgeLensCrossDomainOnly] = useState(false);
   const [savingHoverSuggestion, setSavingHoverSuggestion] = useState(false);
   const [hoverSaveMode, setHoverSaveMode] = useState<HoverSaveMode>("create_new");
@@ -591,6 +606,53 @@ export function GraphDemo() {
       setReplayPushHistory([]);
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(GRAPH_INSIGHT_COLLAPSE_STORAGE_KEY);
+      if (!raw) {
+        return;
+      }
+      const parsed = JSON.parse(raw) as unknown;
+      if (!parsed || typeof parsed !== "object") {
+        return;
+      }
+      const value = parsed as Partial<Record<GraphWorkbenchView, unknown>>;
+      const next: Record<GraphWorkbenchView, GraphInsightSectionKey[]> = {
+        overview: [],
+        bridge: [],
+        history: []
+      };
+      (["overview", "bridge", "history"] as GraphWorkbenchView[]).forEach((view) => {
+        const row = value[view];
+        if (!Array.isArray(row)) {
+          return;
+        }
+        next[view] = row
+          .filter(
+            (item): item is GraphInsightSectionKey =>
+              typeof item === "string" &&
+              item in GRAPH_INSIGHT_SECTION_VIEW_MAP &&
+              GRAPH_INSIGHT_SECTION_VIEW_MAP[item as GraphInsightSectionKey] === view
+          )
+          .slice(0, 6);
+      });
+      setCollapsedInsightSectionsByView(next);
+    } catch {
+      // ignore collapsed section parse errors
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        GRAPH_INSIGHT_COLLAPSE_STORAGE_KEY,
+        JSON.stringify(collapsedInsightSectionsByView)
+      );
+    } catch {
+      // ignore collapsed section storage errors
+    }
+  }, [collapsedInsightSectionsByView]);
 
   const replayPushHistoryStats = useMemo(() => {
     return replayPushHistory.reduce(
@@ -1002,6 +1064,10 @@ export function GraphDemo() {
     () => new Set(collapsedDomains),
     [collapsedDomains]
   );
+  const collapsedInsightSections = useMemo(
+    () => collapsedInsightSectionsByView[graphWorkbenchView] ?? [],
+    [collapsedInsightSectionsByView, graphWorkbenchView]
+  );
   const collapsedInsightSectionSet = useMemo(
     () => new Set(collapsedInsightSections),
     [collapsedInsightSections]
@@ -1019,6 +1085,39 @@ export function GraphDemo() {
         collapsedInsightSectionSet.has(item.key)
       ).length,
     [collapsedInsightSectionSet, visibleInsightSections]
+  );
+  const updateCollapsedInsightsForView = useCallback(
+    (
+      targetView: GraphWorkbenchView,
+      updater: (prev: GraphInsightSectionKey[]) => GraphInsightSectionKey[]
+    ) => {
+      setCollapsedInsightSectionsByView((prev) => {
+        const current = prev[targetView] ?? [];
+        const dedupedNext = Array.from(
+          new Set(
+            updater(current).filter(
+              (item) => GRAPH_INSIGHT_SECTION_VIEW_MAP[item] === targetView
+            )
+          )
+        );
+        if (
+          current.length === dedupedNext.length &&
+          current.every((item, index) => item === dedupedNext[index])
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          [targetView]: dedupedNext
+        };
+      });
+    },
+    []
+  );
+  const updateCurrentViewCollapsedInsights = useCallback(
+    (updater: (prev: GraphInsightSectionKey[]) => GraphInsightSectionKey[]) =>
+      updateCollapsedInsightsForView(graphWorkbenchView, updater),
+    [graphWorkbenchView, updateCollapsedInsightsForView]
   );
 
   useEffect(() => {
@@ -3058,7 +3157,7 @@ export function GraphDemo() {
               <button
                 type="button"
                 onClick={() =>
-                  setCollapsedInsightSections((prev) => {
+                  updateCurrentViewCollapsedInsights((prev) => {
                     const next = new Set(prev);
                     visibleInsightSections.forEach((item) => {
                       next.delete(item.key);
@@ -3073,7 +3172,7 @@ export function GraphDemo() {
               <button
                 type="button"
                 onClick={() =>
-                  setCollapsedInsightSections((prev) => {
+                  updateCurrentViewCollapsedInsights((prev) => {
                     const next = new Set(prev);
                     visibleInsightSections.forEach((item) => next.add(item.key));
                     return Array.from(next);
@@ -3098,7 +3197,7 @@ export function GraphDemo() {
                 <button
                   type="button"
                   onClick={() =>
-                    setCollapsedInsightSections((prev) =>
+                    updateCurrentViewCollapsedInsights((prev) =>
                       prev.includes("domain_cluster")
                         ? prev.filter((item) => item !== "domain_cluster")
                         : [...prev, "domain_cluster"]
@@ -3161,7 +3260,7 @@ export function GraphDemo() {
                 <button
                   type="button"
                   onClick={() =>
-                    setCollapsedInsightSections((prev) =>
+                    updateCurrentViewCollapsedInsights((prev) =>
                       prev.includes("risk_top")
                         ? prev.filter((item) => item !== "risk_top")
                         : [...prev, "risk_top"]
@@ -3209,7 +3308,7 @@ export function GraphDemo() {
                 <button
                   type="button"
                   onClick={() =>
-                    setCollapsedInsightSections((prev) =>
+                    updateCurrentViewCollapsedInsights((prev) =>
                       prev.includes("active_focus")
                         ? prev.filter((item) => item !== "active_focus")
                         : [...prev, "active_focus"]
@@ -3275,7 +3374,7 @@ export function GraphDemo() {
                 <button
                   type="button"
                   onClick={() =>
-                    setCollapsedInsightSections((prev) =>
+                    updateCurrentViewCollapsedInsights((prev) =>
                       prev.includes("bridge_suggestions")
                         ? prev.filter((item) => item !== "bridge_suggestions")
                         : [...prev, "bridge_suggestions"]
@@ -3348,7 +3447,7 @@ export function GraphDemo() {
                 <button
                   type="button"
                   onClick={() =>
-                    setCollapsedInsightSections((prev) =>
+                    updateCurrentViewCollapsedInsights((prev) =>
                       prev.includes("bridge_timeline")
                         ? prev.filter((item) => item !== "bridge_timeline")
                         : [...prev, "bridge_timeline"]
@@ -3614,7 +3713,7 @@ export function GraphDemo() {
                 <button
                   type="button"
                   onClick={() =>
-                    setCollapsedInsightSections((prev) =>
+                    updateCurrentViewCollapsedInsights((prev) =>
                       prev.includes("replay_history")
                         ? prev.filter((item) => item !== "replay_history")
                         : [...prev, "replay_history"]
@@ -4013,7 +4112,7 @@ export function GraphDemo() {
                 <button
                   type="button"
                   onClick={() =>
-                    setCollapsedInsightSections((prev) =>
+                    updateCurrentViewCollapsedInsights((prev) =>
                       prev.includes("graph_timeline")
                         ? prev.filter((item) => item !== "graph_timeline")
                         : [...prev, "graph_timeline"]

@@ -274,6 +274,35 @@ function buildFocusQueueKey(payload: Pick<PathFocusPayload, "nodeId" | "bridgePa
   return `${payload.nodeId}__${payload.bridgePartnerLabel ?? ""}`;
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function renderKeywordMarkedText(input: string, keyword: string) {
+  const normalized = keyword.trim();
+  if (!normalized) {
+    return input;
+  }
+  const matcher = new RegExp(`(${escapeRegExp(normalized)})`, "ig");
+  const segments = input.split(matcher);
+  if (segments.length === 1) {
+    return input;
+  }
+  return (
+    <>
+      {segments.map((part, index) =>
+        part.toLowerCase() === normalized.toLowerCase() ? (
+          <mark key={`mark_${part}_${index}`} className="workspace-session-mark">
+            {part}
+          </mark>
+        ) : (
+          <span key={`text_${part}_${index}`}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
 function deriveStreamStageMap(
   previous: StreamStageMap,
   traceText: string
@@ -574,8 +603,50 @@ export function WorkspaceDemo() {
     () => searchParams.get("replayMode")?.trim() ?? "",
     [searchParams]
   );
+  const normalizedSessionQuery = useMemo(
+    () => sessionQuery.trim().toLowerCase(),
+    [sessionQuery]
+  );
   const hasGraphContext = queryFrom === "graph" || queryFrom === "graph_save";
   const hasMatchedQuerySession = Boolean(querySessionId) && sessionId === querySessionId;
+  const rankedSessions = useMemo(() => {
+    const toMillis = (value: string) => {
+      const millis = Date.parse(value);
+      return Number.isFinite(millis) ? millis : 0;
+    };
+    const keyword = normalizedSessionQuery;
+    return sessions
+      .map((item) => {
+        const titleText = item.title.toLowerCase();
+        const idText = item.id.toLowerCase();
+        let score = 0;
+        if (keyword) {
+          if (titleText.includes(keyword)) score += 60;
+          if (titleText.startsWith(keyword)) score += 24;
+          if (idText.includes(keyword)) score += 44;
+          if (idText.startsWith(keyword)) score += 18;
+        }
+        score += Math.min(12, Math.round(item.messageCount / 2));
+        score += Math.min(8, item.lastLevel);
+        return {
+          item,
+          score,
+          updatedMillis: toMillis(item.updatedAt)
+        };
+      })
+      .sort((left, right) => {
+        if (keyword && right.score !== left.score) {
+          return right.score - left.score;
+        }
+        if (right.updatedMillis !== left.updatedMillis) {
+          return right.updatedMillis - left.updatedMillis;
+        }
+        if (right.item.messageCount !== left.item.messageCount) {
+          return right.item.messageCount - left.item.messageCount;
+        }
+        return right.item.lastLevel - left.item.lastLevel;
+      });
+  }, [normalizedSessionQuery, sessions]);
 
   const canUnlock = useMemo(() => nextData?.canUnlockFinal ?? false, [nextData]);
   const learningChecklist = useMemo(
@@ -2283,6 +2354,12 @@ export function WorkspaceDemo() {
             value={sessionQuery}
             onChange={(event) => setSessionQuery(event.target.value)}
             placeholder="按标题、会话ID或消息内容搜索"
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void loadSessions(sessionQuery);
+              }
+            }}
           />
           <button type="button" onClick={() => loadSessions(sessionQuery)} disabled={loading}>
             搜索会话
@@ -2294,14 +2371,24 @@ export function WorkspaceDemo() {
             刷新会话列表
           </button>
         </div>
+        {normalizedSessionQuery ? (
+          <p className="workspace-session-hint">
+            已按关键词“{sessionQuery.trim()}”进行匹配度排序。
+          </p>
+        ) : null}
         <div className="card-list card-list-top">
-          {sessions.length === 0 ? (
+          {rankedSessions.length === 0 ? (
             <div className="card-item muted">当前没有匹配会话，请先创建或调整搜索条件。</div>
           ) : (
-            sessions.map((item) => (
+            rankedSessions.map(({ item, score }) => (
               <div className="card-item" key={item.id}>
-                <strong>{item.title}</strong>
-                <p>会话 ID：{item.id}</p>
+                <strong>{renderKeywordMarkedText(item.title, normalizedSessionQuery)}</strong>
+                <p>
+                  会话 ID：{renderKeywordMarkedText(item.id, normalizedSessionQuery)}
+                  {normalizedSessionQuery ? (
+                    <span className="workspace-session-score">匹配度 {score}</span>
+                  ) : null}
+                </p>
                 <p>当前层级：Level {item.lastLevel} · 消息数：{item.messageCount}</p>
                 <p>更新时间：{formatTime(item.updatedAt)}</p>
                 <div className="btn-row">
