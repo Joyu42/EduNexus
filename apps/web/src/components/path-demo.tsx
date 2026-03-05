@@ -520,6 +520,11 @@ export function PathDemo() {
         .slice(0, 5),
     [focusPayload, workspaceSessions]
   );
+  const pathQueueSize =
+    focusQueue.length > 0 ? focusQueue.length : focusPayload ? 1 : incomingBatchCount;
+  const pathTaskCount = data?.tasks.length ?? 0;
+  const pathFocusDone = focusFeedbackStats?.done ?? 0;
+  const pathFocusTotal = focusFeedbackStats?.total ?? 0;
 
   useEffect(() => {
     if (!focusPayload) {
@@ -1028,6 +1033,26 @@ export function PathDemo() {
           { id: "path_error_panel", label: "状态反馈" }
         ]}
       />
+      <div className="demo-metric-strip">
+        <div className="demo-metric-chip">
+          <span>焦点队列</span>
+          <strong>{pathQueueSize}</strong>
+        </div>
+        <div className="demo-metric-chip">
+          <span>计划任务</span>
+          <strong>{pathTaskCount}</strong>
+        </div>
+        <div className="demo-metric-chip">
+          <span>焦点回写</span>
+          <strong>
+            {pathFocusDone}/{pathFocusTotal}
+          </strong>
+        </div>
+        <div className="demo-metric-chip">
+          <span>当前状态</span>
+          <strong>{loading ? "执行中" : "就绪"}</strong>
+        </div>
+      </div>
       {focusHint ? <div className="result-box info">{focusHint}</div> : null}
       {focusSummary ? (
         <CollapsiblePanel

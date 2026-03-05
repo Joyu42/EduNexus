@@ -117,6 +117,13 @@ type ChapterPanelConfig = {
   defaultTrendSpan: ChapterTrendSpan;
 };
 
+type MiniFoldCardProps = {
+  title: string;
+  subtitle?: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+};
+
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -234,6 +241,30 @@ function formatChapterPanelPresetLabel(preset: ChapterPanelPreset) {
   if (preset === "light") return "轻量概览";
   if (preset === "custom") return "自定义";
   return "平衡默认";
+}
+
+function MiniFoldCard({
+  title,
+  subtitle,
+  defaultOpen = true,
+  children
+}: MiniFoldCardProps) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <section className={`obsidian-mini-card mini-fold-card ${open ? "open" : "closed"}`}>
+      <header className="mini-fold-head">
+        <div className="mini-fold-meta">
+          <strong>{title}</strong>
+          {subtitle ? <span>{subtitle}</span> : null}
+        </div>
+        <button type="button" onClick={() => setOpen((prev) => !prev)}>
+          {open ? "收起" : "展开"}
+        </button>
+      </header>
+      {open ? <div className="mini-fold-body">{children}</div> : null}
+    </section>
+  );
 }
 
 export function KbDemo() {
@@ -1200,6 +1231,9 @@ export function KbDemo() {
     setChapterTrendSpan(nextConfig.defaultTrendSpan);
   }
 
+  const kbGraphNodeCount = graph?.nodes.length ?? 0;
+  const kbGraphEdgeCount = graph?.edges.length ?? 0;
+
   return (
     <div className={`demo-form demo-form-kb${compactMode ? " is-compact" : ""}`}>
       <div className="demo-toolbar">
@@ -1229,6 +1263,26 @@ export function KbDemo() {
           { id: "kb_error_panel", label: "状态反馈" }
         ]}
       />
+      <div className="demo-metric-strip">
+        <div className="demo-metric-chip">
+          <span>候选结果</span>
+          <strong>{candidates.length}</strong>
+        </div>
+        <div className="demo-metric-chip">
+          <span>焦点文档</span>
+          <strong>{selectedDoc ? selectedDoc.id : "未选中"}</strong>
+        </div>
+        <div className="demo-metric-chip">
+          <span>图谱规模</span>
+          <strong>
+            {kbGraphNodeCount}/{kbGraphEdgeCount}
+          </strong>
+        </div>
+        <div className="demo-metric-chip">
+          <span>标签总数</span>
+          <strong>{tags.length}</strong>
+        </div>
+      </div>
       <div id="kb_search_panel" className="kb-search-panel panel-surface anchor-target">
         <div className="section-head">
           <strong>检索控制台</strong>
@@ -1435,8 +1489,7 @@ export function KbDemo() {
           </article>
 
           <aside className="obsidian-rail">
-            <div className="obsidian-mini-card">
-              <strong>知识脉络时间轴</strong>
+            <MiniFoldCard title="知识脉络时间轴" subtitle="按更新时间与关联关系快速回看" defaultOpen>
               <div className="timeline-list">
                 {timelineEntries.map((item) => (
                   <div className="timeline-item" key={item.id}>
@@ -1445,10 +1498,9 @@ export function KbDemo() {
                   </div>
                 ))}
               </div>
-            </div>
+            </MiniFoldCard>
 
-            <div className="obsidian-mini-card">
-              <strong>双链引用</strong>
+            <MiniFoldCard title="双链引用" subtitle="从引用文档直接回看上下文" defaultOpen>
               <p>{selectedDoc.backlinks.length} 篇文档引用了当前卡片</p>
               <div>
                 {selectedDoc.backlinks.slice(0, 8).map((docId) => (
@@ -1462,10 +1514,9 @@ export function KbDemo() {
                   </button>
                 ))}
               </div>
-            </div>
+            </MiniFoldCard>
 
-            <div className="obsidian-mini-card">
-              <strong>NotebookLM 摘录</strong>
+            <MiniFoldCard title="NotebookLM 摘录" subtitle="自动提炼高价值原文段落" defaultOpen={false}>
               {notebookQuotes.length === 0 ? (
                 <p className="muted">暂无可提炼段落。</p>
               ) : (
@@ -1473,10 +1524,9 @@ export function KbDemo() {
                   <blockquote key={`quote_${index}`}>{quote}</blockquote>
                 ))
               )}
-            </div>
+            </MiniFoldCard>
 
-            <div className="obsidian-mini-card">
-              <strong>引用高亮跳转</strong>
+            <MiniFoldCard title="引用高亮跳转" subtitle="按 sourceRef 快速定位原文证据" defaultOpen={false}>
               <p className="muted">点击 sourceRef 后，下方片段会按关键词高亮显示。</p>
               <div className="btn-row btn-row-bottom">
                 {selectedDoc.sourceRefs.length === 0 ? (
@@ -1499,10 +1549,9 @@ export function KbDemo() {
                   {renderHighlightedText(line, highlightKeywords)}
                 </blockquote>
               ))}
-            </div>
+            </MiniFoldCard>
 
-            <div className="obsidian-mini-card">
-              <strong>关系小地图</strong>
+            <MiniFoldCard title="关系小地图" subtitle="章节锚点与关系链路联动分析" defaultOpen={false}>
               {miniGraphEdges.length === 0 ? (
                 <p className="muted">当前焦点节点附近暂无关系边。</p>
               ) : (
@@ -2057,11 +2106,10 @@ export function KbDemo() {
                   ) : null}
                 </div>
               )}
-            </div>
+            </MiniFoldCard>
 
             {relatedCards.length > 0 ? (
-              <div className="obsidian-mini-card">
-                <strong>关联卡片建议</strong>
+              <MiniFoldCard title="关联卡片建议" subtitle="按关联强度给出跳转建议" defaultOpen={false}>
                 {relatedCards.map((item) => (
                   <button
                     type="button"
@@ -2072,7 +2120,7 @@ export function KbDemo() {
                     {item.title} {item.score > 0 ? `(${item.score.toFixed(1)})` : ""}
                   </button>
                 ))}
-              </div>
+              </MiniFoldCard>
             ) : null}
           </aside>
           </div>

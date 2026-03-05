@@ -1372,6 +1372,20 @@ html[data-theme="aurora"] .obsidian-focus-card {
   background: rgba(255, 255, 255, 0.8);
 }
 
+html[data-theme="aurora"] .mini-fold-head {
+  border-bottom-color: rgba(118, 154, 216, 0.26);
+}
+
+html[data-theme="aurora"] .mini-fold-meta span {
+  color: #6388b3;
+}
+
+html[data-theme="aurora"] .mini-fold-head button {
+  border-color: rgba(118, 154, 216, 0.44);
+  background: rgba(255, 255, 255, 0.86);
+  color: #5579a7;
+}
+
 html[data-theme="aurora"] .workspace-message-list-meta span {
   border-color: rgba(118, 154, 216, 0.44);
   background: rgba(255, 255, 255, 0.84);
@@ -2918,6 +2932,51 @@ html[data-theme="aurora"] .headline-badge {
   margin-bottom: 6px;
 }
 
+.mini-fold-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.mini-fold-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(91, 192, 255, 0.18);
+}
+
+.mini-fold-card.closed .mini-fold-head {
+  border-bottom: 0;
+}
+
+.mini-fold-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.mini-fold-meta strong {
+  margin: 0;
+}
+
+.mini-fold-meta span {
+  font-size: 11px;
+  color: #8bb3d8;
+}
+
+.mini-fold-head button {
+  border: 1px solid rgba(91, 192, 255, 0.34);
+  border-radius: 999px;
+  background: rgba(11, 17, 28, 0.78);
+  color: #b8d9f5;
+  font-size: 11px;
+  padding: 3px 10px;
+}
+
+.mini-fold-body {
+  padding: 0 12px 12px;
+}
+
 .obsidian-mini-card blockquote {
   margin: 8px 0 0;
   padding: 8px 10px;
@@ -4287,6 +4346,36 @@ html[data-theme="aurora"] .tag {
   gap: 7px;
 }
 
+.demo-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.demo-metric-chip {
+  border: 1px solid rgba(97, 132, 178, 0.32);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(97, 199, 255, 0.08), transparent 46%),
+    rgba(7, 12, 21, 0.56);
+  display: grid;
+  gap: 2px;
+}
+
+.demo-metric-chip span {
+  font-size: 11px;
+  color: #8db3d7;
+}
+
+.demo-metric-chip strong {
+  font-size: 13px;
+  color: #dff3ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .demo-form .demo-anchor-chip,
 .demo-form .demo-anchor-tools button {
   border: 1px solid rgba(97, 132, 178, 0.42);
@@ -4585,6 +4674,21 @@ html[data-theme="aurora"] .demo-form .demo-anchor-chip.active {
   color: #285d4d;
 }
 
+html[data-theme="aurora"] .demo-metric-chip {
+  border-color: rgba(118, 154, 216, 0.38);
+  background:
+    radial-gradient(circle at 88% 12%, rgba(122, 187, 255, 0.14), transparent 48%),
+    rgba(255, 255, 255, 0.82);
+}
+
+html[data-theme="aurora"] .demo-metric-chip span {
+  color: #678bb6;
+}
+
+html[data-theme="aurora"] .demo-metric-chip strong {
+  color: #355c88;
+}
+
 html[data-theme="aurora"] .demo-compact-toggle {
   border-color: rgba(118, 154, 216, 0.44);
   background: rgba(255, 255, 255, 0.84);
@@ -4655,7 +4759,8 @@ html[data-theme="aurora"] .collapsible-panel-toggle-indicator {
 .demo-form .demo-compact-toggle,
 .demo-form .demo-anchor-tools button,
 .demo-form .demo-anchor-chip,
-.demo-form .collapsible-panel-head button {
+.demo-form .collapsible-panel-head button,
+.demo-form .mini-fold-head button {
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 11px;
@@ -4666,7 +4771,8 @@ html[data-theme="aurora"] .collapsible-panel-toggle-indicator {
 .demo-form .demo-compact-toggle:hover:not(:disabled),
 .demo-form .demo-anchor-tools button:hover:not(:disabled),
 .demo-form .demo-anchor-chip:hover:not(:disabled),
-.demo-form .collapsible-panel-head button:hover:not(:disabled) {
+.demo-form .collapsible-panel-head button:hover:not(:disabled),
+.demo-form .mini-fold-head button:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 6px 12px rgba(4, 10, 18, 0.28);
 }
@@ -10617,6 +10723,10 @@ html[data-theme="aurora"] .stream-guidance {
     align-items: flex-start;
   }
 
+  .demo-metric-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .demo-toolbar-actions {
     width: 100%;
   }
@@ -10633,6 +10743,11 @@ html[data-theme="aurora"] .stream-guidance {
   .demo-anchor-tools button {
     flex: 1;
     min-width: 0;
+  }
+
+  .mini-fold-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .kb-filter-grid,
@@ -10714,6 +10829,10 @@ html[data-theme="aurora"] .stream-guidance {
   .demo-anchor-row {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .demo-metric-strip {
+    grid-template-columns: 1fr;
   }
 
   .demo-anchor-chip {

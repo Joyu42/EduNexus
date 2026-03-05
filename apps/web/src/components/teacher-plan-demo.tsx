@@ -203,6 +203,9 @@ export function TeacherPlanDemo() {
     URL.revokeObjectURL(url);
   }
 
+  const teacherObjectiveCount = result?.objectives.length ?? 0;
+  const teacherOutlineCount = result?.outline.length ?? 0;
+
   return (
     <div className={`demo-form demo-form-teacher${compactMode ? " is-compact" : ""}`}>
       <div className="demo-toolbar">
@@ -230,6 +233,24 @@ export function TeacherPlanDemo() {
           { id: "teacher_error_panel", label: "状态反馈" }
         ]}
       />
+      <div className="demo-metric-strip">
+        <div className="demo-metric-chip">
+          <span>模板数量</span>
+          <strong>{templates.length}</strong>
+        </div>
+        <div className="demo-metric-chip">
+          <span>教学目标</span>
+          <strong>{teacherObjectiveCount}</strong>
+        </div>
+        <div className="demo-metric-chip">
+          <span>课堂流程</span>
+          <strong>{teacherOutlineCount}</strong>
+        </div>
+        <div className="demo-metric-chip">
+          <span>当前状态</span>
+          <strong>{loading ? "生成中" : result ? "已生成" : "待生成"}</strong>
+        </div>
+      </div>
       <div id="teacher_input_panel" className="teacher-input-panel panel-surface anchor-target">
         <div className="section-head">
           <strong>教学输入配置</strong>
