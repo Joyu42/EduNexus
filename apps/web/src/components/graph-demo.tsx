@@ -70,6 +70,7 @@ const GRAPH_SYNC_LAYOUT_STORAGE_KEY = "edunexus_graph_sync_layout_mode";
 const GRAPH_INSIGHT_COMPACT_STORAGE_KEY = "edunexus_graph_insight_compact_mode";
 const GRAPH_BRIDGE_BATCH_LIMIT_STORAGE_KEY = "edunexus_graph_bridge_batch_limit";
 const GRAPH_BRIDGE_REPLAY_COMPACT_STORAGE_KEY = "edunexus_graph_bridge_replay_compact_mode";
+const GRAPH_BRIDGE_REPLAY_RISK_ONLY_STORAGE_KEY = "edunexus_graph_bridge_replay_risk_only";
 const GRAPH_BRIDGE_HISTORY_LIMIT = 14;
 const BRIDGE_REPLAY_INTERVAL_MS: Record<BridgeReplaySpeed, number> = {
   "1x": 1300,
@@ -213,6 +214,15 @@ const GRAPH_INSIGHT_SECTION_VIEW_MAP: Record<GraphInsightSectionKey, GraphWorkbe
   bridge_timeline: "bridge",
   replay_history: "history",
   graph_timeline: "history"
+};
+const GRAPH_INSIGHT_SECTION_ANCHOR_ID_MAP: Record<GraphInsightSectionKey, string> = {
+  domain_cluster: "graph_overview_panel",
+  risk_top: "graph_risk_top_panel",
+  active_focus: "graph_active_focus_panel",
+  bridge_suggestions: "graph_bridge_panel",
+  bridge_timeline: "graph_bridge_timeline_panel",
+  replay_history: "graph_history_panel",
+  graph_timeline: "graph_timeline_panel"
 };
 
 const DEFAULT_GRAPH_INSIGHT_COLLAPSE_BY_VIEW: Record<
@@ -430,6 +440,8 @@ export function GraphDemo() {
   const [bridgeReplayCursor, setBridgeReplayCursor] = useState(0);
   const [bridgeReplaySpeed, setBridgeReplaySpeed] = useState<BridgeReplaySpeed>("1x");
   const [bridgeReplayBatchLimit, setBridgeReplayBatchLimit] = useState(4);
+  const [bridgeReplayKeyword, setBridgeReplayKeyword] = useState("");
+  const [bridgeReplayRiskOnly, setBridgeReplayRiskOnly] = useState(false);
   const [riskThresholdPercent, setRiskThresholdPercent] = useState(0);
   const [enableEdgeHeatmap, setEnableEdgeHeatmap] = useState(true);
   const [canvasZoomPercent, setCanvasZoomPercent] = useState(100);
@@ -1075,6 +1087,14 @@ export function GraphDemo() {
       } else if (rawBridgeReplayCompact === "1") {
         setBridgeReplayCompactMode(true);
       }
+      const rawBridgeReplayRiskOnly = window.localStorage.getItem(
+        GRAPH_BRIDGE_REPLAY_RISK_ONLY_STORAGE_KEY
+      );
+      if (rawBridgeReplayRiskOnly === "1") {
+        setBridgeReplayRiskOnly(true);
+      } else if (rawBridgeReplayRiskOnly === "0") {
+        setBridgeReplayRiskOnly(false);
+      }
     } catch {
       // ignore storage read errors
     }
@@ -1114,12 +1134,17 @@ export function GraphDemo() {
         GRAPH_BRIDGE_REPLAY_COMPACT_STORAGE_KEY,
         bridgeReplayCompactMode ? "1" : "0"
       );
+      window.localStorage.setItem(
+        GRAPH_BRIDGE_REPLAY_RISK_ONLY_STORAGE_KEY,
+        bridgeReplayRiskOnly ? "1" : "0"
+      );
     } catch {
       // ignore storage write errors
     }
   }, [
     bridgeSuggestionBatchLimit,
     bridgeReplayCompactMode,
+    bridgeReplayRiskOnly,
     canvasZoomPercent,
     enableEdgeHeatmap,
     historyCompactMode,
@@ -1179,6 +1204,14 @@ export function GraphDemo() {
         (section) => section.view === "all" || section.view === graphWorkbenchView
       ),
     [graphWorkbenchView]
+  );
+  const visibleInsightSectionAnchors = useMemo(
+    () =>
+      visibleInsightSections.map((section) => ({
+        ...section,
+        anchorId: GRAPH_INSIGHT_SECTION_ANCHOR_ID_MAP[section.key]
+      })),
+    [visibleInsightSections]
   );
   const visibleCollapsedInsightCount = useMemo(
     () =>
@@ -1245,6 +1278,21 @@ export function GraphDemo() {
       );
     },
     [graphWorkbenchView, updateCurrentViewCollapsedInsights, visibleInsightSections]
+  );
+  const jumpToInsightSection = useCallback(
+    (sectionKey: GraphInsightSectionKey) => {
+      if (collapsedInsightSectionSet.has(sectionKey)) {
+        updateCurrentViewCollapsedInsights((prev) =>
+          prev.filter((item) => item !== sectionKey)
+        );
+      }
+      const anchorId = GRAPH_INSIGHT_SECTION_ANCHOR_ID_MAP[sectionKey];
+      window.setTimeout(() => {
+        const section = document.getElementById(anchorId);
+        section?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 18);
+    },
+    [collapsedInsightSectionSet, updateCurrentViewCollapsedInsights]
   );
 
   useEffect(() => {
@@ -1765,15 +1813,30 @@ export function GraphDemo() {
   );
 
   const displayedBridgeReplayFrames = useMemo(() => {
-    if (bridgeReplayNodeFilter === "all") {
-      return bridgeReplayFrames;
-    }
-    return bridgeReplayFrames.filter(
-      (frame) =>
-        frame.bridge.sourceLabel === bridgeReplayNodeFilter ||
-        frame.bridge.targetLabel === bridgeReplayNodeFilter
-    );
-  }, [bridgeReplayFrames, bridgeReplayNodeFilter]);
+    const keyword = bridgeReplayKeyword.trim().toLowerCase();
+    return bridgeReplayFrames.filter((frame) => {
+      if (
+        bridgeReplayNodeFilter !== "all" &&
+        frame.bridge.sourceLabel !== bridgeReplayNodeFilter &&
+        frame.bridge.targetLabel !== bridgeReplayNodeFilter
+      ) {
+        return false;
+      }
+      if (bridgeReplayRiskOnly && frame.bridge.risk < 0.65) {
+        return false;
+      }
+      if (!keyword) {
+        return true;
+      }
+      const normalizedAt = formatDateTime(frame.at).toLowerCase();
+      return (
+        frame.bridge.sourceLabel.toLowerCase().includes(keyword) ||
+        frame.bridge.targetLabel.toLowerCase().includes(keyword) ||
+        normalizedAt.includes(keyword) ||
+        frame.at.toLowerCase().includes(keyword)
+      );
+    });
+  }, [bridgeReplayFrames, bridgeReplayKeyword, bridgeReplayNodeFilter, bridgeReplayRiskOnly]);
 
   const orderedBridgeReplayFrames = useMemo(
     () =>
@@ -3646,6 +3709,23 @@ export function GraphDemo() {
               >
                 折叠当前视图
               </button>
+              <div className="graph-insight-jump-row">
+                {visibleInsightSectionAnchors.map((section) => {
+                  const collapsed = collapsedInsightSectionSet.has(section.key);
+                  return (
+                    <button
+                      key={`insight_jump_${section.key}`}
+                      type="button"
+                      data-anchor-id={section.anchorId}
+                      className={collapsed ? "collapsed" : ""}
+                      onClick={() => jumpToInsightSection(section.key)}
+                    >
+                      {section.label}
+                      <em>{collapsed ? "已折叠" : "展开中"}</em>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div
@@ -3713,6 +3793,7 @@ export function GraphDemo() {
             </div>
 
             <div
+              id="graph_risk_top_panel"
               className={`graph-insight-card graph-section-overview${
                 collapsedInsightSectionSet.has("risk_top") ? " collapsed" : ""
               }`}
@@ -3761,6 +3842,7 @@ export function GraphDemo() {
             </div>
 
             <div
+              id="graph_active_focus_panel"
               className={`graph-insight-card graph-section-overview${
                 collapsedInsightSectionSet.has("active_focus") ? " collapsed" : ""
               }`}
@@ -3960,6 +4042,7 @@ export function GraphDemo() {
             </div>
 
             <div
+              id="graph_bridge_timeline_panel"
               className={`graph-insight-card graph-section-bridge${
                 collapsedInsightSectionSet.has("bridge_timeline") ? " collapsed" : ""
               }`}
@@ -4030,6 +4113,43 @@ export function GraphDemo() {
                       {bridgeReplayMode === "focus" ? " 焦点回放" : " 全量回放"} · 进度{" "}
                       {bridgeReplayProgressPercent}%
                     </span>
+                  </div>
+                  <div className="graph-bridge-replay-filter-row">
+                    <label className="graph-bridge-replay-search">
+                      关键词
+                      <input
+                        type="search"
+                        value={bridgeReplayKeyword}
+                        placeholder="节点/时间关键词"
+                        onChange={(event) => setBridgeReplayKeyword(event.target.value)}
+                      />
+                    </label>
+                    <label className="graph-bridge-replay-risk-toggle">
+                      <input
+                        type="checkbox"
+                        checked={bridgeReplayRiskOnly}
+                        onChange={(event) => setBridgeReplayRiskOnly(event.target.checked)}
+                      />
+                      仅高风险帧
+                    </label>
+                    <span>
+                      匹配 {displayedBridgeReplayFrames.length}/{bridgeReplayFrames.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBridgeReplayNodeFilter("all");
+                        setBridgeReplayKeyword("");
+                        setBridgeReplayRiskOnly(false);
+                      }}
+                      disabled={
+                        bridgeReplayNodeFilter === "all" &&
+                        bridgeReplayKeyword.trim().length === 0 &&
+                        !bridgeReplayRiskOnly
+                      }
+                    >
+                      清空筛选
+                    </button>
                   </div>
                   {!bridgeReplayCompactMode ? (
                     <div className="graph-bridge-timeline-filter">
