@@ -4,10 +4,10 @@ import { PageHeader } from "@/components/page-header";
 import { PageQuickNav } from "@/components/page-quick-nav";
 
 const PATH_QUICK_NAV_ITEMS = [
-  { href: "#path_focus_panel", label: "焦点联动", hint: "批量队列与桥接" },
-  { href: "#path_goal_panel", label: "目标与生成", hint: "生成与重排" },
-  { href: "#path_plan_panel", label: "计划任务", hint: "执行与回写" },
-  { href: "#path_error_panel", label: "状态反馈", hint: "异常定位" }
+  { href: "/graph", label: "知识图谱", hint: "查看风险链路与来源" },
+  { href: "/workspace", label: "学习工作区", hint: "继续引导与沉淀" },
+  { href: "/kb", label: "本地知识库", hint: "检索历史笔记与证据" },
+  { href: "#path_focus_panel", label: "当前页面分区", hint: "下滑后由分区锚点接管" }
 ] as const;
 
 export default function PathPage() {

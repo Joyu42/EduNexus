@@ -4,9 +4,10 @@ import { PageHeader } from "@/components/page-header";
 import { PageQuickNav } from "@/components/page-quick-nav";
 
 const WORKSPACE_QUICK_NAV_ITEMS = [
-  { href: "#workspace_sessions", label: "会话历史", hint: "检索/恢复/删除" },
-  { href: "#workspace_input_control", label: "输入与控制", hint: "任务清单与引导" },
-  { href: "#workspace_session_records", label: "会话记录", hint: "消息与链路回放" }
+  { href: "/graph", label: "知识图谱", hint: "查看关系链批次来源" },
+  { href: "/path", label: "学习路径", hint: "回到计划任务与重排" },
+  { href: "/kb", label: "本地知识库", hint: "检索沉淀笔记" },
+  { href: "#workspace_sessions", label: "当前页面分区", hint: "下滑后由分区锚点接管" }
 ] as const;
 
 export default function WorkspacePage() {

@@ -562,6 +562,7 @@ export function WorkspaceDemo() {
     useState<WorkspaceViewMode>("learn");
   const [streamCompactMode, setStreamCompactMode] = useState(true);
   const [sessionListCompactMode, setSessionListCompactMode] = useState(true);
+  const [sessionMatchOnly, setSessionMatchOnly] = useState(true);
   const [controlCompactMode, setControlCompactMode] = useState(true);
   const [graphFocus, setGraphFocus] = useState<PathFocusPayload | null>(null);
   const [graphFocusQueue, setGraphFocusQueue] = useState<PathFocusPayload[]>([]);
@@ -627,6 +628,20 @@ export function WorkspaceDemo() {
     ],
     []
   );
+  const workspaceViewMainSectionId = useMemo(
+    () => resolveWorkspaceMainSectionId(workspaceViewMode),
+    [workspaceViewMode]
+  );
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const target = document.getElementById(workspaceViewMainSectionId);
+      if (!target) {
+        return;
+      }
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 90);
+    return () => window.clearTimeout(timer);
+  }, [workspaceViewMainSectionId]);
   const rankedSessions = useMemo(() => {
     const toMillis = (value: string) => {
       const millis = Date.parse(value);
@@ -665,12 +680,28 @@ export function WorkspaceDemo() {
         return right.item.lastLevel - left.item.lastLevel;
       });
   }, [normalizedSessionQuery, sessions]);
-  const renderSessions = useMemo(() => {
-    if (!sessionListCompactMode || normalizedSessionQuery) {
+  const matchedSessions = useMemo(() => {
+    if (!normalizedSessionQuery) {
       return rankedSessions;
     }
-    return rankedSessions.slice(0, 8);
-  }, [normalizedSessionQuery, rankedSessions, sessionListCompactMode]);
+    return rankedSessions.filter(({ item }) => {
+      const titleMatched = item.title.toLowerCase().includes(normalizedSessionQuery);
+      const idMatched = item.id.toLowerCase().includes(normalizedSessionQuery);
+      return titleMatched || idMatched;
+    });
+  }, [normalizedSessionQuery, rankedSessions]);
+  const visibleSessionRows = useMemo(() => {
+    if (!normalizedSessionQuery || !sessionMatchOnly) {
+      return rankedSessions;
+    }
+    return matchedSessions;
+  }, [matchedSessions, normalizedSessionQuery, rankedSessions, sessionMatchOnly]);
+  const renderSessions = useMemo(() => {
+    if (!sessionListCompactMode || normalizedSessionQuery) {
+      return visibleSessionRows;
+    }
+    return visibleSessionRows.slice(0, 8);
+  }, [normalizedSessionQuery, sessionListCompactMode, visibleSessionRows]);
 
   const canUnlock = useMemo(() => nextData?.canUnlockFinal ?? false, [nextData]);
   const learningChecklist = useMemo(
@@ -2305,6 +2336,35 @@ export function WorkspaceDemo() {
     }
   }
 
+  function resolveWorkspaceMainSectionId(viewMode: WorkspaceViewMode) {
+    if (viewMode === "sessions") {
+      return "workspace_sessions";
+    }
+    if (viewMode === "replay") {
+      return "workspace_session_records";
+    }
+    return "workspace_input_control";
+  }
+
+  function scrollToWorkspaceSection(sectionId: string) {
+    if (sectionId === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const target = document.getElementById(sectionId);
+    if (!target) {
+      return;
+    }
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function resetSessionSearchFilters() {
+    setSessionQuery("");
+    setSessionMatchOnly(true);
+    setSessionListCompactMode(true);
+    void loadSessions("");
+  }
+
   return (
     <div
       className="panel-grid panel-grid-tight workspace-layout"
@@ -2365,6 +2425,24 @@ export function WorkspaceDemo() {
         storageKey="workspace_demo"
         items={workspaceAnchorItems}
       />
+      <div className="workspace-quick-actions">
+        <button type="button" onClick={() => scrollToWorkspaceSection(workspaceViewMainSectionId)}>
+          聚焦当前视图
+        </button>
+        <button type="button" onClick={() => scrollToWorkspaceSection("workspace_sessions")}>
+          会话管理
+        </button>
+        <button type="button" onClick={() => scrollToWorkspaceSection("workspace_input_control")}>
+          输入控制
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollToWorkspaceSection("workspace_session_records")}
+        >
+          会话记录
+        </button>
+        <button type="button" onClick={() => scrollToWorkspaceSection("top")}>回到顶部</button>
+      </div>
       {hasGraphContext ? (
         <div
           className={`workspace-graph-context workspace-section workspace-section-common${
@@ -2498,13 +2576,37 @@ export function WorkspaceDemo() {
             刷新会话列表
           </button>
         </div>
+        <div className="workspace-session-filter-row">
+          <label className="workspace-session-match-toggle">
+            <input
+              type="checkbox"
+              checked={sessionMatchOnly}
+              onChange={(event) => setSessionMatchOnly(event.target.checked)}
+              disabled={!normalizedSessionQuery}
+            />
+            <span>仅显示关键词命中</span>
+          </label>
+          <span>
+            命中 {normalizedSessionQuery ? matchedSessions.length : visibleSessionRows.length}/
+            {rankedSessions.length}
+          </span>
+          <button
+            type="button"
+            className="workspace-session-filter-clear"
+            onClick={resetSessionSearchFilters}
+            disabled={!normalizedSessionQuery && sessionListCompactMode && sessionMatchOnly}
+          >
+            清空筛选
+          </button>
+        </div>
         {normalizedSessionQuery ? (
           <p className="workspace-session-hint">
-            已按关键词“{sessionQuery.trim()}”进行匹配度排序。
+            已按关键词“{sessionQuery.trim()}”排序
+            {sessionMatchOnly ? "并仅保留命中会话。" : "，当前展示全部会话。"}
           </p>
-        ) : rankedSessions.length > renderSessions.length ? (
+        ) : visibleSessionRows.length > renderSessions.length ? (
           <p className="workspace-session-hint">
-            当前仅展示最近 {renderSessions.length}/{rankedSessions.length} 个会话，可关闭紧凑模式查看全部。
+            当前仅展示最近 {renderSessions.length}/{visibleSessionRows.length} 个会话，可关闭紧凑模式查看全部。
           </p>
         ) : null}
         <div className="card-list card-list-top">

@@ -266,6 +266,14 @@ export function PathDemo() {
   const [replayPushHistoryEntries, setReplayPushHistoryEntries] = useState<
     ReplayPushHistoryEntry[]
   >([]);
+  const [replayHistoryKeyword, setReplayHistoryKeyword] = useState("");
+  const [replayHistoryTargetFilter, setReplayHistoryTargetFilter] = useState<
+    "all" | "path" | "workspace"
+  >("all");
+  const [replayHistorySourceFilter, setReplayHistorySourceFilter] = useState<
+    "all" | "single_frame" | "batch_queue" | "history_repush"
+  >("all");
+  const [replayHistoryRiskOnly, setReplayHistoryRiskOnly] = useState(false);
   const [submittingTaskId, setSubmittingTaskId] = useState("");
   const [data, setData] = useState<PathPayload | null>(null);
   const [error, setError] = useState("");
@@ -314,6 +322,25 @@ export function PathDemo() {
       // ignore persistence failures
     }
     window.location.reload();
+  }
+
+  function scrollToPathSection(sectionId: string) {
+    if (sectionId === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const target = document.getElementById(sectionId);
+    if (!target) {
+      return;
+    }
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function resetReplayHistoryFilters() {
+    setReplayHistoryKeyword("");
+    setReplayHistoryTargetFilter("all");
+    setReplayHistorySourceFilter("all");
+    setReplayHistoryRiskOnly(false);
   }
 
   useEffect(() => {
@@ -430,9 +457,62 @@ export function PathDemo() {
     };
   }, [focusPayload]);
 
-  const replayPushHistoryPreview = useMemo(
-    () => sortReplayPushHistory(replayPushHistoryEntries, "latest").slice(0, 6),
+  const sortedReplayPushHistory = useMemo(
+    () => sortReplayPushHistory(replayPushHistoryEntries, "latest"),
     [replayPushHistoryEntries]
+  );
+  const normalizedReplayHistoryKeyword = useMemo(
+    () => replayHistoryKeyword.trim().toLowerCase(),
+    [replayHistoryKeyword]
+  );
+  const filteredReplayPushHistory = useMemo(
+    () =>
+      sortedReplayPushHistory.filter((entry) => {
+        if (replayHistoryTargetFilter !== "all" && entry.target !== replayHistoryTargetFilter) {
+          return false;
+        }
+        if (replayHistorySourceFilter !== "all" && entry.source !== replayHistorySourceFilter) {
+          return false;
+        }
+        if (replayHistoryRiskOnly) {
+          const hasHighRisk = entry.queue.some((item) => item.risk >= 0.65);
+          if (!hasHighRisk) {
+            return false;
+          }
+        }
+        if (!normalizedReplayHistoryKeyword) {
+          return true;
+        }
+        const sourceLabel = resolveReplayPushSourceLabel(entry.source);
+        const targetLabel = resolveReplayPushTargetLabel(entry.target);
+        const searchText = [
+          entry.batchId,
+          sourceLabel,
+          targetLabel,
+          entry.primaryNodeLabel,
+          entry.bridgePartnerLabel ?? "",
+          entry.mode ?? "",
+          entry.at
+        ]
+          .join(" ")
+          .toLowerCase();
+        return searchText.includes(normalizedReplayHistoryKeyword);
+      }),
+    [
+      normalizedReplayHistoryKeyword,
+      replayHistoryRiskOnly,
+      replayHistorySourceFilter,
+      replayHistoryTargetFilter,
+      sortedReplayPushHistory
+    ]
+  );
+  const replayPushHistoryPreview = useMemo(
+    () => filteredReplayPushHistory.slice(0, 8),
+    [filteredReplayPushHistory]
+  );
+  const replayHistoryHighRiskCount = useMemo(
+    () => filteredReplayPushHistory.filter((entry) => entry.queue.some((item) => item.risk >= 0.65)).length,
+    [filteredReplayPushHistory]
   );
 
   const loadReplayPushHistory = useCallback(() => {
@@ -1055,6 +1135,23 @@ export function PathDemo() {
           打开知识库检索
         </button>
       </div>
+      <div className="path-quick-actions">
+        <button type="button" onClick={() => scrollToPathSection("path_focus_panel")}>
+          聚焦焦点联动
+        </button>
+        <button type="button" onClick={() => scrollToPathSection("path_goal_panel")}>
+          目标与生成
+        </button>
+        <button type="button" onClick={() => scrollToPathSection("path_plan_panel")}>
+          计划与回写
+        </button>
+        <button type="button" onClick={() => scrollToPathSection("path_error_panel")}>
+          状态反馈
+        </button>
+        <button type="button" onClick={() => scrollToPathSection("top")}>
+          回到顶部
+        </button>
+      </div>
       <SectionAnchorNav
         title="路径分区导航"
         storageKey="path_demo"
@@ -1153,6 +1250,67 @@ export function PathDemo() {
               <strong>回放批次历史入口</strong>
               <span>支持一键载入为当前路径焦点队列</span>
             </header>
+            <div className="path-replay-history-filter">
+              <label className="path-replay-history-search">
+                <span>关键词筛选</span>
+                <input
+                  value={replayHistoryKeyword}
+                  onChange={(event) => setReplayHistoryKeyword(event.target.value)}
+                  placeholder="批次 / 节点 / 来源 / 模式"
+                  aria-label="筛选路径回放批次"
+                />
+              </label>
+              <label>
+                <span>目标</span>
+                <select
+                  value={replayHistoryTargetFilter}
+                  onChange={(event) =>
+                    setReplayHistoryTargetFilter(
+                      event.target.value as "all" | "path" | "workspace"
+                    )
+                  }
+                >
+                  <option value="all">全部目标</option>
+                  <option value="path">路径</option>
+                  <option value="workspace">工作区</option>
+                </select>
+              </label>
+              <label>
+                <span>来源</span>
+                <select
+                  value={replayHistorySourceFilter}
+                  onChange={(event) =>
+                    setReplayHistorySourceFilter(
+                      event.target.value as
+                        | "all"
+                        | "single_frame"
+                        | "batch_queue"
+                        | "history_repush"
+                    )
+                  }
+                >
+                  <option value="all">全部来源</option>
+                  <option value="single_frame">当前帧推送</option>
+                  <option value="batch_queue">批量队列推送</option>
+                  <option value="history_repush">历史复推</option>
+                </select>
+              </label>
+              <label className="path-replay-history-risk-toggle">
+                <input
+                  type="checkbox"
+                  checked={replayHistoryRiskOnly}
+                  onChange={(event) => setReplayHistoryRiskOnly(event.target.checked)}
+                />
+                <span>仅高风险批次</span>
+              </label>
+              <span>
+                命中 {filteredReplayPushHistory.length}/{sortedReplayPushHistory.length} · 高风险{" "}
+                {replayHistoryHighRiskCount}
+              </span>
+              <button type="button" onClick={resetReplayHistoryFilters}>
+                清空筛选
+              </button>
+            </div>
             {replayPushHistoryPreview.length > 0 ? (
               <div className="path-replay-history-list">
                 {replayPushHistoryPreview.map((entry) => (
@@ -1177,7 +1335,11 @@ export function PathDemo() {
                 ))}
               </div>
             ) : (
-              <p className="muted">暂无回放批次历史，可先在图谱页执行批量推送。</p>
+              <p className="muted">
+                {sortedReplayPushHistory.length > 0
+                  ? "当前筛选下没有可用批次，建议放宽筛选条件。"
+                  : "暂无回放批次历史，可先在图谱页执行批量推送。"}
+              </p>
             )}
           </div>
           <p>关联节点：{focusSummary.relatedText}</p>
