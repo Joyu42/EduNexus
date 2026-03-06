@@ -66,6 +66,8 @@ const GRAPH_CANVAS_ZOOM_STORAGE_KEY = "edunexus_graph_canvas_zoom";
 const GRAPH_BRIDGE_HISTORY_STORAGE_KEY = "edunexus_graph_bridge_history_timeline";
 const GRAPH_INSIGHT_COLLAPSE_STORAGE_KEY = "edunexus_graph_insight_collapsed_sections";
 const GRAPH_HISTORY_COMPACT_STORAGE_KEY = "edunexus_graph_history_compact_mode";
+const GRAPH_SYNC_LAYOUT_STORAGE_KEY = "edunexus_graph_sync_layout_mode";
+const GRAPH_INSIGHT_COMPACT_STORAGE_KEY = "edunexus_graph_insight_compact_mode";
 const GRAPH_BRIDGE_HISTORY_LIMIT = 14;
 const BRIDGE_REPLAY_INTERVAL_MS: Record<BridgeReplaySpeed, number> = {
   "1x": 1300,
@@ -458,6 +460,8 @@ export function GraphDemo() {
     useState<ReplayPushHistorySort>("latest");
   const [replayHistoryTopN, setReplayHistoryTopN] = useState<"all" | 3 | 5 | 10>("all");
   const [historyCompactMode, setHistoryCompactMode] = useState(true);
+  const [syncLayoutMode, setSyncLayoutMode] = useState(true);
+  const [insightCompactMode, setInsightCompactMode] = useState(true);
   const [replayHistoryPreset, setReplayHistoryPreset] =
     useState<ReplayHistoryPresetKey>("all");
   const [replayCompareLeftId, setReplayCompareLeftId] = useState("");
@@ -1038,6 +1042,18 @@ export function GraphDemo() {
       } else if (rawHistoryCompact === "1") {
         setHistoryCompactMode(true);
       }
+      const rawSyncLayout = window.localStorage.getItem(GRAPH_SYNC_LAYOUT_STORAGE_KEY);
+      if (rawSyncLayout === "0") {
+        setSyncLayoutMode(false);
+      } else if (rawSyncLayout === "1") {
+        setSyncLayoutMode(true);
+      }
+      const rawInsightCompact = window.localStorage.getItem(GRAPH_INSIGHT_COMPACT_STORAGE_KEY);
+      if (rawInsightCompact === "0") {
+        setInsightCompactMode(false);
+      } else if (rawInsightCompact === "1") {
+        setInsightCompactMode(true);
+      }
     } catch {
       // ignore storage read errors
     }
@@ -1061,10 +1077,25 @@ export function GraphDemo() {
         GRAPH_HISTORY_COMPACT_STORAGE_KEY,
         historyCompactMode ? "1" : "0"
       );
+      window.localStorage.setItem(
+        GRAPH_SYNC_LAYOUT_STORAGE_KEY,
+        syncLayoutMode ? "1" : "0"
+      );
+      window.localStorage.setItem(
+        GRAPH_INSIGHT_COMPACT_STORAGE_KEY,
+        insightCompactMode ? "1" : "0"
+      );
     } catch {
       // ignore storage write errors
     }
-  }, [canvasZoomPercent, enableEdgeHeatmap, historyCompactMode, riskThresholdPercent]);
+  }, [
+    canvasZoomPercent,
+    enableEdgeHeatmap,
+    historyCompactMode,
+    insightCompactMode,
+    riskThresholdPercent,
+    syncLayoutMode
+  ]);
 
   useEffect(() => {
     if (!focusedActivityId) {
@@ -2749,9 +2780,22 @@ export function GraphDemo() {
       insightItem
     ];
   }, [graphWorkbenchView]);
+  const activeInsightAnchorId = useMemo(
+    () =>
+      graphWorkbenchView === "overview"
+        ? "graph_overview_panel"
+        : graphWorkbenchView === "bridge"
+          ? "graph_bridge_panel"
+          : "graph_history_panel",
+    [graphWorkbenchView]
+  );
 
   return (
-    <div className="graph-workbench" data-view={graphWorkbenchView}>
+    <div
+      className="graph-workbench"
+      data-view={graphWorkbenchView}
+      data-layout-sync={syncLayoutMode ? "true" : "false"}
+    >
       <div id="graph_controls" className="graph-control-bar anchor-target">
         <button type="button" className="demo-btn-primary" onClick={loadGraph} disabled={loading}>
           {loading ? "正在同步图谱..." : "刷新图谱"}
@@ -2910,6 +2954,12 @@ export function GraphDemo() {
         <div className="demo-metric-chip">
           <span>镜头模式</span>
           <strong>{graphLensMode === "full" ? "全局图" : "关系链聚焦"}</strong>
+        </div>
+        <div className="demo-metric-chip">
+          <span>视窗布局</span>
+          <strong>
+            {syncLayoutMode ? "同步视窗" : "自由滚动"} · {insightCompactMode ? "侧栏紧凑" : "侧栏完整"}
+          </strong>
         </div>
       </div>
       <div className="graph-domain-collapse">
@@ -3281,11 +3331,28 @@ export function GraphDemo() {
             )}
           </article>
 
-          <aside className="graph-insight-panel" ref={insightPanelRef}>
+          <aside
+            className={`graph-insight-panel${insightCompactMode ? " compact" : ""}`}
+            ref={insightPanelRef}
+          >
             <div className="graph-insight-toggle-bar">
               <span>
                 侧栏分组：已折叠 {visibleCollapsedInsightCount}/{visibleInsightSections.length}
               </span>
+              <button
+                type="button"
+                className={`demo-btn-secondary${syncLayoutMode ? " active" : ""}`}
+                onClick={() => setSyncLayoutMode((prev) => !prev)}
+              >
+                {syncLayoutMode ? "同步视窗开" : "同步视窗关"}
+              </button>
+              <button
+                type="button"
+                className={`demo-btn-secondary${insightCompactMode ? " active" : ""}`}
+                onClick={() => setInsightCompactMode((prev) => !prev)}
+              >
+                {insightCompactMode ? "侧栏紧凑开" : "侧栏紧凑关"}
+              </button>
               {graphWorkbenchView === "history" ? (
                 <button
                   type="button"
@@ -3295,6 +3362,32 @@ export function GraphDemo() {
                   {historyCompactMode ? "历史精简开" : "历史精简关"}
                 </button>
               ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  const canvas = document.getElementById("graph_canvas_panel");
+                  canvas?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                回到画布
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentPanel = document.getElementById(activeInsightAnchorId);
+                  currentPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                当前分组
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  insightPanelRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+                }
+              >
+                侧栏回顶
+              </button>
               <button
                 type="button"
                 className="demo-btn-secondary"

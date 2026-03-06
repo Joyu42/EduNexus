@@ -5084,6 +5084,7 @@ html[data-theme="aurora"] .collapsible-panel-toggle-indicator {
 
 .graph-metric-strip {
   margin-top: -2px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .kb-graph-panel .result-box,
@@ -6786,6 +6787,10 @@ html[data-theme="aurora"] .config-diff-values em {
   gap: 12px;
 }
 
+.graph-workbench[data-layout-sync="true"] .graph-workbench-grid {
+  align-items: start;
+}
+
 .graph-canvas-panel,
 .graph-insight-card {
   border: 1px solid rgba(97, 132, 178, 0.34);
@@ -6794,6 +6799,19 @@ html[data-theme="aurora"] .config-diff-values em {
     radial-gradient(circle at 88% 8%, rgba(159, 255, 210, 0.08), transparent 40%),
     rgba(8, 13, 22, 0.58);
   padding: 12px;
+}
+
+.graph-workbench[data-layout-sync="true"] .graph-canvas-panel,
+.graph-workbench[data-layout-sync="true"] .graph-insight-panel {
+  position: sticky;
+  top: 64px;
+  max-height: calc(100vh - 74px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.graph-workbench[data-layout-sync="true"] .graph-canvas-panel {
+  padding-right: 8px;
 }
 
 .graph-insight-toggle-bar {
@@ -6809,6 +6827,10 @@ html[data-theme="aurora"] .config-diff-values em {
   top: 64px;
   z-index: 4;
   backdrop-filter: blur(6px);
+}
+
+.graph-workbench[data-layout-sync="true"] .graph-insight-toggle-bar {
+  top: 0;
 }
 
 .graph-insight-toggle-bar span {
@@ -7227,6 +7249,20 @@ html[data-theme="aurora"] .config-diff-values em {
 .graph-insight-panel {
   display: grid;
   gap: 10px;
+  min-height: 0;
+  scrollbar-gutter: stable both-edges;
+}
+
+.graph-insight-panel.compact .graph-insight-card {
+  padding: 9px 10px;
+}
+
+.graph-insight-panel.compact .graph-insight-card-head {
+  margin-bottom: 2px;
+}
+
+.graph-insight-panel.compact .graph-insight-card:not(.collapsed) > p.muted:first-of-type {
+  display: none;
 }
 
 .graph-domain-cluster-list {
@@ -11278,6 +11314,13 @@ html[data-theme="aurora"] .stream-guidance {
 
   .graph-workbench-grid {
     grid-template-columns: 1fr;
+  }
+
+  .graph-workbench[data-layout-sync="true"] .graph-canvas-panel,
+  .graph-workbench[data-layout-sync="true"] .graph-insight-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
 
   .graph-canvas {
