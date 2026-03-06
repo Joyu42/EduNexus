@@ -64,6 +64,7 @@ const GRAPH_RISK_THRESHOLD_STORAGE_KEY = "edunexus_graph_risk_threshold";
 const GRAPH_CANVAS_ZOOM_STORAGE_KEY = "edunexus_graph_canvas_zoom";
 const GRAPH_BRIDGE_HISTORY_STORAGE_KEY = "edunexus_graph_bridge_history_timeline";
 const GRAPH_INSIGHT_COLLAPSE_STORAGE_KEY = "edunexus_graph_insight_collapsed_sections";
+const GRAPH_HISTORY_COMPACT_STORAGE_KEY = "edunexus_graph_history_compact_mode";
 const GRAPH_BRIDGE_HISTORY_LIMIT = 14;
 const BRIDGE_REPLAY_INTERVAL_MS: Record<BridgeReplaySpeed, number> = {
   "1x": 1300,
@@ -455,6 +456,7 @@ export function GraphDemo() {
   const [replayHistorySort, setReplayHistorySort] =
     useState<ReplayPushHistorySort>("latest");
   const [replayHistoryTopN, setReplayHistoryTopN] = useState<"all" | 3 | 5 | 10>("all");
+  const [historyCompactMode, setHistoryCompactMode] = useState(true);
   const [replayHistoryPreset, setReplayHistoryPreset] =
     useState<ReplayHistoryPresetKey>("all");
   const [replayCompareLeftId, setReplayCompareLeftId] = useState("");
@@ -858,6 +860,13 @@ export function GraphDemo() {
     }
     return sortedReplayPushHistory.slice(0, replayHistoryTopN);
   }, [replayHistoryTopN, sortedReplayPushHistory]);
+  const renderReplayPushHistory = useMemo(
+    () =>
+      historyCompactMode
+        ? visibleReplayPushHistory.slice(0, 5)
+        : visibleReplayPushHistory,
+    [historyCompactMode, visibleReplayPushHistory]
+  );
 
   const replayCompareCandidates = useMemo(
     () => sortedReplayPushHistory.slice(0, 24),
@@ -1022,6 +1031,12 @@ export function GraphDemo() {
           setCanvasZoomPercent(clampZoomPercent(parsed));
         }
       }
+      const rawHistoryCompact = window.localStorage.getItem(GRAPH_HISTORY_COMPACT_STORAGE_KEY);
+      if (rawHistoryCompact === "0") {
+        setHistoryCompactMode(false);
+      } else if (rawHistoryCompact === "1") {
+        setHistoryCompactMode(true);
+      }
     } catch {
       // ignore storage read errors
     }
@@ -1041,10 +1056,14 @@ export function GraphDemo() {
         GRAPH_CANVAS_ZOOM_STORAGE_KEY,
         String(canvasZoomPercent)
       );
+      window.localStorage.setItem(
+        GRAPH_HISTORY_COMPACT_STORAGE_KEY,
+        historyCompactMode ? "1" : "0"
+      );
     } catch {
       // ignore storage write errors
     }
-  }, [canvasZoomPercent, enableEdgeHeatmap, riskThresholdPercent]);
+  }, [canvasZoomPercent, enableEdgeHeatmap, historyCompactMode, riskThresholdPercent]);
 
   useEffect(() => {
     if (!focusedActivityId) {
@@ -3247,6 +3266,15 @@ export function GraphDemo() {
               <span>
                 侧栏分组：已折叠 {visibleCollapsedInsightCount}/{visibleInsightSections.length}
               </span>
+              {graphWorkbenchView === "history" ? (
+                <button
+                  type="button"
+                  className={`demo-btn-secondary${historyCompactMode ? " active" : ""}`}
+                  onClick={() => setHistoryCompactMode((prev) => !prev)}
+                >
+                  {historyCompactMode ? "历史精简开" : "历史精简关"}
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="demo-btn-secondary"
@@ -3874,220 +3902,227 @@ export function GraphDemo() {
                     <span>路径 {replayPushHistoryStats.pathBatches}</span>
                     <span>工作区 {replayPushHistoryStats.workspaceBatches}</span>
                   </div>
-                  <div className="graph-replay-history-filters">
-                    <div className="graph-replay-history-filter-group">
-                      <span>预设</span>
-                      <div className="graph-replay-history-filter-buttons">
-                        <button
-                          type="button"
-                          className={replayHistoryPreset === "all" ? "active" : ""}
-                          onClick={() => applyReplayHistoryPreset("all")}
-                        >
-                          全量视角
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryPreset === "path_roundtrip" ? "active" : ""}
-                          onClick={() => applyReplayHistoryPreset("path_roundtrip")}
-                        >
-                          路径回流
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryPreset === "workspace_roundtrip" ? "active" : ""}
-                          onClick={() => applyReplayHistoryPreset("workspace_roundtrip")}
-                        >
-                          工作区回流
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryPreset === "batch_queue" ? "active" : ""}
-                          onClick={() => applyReplayHistoryPreset("batch_queue")}
-                        >
-                          批量优先
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryPreset === "single_frame" ? "active" : ""}
-                          onClick={() => applyReplayHistoryPreset("single_frame")}
-                        >
-                          单帧优先
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryPreset === "repush_focus" ? "active" : ""}
-                          onClick={() => applyReplayHistoryPreset("repush_focus")}
-                        >
-                          复推轨迹
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryPreset === "manual" ? "active" : ""}
-                          disabled
-                        >
-                          {replayHistoryPreset === "manual" ? "当前为自定义" : "自定义"}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="graph-replay-history-filter-group">
-                      <span>目标</span>
-                      <div className="graph-replay-history-filter-buttons">
-                        <button
-                          type="button"
-                          className={replayHistoryTargetFilter === "all" ? "active" : ""}
-                          onClick={() => setReplayHistoryTargetFilter("all")}
-                        >
-                          全部
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryTargetFilter === "path" ? "active" : ""}
-                          onClick={() => setReplayHistoryTargetFilter("path")}
-                        >
-                          路径
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryTargetFilter === "workspace" ? "active" : ""}
-                          onClick={() => setReplayHistoryTargetFilter("workspace")}
-                        >
-                          工作区
-                        </button>
-                      </div>
-                    </div>
-                    <div className="graph-replay-history-filter-group">
-                      <span>来源</span>
-                      <div className="graph-replay-history-filter-buttons">
-                        <button
-                          type="button"
-                          className={replayHistorySourceFilter === "all" ? "active" : ""}
-                          onClick={() => setReplayHistorySourceFilter("all")}
-                        >
-                          全部
-                        </button>
-                        <button
-                          type="button"
-                          className={
-                            replayHistorySourceFilter === "single_frame" ? "active" : ""
-                          }
-                          onClick={() => setReplayHistorySourceFilter("single_frame")}
-                        >
-                          当前帧
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistorySourceFilter === "batch_queue" ? "active" : ""}
-                          onClick={() => setReplayHistorySourceFilter("batch_queue")}
-                        >
-                          批量队列
-                        </button>
-                        <button
-                          type="button"
-                          className={
-                            replayHistorySourceFilter === "history_repush" ? "active" : ""
-                          }
-                          onClick={() => setReplayHistorySourceFilter("history_repush")}
-                        >
-                          历史复推
-                        </button>
-                      </div>
-                    </div>
-                    <div className="graph-replay-history-filter-group">
-                      <span>模式</span>
-                      <div className="graph-replay-history-filter-buttons">
-                        <button
-                          type="button"
-                          className={replayHistoryModeFilter === "all" ? "active" : ""}
-                          onClick={() => setReplayHistoryModeFilter("all")}
-                        >
-                          全部
-                        </button>
-                        {replayPushHistoryModeOptions.map((mode) => (
+                  {!historyCompactMode ? (
+                    <div className="graph-replay-history-filters">
+                      <div className="graph-replay-history-filter-group">
+                        <span>预设</span>
+                        <div className="graph-replay-history-filter-buttons">
                           <button
                             type="button"
-                            key={`history_mode_${mode}`}
-                            className={replayHistoryModeFilter === mode ? "active" : ""}
-                            onClick={() => setReplayHistoryModeFilter(mode)}
+                            className={replayHistoryPreset === "all" ? "active" : ""}
+                            onClick={() => applyReplayHistoryPreset("all")}
                           >
-                            {mode}
+                            全量视角
                           </button>
-                        ))}
-                        {replayPushHistoryModeHasUnknown ? (
                           <button
                             type="button"
-                            className={replayHistoryModeFilter === "unknown" ? "active" : ""}
-                            onClick={() => setReplayHistoryModeFilter("unknown")}
+                            className={replayHistoryPreset === "path_roundtrip" ? "active" : ""}
+                            onClick={() => applyReplayHistoryPreset("path_roundtrip")}
                           >
-                            未标注
+                            路径回流
                           </button>
-                        ) : null}
+                          <button
+                            type="button"
+                            className={replayHistoryPreset === "workspace_roundtrip" ? "active" : ""}
+                            onClick={() => applyReplayHistoryPreset("workspace_roundtrip")}
+                          >
+                            工作区回流
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistoryPreset === "batch_queue" ? "active" : ""}
+                            onClick={() => applyReplayHistoryPreset("batch_queue")}
+                          >
+                            批量优先
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistoryPreset === "single_frame" ? "active" : ""}
+                            onClick={() => applyReplayHistoryPreset("single_frame")}
+                          >
+                            单帧优先
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistoryPreset === "repush_focus" ? "active" : ""}
+                            onClick={() => applyReplayHistoryPreset("repush_focus")}
+                          >
+                            复推轨迹
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistoryPreset === "manual" ? "active" : ""}
+                            disabled
+                          >
+                            {replayHistoryPreset === "manual" ? "当前为自定义" : "自定义"}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="graph-replay-history-filter-group">
-                      <span>排序</span>
-                      <div className="graph-replay-history-filter-buttons">
-                        <button
-                          type="button"
-                          className={replayHistorySort === "latest" ? "active" : ""}
-                          onClick={() => setReplayHistorySort("latest")}
-                        >
-                          最新时间
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistorySort === "count_desc" ? "active" : ""}
-                          onClick={() => setReplayHistorySort("count_desc")}
-                        >
-                          数量降序
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistorySort === "count_asc" ? "active" : ""}
-                          onClick={() => setReplayHistorySort("count_asc")}
-                        >
-                          数量升序
-                        </button>
+                      <div className="graph-replay-history-filter-group">
+                        <span>目标</span>
+                        <div className="graph-replay-history-filter-buttons">
+                          <button
+                            type="button"
+                            className={replayHistoryTargetFilter === "all" ? "active" : ""}
+                            onClick={() => setReplayHistoryTargetFilter("all")}
+                          >
+                            全部
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistoryTargetFilter === "path" ? "active" : ""}
+                            onClick={() => setReplayHistoryTargetFilter("path")}
+                          >
+                            路径
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistoryTargetFilter === "workspace" ? "active" : ""}
+                            onClick={() => setReplayHistoryTargetFilter("workspace")}
+                          >
+                            工作区
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="graph-replay-history-filter-group">
-                      <span>快速 TopN</span>
-                      <div className="graph-replay-history-filter-buttons">
-                        <button
-                          type="button"
-                          className={replayHistoryTopN === 3 ? "active" : ""}
-                          onClick={() => setReplayHistoryTopN(3)}
-                        >
-                          Top 3
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryTopN === 5 ? "active" : ""}
-                          onClick={() => setReplayHistoryTopN(5)}
-                        >
-                          Top 5
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryTopN === 10 ? "active" : ""}
-                          onClick={() => setReplayHistoryTopN(10)}
-                        >
-                          Top 10
-                        </button>
-                        <button
-                          type="button"
-                          className={replayHistoryTopN === "all" ? "active" : ""}
-                          onClick={() => setReplayHistoryTopN("all")}
-                        >
-                          全部
-                        </button>
+                      <div className="graph-replay-history-filter-group">
+                        <span>来源</span>
+                        <div className="graph-replay-history-filter-buttons">
+                          <button
+                            type="button"
+                            className={replayHistorySourceFilter === "all" ? "active" : ""}
+                            onClick={() => setReplayHistorySourceFilter("all")}
+                          >
+                            全部
+                          </button>
+                          <button
+                            type="button"
+                            className={
+                              replayHistorySourceFilter === "single_frame" ? "active" : ""
+                            }
+                            onClick={() => setReplayHistorySourceFilter("single_frame")}
+                          >
+                            当前帧
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistorySourceFilter === "batch_queue" ? "active" : ""}
+                            onClick={() => setReplayHistorySourceFilter("batch_queue")}
+                          >
+                            批量队列
+                          </button>
+                          <button
+                            type="button"
+                            className={
+                              replayHistorySourceFilter === "history_repush" ? "active" : ""
+                            }
+                            onClick={() => setReplayHistorySourceFilter("history_repush")}
+                          >
+                            历史复推
+                          </button>
+                        </div>
                       </div>
+                      <div className="graph-replay-history-filter-group">
+                        <span>模式</span>
+                        <div className="graph-replay-history-filter-buttons">
+                          <button
+                            type="button"
+                            className={replayHistoryModeFilter === "all" ? "active" : ""}
+                            onClick={() => setReplayHistoryModeFilter("all")}
+                          >
+                            全部
+                          </button>
+                          {replayPushHistoryModeOptions.map((mode) => (
+                            <button
+                              type="button"
+                              key={`history_mode_${mode}`}
+                              className={replayHistoryModeFilter === mode ? "active" : ""}
+                              onClick={() => setReplayHistoryModeFilter(mode)}
+                            >
+                              {mode}
+                            </button>
+                          ))}
+                          {replayPushHistoryModeHasUnknown ? (
+                            <button
+                              type="button"
+                              className={replayHistoryModeFilter === "unknown" ? "active" : ""}
+                              onClick={() => setReplayHistoryModeFilter("unknown")}
+                            >
+                              未标注
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="graph-replay-history-filter-group">
+                        <span>排序</span>
+                        <div className="graph-replay-history-filter-buttons">
+                          <button
+                            type="button"
+                            className={replayHistorySort === "latest" ? "active" : ""}
+                            onClick={() => setReplayHistorySort("latest")}
+                          >
+                            最新时间
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistorySort === "count_desc" ? "active" : ""}
+                            onClick={() => setReplayHistorySort("count_desc")}
+                          >
+                            数量降序
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistorySort === "count_asc" ? "active" : ""}
+                            onClick={() => setReplayHistorySort("count_asc")}
+                          >
+                            数量升序
+                          </button>
+                        </div>
+                      </div>
+                      <div className="graph-replay-history-filter-group">
+                        <span>快速 TopN</span>
+                        <div className="graph-replay-history-filter-buttons">
+                          <button
+                            type="button"
+                            className={replayHistoryTopN === 3 ? "active" : ""}
+                            onClick={() => setReplayHistoryTopN(3)}
+                          >
+                            Top 3
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistoryTopN === 5 ? "active" : ""}
+                            onClick={() => setReplayHistoryTopN(5)}
+                          >
+                            Top 5
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistoryTopN === 10 ? "active" : ""}
+                            onClick={() => setReplayHistoryTopN(10)}
+                          >
+                            Top 10
+                          </button>
+                          <button
+                            type="button"
+                            className={replayHistoryTopN === "all" ? "active" : ""}
+                            onClick={() => setReplayHistoryTopN("all")}
+                          >
+                            全部
+                          </button>
+                        </div>
+                      </div>
+                      <span className="graph-replay-history-viewport">
+                        当前展示 {renderReplayPushHistory.length}/{filteredReplayPushHistory.length}{" "}
+                        条
+                      </span>
                     </div>
-                    <span className="graph-replay-history-viewport">
-                      当前展示 {visibleReplayPushHistory.length}/{filteredReplayPushHistory.length}{" "}
-                      条
-                    </span>
-                  </div>
-                  {replayCompareCandidates.length > 1 ? (
+                  ) : (
+                    <p className="muted">
+                      历史精简模式已开启，仅展示关键指标和最近 5 条批次（当前{" "}
+                      {renderReplayPushHistory.length}/{filteredReplayPushHistory.length} 条）。关闭后可使用完整筛选与对比。
+                    </p>
+                  )}
+                  {!historyCompactMode && replayCompareCandidates.length > 1 ? (
                     <div className="graph-replay-compare">
                       <strong>批次对比视图</strong>
                       <div className="graph-replay-compare-selects">
@@ -4155,9 +4190,9 @@ export function GraphDemo() {
                       )}
                     </div>
                   ) : null}
-                  {visibleReplayPushHistory.length > 0 ? (
+                  {renderReplayPushHistory.length > 0 ? (
                     <div className="graph-replay-history-list">
-                      {visibleReplayPushHistory.map((entry) => (
+                      {renderReplayPushHistory.map((entry) => (
                         <article
                           className={`graph-replay-history-item${
                             queryReplayBatchId && matchReplayBatchId(entry.batchId, queryReplayBatchId)

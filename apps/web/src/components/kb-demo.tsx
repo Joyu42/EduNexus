@@ -1715,52 +1715,80 @@ export function KbDemo() {
               </div>
             </MiniFoldCard>
 
-            <MiniFoldCard
-              title="NotebookLM 摘录"
-              subtitle="自动提炼高价值原文段落"
-              defaultOpen={false}
-              presetOpen={false}
-              presetVersion={railPresetVersion}
-            >
-              {notebookQuotes.length === 0 ? (
-                <p className="muted">暂无可提炼段落。</p>
-              ) : (
-                notebookQuotes.map((quote, index) => (
-                  <blockquote key={`quote_${index}`}>{quote}</blockquote>
-                ))
-              )}
-            </MiniFoldCard>
+            {railPreset === "compact" ? (
+              <MiniFoldCard
+                title="摘录与引用（精简）"
+                subtitle="当前右栏优先保留主阅读与关系分析"
+                defaultOpen={false}
+                presetOpen={false}
+                presetVersion={railPresetVersion}
+              >
+                <p className="muted">
+                  已隐藏 NotebookLM 摘录和引用高亮跳转，减少首屏长度与滚动压力。
+                </p>
+                <div className="btn-row btn-row-bottom">
+                  <button
+                    type="button"
+                    className="demo-btn-secondary"
+                    onClick={() => {
+                      setRailPreset("balanced");
+                      setRailPresetVersion((prev) => prev + 1);
+                    }}
+                  >
+                    切换到平衡模式查看完整证据卡
+                  </button>
+                </div>
+              </MiniFoldCard>
+            ) : (
+              <>
+                <MiniFoldCard
+                  title="NotebookLM 摘录"
+                  subtitle="自动提炼高价值原文段落"
+                  defaultOpen={false}
+                  presetOpen={false}
+                  presetVersion={railPresetVersion}
+                >
+                  {notebookQuotes.length === 0 ? (
+                    <p className="muted">暂无可提炼段落。</p>
+                  ) : (
+                    notebookQuotes.map((quote, index) => (
+                      <blockquote key={`quote_${index}`}>{quote}</blockquote>
+                    ))
+                  )}
+                </MiniFoldCard>
 
-            <MiniFoldCard
-              title="引用高亮跳转"
-              subtitle="按 sourceRef 快速定位原文证据"
-              defaultOpen={false}
-              presetOpen={railPreset === "balanced"}
-              presetVersion={railPresetVersion}
-            >
-              <p className="muted">点击 sourceRef 后，下方片段会按关键词高亮显示。</p>
-              <div className="btn-row btn-row-bottom">
-                {selectedDoc.sourceRefs.length === 0 ? (
-                  <span className="muted">当前文档没有 sourceRefs。</span>
-                ) : (
-                  selectedDoc.sourceRefs.map((item) => (
-                    <button
-                      type="button"
-                      key={`src_${item}`}
-                      className="note-chip"
-                      onClick={() => setCitationFocus(item)}
-                    >
-                      {item}
-                    </button>
-                  ))
-                )}
-              </div>
-              {citationSnippets.map((line, index) => (
-                <blockquote key={`citation_${index}`}>
-                  {renderHighlightedText(line, highlightKeywords)}
-                </blockquote>
-              ))}
-            </MiniFoldCard>
+                <MiniFoldCard
+                  title="引用高亮跳转"
+                  subtitle="按 sourceRef 快速定位原文证据"
+                  defaultOpen={false}
+                  presetOpen={railPreset === "balanced"}
+                  presetVersion={railPresetVersion}
+                >
+                  <p className="muted">点击 sourceRef 后，下方片段会按关键词高亮显示。</p>
+                  <div className="btn-row btn-row-bottom">
+                    {selectedDoc.sourceRefs.length === 0 ? (
+                      <span className="muted">当前文档没有 sourceRefs。</span>
+                    ) : (
+                      selectedDoc.sourceRefs.map((item) => (
+                        <button
+                          type="button"
+                          key={`src_${item}`}
+                          className="note-chip"
+                          onClick={() => setCitationFocus(item)}
+                        >
+                          {item}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  {citationSnippets.map((line, index) => (
+                    <blockquote key={`citation_${index}`}>
+                      {renderHighlightedText(line, highlightKeywords)}
+                    </blockquote>
+                  ))}
+                </MiniFoldCard>
+              </>
+            )}
 
             <MiniFoldCard
               title="关系小地图"
