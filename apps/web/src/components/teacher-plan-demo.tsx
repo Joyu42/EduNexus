@@ -30,6 +30,11 @@ type WeaknessTemplatePayload = {
   templates: WeaknessTemplate[];
 };
 
+type TeacherWorkbenchView = "input" | "template" | "result";
+
+const TEACHER_WORKBENCH_VIEW_STORAGE_KEY = "edunexus_teacher_workbench_view";
+const TEACHER_FOCUS_ONLY_STORAGE_KEY = "edunexus_teacher_focus_only_mode";
+
 const FALLBACK_TEMPLATES: WeaknessTemplate[] = [
   {
     id: "fallback-condition",
@@ -75,12 +80,28 @@ export function TeacherPlanDemo() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [compactMode, setCompactMode] = useState(false);
+  const [teacherWorkbenchView, setTeacherWorkbenchView] =
+    useState<TeacherWorkbenchView>("input");
+  const [teacherFocusOnlyMode, setTeacherFocusOnlyMode] = useState(false);
 
   useEffect(() => {
     try {
       setCompactMode(window.localStorage.getItem("edunexus_teacher_compact_ui") === "1");
+      const persistedView = window.localStorage.getItem(
+        TEACHER_WORKBENCH_VIEW_STORAGE_KEY
+      );
+      if (persistedView === "template" || persistedView === "result") {
+        setTeacherWorkbenchView(persistedView);
+      } else {
+        setTeacherWorkbenchView("input");
+      }
+      setTeacherFocusOnlyMode(
+        window.localStorage.getItem(TEACHER_FOCUS_ONLY_STORAGE_KEY) === "1"
+      );
     } catch {
       setCompactMode(false);
+      setTeacherWorkbenchView("input");
+      setTeacherFocusOnlyMode(false);
     }
   }, []);
 
@@ -91,6 +112,35 @@ export function TeacherPlanDemo() {
       // ignore persistence failures
     }
   }, [compactMode]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        TEACHER_WORKBENCH_VIEW_STORAGE_KEY,
+        teacherWorkbenchView
+      );
+    } catch {
+      // ignore persistence failures
+    }
+  }, [teacherWorkbenchView]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        TEACHER_FOCUS_ONLY_STORAGE_KEY,
+        teacherFocusOnlyMode ? "1" : "0"
+      );
+    } catch {
+      // ignore persistence failures
+    }
+  }, [teacherFocusOnlyMode]);
+
+  useEffect(() => {
+    if (teacherWorkbenchView !== "result" || result) {
+      return;
+    }
+    setTeacherWorkbenchView("input");
+  }, [result, teacherWorkbenchView]);
 
   function resetTeacherLayout() {
     try {
@@ -164,6 +214,7 @@ export function TeacherPlanDemo() {
         })
       });
       setResult(data);
+      setTeacherWorkbenchView("result");
     } catch (err) {
       setError(formatErrorMessage(err, "生成备课草案失败。"));
       console.error(err);
@@ -222,9 +273,36 @@ export function TeacherPlanDemo() {
 
   const teacherObjectiveCount = result?.objectives.length ?? 0;
   const teacherOutlineCount = result?.outline.length ?? 0;
+  const teacherViewMainSectionId =
+    teacherWorkbenchView === "template"
+      ? "teacher_template_panel"
+      : teacherWorkbenchView === "result"
+        ? "teacher_result_panel"
+        : "teacher_input_panel";
+
+  function scrollToTeacherSection(sectionId: string) {
+    const section = document.getElementById(sectionId);
+    section?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (teacherWorkbenchView === "result" && !result) {
+        scrollToTeacherSection("teacher_input_panel");
+        return;
+      }
+      scrollToTeacherSection(teacherViewMainSectionId);
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [result, teacherViewMainSectionId, teacherWorkbenchView]);
 
   return (
-    <div className={`demo-form demo-form-teacher${compactMode ? " is-compact" : ""}`}>
+    <div
+      className={`demo-form demo-form-teacher teacher-layout${compactMode ? " is-compact" : ""}`}
+      data-view={teacherWorkbenchView}
+      data-focus-only={teacherFocusOnlyMode ? "true" : "false"}
+      data-result-ready={result ? "true" : "false"}
+    >
       <div className="demo-toolbar">
         <span>教师备课工作台</span>
         <div className="demo-toolbar-actions">
@@ -264,6 +342,71 @@ export function TeacherPlanDemo() {
         <button type="button" className="demo-link-chip" onClick={() => router.push("/kb?from=teacher")}>
           打开知识库检索
         </button>
+      </div>
+      <div className="teacher-view-tools">
+        <div className="teacher-view-switcher">
+          <button
+            type="button"
+            className={teacherWorkbenchView === "input" ? "active" : ""}
+            onClick={() => setTeacherWorkbenchView("input")}
+          >
+            输入配置
+            <em>主题与班级信息</em>
+          </button>
+          <button
+            type="button"
+            className={teacherWorkbenchView === "template" ? "active" : ""}
+            onClick={() => setTeacherWorkbenchView("template")}
+          >
+            模板套用
+            <em>{templates.length} 个模板</em>
+          </button>
+          <button
+            type="button"
+            className={teacherWorkbenchView === "result" ? "active" : ""}
+            onClick={() => setTeacherWorkbenchView("result")}
+            disabled={!result}
+          >
+            教案结果
+            <em>{result ? `${teacherObjectiveCount + teacherOutlineCount} 条内容` : "待生成"}</em>
+          </button>
+          <button
+            type="button"
+            className={`teacher-focus-toggle${teacherFocusOnlyMode ? " active" : ""}`}
+            onClick={() => setTeacherFocusOnlyMode((prev) => !prev)}
+          >
+            <strong>仅看当前视图：{teacherFocusOnlyMode ? "开启" : "关闭"}</strong>
+            <em>
+              {teacherFocusOnlyMode
+                ? "已隐藏其它分区，滚动距离更短。"
+                : "开启后仅保留当前视图对应分区。"}
+            </em>
+          </button>
+        </div>
+        <div className="teacher-quick-actions">
+          <button type="button" className="active" onClick={() => scrollToTeacherSection(teacherViewMainSectionId)}>
+            聚焦当前视图
+          </button>
+          <button type="button" onClick={() => scrollToTeacherSection("teacher_input_panel")}>
+            输入配置
+          </button>
+          <button type="button" onClick={() => scrollToTeacherSection("teacher_template_panel")}>
+            模板套用
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollToTeacherSection("teacher_result_panel")}
+            disabled={!result}
+          >
+            教案结果
+          </button>
+          <button type="button" onClick={() => scrollToTeacherSection("teacher_error_panel")}>
+            状态反馈
+          </button>
+          <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            回到顶部
+          </button>
+        </div>
       </div>
       <SectionAnchorNav
         title="备课分区导航"

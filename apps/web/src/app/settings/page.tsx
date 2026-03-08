@@ -908,6 +908,15 @@ export default function SettingsPage() {
       );
     }).slice(0, 12);
   }, [normalizedSettingsSearchKeyword, settingsViewMode]);
+  const settingsViewMainSectionId = useMemo(() => {
+    if (settingsViewMode === "advanced") {
+      return "settings_history_rollback";
+    }
+    if (settingsViewMode === "import") {
+      return "settings_import_json";
+    }
+    return "settings_profile";
+  }, [settingsViewMode]);
 
   useEffect(() => {
     settingsAnchorButtonRefs.current = settingsAnchorButtonRefs.current.slice(
@@ -947,6 +956,22 @@ export default function SettingsPage() {
     }
     scrollToAnchor();
   };
+
+  const jumpToSettingsAnchorById = (anchorId: string) => {
+    const targetAnchor = SETTINGS_ANCHOR_ITEMS.find((item) => item.id === anchorId);
+    if (!targetAnchor) {
+      return;
+    }
+    jumpToSettingsAnchor(targetAnchor);
+  };
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const section = document.getElementById(settingsViewMainSectionId);
+      section?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [settingsViewMainSectionId]);
 
   if (!hasMounted) {
     return (
@@ -1053,6 +1078,51 @@ export default function SettingsPage() {
                   : "开启后会隐藏首屏介绍并降低页面密度，减少滚动。"}
               </em>
             </button>
+            <div className="settings-quick-actions">
+              <button
+                type="button"
+                className="active"
+                onClick={() => jumpToSettingsAnchorById(settingsViewMainSectionId)}
+              >
+                聚焦当前视图
+              </button>
+              <button
+                type="button"
+                onClick={() => jumpToSettingsAnchorById("settings_global_actions")}
+              >
+                全局操作
+              </button>
+              <button
+                type="button"
+                onClick={() => jumpToSettingsAnchorById("settings_profile")}
+              >
+                策略画像
+              </button>
+              <button
+                type="button"
+                onClick={() => jumpToSettingsAnchorById("settings_history_rollback")}
+              >
+                历史回滚
+              </button>
+              <button
+                type="button"
+                onClick={() => jumpToSettingsAnchorById("settings_import_json")}
+              >
+                JSON 导入
+              </button>
+              <button
+                type="button"
+                onClick={() => jumpToSettingsAnchorById("settings_import_audit")}
+              >
+                审计日志
+              </button>
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
+                回到顶部
+              </button>
+            </div>
           </div>
           <div className="settings-search-tools">
             <label className="settings-search-input">

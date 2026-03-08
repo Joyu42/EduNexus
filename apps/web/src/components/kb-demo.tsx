@@ -56,6 +56,7 @@ type RelationGroupBy = "none" | "domain" | "type";
 type MiniLayoutMode = "graph" | "chapter";
 type ChapterSubgraphMode = "highlight" | "focus";
 type ChapterTrendSpan = 7 | 14;
+type KbWorkbenchView = "search" | "doc" | "graph" | "index";
 
 type MiniFlowNode = {
   id: string;
@@ -197,6 +198,8 @@ const DEFAULT_CHAPTER_PANEL_CONFIG: ChapterPanelConfig = {
   defaultSubgraphMode: "highlight",
   defaultTrendSpan: 7
 };
+const KB_WORKBENCH_VIEW_STORAGE_KEY = "edunexus_kb_workbench_view";
+const KB_FOCUS_ONLY_STORAGE_KEY = "edunexus_kb_focus_only_mode";
 
 const CHAPTER_PANEL_PRESETS: Record<
   Exclude<ChapterPanelPreset, "custom">,
@@ -236,6 +239,13 @@ function normalizeChapterPanelPreset(value: string): ChapterPanelPreset {
     return value;
   }
   return "balanced";
+}
+
+function normalizeKbWorkbenchView(value: string | null | undefined): KbWorkbenchView {
+  if (value === "doc" || value === "graph" || value === "index") {
+    return value;
+  }
+  return "search";
 }
 
 function formatChapterPanelPresetLabel(preset: ChapterPanelPreset) {
@@ -314,6 +324,8 @@ export function KbDemo() {
   const [error, setError] = useState("");
   const [externalContextHint, setExternalContextHint] = useState("");
   const [compactMode, setCompactMode] = useState(false);
+  const [kbWorkbenchView, setKbWorkbenchView] = useState<KbWorkbenchView>("search");
+  const [kbFocusOnlyMode, setKbFocusOnlyMode] = useState(true);
   const [railPreset, setRailPreset] = useState<"compact" | "balanced">("compact");
   const [railPresetVersion, setRailPresetVersion] = useState(0);
   const [miniMapDeepMode, setMiniMapDeepMode] = useState(false);
@@ -350,9 +362,15 @@ export function KbDemo() {
       setCompactMode(window.localStorage.getItem("edunexus_kb_compact_ui") === "1");
       const rawRailPreset = window.localStorage.getItem("edunexus_kb_rail_preset");
       setRailPreset(rawRailPreset === "balanced" ? "balanced" : "compact");
+      setKbWorkbenchView(
+        normalizeKbWorkbenchView(window.localStorage.getItem(KB_WORKBENCH_VIEW_STORAGE_KEY))
+      );
+      setKbFocusOnlyMode(window.localStorage.getItem(KB_FOCUS_ONLY_STORAGE_KEY) !== "0");
     } catch {
       setCompactMode(false);
       setRailPreset("compact");
+      setKbWorkbenchView("search");
+      setKbFocusOnlyMode(true);
     }
   }, []);
 
@@ -360,10 +378,12 @@ export function KbDemo() {
     try {
       window.localStorage.setItem("edunexus_kb_compact_ui", compactMode ? "1" : "0");
       window.localStorage.setItem("edunexus_kb_rail_preset", railPreset);
+      window.localStorage.setItem(KB_WORKBENCH_VIEW_STORAGE_KEY, kbWorkbenchView);
+      window.localStorage.setItem(KB_FOCUS_ONLY_STORAGE_KEY, kbFocusOnlyMode ? "1" : "0");
     } catch {
       // ignore persistence failures
     }
-  }, [compactMode, railPreset]);
+  }, [compactMode, kbFocusOnlyMode, kbWorkbenchView, railPreset]);
 
   useEffect(() => {
     try {
@@ -451,6 +471,38 @@ export function KbDemo() {
     }
     window.location.reload();
   }
+
+  const kbViewMainSectionId =
+    kbWorkbenchView === "search"
+      ? "kb_search_panel"
+      : kbWorkbenchView === "doc"
+        ? "kb_doc_panel"
+        : kbWorkbenchView === "graph"
+          ? "kb_graph_panel"
+          : "kb_index_panel";
+
+  function scrollToKbSection(sectionId: string) {
+    if (sectionId === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const target = document.getElementById(sectionId);
+    if (!target) {
+      return;
+    }
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const target = document.getElementById(kbViewMainSectionId);
+      if (!target) {
+        return;
+      }
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 90);
+    return () => window.clearTimeout(timer);
+  }, [kbViewMainSectionId]);
 
   async function loadTags() {
     try {
@@ -1361,7 +1413,11 @@ export function KbDemo() {
   const kbGraphEdgeCount = graph?.edges.length ?? 0;
 
   return (
-    <div className={`demo-form demo-form-kb${compactMode ? " is-compact" : ""}`}>
+    <div
+      className={`demo-form demo-form-kb kb-layout${compactMode ? " is-compact" : ""}`}
+      data-view={kbWorkbenchView}
+      data-focus-only={kbFocusOnlyMode ? "true" : "false"}
+    >
       <div className="demo-toolbar">
         <span>知识库检索工作台</span>
         <div className="demo-toolbar-actions">
@@ -1421,6 +1477,65 @@ export function KbDemo() {
           { id: "kb_error_panel", label: "状态反馈" }
         ]}
       />
+      <div className="kb-quick-actions">
+        <button type="button" onClick={() => scrollToKbSection(kbViewMainSectionId)}>
+          聚焦当前视图
+        </button>
+        <button type="button" onClick={() => scrollToKbSection("kb_search_panel")}>
+          检索控制
+        </button>
+        <button type="button" onClick={() => scrollToKbSection("kb_doc_panel")}>
+          文档阅读
+        </button>
+        <button type="button" onClick={() => scrollToKbSection("kb_graph_panel")}>
+          关系图谱
+        </button>
+        <button type="button" onClick={() => scrollToKbSection("top")}>
+          回到顶部
+        </button>
+      </div>
+      <div id="kb_view_switcher" className="kb-view-switcher anchor-target">
+        <button
+          type="button"
+          className={kbWorkbenchView === "search" ? "active" : ""}
+          onClick={() => setKbWorkbenchView("search")}
+        >
+          检索视图
+          <em>关键词、过滤与候选列表</em>
+        </button>
+        <button
+          type="button"
+          className={kbWorkbenchView === "doc" ? "active" : ""}
+          onClick={() => setKbWorkbenchView("doc")}
+        >
+          阅读视图
+          <em>主文档、双链与摘录</em>
+        </button>
+        <button
+          type="button"
+          className={kbWorkbenchView === "graph" ? "active" : ""}
+          onClick={() => setKbWorkbenchView("graph")}
+        >
+          图谱视图
+          <em>关系图与章节分析</em>
+        </button>
+        <button
+          type="button"
+          className={kbWorkbenchView === "index" ? "active" : ""}
+          onClick={() => setKbWorkbenchView("index")}
+        >
+          索引视图
+          <em>索引统计与审计摘要</em>
+        </button>
+        <button
+          type="button"
+          className={`kb-focus-toggle${kbFocusOnlyMode ? " active" : ""}`}
+          onClick={() => setKbFocusOnlyMode((prev) => !prev)}
+        >
+          {kbFocusOnlyMode ? "仅看当前视图：开" : "仅看当前视图：关"}
+          <em>{kbFocusOnlyMode ? "已隐藏非当前区块" : "显示全部区块"}</em>
+        </button>
+      </div>
       <div className="demo-metric-strip">
         <div className="demo-metric-chip">
           <span>候选结果</span>

@@ -68,6 +68,7 @@ const GRAPH_INSIGHT_COLLAPSE_STORAGE_KEY = "edunexus_graph_insight_collapsed_sec
 const GRAPH_HISTORY_COMPACT_STORAGE_KEY = "edunexus_graph_history_compact_mode";
 const GRAPH_SYNC_LAYOUT_STORAGE_KEY = "edunexus_graph_sync_layout_mode";
 const GRAPH_INSIGHT_COMPACT_STORAGE_KEY = "edunexus_graph_insight_compact_mode";
+const GRAPH_FOCUS_ONLY_STORAGE_KEY = "edunexus_graph_focus_only_mode";
 const GRAPH_BRIDGE_BATCH_LIMIT_STORAGE_KEY = "edunexus_graph_bridge_batch_limit";
 const GRAPH_BRIDGE_REPLAY_COMPACT_STORAGE_KEY = "edunexus_graph_bridge_replay_compact_mode";
 const GRAPH_BRIDGE_REPLAY_RISK_ONLY_STORAGE_KEY = "edunexus_graph_bridge_replay_risk_only";
@@ -475,6 +476,7 @@ export function GraphDemo() {
   const [replayHistoryTopN, setReplayHistoryTopN] = useState<"all" | 3 | 5 | 10>("all");
   const [historyCompactMode, setHistoryCompactMode] = useState(true);
   const [syncLayoutMode, setSyncLayoutMode] = useState(true);
+  const [graphFocusOnlyMode, setGraphFocusOnlyMode] = useState(true);
   const [insightCompactMode, setInsightCompactMode] = useState(true);
   const [bridgeReplayCompactMode, setBridgeReplayCompactMode] = useState(true);
   const [bridgeSuggestionBatchLimit, setBridgeSuggestionBatchLimit] = useState(3);
@@ -1064,6 +1066,12 @@ export function GraphDemo() {
       } else if (rawSyncLayout === "1") {
         setSyncLayoutMode(true);
       }
+      const rawFocusOnly = window.localStorage.getItem(GRAPH_FOCUS_ONLY_STORAGE_KEY);
+      if (rawFocusOnly === "0") {
+        setGraphFocusOnlyMode(false);
+      } else if (rawFocusOnly === "1") {
+        setGraphFocusOnlyMode(true);
+      }
       const rawInsightCompact = window.localStorage.getItem(GRAPH_INSIGHT_COMPACT_STORAGE_KEY);
       if (rawInsightCompact === "0") {
         setInsightCompactMode(false);
@@ -1123,6 +1131,10 @@ export function GraphDemo() {
         syncLayoutMode ? "1" : "0"
       );
       window.localStorage.setItem(
+        GRAPH_FOCUS_ONLY_STORAGE_KEY,
+        graphFocusOnlyMode ? "1" : "0"
+      );
+      window.localStorage.setItem(
         GRAPH_INSIGHT_COMPACT_STORAGE_KEY,
         insightCompactMode ? "1" : "0"
       );
@@ -1147,6 +1159,7 @@ export function GraphDemo() {
     bridgeReplayRiskOnly,
     canvasZoomPercent,
     enableEdgeHeatmap,
+    graphFocusOnlyMode,
     historyCompactMode,
     insightCompactMode,
     riskThresholdPercent,
@@ -3027,6 +3040,12 @@ export function GraphDemo() {
       : graphWorkbenchView === "bridge"
         ? "关系回放"
         : "历史审计";
+  const graphViewMainSectionId =
+    graphWorkbenchView === "overview"
+      ? "graph_overview_panel"
+      : graphWorkbenchView === "bridge"
+        ? "graph_bridge_panel"
+        : "graph_history_panel";
   const graphAnchorItems = useMemo(() => {
     const insightItem =
       graphWorkbenchView === "overview"
@@ -3051,11 +3070,35 @@ export function GraphDemo() {
     [graphWorkbenchView]
   );
 
+  function scrollToGraphSection(sectionId: string) {
+    if (sectionId === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const target = document.getElementById(sectionId);
+    if (!target) {
+      return;
+    }
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const target = document.getElementById(graphViewMainSectionId);
+      if (!target) {
+        return;
+      }
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 90);
+    return () => window.clearTimeout(timer);
+  }, [graphViewMainSectionId]);
+
   return (
     <div
       className="graph-workbench"
       data-view={graphWorkbenchView}
       data-layout-sync={syncLayoutMode ? "true" : "false"}
+      data-focus-only={graphFocusOnlyMode ? "true" : "false"}
     >
       <div id="graph_controls" className="graph-control-bar anchor-target">
         <button type="button" className="demo-btn-primary" onClick={loadGraph} disabled={loading}>
@@ -3195,6 +3238,23 @@ export function GraphDemo() {
         storageKey="graph_demo"
         items={graphAnchorItems}
       />
+      <div className="graph-quick-actions">
+        <button type="button" onClick={() => scrollToGraphSection(graphViewMainSectionId)}>
+          聚焦当前视图
+        </button>
+        <button type="button" onClick={() => scrollToGraphSection("graph_controls")}>
+          筛选控制
+        </button>
+        <button type="button" onClick={() => scrollToGraphSection("graph_canvas_panel")}>
+          图谱画布
+        </button>
+        <button type="button" onClick={() => scrollToGraphSection(activeInsightAnchorId)}>
+          当前洞察
+        </button>
+        <button type="button" onClick={() => scrollToGraphSection("top")}>
+          回到顶部
+        </button>
+      </div>
       <div className="demo-metric-strip graph-metric-strip">
         <div className="demo-metric-chip">
           <span>总节点/边</span>
@@ -3278,6 +3338,16 @@ export function GraphDemo() {
           历史审计
           <em>批次历史与图谱演化</em>
         </button>
+        <div className="graph-view-tools">
+          <button
+            type="button"
+            className={graphFocusOnlyMode ? "active" : ""}
+            onClick={() => setGraphFocusOnlyMode((prev) => !prev)}
+          >
+            {graphFocusOnlyMode ? "仅看当前视图：开" : "仅看当前视图：关"}
+            <em>{graphFocusOnlyMode ? "已隐藏次要区块，减少滚动" : "显示完整区块"}</em>
+          </button>
+        </div>
       </div>
       {pathPushHint ? <div className="result-box success">{pathPushHint}</div> : null}
       {hoverSaveResult ? (
