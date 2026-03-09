@@ -68,16 +68,16 @@ export function ModelConfigPanel({
       setModels([
         // Qwen3.5 系列（最新）
         {
-          id: "Qwen/Qwen3.5-7B-Instruct",
-          name: "Qwen3.5-7B-Instruct",
-          description: "通义千问 3.5 代 7B 指令模型（推荐）",
+          id: "Qwen/Qwen3.5-122B-A10B",
+          name: "Qwen3.5-122B-A10B",
+          description: "通义千问 3.5 代 122B 模型（最强）",
           provider: "ModelScope",
           multimodal: false
         },
         {
-          id: "Qwen/Qwen3.5-14B-Instruct",
-          name: "Qwen3.5-14B-Instruct",
-          description: "通义千问 3.5 代 14B 指令模型",
+          id: "Qwen/Qwen3.5-72B-Instruct",
+          name: "Qwen3.5-72B-Instruct",
+          description: "通义千问 3.5 代 72B 指令模型",
           provider: "ModelScope",
           multimodal: false
         },
@@ -89,24 +89,38 @@ export function ModelConfigPanel({
           multimodal: false
         },
         {
-          id: "Qwen/Qwen3.5-72B-Instruct",
-          name: "Qwen3.5-72B-Instruct",
-          description: "通义千问 3.5 代 72B 指令模型",
+          id: "Qwen/Qwen3.5-14B-Instruct",
+          name: "Qwen3.5-14B-Instruct",
+          description: "通义千问 3.5 代 14B 指令模型",
+          provider: "ModelScope",
+          multimodal: false
+        },
+        {
+          id: "Qwen/Qwen3.5-7B-Instruct",
+          name: "Qwen3.5-7B-Instruct",
+          description: "通义千问 3.5 代 7B 指令模型（推荐）",
           provider: "ModelScope",
           multimodal: false
         },
         // Qwen3.5 VL 系列（多模态）
         {
-          id: "Qwen/Qwen3.5-VL-7B",
-          name: "Qwen3.5-VL-7B 🖼️",
-          description: "支持图片理解的视觉语言模型",
+          id: "Qwen/Qwen3.5-VL-72B",
+          name: "Qwen3.5-VL-72B 🖼️",
+          description: "支持图片理解的视觉语言模型 72B",
           provider: "ModelScope",
           multimodal: true
         },
         {
           id: "Qwen/Qwen3.5-VL-32B",
           name: "Qwen3.5-VL-32B 🖼️",
-          description: "支持图片理解的视觉语言模型（强大）",
+          description: "支持图片理解的视觉语言模型 32B",
+          provider: "ModelScope",
+          multimodal: true
+        },
+        {
+          id: "Qwen/Qwen3.5-VL-7B",
+          name: "Qwen3.5-VL-7B 🖼️",
+          description: "支持图片理解的视觉语言模型 7B",
           provider: "ModelScope",
           multimodal: true
         },
