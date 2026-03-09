@@ -25,6 +25,7 @@ type Model = {
   name: string;
   description: string;
   provider: string;
+  multimodal?: boolean;
 };
 
 export function ModelConfigPanel({
@@ -65,23 +66,64 @@ export function ModelConfigPanel({
       setModelsError("加载模型列表失败");
       // 使用默认模型列表
       setModels([
+        // Qwen3.5 系列（最新）
+        {
+          id: "Qwen/Qwen3.5-7B-Instruct",
+          name: "Qwen3.5-7B-Instruct",
+          description: "通义千问 3.5 代 7B 指令模型（推荐）",
+          provider: "ModelScope",
+          multimodal: false
+        },
+        {
+          id: "Qwen/Qwen3.5-14B-Instruct",
+          name: "Qwen3.5-14B-Instruct",
+          description: "通义千问 3.5 代 14B 指令模型",
+          provider: "ModelScope",
+          multimodal: false
+        },
+        {
+          id: "Qwen/Qwen3.5-32B-Instruct",
+          name: "Qwen3.5-32B-Instruct",
+          description: "通义千问 3.5 代 32B 指令模型",
+          provider: "ModelScope",
+          multimodal: false
+        },
+        {
+          id: "Qwen/Qwen3.5-72B-Instruct",
+          name: "Qwen3.5-72B-Instruct",
+          description: "通义千问 3.5 代 72B 指令模型",
+          provider: "ModelScope",
+          multimodal: false
+        },
+        // Qwen3.5 VL 系列（多模态）
+        {
+          id: "Qwen/Qwen3.5-VL-7B",
+          name: "Qwen3.5-VL-7B 🖼️",
+          description: "支持图片理解的视觉语言模型",
+          provider: "ModelScope",
+          multimodal: true
+        },
+        {
+          id: "Qwen/Qwen3.5-VL-32B",
+          name: "Qwen3.5-VL-32B 🖼️",
+          description: "支持图片理解的视觉语言模型（强大）",
+          provider: "ModelScope",
+          multimodal: true
+        },
+        // Qwen3 系列
         {
           id: "Qwen/Qwen3-8B",
           name: "Qwen3-8B",
-          description: "通义千问 3 代 8B 模型，平衡性能与速度",
-          provider: "ModelScope"
-        },
-        {
-          id: "Qwen/Qwen3-4B",
-          name: "Qwen3-4B",
-          description: "通义千问 3 代 4B 模型，快速响应",
-          provider: "ModelScope"
+          description: "通义千问 3 代 8B 模型",
+          provider: "ModelScope",
+          multimodal: false
         },
         {
           id: "deepseek-ai/DeepSeek-V3.2",
           name: "DeepSeek-V3.2",
           description: "DeepSeek V3.2 最新版本",
-          provider: "ModelScope"
+          provider: "ModelScope",
+          multimodal: false
         }
       ]);
     } finally {
@@ -178,7 +220,14 @@ export function ModelConfigPanel({
                 {models.map((model) => (
                   <SelectItem key={model.id} value={model.id}>
                     <div className="flex flex-col">
-                      <span className="font-medium">{model.name}</span>
+                      <span className="font-medium flex items-center gap-2">
+                        {model.name}
+                        {model.multimodal && (
+                          <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                            多模态
+                          </span>
+                        )}
+                      </span>
                       <span className="text-xs text-muted-foreground">
                         {model.description}
                       </span>
@@ -192,6 +241,9 @@ export function ModelConfigPanel({
             )}
             <p className="text-xs text-muted-foreground">
               当前选择: {models.find(m => m.id === selectedModel)?.name || selectedModel}
+              {models.find(m => m.id === selectedModel)?.multimodal && (
+                <span className="ml-2 text-purple-600">· 支持图片理解</span>
+              )}
             </p>
           </div>
 
