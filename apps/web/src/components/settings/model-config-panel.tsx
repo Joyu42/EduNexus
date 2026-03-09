@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Save } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Eye, EyeOff, Save, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 interface ModelConfigPanelProps {
@@ -19,6 +20,46 @@ interface ModelConfigPanelProps {
   onApiKeyChange: (value: string) => void;
 }
 
+// ModelScope 可用模型列表 (2026-03 实测)
+const AVAILABLE_MODELS = [
+  {
+    id: "Qwen/Qwen3-8B",
+    name: "Qwen3-8B",
+    description: "通义千问 3 代 8B 模型，平衡性能与速度",
+    provider: "ModelScope"
+  },
+  {
+    id: "Qwen/Qwen3-4B",
+    name: "Qwen3-4B",
+    description: "通义千问 3 代 4B 模型，快速响应",
+    provider: "ModelScope"
+  },
+  {
+    id: "Qwen/Qwen3-14B",
+    name: "Qwen3-14B",
+    description: "通义千问 3 代 14B 模型，更强理解能力",
+    provider: "ModelScope"
+  },
+  {
+    id: "Qwen/Qwen3-32B",
+    name: "Qwen3-32B",
+    description: "通义千问 3 代 32B 模型，顶级性能",
+    provider: "ModelScope"
+  },
+  {
+    id: "deepseek-ai/DeepSeek-R1",
+    name: "DeepSeek-R1",
+    description: "DeepSeek 推理模型，强大的逻辑推理能力",
+    provider: "ModelScope"
+  },
+  {
+    id: "THUDM/glm-4-9b-chat",
+    name: "GLM-4-9B",
+    description: "智谱 GLM-4 9B 对话模型",
+    provider: "ModelScope"
+  }
+];
+
 export function ModelConfigPanel({
   temperature,
   topP,
@@ -30,6 +71,21 @@ export function ModelConfigPanel({
   onApiKeyChange,
 }: ModelConfigPanelProps) {
   const [showApiKey, setShowApiKey] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0].id);
+  const [apiEndpoint, setApiEndpoint] = useState("https://api-inference.modelscope.cn/v1");
+
+  const handleSave = () => {
+    const config = {
+      model: selectedModel,
+      apiEndpoint,
+      apiKey,
+      temperature,
+      topP,
+      maxTokens
+    };
+    localStorage.setItem("edunexus_model_config", JSON.stringify(config));
+    alert("模型配置已保存");
+  };
 
   return (
     <div className="space-y-6">
@@ -39,6 +95,56 @@ export function ModelConfigPanel({
           配置 AI 模型参数和 API 密钥
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5" />
+            模型选择
+          </CardTitle>
+          <CardDescription>选择要使用的 AI 模型</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="model">AI 模型</Label>
+            <Select value={selectedModel} onValueChange={setSelectedModel}>
+              <SelectTrigger id="model">
+                <SelectValue placeholder="选择模型" />
+              </SelectTrigger>
+              <SelectContent>
+                {AVAILABLE_MODELS.map((model) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{model.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {model.description}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              当前选择: {AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="apiEndpoint">API 端点</Label>
+            <Input
+              id="apiEndpoint"
+              type="text"
+              value={apiEndpoint}
+              onChange={(e) => setApiEndpoint(e.target.value)}
+              placeholder="https://api-inference.modelscope.cn/v1"
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              ModelScope API 端点地址
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -54,7 +160,7 @@ export function ModelConfigPanel({
                 type={showApiKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => onApiKeyChange(e.target.value)}
-                placeholder="sk-..."
+                placeholder="输入 ModelScope API Key"
                 className="font-mono"
               />
               <Button
@@ -65,6 +171,9 @@ export function ModelConfigPanel({
                 {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">
+              在 <a href="https://modelscope.cn" target="_blank" rel="noopener noreferrer" className="underline">ModelScope</a> 获取 API Key
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -132,7 +241,7 @@ export function ModelConfigPanel({
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={() => alert('模型配置已保存')}>
+        <Button onClick={handleSave}>
           <Save className="h-4 w-4 mr-2" />
           保存配置
         </Button>
