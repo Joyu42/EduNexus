@@ -19,27 +19,17 @@ import {
   MoreVertical,
   MessageSquare,
   Clock,
-  Calendar,
   Lightbulb,
-  Code,
-  Play,
-  Pause,
-  RotateCcw,
-  Maximize2,
-  Minimize2,
   StickyNote,
   Link2,
-  Tag,
   Brain,
   Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -66,13 +56,6 @@ type Session = {
   lastMessage: string;
   timestamp: Date;
   messageCount: number;
-};
-
-type KnowledgePoint = {
-  id: string;
-  title: string;
-  content: string;
-  relatedMessages: string[];
 };
 
 type Note = {
@@ -116,7 +99,7 @@ const mockSessions: Session[] = [
 
 export default function WorkspacePage() {
   // State
-  const [sessions, setSessions] = useState<Session[]>(mockSessions);
+  const [sessions] = useState<Session[]>(mockSessions);
   const [currentSessionId, setCurrentSessionId] = useState<string>("1");
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -131,12 +114,11 @@ export default function WorkspacePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [socraticMode, setSocraticMode] = useState(true);
-  const [showThinking, setShowThinking] = useState(true);
+  const [showThinking] = useState(true);
   const [expandedThinking, setExpandedThinking] = useState<Set<string>>(new Set());
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [knowledgePoints, setKnowledgePoints] = useState<KnowledgePoint[]>([]);
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [resources, setResources] = useState<Resource[]>([
+  const [notes] = useState<Note[]>([]);
+  const [resources] = useState<Resource[]>([
     { id: "1", title: "线性代数教程", type: "document" },
     { id: "2", title: "MIT 公开课", type: "link", url: "#" }
   ]);
@@ -215,11 +197,6 @@ export default function WorkspacePage() {
     })
   };
 
-  // Filter sessions by search
-  const filteredSessions = sessions.filter(s =>
-    s.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div className="flex h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30">
       {/* Left Sidebar - Session List */}
@@ -247,11 +224,12 @@ export default function WorkspacePage() {
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
+              <input
+                type="text"
                 placeholder="搜索会话..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-9 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
 

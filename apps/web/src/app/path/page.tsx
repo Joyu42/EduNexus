@@ -315,7 +315,7 @@ export default function PathPage() {
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-orange-200 via-amber-200 to-yellow-200" />
 
               <div className="space-y-6">
-                {selectedPath.milestones.map((milestone, mIndex) => (
+                {selectedPath.milestones.map((milestone) => (
                   <div key={milestone.id} className="space-y-4">
                     {/* 里程碑标记 */}
                     <div className="flex items-center gap-4">
@@ -333,7 +333,7 @@ export default function PathPage() {
                     {/* 任务卡片 */}
                     {selectedPath.tasks
                       .filter((task) => milestone.taskIds.includes(task.id))
-                      .map((task, tIndex) => (
+                      .map((task) => (
                         <div key={task.id} className="ml-6 pl-10 relative">
                           {/* 任务节点 */}
                           <div className="absolute left-0 top-6 z-10">

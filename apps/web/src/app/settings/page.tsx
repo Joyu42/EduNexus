@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Settings,
-  Palette,
   Cpu,
   Database,
   Download,
@@ -70,7 +68,6 @@ const navigationItems = [
 ];
 
 export default function SettingsPage() {
-  const router = useRouter();
   const [activeSection, setActiveSection] = useState<SettingsSection>("general");
 
   // Settings state

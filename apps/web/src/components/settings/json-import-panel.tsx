@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Download, FileJson, AlertCircle } from "lucide-react";
+import { Upload, FileJson, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -18,7 +18,7 @@ export function JsonImportPanel() {
       JSON.parse(jsonInput);
       setError("");
       // Handle import logic
-    } catch (e) {
+    } catch {
       setError("无效的 JSON 格式");
     }
   };

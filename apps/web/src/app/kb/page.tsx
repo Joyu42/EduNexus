@@ -8,24 +8,15 @@ import {
   Save,
   Download,
   Settings,
-  ChevronRight,
-  ChevronDown,
   Tag,
   Clock,
   Link2,
-  Image as ImageIcon,
   Eye,
   Edit3,
-  Trash2,
-  FolderOpen,
   Hash,
-  List,
-  X,
-  Upload
+  List
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
@@ -116,14 +107,13 @@ export default function KnowledgeBasePage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(["root"]));
 
   // 初始化编辑内容
   useEffect(() => {
     if (selectedDoc) {
       setEditContent(selectedDoc.content);
     }
-  }, [selectedDoc?.id]);
+  }, [selectedDoc]);
 
   // 搜索和筛选
   const filteredDocuments = useMemo(() => {
@@ -281,11 +271,12 @@ export default function KnowledgeBasePage() {
         <div className="p-4 border-b border-amber-200/50">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-600" />
-            <Input
+            <input
+              type="text"
               placeholder="搜索文档..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-amber-50/50 border-amber-200 focus:border-amber-400"
+              className="pl-10 bg-amber-50/50 border-amber-200 focus:border-amber-400 flex h-10 w-full rounded-md border border-input px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
         </div>

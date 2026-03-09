@@ -8,18 +8,11 @@ import {
   Download,
   Plus,
   Search,
-  Filter,
   TrendingUp,
   Clock,
   CheckCircle2,
   AlertCircle,
-  BarChart3,
-  Activity,
-  Target,
-  MessageSquare,
   Calendar,
-  GraduationCap,
-  Award,
   Eye
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,15 +47,6 @@ type Assignment = {
   submitted: number;
   total: number;
   status: "pending" | "grading" | "completed";
-};
-
-type Student = {
-  id: string;
-  name: string;
-  avatar: string;
-  performance: number;
-  attendance: number;
-  assignments: number;
 };
 
 const mockCourses: Course[] = [

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -105,8 +105,13 @@ const generateMockData = (): { nodes: GraphNode[]; links: GraphLink[] } => {
   return { nodes, links };
 };
 
+interface ForceGraphRef {
+  zoom: (scale?: number, duration?: number) => number | void;
+  zoomToFit: (duration?: number, padding?: number) => void;
+}
+
 export default function GraphPage() {
-  const graphRef = useRef<any>();
+  const graphRef = useRef<ForceGraphRef | null>(null);
   const [graphData, setGraphData] = useState<{ nodes: GraphNode[]; links: GraphLink[] }>({ nodes: [], links: [] });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -132,23 +137,25 @@ export default function GraphPage() {
     })
   };
 
-  const handleNodeClick = useCallback((node: any) => {
-    setSelectedNode(node as GraphNode);
+  const handleNodeClick = useCallback((node: GraphNode) => {
+    setSelectedNode(node);
   }, []);
 
-  const handleNodeHover = useCallback((node: any) => {
-    setHoveredNode(node as GraphNode | null);
+  const handleNodeHover = useCallback((node: GraphNode | null) => {
+    setHoveredNode(node);
   }, []);
 
   const handleZoomIn = () => {
     if (graphRef.current) {
-      graphRef.current.zoom(graphRef.current.zoom() * 1.2, 400);
+      const currentZoom = graphRef.current.zoom() as number;
+      graphRef.current.zoom(currentZoom * 1.2, 400);
     }
   };
 
   const handleZoomOut = () => {
     if (graphRef.current) {
-      graphRef.current.zoom(graphRef.current.zoom() / 1.2, 400);
+      const currentZoom = graphRef.current.zoom() as number;
+      graphRef.current.zoom(currentZoom / 1.2, 400);
     }
   };
 
@@ -270,7 +277,7 @@ export default function GraphPage() {
             graphData={filteredData}
             nodeLabel="name"
             nodeAutoColorBy="type"
-            nodeCanvasObject={(node: any, ctx, globalScale) => {
+            nodeCanvasObject={(node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
               const label = node.name;
               const fontSize = 12 / globalScale;
               const nodeType = NODE_TYPES[node.type as keyof typeof NODE_TYPES];
@@ -281,7 +288,7 @@ export default function GraphPage() {
 
               // Draw node circle
               ctx.beginPath();
-              ctx.arc(node.x, node.y, nodeSize, 0, 2 * Math.PI);
+              ctx.arc(node.x || 0, node.y || 0, nodeSize, 0, 2 * Math.PI);
               ctx.fillStyle = nodeColor;
               ctx.fill();
 
@@ -295,9 +302,9 @@ export default function GraphPage() {
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillStyle = '#1a1a1a';
-              ctx.fillText(label, node.x, node.y + nodeSize + fontSize + 2);
+              ctx.fillText(label, node.x || 0, (node.y || 0) + nodeSize + fontSize + 2);
             }}
-            linkColor={(link: any) => EDGE_TYPES[link.type as keyof typeof EDGE_TYPES].color}
+            linkColor={(link: GraphLink) => EDGE_TYPES[link.type as keyof typeof EDGE_TYPES].color}
             linkWidth={1.5}
             linkDirectionalParticles={2}
             linkDirectionalParticleWidth={2}
