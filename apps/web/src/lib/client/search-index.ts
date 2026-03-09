@@ -20,6 +20,16 @@ export type SearchResult = {
   document: KBDocument;
   score: number;
   highlights: string[];
+  matchedTerms?: string[]; // 匹配的关键词
+};
+
+// 高级搜索查询解析结果
+type ParsedQuery = {
+  terms: string[]; // 普通搜索词
+  exactPhrases: string[]; // 精确匹配短语
+  excludeTerms: string[]; // 排除词
+  tagFilters: string[]; // 标签过滤
+  operator: "AND" | "OR"; // 逻辑运算符
 };
 
 // 简单的中文分词（基于字符和常见词）
@@ -55,11 +65,70 @@ function tokenize(text: string): string[] {
   return [...new Set(tokens)]; // 去重
 }
 
+/**
+ * 解析高级搜索语法
+ * 支持：
+ * - "exact phrase" 精确匹配
+ * - AND/OR 逻辑运算符
+ * - NOT 或 - 排除词
+ * - tag:标签名 标签过滤
+ */
+function parseAdvancedQuery(query: string): ParsedQuery {
+  const result: ParsedQuery = {
+    terms: [],
+    exactPhrases: [],
+    excludeTerms: [],
+    tagFilters: [],
+    operator: "AND",
+  };
+
+  let remaining = query;
+
+  // 提取精确匹配短语 "..."
+  const phraseRegex = /"([^"]+)"/g;
+  let match;
+  while ((match = phraseRegex.exec(query)) !== null) {
+    result.exactPhrases.push(match[1]);
+    remaining = remaining.replace(match[0], " ");
+  }
+
+  // 提取标签过滤 tag:xxx
+  const tagRegex = /tag:(\S+)/gi;
+  while ((match = tagRegex.exec(remaining)) !== null) {
+    result.tagFilters.push(match[1]);
+    remaining = remaining.replace(match[0], " ");
+  }
+
+  // 检测逻辑运算符
+  if (/\bOR\b/i.test(remaining)) {
+    result.operator = "OR";
+    remaining = remaining.replace(/\bOR\b/gi, " ");
+  }
+  if (/\bAND\b/i.test(remaining)) {
+    result.operator = "AND";
+    remaining = remaining.replace(/\bAND\b/gi, " ");
+  }
+
+  // 提取排除词 NOT xxx 或 -xxx
+  const excludeRegex = /(?:NOT\s+|-)(\S+)/gi;
+  while ((match = excludeRegex.exec(remaining)) !== null) {
+    result.excludeTerms.push(match[1]);
+    remaining = remaining.replace(match[0], " ");
+  }
+
+  // 剩余的作为普通搜索词
+  const words = remaining.split(/\s+/).filter((w) => w.trim().length > 0);
+  result.terms = words;
+
+  return result;
+}
+
 // 计算文档相关性得分
 function calculateRelevance(
   doc: SearchIndexItem,
   queryTokens: string[],
-  query: string
+  query: string,
+  parsedQuery?: ParsedQuery
 ): number {
   let score = 0;
   const lowerQuery = query.toLowerCase();
@@ -102,6 +171,34 @@ function calculateRelevance(
     }
   });
 
+  // 高级搜索语法加成
+  if (parsedQuery) {
+    // 精确短语匹配（高权重）
+    parsedQuery.exactPhrases.forEach((phrase) => {
+      const lowerPhrase = phrase.toLowerCase();
+      if (doc.title.toLowerCase().includes(lowerPhrase)) {
+        score += 80;
+      }
+      if (doc.content.toLowerCase().includes(lowerPhrase)) {
+        const regex = new RegExp(phrase, "gi");
+        const matches = doc.content.match(regex);
+        if (matches) {
+          score += matches.length * 15;
+        }
+      }
+    });
+
+    // 标签过滤匹配
+    parsedQuery.tagFilters.forEach((tagFilter) => {
+      const hasTag = doc.tags.some((tag) =>
+        tag.toLowerCase().includes(tagFilter.toLowerCase())
+      );
+      if (hasTag) {
+        score += 30;
+      }
+    });
+  }
+
   // 新鲜度加成（最近更新的文档得分略高）
   const daysSinceUpdate = (Date.now() - doc.updatedAt.getTime()) / (1000 * 60 * 60 * 24);
   if (daysSinceUpdate < 7) {
@@ -113,23 +210,72 @@ function calculateRelevance(
   return score;
 }
 
-// 生成高亮片段
-function generateHighlights(content: string, query: string, maxHighlights: number = 3): string[] {
+// 生成高亮片段（支持多个关键词）
+function generateHighlights(
+  content: string,
+  query: string,
+  parsedQuery?: ParsedQuery,
+  maxHighlights: number = 3
+): string[] {
   const highlights: string[] = [];
   const lowerContent = content.toLowerCase();
-  const lowerQuery = query.toLowerCase();
 
-  let startIndex = 0;
-  while (highlights.length < maxHighlights) {
-    const index = lowerContent.indexOf(lowerQuery, startIndex);
-    if (index === -1) break;
+  // 收集所有需要高亮的词
+  const termsToHighlight: string[] = [];
 
-    const start = Math.max(0, index - 40);
-    const end = Math.min(content.length, index + query.length + 40);
+  if (parsedQuery) {
+    // 添加精确短语
+    termsToHighlight.push(...parsedQuery.exactPhrases);
+    // 添加普通搜索词
+    termsToHighlight.push(...parsedQuery.terms);
+  } else {
+    termsToHighlight.push(query);
+  }
+
+  // 找到所有匹配位置
+  const matchPositions: Array<{ start: number; end: number; term: string }> = [];
+
+  termsToHighlight.forEach((term) => {
+    if (!term.trim()) return;
+
+    const lowerTerm = term.toLowerCase();
+    let startIndex = 0;
+
+    while (true) {
+      const index = lowerContent.indexOf(lowerTerm, startIndex);
+      if (index === -1) break;
+
+      matchPositions.push({
+        start: index,
+        end: index + term.length,
+        term,
+      });
+
+      startIndex = index + term.length;
+    }
+  });
+
+  // 按位置排序
+  matchPositions.sort((a, b) => a.start - b.start);
+
+  // 生成高亮片段（前后各50字符）
+  const usedRanges = new Set<string>();
+
+  for (const match of matchPositions) {
+    if (highlights.length >= maxHighlights) break;
+
+    const start = Math.max(0, match.start - 50);
+    const end = Math.min(content.length, match.end + 50);
+    const rangeKey = `${start}-${end}`;
+
+    // 避免重复片段
+    if (usedRanges.has(rangeKey)) continue;
+    usedRanges.add(rangeKey);
+
     const snippet = content.slice(start, end);
-
-    highlights.push((start > 0 ? "..." : "") + snippet + (end < content.length ? "..." : ""));
-    startIndex = index + query.length;
+    highlights.push(
+      (start > 0 ? "..." : "") + snippet + (end < content.length ? "..." : "")
+    );
   }
 
   return highlights;
@@ -197,9 +343,12 @@ export class SearchIndexManager {
         document: doc,
         score: 0,
         highlights: [],
+        matchedTerms: [],
       }));
     }
 
+    // 解析高级搜索语法
+    const parsedQuery = parseAdvancedQuery(query);
     const queryTokens = tokenize(query);
     const results: SearchResult[] = [];
 
@@ -207,13 +356,66 @@ export class SearchIndexManager {
       const indexItem = this.index.get(doc.id);
       if (!indexItem) return;
 
-      const score = calculateRelevance(indexItem, queryTokens, query);
+      // 检查排除词
+      const hasExcludedTerm = parsedQuery.excludeTerms.some((term) => {
+        const lowerTerm = term.toLowerCase();
+        return (
+          doc.title.toLowerCase().includes(lowerTerm) ||
+          doc.content.toLowerCase().includes(lowerTerm) ||
+          doc.tags.some((tag) => tag.toLowerCase().includes(lowerTerm))
+        );
+      });
+
+      if (hasExcludedTerm) return;
+
+      // 检查标签过滤
+      if (parsedQuery.tagFilters.length > 0) {
+        const hasAllTags = parsedQuery.tagFilters.every((tagFilter) =>
+          doc.tags.some((tag) =>
+            tag.toLowerCase().includes(tagFilter.toLowerCase())
+          )
+        );
+        if (!hasAllTags) return;
+      }
+
+      // 检查逻辑运算符
+      if (parsedQuery.operator === "AND") {
+        // AND: 所有词都必须匹配
+        const allTermsMatch = [
+          ...parsedQuery.terms,
+          ...parsedQuery.exactPhrases,
+        ].every((term) => {
+          const lowerTerm = term.toLowerCase();
+          return (
+            doc.title.toLowerCase().includes(lowerTerm) ||
+            doc.content.toLowerCase().includes(lowerTerm) ||
+            doc.tags.some((tag) => tag.toLowerCase().includes(lowerTerm))
+          );
+        });
+
+        if (!allTermsMatch && parsedQuery.terms.length > 0) return;
+      }
+
+      const score = calculateRelevance(indexItem, queryTokens, query, parsedQuery);
 
       if (score >= (options?.minScore || 0)) {
+        // 收集匹配的关键词
+        const matchedTerms = [
+          ...parsedQuery.terms,
+          ...parsedQuery.exactPhrases,
+        ].filter((term) => {
+          const lowerTerm = term.toLowerCase();
+          return (
+            doc.title.toLowerCase().includes(lowerTerm) ||
+            doc.content.toLowerCase().includes(lowerTerm)
+          );
+        });
+
         results.push({
           document: doc,
           score,
-          highlights: generateHighlights(doc.content, query),
+          highlights: generateHighlights(doc.content, query, parsedQuery),
+          matchedTerms,
         });
       }
     });

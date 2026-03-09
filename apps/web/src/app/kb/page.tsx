@@ -36,6 +36,11 @@ import { getKBStorage, type KBDocument } from "@/lib/client/kb-storage";
 import { AIAssistant } from "@/components/kb/ai-assistant";
 import { TimeRange } from "@/components/ui/timestamp";
 import { SearchBar } from "@/components/kb/search-bar";
+import { AISummaryPanel } from "@/components/kb/ai-summary-panel";
+import { AIKeywordsPanel } from "@/components/kb/ai-keywords-panel";
+import { MindMapViewer } from "@/components/kb/mindmap-viewer";
+import { LearningPlanner } from "@/components/kb/learning-planner";
+import { KBQAAssistant } from "@/components/kb/kb-qa-assistant";
 import { SearchFiltersPanel, type SearchFilters } from "@/components/kb/search-filters";
 import { SearchResults } from "@/components/kb/search-results";
 import { getSearchIndex } from "@/lib/client/search-index";
@@ -67,6 +72,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ViewSwitcher, getSavedViewMode, type ViewMode } from "@/components/kb/view-switcher";
+import { CardView } from "@/components/kb/card-view";
+import { TimelineView } from "@/components/kb/timeline-view";
+import { KanbanView } from "@/components/kb/kanban-view";
 
 // 文档类型定义
 type Document = KBDocument & {
@@ -108,6 +117,7 @@ export default function KnowledgeBasePage() {
   const [quickCreateInitialData, setQuickCreateInitialData] = useState<Partial<QuickCreateData> | undefined>();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   // 初始化
   useEffect(() => {
@@ -119,6 +129,8 @@ export default function KnowledgeBasePage() {
           setCurrentVaultId(savedVaultId);
           await loadDocuments(savedVaultId);
         }
+        // 加载保存的视图模式
+        setViewMode(getSavedViewMode());
       } catch (error) {
         console.error("Failed to initialize storage:", error);
       } finally {
@@ -170,18 +182,29 @@ export default function KnowledgeBasePage() {
   }, [editTitle, editContent, selectedDoc, isEditing]);
 
   // 搜索和筛选
-  const filteredDocuments = useMemo(() => {
-    let filtered = documents;
-
-    if (searchQuery.trim()) {
-      const searchResults = searchIndex.search(documents, searchQuery, {
-        maxResults: 100,
-        minScore: 1,
-      });
-      filtered = searchResults.map((result) => result.document);
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return documents.map((doc) => ({
+        document: doc,
+        score: 0,
+        highlights: [],
+        matchedTerms: [],
+      }));
     }
 
-    filtered = filtered.filter((doc) => {
+    return searchIndex.search(documents, searchQuery, {
+      maxResults: 100,
+      minScore: 1,
+    });
+  }, [documents, searchQuery, searchIndex]);
+
+  const filteredResults = useMemo(() => {
+    let filtered = searchResults;
+
+    // 应用标签过滤
+    filtered = filtered.filter((result) => {
+      const doc = result.document;
+
       if (searchFilters.tags.length > 0) {
         const hasMatchingTag =
           searchFilters.logicMode === "AND"
@@ -201,7 +224,12 @@ export default function KnowledgeBasePage() {
     });
 
     return filtered;
-  }, [documents, searchQuery, searchFilters, searchIndex]);
+  }, [searchResults, searchFilters]);
+
+  // 兼容旧代码：提取文档列表
+  const filteredDocuments = useMemo(() => {
+    return filteredResults.map((result) => result.document);
+  }, [filteredResults]);
 
   // 获取所有标签
   const allTags = useMemo(() => {
@@ -570,7 +598,9 @@ export default function KnowledgeBasePage() {
               onChange={setSearchQuery}
               onSearch={handleSearch}
               suggestions={searchSuggestions}
+              tags={allTags}
               showHistory={true}
+              showSyntaxHelp={true}
             />
           </div>
 
@@ -623,7 +653,7 @@ export default function KnowledgeBasePage() {
                     </Select>
                   </div>
                   <SearchResults
-                    documents={filteredDocuments}
+                    results={searchResults}
                     searchQuery={searchQuery}
                     onSelectDocument={setSelectedDoc}
                     selectedDocId={selectedDoc?.id}
@@ -727,6 +757,11 @@ export default function KnowledgeBasePage() {
                 </Tooltip>
               )}
             </TooltipProvider>
+
+            <Separator orientation="vertical" className="h-6" />
+
+            {/* 视图切换器 */}
+            <ViewSwitcher currentView={viewMode} onViewChange={setViewMode} />
 
             <Separator orientation="vertical" className="h-6" />
 
@@ -854,7 +889,7 @@ export default function KnowledgeBasePage() {
         </div>
 
         {/* 编辑器工具栏 */}
-        {isEditing && (
+        {isEditing && viewMode === "list" && (
           <EditorToolbar
             onInsert={handleEditorInsert}
             onFormat={(format) => console.log(format)}
@@ -864,7 +899,49 @@ export default function KnowledgeBasePage() {
 
         {/* 编辑器/预览区 */}
         <div className="flex-1 overflow-y-auto p-8">
-          {selectedDoc ? (
+          {viewMode !== "list" ? (
+            /* 非列表视图：显示卡片/时间轴/看板 */
+            <div className="max-w-7xl mx-auto">
+              {viewMode === "card" ? (
+                <CardView
+                  documents={filteredDocuments}
+                  onSelectDocument={setSelectedDoc}
+                  selectedDocId={selectedDoc?.id}
+                />
+              ) : viewMode === "timeline" ? (
+                <TimelineView
+                  documents={filteredDocuments}
+                  onSelectDocument={setSelectedDoc}
+                  selectedDocId={selectedDoc?.id}
+                />
+              ) : (
+                <KanbanView
+                  documents={filteredDocuments}
+                  onSelectDocument={setSelectedDoc}
+                  selectedDocId={selectedDoc?.id}
+                  onUpdateDocumentStatus={async (docId, status) => {
+                    const doc = documents.find((d) => d.id === docId);
+                    if (!doc) return;
+
+                    // 更新文档标签以反映新状态
+                    const statusTags = ["待学习", "学习中", "已完成"];
+                    const newTags = doc.tags.filter((tag) => !statusTags.includes(tag));
+
+                    if (status === "todo") newTags.push("待学习");
+                    else if (status === "in-progress") newTags.push("学习中");
+                    else if (status === "done") newTags.push("已完成");
+
+                    const updatedDoc = { ...doc, tags: newTags };
+                    await storage.updateDocument(updatedDoc);
+                    setDocuments((prev) =>
+                      prev.map((d) => (d.id === docId ? updatedDoc : d))
+                    );
+                  }}
+                />
+              )}
+            </div>
+          ) : selectedDoc ? (
+            /* 列表视图：显示文档编辑器/预览 */
             <div className="max-w-4xl mx-auto">
               {/* 文档标题 */}
               {isEditing ? (
@@ -961,19 +1038,39 @@ export default function KnowledgeBasePage() {
         </div>
       </div>
 
-      {/* 右侧：大纲和关系图 */}
+      {/* 右侧：大纲和 AI 功能 */}
       {!rightPanelCollapsed && (
         <div className="w-80 border-l border-amber-200/50 bg-white/80 backdrop-blur-sm overflow-y-auto">
-          <div className="p-4 space-y-6">
-            {/* 文档统计 */}
-            {docStats && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <BarChart3 className="w-4 h-4 text-amber-600" />
-                  <span className="text-sm font-semibold text-amber-900">
-                    文档统计
-                  </span>
-                </div>
+          <Tabs defaultValue="outline" className="w-full">
+            <TabsList className="w-full bg-amber-100/50 m-2">
+              <TabsTrigger value="outline" className="flex-1 text-xs">
+                <List className="w-3 h-3 mr-1" />
+                大纲
+              </TabsTrigger>
+              <TabsTrigger value="ai-summary" className="flex-1 text-xs">
+                <Sparkles className="w-3 h-3 mr-1" />
+                摘要
+              </TabsTrigger>
+              <TabsTrigger value="ai-keywords" className="flex-1 text-xs">
+                <Tag className="w-3 h-3 mr-1" />
+                关键词
+              </TabsTrigger>
+              <TabsTrigger value="mindmap" className="flex-1 text-xs">
+                <Zap className="w-3 h-3 mr-1" />
+                导图
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="outline" className="p-4 space-y-6">
+              {/* 文档统计 */}
+              {docStats && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <BarChart3 className="w-4 h-4 text-amber-600" />
+                    <span className="text-sm font-semibold text-amber-900">
+                      文档统计
+                    </span>
+                  </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
                     <div className="text-2xl font-bold text-amber-900">
@@ -1089,7 +1186,56 @@ export default function KnowledgeBasePage() {
                 )}
               </div>
             </div>
-          </div>
+          </TabsContent>
+
+          {/* AI 摘要标签页 */}
+          <TabsContent value="ai-summary" className="p-4">
+            <AISummaryPanel
+              documentId={selectedDoc?.id}
+              documentTitle={selectedDoc?.title}
+              documentContent={selectedDoc?.content}
+              onInsertText={(text) => {
+                if (isEditing) {
+                  setEditContent((prev) => prev + "\n\n" + text);
+                }
+              }}
+            />
+          </TabsContent>
+
+          {/* AI 关键词标签页 */}
+          <TabsContent value="ai-keywords" className="p-4">
+            <AIKeywordsPanel
+              documentId={selectedDoc?.id}
+              documentTitle={selectedDoc?.title}
+              documentContent={selectedDoc?.content}
+              currentTags={selectedDoc?.tags || []}
+              onAddTags={async (tags) => {
+                if (selectedDoc) {
+                  const updatedDoc = {
+                    ...selectedDoc,
+                    tags: Array.from(new Set([...selectedDoc.tags, ...tags])),
+                  };
+                  await storage.updateDocument(updatedDoc);
+                  setDocuments((prev) =>
+                    prev.map((doc) =>
+                      doc.id === selectedDoc.id ? updatedDoc : doc
+                    )
+                  );
+                  setSelectedDoc(updatedDoc);
+                }
+              }}
+            />
+          </TabsContent>
+
+          {/* 思维导图标签页 */}
+          <TabsContent value="mindmap" className="p-4">
+            <MindMapViewer
+              documentId={selectedDoc?.id}
+              documentTitle={selectedDoc?.title}
+              documentContent={selectedDoc?.content}
+            />
+          </TabsContent>
+        </Tabs>
         </div>
       )}
 
