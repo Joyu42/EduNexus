@@ -188,6 +188,11 @@
 
   .card-hover:hover {
     @apply bg-card/80 border-primary/30;
+    transform: translateY(-4px) scale(1.01);
+  }
+
+  .card-hover:active {
+    transform: translateY(-2px) scale(0.99);
   }
 
   /* 面板网格系统 */
@@ -248,10 +253,16 @@
     @apply hover:bg-primary/90 active:bg-primary/80;
     @apply shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30;
     @apply transition-all duration-200;
+    @apply hover:scale-105 active:scale-95;
   }
 
   .btn-ghost {
     @apply hover:bg-accent/10 hover:text-accent;
+    @apply transition-all duration-200;
+  }
+
+  .btn-ghost:hover {
+    transform: translateX(2px);
   }
 
   /* 输入框增强 */
@@ -259,6 +270,11 @@
     @apply bg-background/50 border-border/50;
     @apply focus:border-primary/50 focus:ring-2 focus:ring-primary/20;
     @apply transition-all duration-200;
+    @apply hover:border-primary/30;
+  }
+
+  .input-enhanced:focus {
+    transform: scale(1.01);
   }
 
   /* 分隔线 */
@@ -345,6 +361,34 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-bounce-subtle {
+    animation: bounceSubtle 2s ease-in-out infinite;
+  }
+
+  @keyframes bounceSubtle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
     }
   }
 

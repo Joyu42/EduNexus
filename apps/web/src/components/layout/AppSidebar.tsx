@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useSidebarStore } from '@/lib/stores/sidebar-store'
@@ -67,11 +68,18 @@ export function AppSidebar() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div
+      <motion.div
         className={cn(
-          'app-sidebar flex h-full flex-col bg-sidebar border-sidebar-border border-r transition-all duration-300',
-          isCollapsed ? 'w-16' : 'w-64'
+          'app-sidebar flex h-full flex-col bg-sidebar border-sidebar-border border-r'
         )}
+        initial={false}
+        animate={{
+          width: isCollapsed ? 64 : 256
+        }}
+        transition={{
+          duration: 0.3,
+          ease: [0.4, 0, 0.2, 1]
+        }}
       >
         <div
           className={cn(
@@ -79,45 +87,69 @@ export function AppSidebar() {
             isCollapsed ? 'justify-center px-2' : 'justify-between px-4'
           )}
         >
-          {isCollapsed ? (
-            <div className="relative flex items-center justify-center w-full">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm transition-opacity group-hover:opacity-0">
-                EN
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleCollapse}
-                className="absolute text-sidebar-foreground hover:bg-sidebar-accent opacity-0 group-hover:opacity-100 transition-opacity"
+          <AnimatePresence mode="wait">
+            {isCollapsed ? (
+              <motion.div
+                key="collapsed"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+                className="relative flex items-center justify-center w-full"
               >
-                <Menu className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
+                <motion.div
+                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm transition-opacity group-hover:opacity-0"
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                >
                   EN
-                </div>
-                <span className="text-base font-medium text-sidebar-foreground">
-                  EduNexus
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleCollapse}
-                className="text-sidebar-foreground hover:bg-sidebar-accent"
+                </motion.div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleCollapse}
+                  className="absolute text-sidebar-foreground hover:bg-sidebar-accent opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="expanded"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center justify-between w-full"
               >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            </>
-          )}
+                <div className="flex items-center gap-2">
+                  <motion.div
+                    className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm"
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    EN
+                  </motion.div>
+                  <span className="text-base font-medium text-sidebar-foreground">
+                    EduNexus
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleCollapse}
+                  className="text-sidebar-foreground hover:bg-sidebar-accent"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <nav
           className={cn(
-            'flex-1 space-y-1 py-4',
+            'flex-1 space-y-1 py-4 overflow-y-auto scrollbar-thin',
             isCollapsed ? 'px-2' : 'px-3'
           )}
         >
@@ -127,26 +159,63 @@ export function AppSidebar() {
                 <Separator className="my-3" />
               )}
               <div className="space-y-1">
-                {!isCollapsed && (
-                  <h3 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
-                    {section.title}
-                  </h3>
-                )}
+                <AnimatePresence>
+                  {!isCollapsed && (
+                    <motion.h3
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60"
+                    >
+                      {section.title}
+                    </motion.h3>
+                  )}
+                </AnimatePresence>
 
                 {section.items.map((item) => {
                   const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href))
                   const button = (
-                    <Button
-                      variant={isActive ? 'secondary' : 'ghost'}
-                      className={cn(
-                        'w-full gap-3 text-sidebar-foreground sidebar-menu-item',
-                        isActive && 'bg-sidebar-accent text-sidebar-accent-foreground',
-                        isCollapsed ? 'justify-center px-2' : 'justify-start'
-                      )}
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                      <item.icon className="h-4 w-4" />
-                      {!isCollapsed && <span>{item.name}</span>}
-                    </Button>
+                      <Button
+                        variant={isActive ? 'secondary' : 'ghost'}
+                        className={cn(
+                          'w-full gap-3 text-sidebar-foreground sidebar-menu-item relative overflow-hidden',
+                          isActive && 'bg-sidebar-accent text-sidebar-accent-foreground',
+                          isCollapsed ? 'justify-center px-2' : 'justify-start'
+                        )}
+                      >
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeIndicator"
+                            className="absolute left-0 top-0 bottom-0 w-1 bg-primary"
+                            initial={false}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 30
+                            }}
+                          />
+                        )}
+                        <item.icon className="h-4 w-4 flex-shrink-0" />
+                        <AnimatePresence>
+                          {!isCollapsed && (
+                            <motion.span
+                              initial={{ opacity: 0, width: 0 }}
+                              animate={{ opacity: 1, width: "auto" }}
+                              exit={{ opacity: 0, width: 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              {item.name}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </Button>
+                    </motion.div>
                   )
 
                   if (isCollapsed) {
@@ -157,7 +226,9 @@ export function AppSidebar() {
                             {button}
                           </Link>
                         </TooltipTrigger>
-                        <TooltipContent side="right">{item.name}</TooltipContent>
+                        <TooltipContent side="right" className="font-medium">
+                          {item.name}
+                        </TooltipContent>
                       </Tooltip>
                     )
                   }
@@ -186,7 +257,7 @@ export function AppSidebar() {
             <ThemeToggle />
           </div>
         </div>
-      </div>
+      </motion.div>
     </TooltipProvider>
   )
 }

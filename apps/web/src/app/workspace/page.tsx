@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
   Sparkles,
@@ -18,6 +19,8 @@ import {
   Save,
   Code,
   FileText,
+  Zap,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -210,14 +213,29 @@ export default function WorkspacePage() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="border-b bg-white/80 backdrop-blur-sm p-4">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="border-b bg-white/80 backdrop-blur-sm p-4 shadow-sm"
+        >
           <div className="flex items-center justify-between max-w-4xl mx-auto">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-rose-500">
+              <motion.div
+                className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-rose-500"
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <Sparkles className="h-5 w-5 text-white" />
-              </div>
+              </motion.div>
               <div>
-                <h1 className="text-xl font-semibold">学习工作区</h1>
+                <h1 className="text-xl font-semibold flex items-center gap-2">
+                  学习工作区
+                  <Badge variant="secondary" className="text-xs">
+                    <Zap className="h-3 w-3 mr-1" />
+                    AI 驱动
+                  </Badge>
+                </h1>
                 <p className="text-sm text-muted-foreground">
                   智能学习伙伴 · 随时为你答疑解惑
                 </p>
@@ -225,7 +243,10 @@ export default function WorkspacePage() {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
+              <motion.div
+                className="flex items-center gap-2"
+                whileHover={{ scale: 1.02 }}
+              >
                 <Switch
                   id="socratic"
                   checked={socraticMode}
@@ -234,8 +255,11 @@ export default function WorkspacePage() {
                 <Label htmlFor="socratic" className="text-sm cursor-pointer">
                   苏格拉底模式
                 </Label>
-              </div>
-              <div className="flex items-center gap-2">
+              </motion.div>
+              <motion.div
+                className="flex items-center gap-2"
+                whileHover={{ scale: 1.02 }}
+              >
                 <Switch
                   id="thinking"
                   checked={showThinking}
@@ -244,77 +268,111 @@ export default function WorkspacePage() {
                 <Label htmlFor="thinking" className="text-sm cursor-pointer">
                   显示思考
                 </Label>
-              </div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
           <div className="max-w-4xl mx-auto space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={cn(
-                  "flex gap-3",
-                  message.role === "user" ? "justify-end" : "justify-start"
-                )}
-              >
-                {message.role === "assistant" && (
-                  <div className="p-2 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 h-8 w-8 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="h-4 w-4 text-white" />
-                  </div>
-                )}
-
-                <div
+            <AnimatePresence mode="popLayout">
+              {messages.map((message, index) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: index * 0.05,
+                    ease: "easeOut"
+                  }}
                   className={cn(
-                    "rounded-2xl p-4 max-w-[80%] shadow-sm transition-all hover:shadow-md",
-                    message.role === "user"
-                      ? "bg-gradient-to-br from-orange-500 to-rose-500 text-white"
-                      : "bg-white border border-gray-200"
+                    "flex gap-3",
+                    message.role === "user" ? "justify-end" : "justify-start"
                   )}
                 >
-                  {message.thinking && showThinking && (
-                    <details className="mb-3 text-sm">
-                      <summary className="cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors">
-                        <Brain className="h-4 w-4" />
-                        思考过程
-                      </summary>
-                      <div className="mt-2 p-3 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg text-xs whitespace-pre-wrap border border-orange-100">
-                        {message.thinking}
-                      </div>
-                    </details>
+                  {message.role === "assistant" && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, delay: 0.1 }}
+                      className="p-2 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 h-8 w-8 flex items-center justify-center flex-shrink-0"
+                    >
+                      <Sparkles className="h-4 w-4 text-white" />
+                    </motion.div>
                   )}
-                  {message.images && message.images.length > 0 && (
-                    <div className="mb-3 grid grid-cols-2 gap-2">
-                      {message.images.map((img, idx) => (
-                        <img
-                          key={idx}
-                          src={img}
-                          alt={`上传的图片 ${idx + 1}`}
-                          className="rounded-lg border border-gray-200 max-h-48 object-cover"
-                        />
-                      ))}
-                    </div>
-                  )}
-                  <div className="prose prose-sm max-w-none">
-                    <MarkdownRenderer content={message.content} />
-                  </div>
-                  <div className="text-xs opacity-70 mt-2">
-                    {message.timestamp.toLocaleTimeString()}
-                  </div>
-                </div>
 
-                {message.role === "user" && (
-                  <div className="p-2 rounded-full bg-gray-200 h-8 w-8 flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="h-4 w-4 text-gray-600" />
-                  </div>
-                )}
-              </div>
-            ))}
+                  <motion.div
+                    whileHover={{ scale: 1.01 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    className={cn(
+                      "rounded-2xl p-4 max-w-[80%] shadow-sm transition-all hover:shadow-md",
+                      message.role === "user"
+                        ? "bg-gradient-to-br from-orange-500 to-rose-500 text-white"
+                        : "bg-white border border-gray-200"
+                    )}
+                  >
+                    {message.thinking && showThinking && (
+                      <details className="mb-3 text-sm">
+                        <summary className="cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors">
+                          <Brain className="h-4 w-4" />
+                          思考过程
+                        </summary>
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className="mt-2 p-3 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg text-xs whitespace-pre-wrap border border-orange-100"
+                        >
+                          {message.thinking}
+                        </motion.div>
+                      </details>
+                    )}
+                    {message.images && message.images.length > 0 && (
+                      <div className="mb-3 grid grid-cols-2 gap-2">
+                        {message.images.map((img, idx) => (
+                          <motion.img
+                            key={idx}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: idx * 0.1 }}
+                            src={img}
+                            alt={`上传的图片 ${idx + 1}`}
+                            className="rounded-lg border border-gray-200 max-h-48 object-cover"
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <div className="prose prose-sm max-w-none">
+                      <MarkdownRenderer content={message.content} />
+                    </div>
+                    <div className="text-xs opacity-70 mt-2">
+                      {message.timestamp.toLocaleTimeString()}
+                    </div>
+                  </motion.div>
+
+                  {message.role === "user" && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, delay: 0.1 }}
+                      className="p-2 rounded-full bg-gray-200 h-8 w-8 flex items-center justify-center flex-shrink-0"
+                    >
+                      <MessageSquare className="h-4 w-4 text-gray-600" />
+                    </motion.div>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
             {isLoading && (
-              <div className="flex gap-3 justify-start">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex gap-3 justify-start"
+              >
                 <div className="p-2 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 h-8 w-8 flex items-center justify-center flex-shrink-0 animate-pulse">
                   <Sparkles className="h-4 w-4 text-white" />
                 </div>
@@ -324,7 +382,7 @@ export default function WorkspacePage() {
                     <span className="text-sm">正在思考...</span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             <div ref={messagesEndRef} />
@@ -332,55 +390,89 @@ export default function WorkspacePage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="border-t bg-white/80 backdrop-blur-sm p-4">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="border-t bg-white/80 backdrop-blur-sm p-4 shadow-lg"
+        >
           <div className="max-w-4xl mx-auto">
-            <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-              {quickActions.map((action) => {
+            <div className="flex gap-2 mb-3 overflow-x-auto pb-2 scrollbar-thin">
+              {quickActions.map((action, index) => {
                 const Icon = action.icon;
                 return (
-                  <Button
+                  <motion.div
                     key={action.label}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInputValue(action.prompt)}
-                    className="flex-shrink-0 hover:bg-orange-50 hover:border-orange-300 transition-colors"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
                   >
-                    <Icon className="h-4 w-4 mr-2" />
-                    {action.label}
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInputValue(action.prompt)}
+                      className="flex-shrink-0 hover:bg-orange-50 hover:border-orange-300 transition-colors group"
+                    >
+                      <Icon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                      {action.label}
+                    </Button>
+                  </motion.div>
                 );
               })}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportConversation}
-                className="flex-shrink-0 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: quickActions.length * 0.05 }}
               >
-                <Download className="h-4 w-4 mr-2" />
-                导出对话
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportConversation}
+                  className="flex-shrink-0 hover:bg-blue-50 hover:border-blue-300 transition-colors group"
+                >
+                  <Download className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                  导出对话
+                </Button>
+              </motion.div>
             </div>
 
             {/* Image Preview */}
-            {uploadedImages.length > 0 && (
-              <div className="mb-3 flex gap-2 flex-wrap">
-                {uploadedImages.map((img, idx) => (
-                  <div key={idx} className="relative group">
-                    <img
-                      src={img}
-                      alt={`预览 ${idx + 1}`}
-                      className="h-20 w-20 object-cover rounded-lg border-2 border-orange-300"
-                    />
-                    <button
-                      onClick={() => removeImage(idx)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            <AnimatePresence>
+              {uploadedImages.length > 0 && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mb-3 flex gap-2 flex-wrap overflow-hidden"
+                >
+                  {uploadedImages.map((img, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="relative group"
                     >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <img
+                        src={img}
+                        alt={`预览 ${idx + 1}`}
+                        className="h-20 w-20 object-cover rounded-lg border-2 border-orange-300"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => removeImage(idx)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </motion.button>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Input */}
             <div className="flex gap-2">
@@ -392,16 +484,18 @@ export default function WorkspacePage() {
                 onChange={handleImageUpload}
                 className="hidden"
               />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-                className="flex-shrink-0"
-                title="上传图片"
-              >
-                <ImageIcon className="h-4 w-4" />
-              </Button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading}
+                  className="flex-shrink-0 hover:bg-orange-50 hover:border-orange-300"
+                  title="上传图片"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                </Button>
+              </motion.div>
               <Textarea
                 ref={textareaRef}
                 value={inputValue}
@@ -412,31 +506,47 @@ export default function WorkspacePage() {
                     ? "提出你的问题，我会引导你思考..."
                     : "输入你的问题..."
                 }
-                className="min-h-[60px] max-h-[200px] resize-none rounded-xl border-gray-300 focus:border-orange-400 focus:ring-orange-400"
+                className="min-h-[60px] max-h-[200px] resize-none rounded-xl border-gray-300 focus:border-orange-400 focus:ring-orange-400 transition-all"
                 disabled={isLoading}
               />
-              <Button
-                onClick={handleSend}
-                disabled={(!inputValue.trim() && uploadedImages.length === 0) || isLoading}
-                className="bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 shadow-md hover:shadow-lg transition-all"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
+                <Button
+                  onClick={handleSend}
+                  disabled={(!inputValue.trim() && uploadedImages.length === 0) || isLoading}
+                  className="bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 shadow-md hover:shadow-lg transition-all"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </motion.div>
             </div>
 
-            <div className="mt-2 text-xs text-muted-foreground">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mt-2 text-xs text-muted-foreground flex items-center gap-2"
+            >
               {socraticMode ? (
-                <span>💡 苏格拉底模式：我会通过提问引导你思考</span>
+                <>
+                  <Lightbulb className="h-3 w-3" />
+                  <span>苏格拉底模式：我会通过提问引导你思考</span>
+                </>
               ) : (
-                <span>📚 直接教学模式：我会直接解答你的问题</span>
+                <>
+                  <BookOpen className="h-3 w-3" />
+                  <span>直接教学模式：我会直接解答你的问题</span>
+                </>
               )}
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Right Sidebar - Info Panel */}

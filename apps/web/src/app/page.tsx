@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { GalaxyHero, GalaxySpotlight } from "@/components/galaxy-ui";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -14,7 +17,10 @@ import {
   Settings,
   ArrowRight,
   Target,
-  Lightbulb
+  Lightbulb,
+  Sparkles,
+  Zap,
+  TrendingUp
 } from "lucide-react";
 
 const coreEntries = [
@@ -72,29 +78,63 @@ const supportEntries = [
   }
 ];
 
+// 动画配置
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut"
+    }
+  }
+};
+
 export default function HomePage() {
   return (
-    <section className="page-container space-y-12 animate-in">
-      <PageHeader
-        title="AI 教育生态平台"
-        description="统一学习引导、知识沉淀、图谱分析与路径干预。全部能力围绕「先学会，再答题」构建。"
-        tags={["纯 Web", "LangGraph", "ModelScope", "本地优先知识库"]}
-        actions={
-          <>
-            <Button size="lg" className="btn-primary" asChild>
-              <Link href="/workspace">
-                开始学习
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/graph">查看知识星图</Link>
-            </Button>
-          </>
-        }
-      />
+    <motion.section
+      className="page-container space-y-12"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <motion.div variants={itemVariants}>
+        <PageHeader
+          title="AI 教育生态平台"
+          description="统一学习引导、知识沉淀、图谱分析与路径干预。全部能力围绕「先学会，再答题」构建。"
+          tags={["纯 Web", "LangGraph", "ModelScope", "本地优先知识库"]}
+          actions={
+            <>
+              <Button size="lg" className="btn-primary group" asChild>
+                <Link href="/workspace">
+                  <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" />
+                  开始学习
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="group" asChild>
+                <Link href="/graph">
+                  <Network className="mr-2 h-4 w-4" />
+                  查看知识星图
+                </Link>
+              </Button>
+            </>
+          }
+        />
+      </motion.div>
 
-      <div className="panel-grid">
+      <motion.div className="panel-grid" variants={itemVariants}>
         <GalaxyHero
           badge="学习生态主入口"
           title="从「会做题」升级为「会学习、会迁移、会复盘」"
@@ -108,18 +148,24 @@ export default function HomePage() {
           ]}
           actions={
             <>
-              <Button size="lg" className="btn-primary" asChild>
-                <Link href="/workspace">进入学习工作区</Link>
+              <Button size="lg" className="btn-primary group" asChild>
+                <Link href="/workspace">
+                  <Zap className="mr-2 h-4 w-4 group-hover:animate-pulse" />
+                  进入学习工作区
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/path">查看成长地图</Link>
+              <Button size="lg" variant="outline" className="group" asChild>
+                <Link href="/path">
+                  <Route className="mr-2 h-4 w-4" />
+                  查看成长地图
+                </Link>
               </Button>
             </>
           }
         />
-      </div>
+      </motion.div>
 
-      <div className="panel-grid">
+      <motion.div className="panel-grid" variants={itemVariants}>
         <div className="col-span-12 md:col-span-6">
           <GalaxySpotlight
             title="产品原则"
@@ -136,92 +182,124 @@ export default function HomePage() {
             icon={<Lightbulb className="w-5 h-5" />}
           />
         </div>
-      </div>
+      </motion.div>
 
       {/* 核心学习链路 */}
-      <div className="space-y-6">
+      <motion.div className="space-y-6" variants={itemVariants}>
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold">核心学习链路</h2>
-          <p className="text-muted-foreground">按学习闭环顺序组织，建议从左到右逐步使用</p>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <TrendingUp className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">核心学习链路</h2>
+              <p className="text-muted-foreground">按学习闭环顺序组织，建议从左到右逐步使用</p>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {coreEntries.map((item) => {
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          variants={containerVariants}
+        >
+          {coreEntries.map((item, index) => {
             const Icon = item.icon;
             return (
-              <Card key={item.href} className="card-hover group">
-                <CardHeader>
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <Icon className="w-6 h-6" />
+              <motion.div key={item.href} variants={itemVariants}>
+                <Card className="card-hover group h-full">
+                  <CardHeader>
+                    <div className="flex items-start justify-between mb-3">
+                      <motion.div
+                        className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <Icon className="w-6 h-6" />
+                      </motion.div>
+                      <Badge variant="outline" className="feature-chip">
+                        {item.tag}
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="feature-chip">
-                      {item.tag}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-xl">{item.title}</CardTitle>
-                  <CardDescription className="leading-relaxed">
-                    {item.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="ghost" className="w-full justify-between group-hover:bg-primary/10" asChild>
-                    <Link href={item.href}>
-                      进入 {item.title}
-                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+                    <CardTitle className="text-xl">{item.title}</CardTitle>
+                    <CardDescription className="leading-relaxed">
+                      {item.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button variant="ghost" className="w-full justify-between group-hover:bg-primary/10" asChild>
+                      <Link href={item.href}>
+                        进入 {item.title}
+                        <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
             );
           })}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* 生态支撑模块 */}
-      <div className="space-y-6">
+      <motion.div className="space-y-6" variants={itemVariants}>
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold">生态支撑模块</h2>
-          <p className="text-muted-foreground">围绕教学、治理与知识管理提供配套能力</p>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-secondary/50">
+              <BarChart3 className="h-5 w-5 text-secondary-foreground" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">生态支撑模块</h2>
+              <p className="text-muted-foreground">围绕教学、治理与知识管理提供配套能力</p>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {supportEntries.map((item) => {
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          variants={containerVariants}
+        >
+          {supportEntries.map((item, index) => {
             const Icon = item.icon;
             return (
-              <Card key={item.href} className="card-hover group">
-                <CardHeader className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="p-2 rounded-lg bg-secondary/50 text-secondary-foreground">
-                      <Icon className="w-5 h-5" />
+              <motion.div key={item.href} variants={itemVariants}>
+                <Card className="card-hover group h-full">
+                  <CardHeader className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <motion.div
+                        className="p-2 rounded-lg bg-secondary/50 text-secondary-foreground"
+                        whileHover={{ scale: 1.1, rotate: -5 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </motion.div>
+                      <Badge variant="secondary" className="text-xs">
+                        {item.tag}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="text-xs">
-                      {item.tag}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-lg">{item.title}</CardTitle>
-                  <CardDescription className="text-sm line-clamp-2">
-                    {item.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs group-hover:bg-secondary/70"
-                    asChild
-                  >
-                    <Link href={item.href}>
-                      查看详情
-                      <ArrowRight className="ml-1 h-3 w-3" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+                    <CardTitle className="text-lg">{item.title}</CardTitle>
+                    <CardDescription className="text-sm line-clamp-2">
+                      {item.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs group-hover:bg-secondary/70"
+                      asChild
+                    >
+                      <Link href={item.href}>
+                        查看详情
+                        <ArrowRight className="ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
             );
           })}
-        </div>
-      </div>
-    </section>
+        </motion.div>
+      </motion.div>
+    </motion.section>
   );
 }
