@@ -545,8 +545,6 @@ export default function PathPage() {
                       ))}
                   </motion.div>
                 ))}
-                  </div>
-                ))}
 
                 {/* 未分组任务 */}
                 {selectedPath.tasks

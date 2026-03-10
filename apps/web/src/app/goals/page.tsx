@@ -236,6 +236,7 @@ export default function GoalsPage() {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }
