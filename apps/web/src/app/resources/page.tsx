@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Sparkles, TrendingUp, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResourceUpload } from "@/components/resources/resource-upload";
 import { ResourceList } from "@/components/resources/resource-list";
