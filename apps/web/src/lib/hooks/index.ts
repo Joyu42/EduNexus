@@ -23,3 +23,9 @@ export { useSafeArea } from './use-safe-area';
 // 屏幕方向
 export { useOrientation } from './use-orientation';
 export type { Orientation } from './use-orientation';
+
+// 键盘快捷键
+export { useKeyboardShortcut } from './use-keyboard-shortcut';
+
+// 拖拽
+export { useDraggable } from './use-draggable';

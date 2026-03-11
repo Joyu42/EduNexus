@@ -53,7 +53,8 @@
       "Bash(cd /f/1work/EduNexus && pnpm tsc --noEmit apps/web/src/components/kb/floating-create-button.tsx 2>&1)",
       "Bash(cd \"F:/1work/EduNexus/apps/web\" && npx tsc --noEmit --skipLibCheck src/components/workspace/monaco-editor.tsx src/components/workspace/enhanced-code-executor.tsx src/components/workspace/programming-lab.tsx src/components/workspace/file-tree.tsx src/components/workspace/project-templates.tsx 2>&1)",
       "Bash(bash:*)",
-      "Bash(cd /f/1work/EduNexus/apps/web && npx tsc --noEmit --skipLibCheck src/lib/design-system/*.ts src/components/ui/button.tsx src/components/ui/input.tsx src/components/ui/card.tsx src/components/ui/badge.tsx src/components/ui/alert.tsx src/components/ui/label.tsx src/components/ui/separator.tsx src/components/ui/spinner.tsx src/components/ui/skeleton.tsx 2>&1)"
+      "Bash(cd /f/1work/EduNexus/apps/web && npx tsc --noEmit --skipLibCheck src/lib/design-system/*.ts src/components/ui/button.tsx src/components/ui/input.tsx src/components/ui/card.tsx src/components/ui/badge.tsx src/components/ui/alert.tsx src/components/ui/label.tsx src/components/ui/separator.tsx src/components/ui/spinner.tsx src/components/ui/skeleton.tsx 2>&1)",
+      "Bash(cd \"F:/1work/EduNexus/apps/web\" && npx tsc --noEmit --skipLibCheck src/components/global/global-ai-assistant.tsx src/lib/hooks/use-keyboard-shortcut.ts src/lib/hooks/use-draggable.ts src/lib/ai/context-adapter.ts 2>&1)"
     ]
   }
 }

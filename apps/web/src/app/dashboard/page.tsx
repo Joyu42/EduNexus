@@ -62,14 +62,6 @@ export default function DashboardPage() {
       bgColor: "bg-orange-50"
     },
     {
-      title: "教师工作台",
-      description: "课程和作业管理",
-      icon: Users,
-      href: "/teacher",
-      color: "text-rose-600",
-      bgColor: "bg-rose-50"
-    },
-    {
       title: "配置中心",
       description: "系统设置和配置",
       icon: Settings,

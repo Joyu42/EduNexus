@@ -37,6 +37,7 @@ const STATUS_CONFIG = {
     color: 'text-gray-500',
     bgColor: 'bg-gray-50',
     borderColor: 'border-gray-200',
+    animate: false,
   },
   saving: {
     icon: Loader2,
@@ -52,6 +53,7 @@ const STATUS_CONFIG = {
     color: 'text-green-600',
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
+    animate: false,
   },
   error: {
     icon: AlertCircle,
@@ -59,6 +61,7 @@ const STATUS_CONFIG = {
     color: 'text-red-600',
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
+    animate: false,
   },
 } as const;
 

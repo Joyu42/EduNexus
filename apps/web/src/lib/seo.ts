@@ -232,11 +232,6 @@ export const seoPresets = {
     description: '统一追踪学习增益、提示依赖和风险干预结果',
     keywords: ['数据分析', '学习统计', '进度追踪'],
   },
-  teacher: {
-    title: '教师工作台',
-    description: '围绕备课与课堂改进输出结构化教学方案',
-    keywords: ['教师工具', '备课', '教学设计'],
-  },
   settings: {
     title: '配置中心',
     description: '统一管理策略模板、导入审计与系统参数',
@@ -285,11 +280,6 @@ export function generateSitemapEntries(): SitemapEntry[] {
     },
     {
       url: `${baseUrl}/dashboard`,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/teacher`,
       changeFrequency: 'weekly',
       priority: 0.7,
     },

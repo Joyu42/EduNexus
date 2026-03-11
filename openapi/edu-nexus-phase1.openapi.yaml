@@ -13,7 +13,6 @@ tags:
   - name: Graph
   - name: Path
   - name: KB
-  - name: Teacher
 components:
   securitySchemes:
     bearerAuth:
@@ -693,91 +692,6 @@ components:
                     type: number
         traceId:
           type: string
-    TeacherWeaknessTemplate:
-      type: object
-      required: [id, label, content, description, scope]
-      properties:
-        id:
-          type: string
-        label:
-          type: string
-        content:
-          type: string
-        description:
-          type: string
-        scope:
-          type: string
-    TeacherWeaknessTemplateResponse:
-      type: object
-      required: [success, data, traceId]
-      properties:
-        success:
-          type: boolean
-          const: true
-        data:
-          type: object
-          required: [subject, templates]
-          properties:
-            subject:
-              type: string
-            templates:
-              type: array
-              items:
-                $ref: '#/components/schemas/TeacherWeaknessTemplate'
-        traceId:
-          type: string
-    TeacherLessonPlanRequest:
-      type: object
-      required: [subject, topic, grade, difficulty]
-      properties:
-        subject:
-          type: string
-        topic:
-          type: string
-        grade:
-          type: string
-        difficulty:
-          type: string
-          enum: [基础, 中等, 提升]
-        classWeakness:
-          type: string
-    TeacherLessonPlanResponse:
-      type: object
-      required: [success, data, traceId]
-      properties:
-        success:
-          type: boolean
-          const: true
-        data:
-          type: object
-          required: [title, objectives, outline, classAdjustment, homework, reviewChecklist, source]
-          properties:
-            title:
-              type: string
-            objectives:
-              type: array
-              items:
-                type: string
-            outline:
-              type: array
-              items:
-                type: string
-            classAdjustment:
-              type: string
-            homework:
-              type: array
-              items:
-                type: string
-            reviewChecklist:
-              type: array
-              items:
-                type: string
-            source:
-              type: string
-            modelHint:
-              type: string
-        traceId:
-          type: string
 paths:
   /workspace/session:
     post:
@@ -1290,57 +1204,6 @@ paths:
                 $ref: '#/components/schemas/KbIndexRebuildResponse'
         '500':
           description: Rebuild failed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-  /teacher/lesson-plan/templates:
-    get:
-      tags: [Teacher]
-      summary: Get weakness templates for lesson plan generation.
-      parameters:
-        - name: subject
-          in: query
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Template list
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TeacherWeaknessTemplateResponse'
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-  /teacher/lesson-plan/generate:
-    post:
-      tags: [Teacher]
-      summary: Generate lesson plan draft for teachers.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TeacherLessonPlanRequest'
-      responses:
-        '200':
-          description: Lesson plan generated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TeacherLessonPlanResponse'
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
-        '500':
-          description: Server error
           content:
             application/json:
               schema:

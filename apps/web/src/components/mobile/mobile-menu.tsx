@@ -13,7 +13,6 @@ import {
   BookOpen,
   Route,
   Briefcase,
-  GraduationCap,
   Settings,
   BarChart3,
   Target,
@@ -43,7 +42,6 @@ const navigation = [
     items: [
       { name: "学习工作区", href: "/workspace", icon: Briefcase },
       { name: "学习分析", href: "/workspace/analytics", icon: BarChart3 },
-      { name: "教师工作台", href: "/teacher", icon: GraduationCap },
     ],
   },
   {

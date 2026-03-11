@@ -278,19 +278,6 @@ async function main() {
     });
     assert.equal(pathFeedbackRes.status, 200, "路径焦点反馈接口失败");
 
-    const teacherRes = await requestJson(baseUrl, "/api/teacher/lesson-plan/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        subject: "高中数学",
-        topic: "等差数列求和",
-        grade: "高一",
-        difficulty: "中等",
-        classWeakness: "条件识别能力弱，易直接套公式"
-      })
-    });
-    assert.equal(teacherRes.status, 200, "教师备课接口失败");
-
     console.log("\n[smoke] API 冒烟测试通过");
   } finally {
     await killProcessTree(child);

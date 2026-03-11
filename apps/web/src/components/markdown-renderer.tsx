@@ -22,7 +22,8 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
         rehypePlugins={[rehypeKatex, rehypeHighlight, rehypeRaw]}
         components={{
           // 代码块样式
-          code({ node, inline, className, children, ...props }) {
+          code({ node, className, children, ...props }: any) {
+            const inline = !className;
             return inline ? (
               <code
                 className="px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 text-sm font-mono"

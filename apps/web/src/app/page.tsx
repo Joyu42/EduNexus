@@ -13,7 +13,6 @@ import {
   Route,
   BarChart3,
   Database,
-  GraduationCap,
   Settings,
   ArrowRight,
   Target,
@@ -61,13 +60,6 @@ const supportEntries = [
     description: "用双链与检索组织长期知识资产，形成个人学习语境。",
     tag: "轻量沉淀复用",
     icon: Database
-  },
-  {
-    href: "/teacher",
-    title: "教师工作台",
-    description: "围绕备课与课堂改进输出结构化教学方案。",
-    tag: "教学协同",
-    icon: GraduationCap
   },
   {
     href: "/settings",
@@ -255,7 +247,7 @@ export default function HomePage() {
         </div>
 
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
           variants={containerVariants}
         >
           {supportEntries.map((item, index) => {

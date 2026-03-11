@@ -8,6 +8,7 @@ import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { OfflineIndicator } from "@/components/pwa/offline-indicator";
 import { NotificationPermission } from "@/components/pwa/notification-permission";
 import { UpdatePrompt } from "@/components/pwa/update-prompt";
+import { GlobalAIAssistant } from "@/components/global/global-ai-assistant";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -60,6 +61,7 @@ export default function RootLayout({
           <OfflineIndicator />
           <NotificationPermission />
           <UpdatePrompt />
+          <GlobalAIAssistant />
         </QueryProvider>
       </body>
     </html>

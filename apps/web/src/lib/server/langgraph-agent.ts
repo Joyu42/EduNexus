@@ -114,13 +114,6 @@ function detectIntent(userInput: string) {
     return "error_review";
   }
   if (
-    normalized.includes("教案") ||
-    normalized.includes("备课") ||
-    normalized.includes("课堂")
-  ) {
-    return "teacher_design";
-  }
-  if (
     normalized.includes("计划") ||
     normalized.includes("路径") ||
     normalized.includes("安排")
