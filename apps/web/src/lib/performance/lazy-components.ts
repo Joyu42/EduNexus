@@ -7,18 +7,13 @@ import dynamic from 'next/dynamic';
 import { ComponentType } from 'react';
 
 // 加载占位符组件
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center p-8">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-  </div>
-);
+const LoadingSpinner = () => {
+  return null;
+};
 
-const LoadingCard = () => (
-  <div className="animate-pulse space-y-4 p-6">
-    <div className="h-4 bg-muted rounded w-3/4"></div>
-    <div className="h-4 bg-muted rounded w-1/2"></div>
-  </div>
-);
+const LoadingCard = () => {
+  return null;
+};
 
 /**
  * 创建懒加载组件的辅助函数

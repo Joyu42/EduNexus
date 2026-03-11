@@ -12,7 +12,7 @@ interface UserFollowButtonProps {
   isFollowing?: boolean
   isMutualFollow?: boolean
   variant?: 'default' | 'outline' | 'ghost'
-  size?: 'default' | 'sm' | 'lg'
+  size?: 'sm' | 'md' | 'lg'
   className?: string
   onFollowChange?: (isFollowing: boolean) => void
 }
@@ -23,7 +23,7 @@ export function UserFollowButton({
   isFollowing: initialIsFollowing = false,
   isMutualFollow = false,
   variant = 'default',
-  size = 'default',
+  size = 'md',
   className,
   onFollowChange,
 }: UserFollowButtonProps) {

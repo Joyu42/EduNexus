@@ -53,11 +53,16 @@ export function KBSidebar({
     tags: false,
   });
 
-  // 过滤文档
-  const filteredDocs = documents.filter(doc =>
-    doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // 过滤文档（优化搜索）
+  const filteredDocs = documents.filter(doc => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      doc.title.toLowerCase().includes(query) ||
+      doc.content.toLowerCase().includes(query) ||
+      doc.tags.some(tag => tag.toLowerCase().includes(query))
+    );
+  });
 
   // 最近文档（按更新时间排序，取前5个）
   const recentDocs = [...documents]

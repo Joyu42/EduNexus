@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
-import Table from "@tiptap/extension-table";
-import TableRow from "@tiptap/extension-table-row";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TaskList } from "@tiptap/extension-task-list";
+import { TaskItem } from "@tiptap/extension-task-item";
+import { FileText } from "lucide-react";
 import { EditorToolbar } from "./editor-toolbar";
 import type { KBDocument } from "@/lib/client/kb-storage";
 
@@ -23,6 +24,7 @@ interface KBEditorProps {
 export function KBEditor({ document, onUpdate }: KBEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -59,7 +61,7 @@ export function KBEditor({ document, onUpdate }: KBEditorProps) {
     content: document?.content || "",
     editorProps: {
       attributes: {
-        class: "prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none focus:outline-none min-h-full p-8",
+        class: "prose prose-sm sm:prose lg:prose-lg max-w-none focus:outline-none min-h-full p-8 prose-headings:font-bold prose-a:text-primary prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-muted",
       },
     },
     onUpdate: ({ editor }) => {
@@ -82,27 +84,59 @@ export function KBEditor({ document, onUpdate }: KBEditorProps) {
   const handleSave = async (content: string) => {
     if (!document) return;
 
-    setIsSaving(true);
-    try {
-      await onUpdate({
-        ...document,
-        content,
-        updatedAt: new Date(),
-      });
-      setLastSaved(new Date());
-    } catch (error) {
-      console.error("Failed to save document:", error);
-    } finally {
-      setIsSaving(false);
+    // 清除之前的定时器
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
     }
+
+    // 设置新的定时器，2秒后保存
+    saveTimeoutRef.current = setTimeout(async () => {
+      setIsSaving(true);
+      try {
+        await onUpdate({
+          ...document,
+          content,
+          updatedAt: new Date(),
+        });
+        setLastSaved(new Date());
+      } catch (error) {
+        console.error("Failed to save document:", error);
+      } finally {
+        setIsSaving(false);
+      }
+    }, 2000);
   };
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!document) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center text-muted-foreground">
-          <p className="text-lg mb-2">选择一个文档开始编辑</p>
-          <p className="text-sm">或创建一个新文档</p>
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-background to-muted/30">
+        <div className="text-center max-w-md px-8">
+          <div className="mb-6">
+            <FileText className="h-20 w-20 mx-auto text-muted-foreground/50" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3">欢迎使用知识库 V2</h2>
+          <p className="text-muted-foreground mb-6">
+            选择左侧的文档开始编辑，或创建一个新文档开始你的知识管理之旅。
+          </p>
+          <div className="space-y-2 text-sm text-muted-foreground text-left bg-muted/50 rounded-lg p-4">
+            <p className="font-semibold mb-2">✨ 功能特性：</p>
+            <ul className="space-y-1 ml-4">
+              <li>• 富文本编辑器，支持 Markdown</li>
+              <li>• AI 智能摘要和思维导图</li>
+              <li>• 实时自动保存</li>
+              <li>• 文档大纲导航</li>
+              <li>• 标签和分类管理</li>
+            </ul>
+          </div>
         </div>
       </div>
     );

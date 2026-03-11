@@ -193,39 +193,10 @@ import { MonthlyReport } from '@/components/analytics/monthly-report';
 import { AISuggestions } from '@/components/analytics/ai-suggestions';
 
 export function UserReportsPage() {
-  const [reportType, setReportType] = useState<'weekly' | 'monthly'>('weekly');
+  // This is a usage example - actual implementation should be in a React component file
+  // const [reportType, setReportType] = useState<'weekly' | 'monthly'>('weekly');
 
-  return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">我的学习报告</h1>
-
-      {/* 报告类型切换 */}
-      <div className="mb-6">
-        <button
-          onClick={() => setReportType('weekly')}
-          className={reportType === 'weekly' ? 'active' : ''}
-        >
-          周报
-        </button>
-        <button
-          onClick={() => setReportType('monthly')}
-          className={reportType === 'monthly' ? 'active' : ''}
-        >
-          月报
-        </button>
-      </div>
-
-      {/* 显示报告 */}
-      {reportType === 'weekly' ? (
-        <WeeklyReport date={new Date()} />
-      ) : (
-        <MonthlyReport date={new Date()} />
-      )}
-
-      {/* AI 建议 */}
-      <AISuggestions reportType={reportType} />
-    </div>
-  );
+  console.log('UserReportsPage example - implement in a .tsx file');
 }
 
 // ============================================

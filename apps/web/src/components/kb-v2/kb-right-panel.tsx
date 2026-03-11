@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,8 @@ import {
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import type { KBDocument } from "@/lib/client/kb-storage";
+import { getKBStorage } from "@/lib/client/kb-storage";
+import { extractOutline, type OutlineItem } from "@/lib/client/document-outline";
 import { AIMindMap } from "./ai-mindmap";
 import { AISummary } from "./ai-summary";
 import { AIChat } from "./ai-chat";
@@ -30,6 +32,17 @@ interface KBRightPanelProps {
 
 export function KBRightPanel({ document }: KBRightPanelProps) {
   const [activeTab, setActiveTab] = useState("outline");
+  const [outline, setOutline] = useState<OutlineItem[]>([]);
+
+  // 提取文档大纲
+  useEffect(() => {
+    if (document?.content) {
+      const extracted = extractOutline(document.content);
+      setOutline(extracted);
+    } else {
+      setOutline([]);
+    }
+  }, [document?.content]);
 
   if (!document) {
     return (
@@ -70,41 +83,49 @@ export function KBRightPanel({ document }: KBRightPanelProps) {
           <TabsContent value="outline" className="p-4 mt-0">
             <div className="space-y-2">
               <h3 className="font-semibold text-sm mb-3">文档大纲</h3>
-              <div className="text-sm text-muted-foreground">
-                暂无大纲内容
-              </div>
+              {outline.length > 0 ? (
+                <OutlineTree items={outline} />
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  暂无大纲内容
+                </div>
+              )}
             </div>
           </TabsContent>
 
           {/* AI 功能 */}
           <TabsContent value="ai" className="p-4 mt-0 space-y-4">
-            <div>
-              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                AI 思维导图
-              </h3>
-              <AIMindMap document={document} />
-            </div>
+            {activeTab === "ai" && (
+              <>
+                <div>
+                  <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    AI 思维导图
+                  </h3>
+                  <AIMindMap document={document} />
+                </div>
 
-            <Separator />
+                <Separator />
 
-            <div>
-              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                AI 摘要
-              </h3>
-              <AISummary document={document} />
-            </div>
+                <div>
+                  <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    AI 摘要
+                  </h3>
+                  <AISummary document={document} />
+                </div>
 
-            <Separator />
+                <Separator />
 
-            <div>
-              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                AI 问答
-              </h3>
-              <AIChat document={document} />
-            </div>
+                <div>
+                  <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    AI 问答
+                  </h3>
+                  <AIChat document={document} />
+                </div>
+              </>
+            )}
           </TabsContent>
 
           {/* 属性 */}
@@ -157,7 +178,17 @@ export function KBRightPanel({ document }: KBRightPanelProps) {
                   操作
                 </label>
                 <div className="space-y-2">
-                  <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      if (document) {
+                        const storage = getKBStorage();
+                        storage.exportDocumentAsMarkdown(document);
+                      }
+                    }}
+                  >
                     <Download className="h-4 w-4 mr-2" />
                     导出为 Markdown
                   </Button>
@@ -181,6 +212,48 @@ export function KBRightPanel({ document }: KBRightPanelProps) {
           </TabsContent>
         </ScrollArea>
       </Tabs>
+    </div>
+  );
+}
+
+// 大纲树组件
+function OutlineTree({ items }: { items: OutlineItem[] }) {
+  return (
+    <div className="space-y-1">
+      {items.map((item) => (
+        <OutlineTreeItem key={item.id} item={item} />
+      ))}
+    </div>
+  );
+}
+
+function OutlineTreeItem({ item }: { item: OutlineItem }) {
+  const paddingLeft = (item.level - 1) * 12;
+
+  return (
+    <div>
+      <button
+        className="w-full text-left text-sm py-1.5 px-2 rounded hover:bg-accent transition-colors"
+        style={{ paddingLeft: `${paddingLeft}px` }}
+        onClick={() => {
+          // 滚动到对应标题
+          const heading = document.querySelector(`#${item.id}`);
+          if (heading) {
+            heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }}
+      >
+        <span className="text-muted-foreground mr-2">
+          {item.level === 1 && '📄'}
+          {item.level === 2 && '📌'}
+          {item.level === 3 && '•'}
+          {item.level > 3 && '◦'}
+        </span>
+        {item.text}
+      </button>
+      {item.children.length > 0 && (
+        <OutlineTree items={item.children} />
+      )}
     </div>
   );
 }
