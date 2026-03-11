@@ -47,12 +47,12 @@ export function GlobalAIAssistant() {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // 计算初始位置
+  // 计算初始位置（右下角，留出边距）
   const getInitialPosition = () => {
     if (typeof window === 'undefined') return { x: 0, y: 0 };
     return {
-      x: window.innerWidth - 450,
-      y: window.innerHeight - 650,
+      x: window.innerWidth - 380, // 减小宽度，留出更多空间
+      y: window.innerHeight - 550, // 减小高度
     };
   };
 
@@ -63,11 +63,11 @@ export function GlobalAIAssistant() {
     bounds: 'window',
   });
 
-  // 可调整大小功能
+  // 可调整大小功能（更小的默认尺寸）
   const { size, isResizing, handleResizeStart } = useResizable({
-    initialSize: { width: 420, height: 620 },
-    minSize: { width: 320, height: 400 },
-    maxSize: { width: 800, height: 900 },
+    initialSize: { width: 360, height: 500 }, // 减小默认尺寸
+    minSize: { width: 300, height: 350 }, // 减小最小尺寸
+    maxSize: { width: 600, height: 800 }, // 减小最大尺寸
     storageKey: 'ai-assistant-size',
   });
 
@@ -188,7 +188,7 @@ export function GlobalAIAssistant() {
         animate={{ scale: 1 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center group"
+        className="fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center group"
         onClick={() => setIsOpen(true)}
         title="打开 AI 助手 (Cmd/Ctrl + K)"
       >
@@ -210,7 +210,7 @@ export function GlobalAIAssistant() {
           top: position.y,
           width: size.width,
           height: size.height,
-          zIndex: 40,
+          zIndex: 30, // 降低到 30，确保不遮挡下拉框
         }}
         className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden ${
           isDragging ? 'opacity-90' : ''
