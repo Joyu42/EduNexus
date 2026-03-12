@@ -21,6 +21,9 @@ import {
   FileText,
   Zap,
   TrendingUp,
+  History,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,14 +33,29 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
-import { CodeExecutor } from "@/components/workspace/code-executor";
 import { LearningNotes } from "@/components/workspace/learning-notes";
-import { QuizGenerator } from "@/components/workspace/quiz-generator";
 import { CompactLevelDisplay } from "@/components/compact-level-display";
 import { LearningPlanner } from "@/components/kb/learning-planner";
 import { KBQAAssistant } from "@/components/kb/kb-qa-assistant";
-import { ProgrammingLab } from "@/components/workspace/programming-lab";
+import { TeacherManager } from "@/components/workspace/teacher-manager";
 import { getKBStorage } from "@/lib/client/kb-storage";
+import { getModelConfig } from "@/lib/client/model-config";
+import {
+  createChatSession,
+  addMessageToSession,
+  getRecentChatSessions,
+  getChatSession,
+  deleteChatSession,
+  exportChatSessionAsMarkdown,
+  generateSessionTitle,
+  type ChatSession,
+  type ChatMessage,
+} from "@/lib/workspace/chat-history-storage";
+import {
+  getAllTeachers,
+  type AITeacher,
+} from "@/lib/workspace/teacher-storage";
+import { toast } from "sonner";
 
 type Message = {
   id: string;
@@ -47,17 +65,32 @@ type Message = {
   attachments?: { name: string; type: string; url: string }[];
   thinking?: string;
   timestamp: Date;
+  mode?: "normal" | "kb-qa"; // 标记消息来自哪种模式
+};
+
+const teachingStyleLabels = {
+  socratic: '苏格拉底式',
+  direct: '直接教学',
+  interactive: '互动式',
+  'project-based': '项目式',
+  mixed: '混合式',
 };
 
 export default function WorkspacePage() {
   const storage = getKBStorage();
   const [kbDocuments, setKbDocuments] = useState<any[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [recentSessions, setRecentSessions] = useState<ChatSession[]>([]);
+  const [currentTeacher, setCurrentTeacher] = useState<AITeacher | null>(null);
+  const [teachers, setTeachers] = useState<AITeacher[]>([]);
+  const [kbQAMode, setKbQAMode] = useState(false); // 知识库问答模式开关
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
       role: "assistant",
       content: "你好！我是你的智能学习伙伴。我可以帮你：\n\n- 🔍 搜索知识宝库和星图\n- 📝 生成个性化练习题\n- 🗺️ 规划成长地图\n- 💡 解释复杂概念\n- 🤔 通过提问引导思考\n- 🖼️ 分析图片和图表（支持多模态）\n- 💻 解释和调试代码\n\n有什么想学习或探讨的吗？",
       timestamp: new Date(),
+      mode: "normal",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -65,12 +98,12 @@ export default function WorkspacePage() {
   const [socraticMode, setSocraticMode] = useState(true);
   const [showThinking, setShowThinking] = useState(true);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<"status" | "tools" | "notes" | "quiz" | "plan" | "kb-qa" | "lab">("status");
+  const [activeTab, setActiveTab] = useState<"status" | "teachers" | "notes" | "plan" | "kb-qa" | "history">("status");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 加载知识库文档
+  // 加载知识库文档、历史会话和老师列表
   useEffect(() => {
     const loadKBDocuments = async () => {
       try {
@@ -84,7 +117,32 @@ export default function WorkspacePage() {
         console.error("加载知识库文档失败:", error);
       }
     };
+
+    const loadRecentSessions = async () => {
+      try {
+        const sessions = await getRecentChatSessions(5);
+        setRecentSessions(sessions);
+      } catch (error) {
+        console.error("加载历史会话失败:", error);
+      }
+    };
+
+    const loadTeachers = async () => {
+      try {
+        const allTeachers = await getAllTeachers();
+        setTeachers(allTeachers);
+        // 默认选择第一个老师（苏格拉底老师）
+        if (allTeachers.length > 0 && !currentTeacher) {
+          setCurrentTeacher(allTeachers[0]);
+        }
+      } catch (error) {
+        console.error("加载老师列表失败:", error);
+      }
+    };
+
     loadKBDocuments();
+    loadRecentSessions();
+    loadTeachers();
   }, []);
 
   useEffect(() => {
@@ -118,20 +176,62 @@ export default function WorkspacePage() {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const exportConversation = () => {
-    const content = messages
-      .map((m) => `[${m.role}] ${m.content}`)
-      .join("\n\n");
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `学习对话_${new Date().toISOString().slice(0, 10)}.txt`;
-    a.click();
+  const exportConversation = async () => {
+    if (!currentSessionId) {
+      // 如果没有会话ID，直接导出当前消息
+      const content = messages
+        .map((m) => `[${m.role}] ${m.content}`)
+        .join("\n\n");
+      const blob = new Blob([content], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `学习对话_${new Date().toISOString().slice(0, 10)}.txt`;
+      a.click();
+      return;
+    }
+
+    // 从数据库导出
+    try {
+      const session = await getChatSession(currentSessionId);
+      if (session) {
+        const markdown = exportChatSessionAsMarkdown(session);
+        const blob = new Blob([markdown], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${session.title}_${new Date().toISOString().slice(0, 10)}.md`;
+        a.click();
+        toast.success("对话已导出");
+      }
+    } catch (error) {
+      console.error("导出失败:", error);
+      toast.error("导出失败");
+    }
+  };
+
+  const startNewConversation = () => {
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content: "你好！我是你的智能学习伙伴。有什么想学习或探讨的吗？",
+        timestamp: new Date(),
+        mode: kbQAMode ? "kb-qa" : "normal",
+      },
+    ]);
+    setCurrentSessionId(null);
+    toast.success("已开始新对话");
   };
 
   const handleSend = async () => {
     if ((!inputValue.trim() && uploadedImages.length === 0) || isLoading) return;
+
+    // 知识库问答模式检查
+    if (kbQAMode && kbDocuments.length === 0) {
+      toast.error("知识库中没有文档，请先添加文档或切换到普通对话模式");
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -139,6 +239,7 @@ export default function WorkspacePage() {
       content: inputValue || "请分析这些图片",
       images: uploadedImages.length > 0 ? [...uploadedImages] : undefined,
       timestamp: new Date(),
+      mode: kbQAMode ? "kb-qa" : "normal",
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -147,48 +248,117 @@ export default function WorkspacePage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/workspace/agent/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: inputValue || "请分析这些图片",
-          images: uploadedImages.length > 0 ? uploadedImages : undefined,
-          history: messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-            images: m.images,
-          })),
-          config: {
-            socraticMode,
-            temperature: 0.7,
-            maxIterations: 5,
-          },
-        }),
-      });
+      let assistantMessage: Message;
 
-      const data = await response.json();
+      if (kbQAMode) {
+        // 知识库问答模式
+        const response = await fetch("/api/kb/qa", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question: inputValue || "请分析这些图片",
+            documents: kbDocuments.map((doc) => ({
+              id: doc.id,
+              title: doc.title,
+              content: doc.content,
+              tags: doc.tags,
+            })),
+            history: messages
+              .filter((m) => m.mode === "kb-qa")
+              .slice(-4)
+              .map((m) => ({
+                role: m.role,
+                content: m.content,
+              })),
+          }),
+        });
 
-      if (data.success) {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: data.response,
-          thinking: data.thinking,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
+        const data = await response.json();
+
+        if (data.success) {
+          assistantMessage = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: data.answer,
+            timestamp: new Date(),
+            mode: "kb-qa",
+          };
+        } else {
+          throw new Error(data.error || "Unknown error");
+        }
       } else {
-        throw new Error(data.error || "Unknown error");
+        // 普通对话模式
+        const modelConfig = getModelConfig();
+
+        const response = await fetch("/api/workspace/agent/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: inputValue || "请分析这些图片",
+            images: uploadedImages.length > 0 ? uploadedImages : undefined,
+            history: messages
+              .filter((m) => m.mode === "normal")
+              .map((m) => ({
+                role: m.role,
+                content: m.content,
+                images: m.images,
+              })),
+            config: {
+              socraticMode: currentTeacher?.teachingStyle === 'socratic',
+              temperature: currentTeacher?.temperature || modelConfig.temperature,
+              maxIterations: 5,
+              apiKey: modelConfig.apiKey,
+              apiEndpoint: modelConfig.apiEndpoint,
+              modelName: modelConfig.model,
+              systemPrompt: currentTeacher?.systemPrompt,
+            },
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          assistantMessage = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: data.response,
+            thinking: data.thinking,
+            timestamp: new Date(),
+            mode: "normal",
+          };
+        } else {
+          throw new Error(data.error || "Unknown error");
+        }
+      }
+
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      // 保存对话到历史记录
+      try {
+        if (!currentSessionId) {
+          const title = generateSessionTitle([userMessage as ChatMessage]);
+          const session = await createChatSession(title, currentTeacher?.teachingStyle === 'socratic');
+          setCurrentSessionId(session.id);
+          await addMessageToSession(session.id, userMessage as ChatMessage);
+          await addMessageToSession(session.id, assistantMessage as ChatMessage);
+        } else {
+          await addMessageToSession(currentSessionId, userMessage as ChatMessage);
+          await addMessageToSession(currentSessionId, assistantMessage as ChatMessage);
+        }
+      } catch (storageError) {
+        console.error("保存对话历史失败:", storageError);
       }
     } catch (error) {
       console.error("Chat error:", error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "抱歉，处理你的请求时出现了错误。请稍后重试。",
+        content: error instanceof Error ? error.message : "抱歉，处理你的请求时出现了错误。请稍后重试。",
         timestamp: new Date(),
+        mode: kbQAMode ? "kb-qa" : "normal",
       };
       setMessages((prev) => [...prev, errorMessage]);
+      toast.error("发送失败：" + (error instanceof Error ? error.message : "未知错误"));
     } finally {
       setIsLoading(false);
     }
@@ -226,18 +396,23 @@ export default function WorkspacePage() {
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <Sparkles className="h-5 w-5 text-white" />
+                {currentTeacher ? (
+                  <span className="text-2xl">{currentTeacher.avatar}</span>
+                ) : (
+                  <Sparkles className="h-5 w-5 text-white" />
+                )}
               </motion.div>
               <div>
                 <h1 className="text-xl font-semibold flex items-center gap-2">
                   学习工作区
-                  <Badge variant="secondary" className="text-xs">
-                    <Zap className="h-3 w-3 mr-1" />
-                    AI 驱动
-                  </Badge>
+                  {currentTeacher && (
+                    <Badge variant="secondary" className="text-xs">
+                      {currentTeacher.name}
+                    </Badge>
+                  )}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  智能学习伙伴 · 随时为你答疑解惑
+                  {currentTeacher ? currentTeacher.description : '智能学习伙伴 · 随时为你答疑解惑'}
                 </p>
               </div>
             </div>
@@ -248,12 +423,25 @@ export default function WorkspacePage() {
                 whileHover={{ scale: 1.02 }}
               >
                 <Switch
-                  id="socratic"
-                  checked={socraticMode}
-                  onCheckedChange={setSocraticMode}
+                  id="kb-qa-mode"
+                  checked={kbQAMode}
+                  onCheckedChange={(checked) => {
+                    setKbQAMode(checked);
+                    toast.success(checked ? "已切换到知识库问答模式" : "已切换到普通对话模式");
+                  }}
                 />
-                <Label htmlFor="socratic" className="text-sm cursor-pointer">
-                  苏格拉底模式
+                <Label htmlFor="kb-qa-mode" className="text-sm cursor-pointer flex items-center gap-1">
+                  {kbQAMode ? (
+                    <>
+                      <BookOpen className="h-3 w-3" />
+                      知识库问答
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="h-3 w-3" />
+                      普通对话
+                    </>
+                  )}
                 </Label>
               </motion.div>
               <motion.div
@@ -298,9 +486,18 @@ export default function WorkspacePage() {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 500, delay: 0.1 }}
-                      className="p-2 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 h-8 w-8 flex items-center justify-center flex-shrink-0"
+                      className={cn(
+                        "p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0",
+                        message.mode === "kb-qa"
+                          ? "bg-gradient-to-br from-purple-500 to-pink-500"
+                          : "bg-gradient-to-br from-orange-500 to-rose-500"
+                      )}
                     >
-                      <Sparkles className="h-4 w-4 text-white" />
+                      {message.mode === "kb-qa" ? (
+                        <BookOpen className="h-4 w-4 text-white" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 text-white" />
+                      )}
                     </motion.div>
                   )}
 
@@ -310,7 +507,9 @@ export default function WorkspacePage() {
                     className={cn(
                       "rounded-2xl p-4 max-w-[80%] shadow-sm transition-all hover:shadow-md",
                       message.role === "user"
-                        ? "bg-gradient-to-br from-orange-500 to-rose-500 text-white"
+                        ? message.mode === "kb-qa"
+                          ? "bg-gradient-to-br from-purple-500 to-pink-500 text-white"
+                          : "bg-gradient-to-br from-orange-500 to-rose-500 text-white"
                         : "bg-white border border-gray-200"
                     )}
                   >
@@ -348,8 +547,31 @@ export default function WorkspacePage() {
                     <div className="prose prose-sm max-w-none">
                       <MarkdownRenderer content={message.content} />
                     </div>
-                    <div className="text-xs opacity-70 mt-2">
-                      {message.timestamp.toLocaleTimeString()}
+                    <div className="text-xs opacity-70 mt-2 flex items-center justify-between">
+                      <span>{message.timestamp.toLocaleTimeString()}</span>
+                      {message.mode && (
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-xs ml-2",
+                            message.mode === "kb-qa"
+                              ? "border-purple-300 text-purple-600"
+                              : "border-orange-300 text-orange-600"
+                          )}
+                        >
+                          {message.mode === "kb-qa" ? (
+                            <>
+                              <BookOpen className="h-3 w-3 mr-1" />
+                              知识库
+                            </>
+                          ) : (
+                            <>
+                              <MessageSquare className="h-3 w-3 mr-1" />
+                              对话
+                            </>
+                          )}
+                        </Badge>
+                      )}
                     </div>
                   </motion.div>
 
@@ -373,13 +595,26 @@ export default function WorkspacePage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex gap-3 justify-start"
               >
-                <div className="p-2 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 h-8 w-8 flex items-center justify-center flex-shrink-0 animate-pulse">
-                  <Sparkles className="h-4 w-4 text-white" />
+                <div
+                  className={cn(
+                    "p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0 animate-pulse",
+                    kbQAMode
+                      ? "bg-gradient-to-br from-purple-500 to-pink-500"
+                      : "bg-gradient-to-br from-orange-500 to-rose-500"
+                  )}
+                >
+                  {kbQAMode ? (
+                    <BookOpen className="h-4 w-4 text-white" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-white" />
+                  )}
                 </div>
                 <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">正在思考...</span>
+                    <span className="text-sm">
+                      {kbQAMode ? "正在查询知识库..." : "正在思考..."}
+                    </span>
                   </div>
                 </div>
               </motion.div>
@@ -423,6 +658,21 @@ export default function WorkspacePage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: quickActions.length * 0.05 }}
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={startNewConversation}
+                  className="flex-shrink-0 hover:bg-green-50 hover:border-green-300 transition-colors group"
+                >
+                  <Plus className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+                  新对话
+                </Button>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: (quickActions.length + 1) * 0.05 }}
               >
                 <Button
                   variant="outline"
@@ -489,9 +739,9 @@ export default function WorkspacePage() {
                   variant="outline"
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading}
+                  disabled={isLoading || kbQAMode}
                   className="flex-shrink-0 hover:bg-orange-50 hover:border-orange-300"
-                  title="上传图片"
+                  title={kbQAMode ? "知识库问答模式不支持图片" : "上传图片"}
                 >
                   <ImageIcon className="h-4 w-4" />
                 </Button>
@@ -502,11 +752,18 @@ export default function WorkspacePage() {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={
-                  socraticMode
-                    ? "提出你的问题，我会引导你思考..."
+                  kbQAMode
+                    ? `基于知识库提问（${kbDocuments.length} 个文档）...`
+                    : currentTeacher
+                    ? `向${currentTeacher.name}提问...`
                     : "输入你的问题..."
                 }
-                className="min-h-[60px] max-h-[200px] resize-none rounded-xl border-gray-300 focus:border-orange-400 focus:ring-orange-400 transition-all"
+                className={cn(
+                  "min-h-[60px] max-h-[200px] resize-none rounded-xl transition-all",
+                  kbQAMode
+                    ? "border-purple-300 focus:border-purple-400 focus:ring-purple-400"
+                    : "border-gray-300 focus:border-orange-400 focus:ring-orange-400"
+                )}
                 disabled={isLoading}
               />
               <motion.div
@@ -516,7 +773,12 @@ export default function WorkspacePage() {
                 <Button
                   onClick={handleSend}
                   disabled={(!inputValue.trim() && uploadedImages.length === 0) || isLoading}
-                  className="bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 shadow-md hover:shadow-lg transition-all"
+                  className={cn(
+                    "shadow-md hover:shadow-lg transition-all",
+                    kbQAMode
+                      ? "bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      : "bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
+                  )}
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -533,15 +795,20 @@ export default function WorkspacePage() {
               transition={{ delay: 0.3 }}
               className="mt-2 text-xs text-muted-foreground flex items-center gap-2"
             >
-              {socraticMode ? (
+              {kbQAMode ? (
                 <>
-                  <Lightbulb className="h-3 w-3" />
-                  <span>苏格拉底模式：我会通过提问引导你思考</span>
+                  <BookOpen className="h-3 w-3" />
+                  <span>知识库问答模式 · {kbDocuments.length} 个文档</span>
+                </>
+              ) : currentTeacher ? (
+                <>
+                  <Sparkles className="h-3 w-3" />
+                  <span>{currentTeacher.name} · {teachingStyleLabels[currentTeacher.teachingStyle]}</span>
                 </>
               ) : (
                 <>
-                  <BookOpen className="h-3 w-3" />
-                  <span>直接教学模式：我会直接解答你的问题</span>
+                  <Lightbulb className="h-3 w-3" />
+                  <span>请在右侧选择一位 AI 老师</span>
                 </>
               )}
             </motion.div>
@@ -554,10 +821,7 @@ export default function WorkspacePage() {
         initial={{ x: 20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.3, delay: 0.2 }}
-        className={cn(
-          "border-l bg-white/50 backdrop-blur-sm overflow-hidden flex flex-col transition-all duration-300",
-          activeTab === "lab" ? "w-[800px]" : "w-80"
-        )}
+        className="w-80 border-l bg-white/50 backdrop-blur-sm overflow-hidden flex flex-col"
       >
         {/* Tabs */}
         <div className="border-b bg-white/80 p-2 flex gap-1 overflow-x-auto scrollbar-thin">
@@ -577,30 +841,16 @@ export default function WorkspacePage() {
           </motion.div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
-              variant={activeTab === "tools" ? "default" : "ghost"}
+              variant={activeTab === "teachers" ? "default" : "ghost"}
               size="sm"
-              onClick={() => setActiveTab("tools")}
+              onClick={() => setActiveTab("teachers")}
               className={cn(
                 "flex-shrink-0 text-xs transition-all",
-                activeTab === "tools" && "bg-gradient-to-r from-orange-500 to-rose-500 text-white"
+                activeTab === "teachers" && "bg-gradient-to-r from-orange-500 to-rose-500 text-white"
               )}
             >
-              <Code className="h-3 w-3 mr-1" />
-              工具
-            </Button>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              variant={activeTab === "lab" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("lab")}
-              className={cn(
-                "flex-shrink-0 text-xs transition-all",
-                activeTab === "lab" && "bg-gradient-to-r from-orange-500 to-rose-500 text-white"
-              )}
-            >
-              <Code className="h-3 w-3 mr-1" />
-              实验室
+              <Sparkles className="h-3 w-3 mr-1" />
+              老师
             </Button>
           </motion.div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -619,20 +869,6 @@ export default function WorkspacePage() {
           </motion.div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
-              variant={activeTab === "quiz" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("quiz")}
-              className={cn(
-                "flex-shrink-0 text-xs transition-all",
-                activeTab === "quiz" && "bg-gradient-to-r from-orange-500 to-rose-500 text-white"
-              )}
-            >
-              <Target className="h-3 w-3 mr-1" />
-              练习
-            </Button>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
               variant={activeTab === "plan" ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveTab("plan")}
@@ -641,7 +877,7 @@ export default function WorkspacePage() {
                 activeTab === "plan" && "bg-gradient-to-r from-orange-500 to-rose-500 text-white"
               )}
             >
-              <Sparkles className="h-3 w-3 mr-1" />
+              <Target className="h-3 w-3 mr-1" />
               计划
             </Button>
           </motion.div>
@@ -656,7 +892,21 @@ export default function WorkspacePage() {
               )}
             >
               <Brain className="h-3 w-3 mr-1" />
-              问答
+              知识库
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              variant={activeTab === "history" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("history")}
+              className={cn(
+                "flex-shrink-0 text-xs transition-all",
+                activeTab === "history" && "bg-gradient-to-r from-orange-500 to-rose-500 text-white"
+              )}
+            >
+              <History className="h-3 w-3 mr-1" />
+              历史
             </Button>
           </motion.div>
         </div>
@@ -692,6 +942,22 @@ export default function WorkspacePage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm">
+                      <motion.div
+                        whileHover={{ x: 2 }}
+                        className="flex items-center justify-between p-2 rounded-lg hover:bg-orange-50/50 transition-colors"
+                      >
+                        <span className="text-muted-foreground">对话模式</span>
+                        <Badge
+                          variant="default"
+                          className={
+                            kbQAMode
+                              ? "bg-gradient-to-r from-purple-500 to-pink-500"
+                              : "bg-gradient-to-r from-orange-500 to-rose-500"
+                          }
+                        >
+                          {kbQAMode ? "知识库问答" : "普通对话"}
+                        </Badge>
+                      </motion.div>
                       <motion.div
                         whileHover={{ x: 2 }}
                         className="flex items-center justify-between p-2 rounded-lg hover:bg-orange-50/50 transition-colors"
@@ -803,23 +1069,19 @@ export default function WorkspacePage() {
               </motion.div>
             )}
 
-            {activeTab === "tools" && (
+            {activeTab === "teachers" && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="space-y-4"
               >
-                <CodeExecutor />
-              </motion.div>
-            )}
-
-            {activeTab === "lab" && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="h-full"
-              >
-                <ProgrammingLab />
+                <TeacherManager
+                  currentTeacherId={currentTeacher?.id || ''}
+                  onSelectTeacher={(teacher) => {
+                    setCurrentTeacher(teacher);
+                    toast.success(`已切换到${teacher.name}`);
+                  }}
+                />
               </motion.div>
             )}
 
@@ -829,15 +1091,6 @@ export default function WorkspacePage() {
                 animate={{ opacity: 1 }}
               >
                 <LearningNotes />
-              </motion.div>
-            )}
-
-            {activeTab === "quiz" && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <QuizGenerator />
               </motion.div>
             )}
 
@@ -858,6 +1111,88 @@ export default function WorkspacePage() {
                 className="h-full"
               >
                 <KBQAAssistant documents={kbDocuments} />
+              </motion.div>
+            )}
+
+            {activeTab === "history" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">对话历史</h3>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={startNewConversation}
+                    className="text-xs"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    新对话
+                  </Button>
+                </div>
+
+                {recentSessions.length === 0 ? (
+                  <Card className="p-6 text-center">
+                    <History className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">暂无历史记录</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-2">
+                    {recentSessions.map((session) => (
+                      <Card
+                        key={session.id}
+                        className={cn(
+                          "p-3 cursor-pointer hover:shadow-md transition-all",
+                          currentSessionId === session.id && "border-orange-500 bg-orange-50"
+                        )}
+                        onClick={async () => {
+                          const fullSession = await getChatSession(session.id);
+                          if (fullSession) {
+                            setMessages(fullSession.messages.map(m => ({
+                              ...m,
+                              timestamp: new Date(m.timestamp),
+                            })));
+                            setCurrentSessionId(session.id);
+                            setSocraticMode(session.socraticMode);
+                            toast.success("已加载对话");
+                          }
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-medium truncate">{session.title}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              {session.messages.length} 条消息
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(session.updatedAt).toLocaleString()}
+                            </p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (confirm("确定要删除这个对话吗？")) {
+                                await deleteChatSession(session.id);
+                                setRecentSessions(prev => prev.filter(s => s.id !== session.id));
+                                if (currentSessionId === session.id) {
+                                  startNewConversation();
+                                }
+                                toast.success("已删除对话");
+                              }
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             )}
           </motion.div>

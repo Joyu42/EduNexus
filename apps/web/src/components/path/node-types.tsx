@@ -10,7 +10,16 @@ import {
   Circle,
   Clock,
   PlayCircle,
-  CheckCircle
+  CheckCircle,
+  BookOpen,
+  Users,
+  RotateCcw,
+  BookMarked,
+  FlaskConical,
+  ClipboardList,
+  Presentation,
+  Search,
+  Trophy,
 } from 'lucide-react';
 import { PathNodeData, NodeType } from '@/lib/path/path-types';
 import { cn } from '@/lib/utils';
@@ -20,8 +29,16 @@ const nodeIcons: Record<NodeType, React.ComponentType<{ className?: string }>> =
   video: Video,
   practice: Code,
   quiz: CheckCircle2,
+  project: BookOpen,
+  discussion: Users,
+  review: RotateCcw,
+  reading: BookMarked,
+  lab: FlaskConical,
+  assignment: ClipboardList,
+  presentation: Presentation,
+  research: Search,
   start: PlayCircle,
-  end: CheckCircle,
+  end: Trophy,
 };
 
 const nodeColors: Record<NodeType, string> = {
@@ -29,6 +46,14 @@ const nodeColors: Record<NodeType, string> = {
   video: 'bg-purple-500',
   practice: 'bg-green-500',
   quiz: 'bg-orange-500',
+  project: 'bg-teal-500',
+  discussion: 'bg-violet-500',
+  review: 'bg-yellow-500',
+  reading: 'bg-indigo-500',
+  lab: 'bg-lime-500',
+  assignment: 'bg-emerald-500',
+  presentation: 'bg-rose-500',
+  research: 'bg-fuchsia-500',
   start: 'bg-gray-500',
   end: 'bg-gray-700',
 };

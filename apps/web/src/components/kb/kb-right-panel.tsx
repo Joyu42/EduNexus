@@ -17,17 +17,23 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
+import { useRouter } from "next/navigation";
 import type { KBDocument } from "@/lib/client/kb-storage";
 import { getKBStorage } from "@/lib/client/kb-storage";
 import { extractOutline, type OutlineItem } from "@/lib/client/document-outline";
 import { AIMindMapEnhanced } from "./ai-mindmap-enhanced";
 import { AISummaryEnhanced } from "./ai-summary-enhanced";
+import { pathStorage, type LearningPath } from "@/lib/client/path-storage";
+import { getAllResources, type Resource } from "@/lib/resources/resource-storage";
 
 interface KBRightPanelProps {
   document: KBDocument | null;
+  allDocuments?: KBDocument[];
+  onDocumentClick?: (doc: KBDocument) => void;
 }
 
-export function KBRightPanel({ document }: KBRightPanelProps) {
+export function KBRightPanel({ document, allDocuments = [], onDocumentClick }: KBRightPanelProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("outline");
   const [outline, setOutline] = useState<OutlineItem[]>([]);
 

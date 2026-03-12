@@ -1,15 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: false,
   },
 
   // 性能优化配置
   reactStrictMode: true,
-  swcMinify: true,
 
   // 图片优化
   images: {

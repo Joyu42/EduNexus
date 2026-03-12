@@ -17,17 +17,26 @@ import { EditorToolbar } from "./editor-toolbar";
 import { MarkdownShortcuts } from "@/lib/tiptap/markdown-shortcuts";
 import { HeadingWithId } from "@/lib/tiptap/heading-with-id";
 import type { KBDocument } from "@/lib/client/kb-storage";
+import { useKBDocumentSync } from "@/lib/sync";
 
 interface KBEditorProps {
   document: KBDocument | null;
   onUpdate: (doc: KBDocument) => Promise<void>;
+  onDocumentChange?: () => void; // 新增：文档列表刷新回调
 }
 
-export function KBEditor({ document, onUpdate }: KBEditorProps) {
+export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [wordCount, setWordCount] = useState(0);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 监听文档变化，自动刷新文档列表
+  useKBDocumentSync(() => {
+    if (onDocumentChange) {
+      onDocumentChange();
+    }
+  });
 
   const editor = useEditor({
     immediatelyRender: false,

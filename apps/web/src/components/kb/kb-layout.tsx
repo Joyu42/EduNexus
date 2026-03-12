@@ -8,6 +8,7 @@ import { KBSidebar } from "./kb-sidebar";
 import { KBEditor } from "./kb-editor";
 import { KBRightPanel } from "./kb-right-panel";
 import { useKBShortcuts } from "@/lib/hooks/use-kb-shortcuts";
+import { useRouter } from "next/navigation";
 import type { KBDocument, KBVault } from "@/lib/client/kb-storage";
 
 interface KBLayoutProps {
@@ -33,6 +34,7 @@ export function KBLayout({
   onDeleteDocument,
   onSelectDocument,
 }: KBLayoutProps) {
+  const router = useRouter();
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
@@ -143,7 +145,11 @@ export function KBLayout({
             transition={{ duration: 0.2 }}
             className="w-[320px] border-l bg-muted/30 flex-shrink-0"
           >
-            <KBRightPanel document={currentDoc} />
+            <KBRightPanel
+              document={currentDoc}
+              allDocuments={documents}
+              onDocumentClick={onSelectDocument}
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -48,16 +48,17 @@ export async function runAgentConversation(
 }> {
   try {
     const {
-      modelName = process.env.MODELSCOPE_CHAT_MODEL || "Qwen/Qwen3.5-122B-A10B",
+      modelName = "Qwen/Qwen3.5-122B-A10B",
       temperature = 0.7,
       socraticMode = true,
-      apiKey = process.env.MODELSCOPE_API_KEY,
-      apiEndpoint = process.env.MODELSCOPE_BASE_URL || "https://api-inference.modelscope.cn/v1",
+      apiKey,
+      apiEndpoint,
       systemPrompt: customSystemPrompt,
     } = config;
 
-    if (!apiKey) {
-      throw new Error("API Key 未配置，请在配置中心设置 ModelScope API Key");
+    // 如果没有提供 API 配置，抛出错误
+    if (!apiKey || !apiEndpoint) {
+      throw new Error("请先在设置中配置 API 密钥和端点。\n\n1. 点击右上角设置图标\n2. 配置 ModelScope API 密钥\n3. 配置 API 端点（默认：https://api-inference.modelscope.cn/v1）");
     }
 
     // 创建 ModelScope 客户端

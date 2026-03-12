@@ -41,8 +41,8 @@ export function LearningPathOverlay({
   const getNodeById = (id: string) => nodes.find((n) => n.id === id);
 
   return (
-    <div className="absolute top-4 left-4 w-96 max-h-[calc(100vh-8rem)] max-md:top-2 max-md:left-2 max-md:w-80 max-md:max-h-[calc(100vh-10rem)] z-10">
-      <Card className="shadow-2xl border-2 border-primary/20 bg-card/95 backdrop-blur-sm">
+    <div className="absolute top-4 left-4 w-96 max-h-[calc(100vh-8rem)] max-md:top-2 max-md:left-2 max-md:w-80 max-md:max-h-[calc(100vh-10rem)] z-20 pointer-events-auto">
+      <Card className="shadow-2xl border-2 border-primary/20 bg-card/95 backdrop-blur-sm pointer-events-auto">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

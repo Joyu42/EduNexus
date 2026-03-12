@@ -37,12 +37,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Agent chat error:", error);
 
-    // 降级到简单回复
+    // 返回详细错误信息
     return NextResponse.json({
-      success: true,
-      response: "我理解你的问题。让我们一步步来思考这个问题...",
-      fallback: true,
+      success: false,
       error: error instanceof Error ? error.message : "Unknown error",
-    });
+      response: "抱歉，处理你的请求时出现了错误。请检查：\n\n1. 是否已在设置中配置 API 密钥\n2. API 密钥是否有效\n3. 网络连接是否正常\n\n错误详情：" + (error instanceof Error ? error.message : "未知错误"),
+    }, { status: 500 });
   }
 }

@@ -18,7 +18,7 @@ export interface Goal {
     timeBound: string;
   };
   progress: number;
-  milestones: Milestone[];
+  linkedPathIds: string[]; // 关联的学习路径 ID
   relatedKnowledge: string[];
   startDate: string;
   endDate: string;
@@ -26,14 +26,6 @@ export interface Goal {
   updatedAt: string;
 }
 
-export interface Milestone {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  completedAt?: string;
-  dueDate?: string;
-}
 
 export interface Habit {
   id: string;

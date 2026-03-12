@@ -24,6 +24,7 @@ import {
   saveProgress,
 } from '@/lib/path/path-storage';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePathSync } from '@/lib/sync';
 
 interface PathExecutorProps {
   path: LearningPath;
@@ -36,6 +37,11 @@ function PathExecutorInner({ path, onComplete }: PathExecutorProps) {
   const [edges, setEdges, onEdgesChange] = useEdgesState(path.edges as Edge[]);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [showCertificate, setShowCertificate] = useState(false);
+
+  // 监听路径变化，自动刷新进度
+  usePathSync(() => {
+    loadProgress();
+  });
 
   useEffect(() => {
     loadProgress();

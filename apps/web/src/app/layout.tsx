@@ -10,6 +10,7 @@ import { NotificationPermission } from "@/components/pwa/notification-permission
 import { UpdatePrompt } from "@/components/pwa/update-prompt";
 import { GlobalAIAssistant } from "@/components/global/global-ai-assistant";
 import { DocumentProvider } from "@/lib/ai/document-context";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -64,6 +65,7 @@ export default function RootLayout({
             <NotificationPermission />
             <UpdatePrompt />
             <GlobalAIAssistant />
+            <Toaster />
           </DocumentProvider>
         </QueryProvider>
       </body>

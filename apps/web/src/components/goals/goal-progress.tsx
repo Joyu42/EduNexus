@@ -3,7 +3,7 @@
 import { Goal } from '@/lib/goals/goal-storage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, Sparkles } from 'lucide-react';
+import { CheckCircle2, Sparkles, BookOpen } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface GoalProgressProps {
@@ -20,9 +20,6 @@ export function GoalProgress({ goal }: GoalProgressProps) {
       return () => clearTimeout(timer);
     }
   }, [goal.progress, goal.status]);
-
-  const completedMilestones = goal.milestones.filter(m => m.completed).length;
-  const totalMilestones = goal.milestones.length;
 
   return (
     <Card className="relative overflow-hidden">
@@ -51,44 +48,15 @@ export function GoalProgress({ goal }: GoalProgressProps) {
           <Progress value={goal.progress} className="h-3" />
         </div>
 
-        {totalMilestones > 0 && (
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="font-medium">里程碑完成</span>
-              <span className="font-semibold">
-                {completedMilestones} / {totalMilestones}
-              </span>
-            </div>
-            <Progress value={(completedMilestones / totalMilestones) * 100} className="h-2" />
-            <div className="mt-4 space-y-2">
-              {goal.milestones.map((milestone) => (
-                <div
-                  key={milestone.id}
-                  className={`flex items-start gap-3 p-3 rounded-lg ${
-                    milestone.completed ? 'bg-green-50 dark:bg-green-950' : 'bg-muted'
-                  }`}
-                >
-                  <CheckCircle2
-                    className={`w-5 h-5 mt-0.5 ${
-                      milestone.completed ? 'text-green-500' : 'text-muted-foreground'
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <p className={`font-medium ${milestone.completed ? 'line-through' : ''}`}>
-                      {milestone.title}
-                    </p>
-                    {milestone.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{milestone.description}</p>
-                    )}
-                    {milestone.completedAt && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        完成于 {new Date(milestone.completedAt).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+        {goal.linkedPathIds && goal.linkedPathIds.length > 0 && (
+          <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <p className="text-sm font-semibold mb-2 flex items-center gap-1">
+              <BookOpen className="w-4 h-4 text-blue-500" />
+              关联的学习路径
+            </p>
+            <p className="text-xs text-muted-foreground">
+              已关联 {goal.linkedPathIds.length} 个学习路径
+            </p>
           </div>
         )}
 

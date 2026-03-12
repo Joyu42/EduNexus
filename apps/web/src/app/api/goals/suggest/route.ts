@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
-    const { goalTitle, goalDescription, category, type } = await request.json();
+    const { goalTitle, goalDescription, category, type, apiKey, apiEndpoint, model } = await request.json();
 
-    if (!goalTitle) {
+    if (!goalTitle || !apiKey || !apiEndpoint) {
       return NextResponse.json(
-        { error: '目标标题不能为空' },
+        { error: '缺少必要参数' },
         { status: 400 }
       );
     }
@@ -26,10 +23,9 @@ export async function POST(request: NextRequest) {
 
 请提供以下建议（以JSON格式返回）：
 1. SMART目标分析（Specific, Measurable, Achievable, Relevant, Time-bound）
-2. 建议的里程碑（3-5个关键里程碑）
+2. 建议的学习路径（3-5个）
 3. 相关知识点推荐
-4. 学习资源建议
-5. 潜在挑战和应对策略
+4. 潜在挑战和应对策略
 
 返回格式：
 {
@@ -40,15 +36,14 @@ export async function POST(request: NextRequest) {
     "relevant": "相关性说明",
     "timeBound": "时间规划建议"
   },
-  "milestones": [
+  "suggestedPaths": [
     {
-      "title": "里程碑标题",
-      "description": "里程碑描述",
-      "estimatedDays": 30
+      "title": "路径标题",
+      "description": "路径描述",
+      "estimatedWeeks": 4
     }
   ],
   "relatedKnowledge": ["知识点1", "知识点2"],
-  "resources": ["资源建议1", "资源建议2"],
   "challenges": [
     {
       "challenge": "挑战描述",
@@ -57,24 +52,38 @@ export async function POST(request: NextRequest) {
   ]
 }`;
 
-    const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 2000,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+    const response = await fetch(`${apiEndpoint}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: model || 'qwen-plus',
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+      }),
     });
 
-    const content = message.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type');
+    if (!response.ok) {
+      throw new Error('AI API 调用失败');
+    }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content;
+
+    if (!content) {
+      throw new Error('AI 返回内容为空');
     }
 
     // Extract JSON from the response
-    const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('Failed to parse AI response');
     }

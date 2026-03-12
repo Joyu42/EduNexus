@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Goal, goalStorage, Habit, habitStorage } from '@/lib/goals/goal-storage';
+import { pathStorage } from '@/lib/client/path-storage';
 import { GoalWizard } from '@/components/goals/goal-wizard';
 import { GoalCard } from '@/components/goals/goal-card';
 import { HabitCalendar } from '@/components/goals/habit-calendar';
@@ -12,7 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Target, Calendar } from 'lucide-react';
+import { Plus, Target, Calendar, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -20,44 +22,56 @@ export default function GoalsPage() {
   const [showWizard, setShowWizard] = useState(false);
   const [showHabitDialog, setShowHabitDialog] = useState(false);
   const [newHabit, setNewHabit] = useState({ name: '', description: '' });
+  const [linkedPathsData, setLinkedPathsData] = useState<Record<string, { count: number; progress: number }>>({});
 
   useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
     setGoals(goalStorage.getGoals());
     setHabits(habitStorage.getHabits());
-  }, []);
+
+    // 加载关联路径数据
+    const goals = goalStorage.getGoals();
+    const pathsData: Record<string, { count: number; progress: number }> = {};
+
+    for (const goal of goals) {
+      const paths = await pathStorage.getAllPaths();
+      const linkedPaths = paths.filter(p => p.goalId === goal.id);
+      const avgProgress = linkedPaths.length > 0
+        ? Math.round(linkedPaths.reduce((sum, p) => sum + p.progress, 0) / linkedPaths.length)
+        : 0;
+
+      pathsData[goal.id] = {
+        count: linkedPaths.length,
+        progress: avgProgress
+      };
+    }
+
+    setLinkedPathsData(pathsData);
+  };
 
   const handleCreateGoal = (goal: Goal) => {
     goalStorage.saveGoal(goal);
-    setGoals(goalStorage.getGoals());
+    loadData();
     setShowWizard(false);
+    toast.success('目标创建成功！');
   };
 
   const handleUpdateProgress = (id: string, progress: number) => {
     goalStorage.updateProgress(id, progress);
-    setGoals(goalStorage.getGoals());
+    loadData();
+    toast.success('进度已更新');
   };
 
-  const handleToggleMilestone = (goalId: string, milestoneId: string) => {
-    const goal = goals.find(g => g.id === goalId);
-    if (goal) {
-      const milestone = goal.milestones.find(m => m.id === milestoneId);
-      if (milestone) {
-        milestone.completed = !milestone.completed;
-        milestone.completedAt = milestone.completed ? new Date().toISOString() : undefined;
-
-        const completedCount = goal.milestones.filter(m => m.completed).length;
-        const progress = Math.round((completedCount / goal.milestones.length) * 100);
-        goal.progress = progress;
-
-        goalStorage.saveGoal(goal);
-        setGoals(goalStorage.getGoals());
-      }
-    }
-  };
 
   const handleDeleteGoal = (id: string) => {
-    goalStorage.deleteGoal(id);
-    setGoals(goalStorage.getGoals());
+    if (confirm('确定要删除这个目标吗？')) {
+      goalStorage.deleteGoal(id);
+      loadData();
+      toast.success('目标已删除');
+    }
   };
 
   const handleCreateHabit = () => {
@@ -92,6 +106,12 @@ export default function GoalsPage() {
     setHabits(habitStorage.getHabits());
   };
 
+  const activeGoals = goals.filter(g => g.status === 'active').length;
+  const completedGoals = goals.filter(g => g.status === 'completed').length;
+  const avgProgress = goals.length > 0
+    ? Math.round(goals.reduce((sum, g) => sum + g.progress, 0) / goals.length)
+    : 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30">
       <div className="page-container">
@@ -104,8 +124,26 @@ export default function GoalsPage() {
             目标管理
           </h1>
           <p className="text-muted-foreground">
-            设定目标，追踪进度，养成习惯，成就更好的自己
+            设定目标，关联学习路径，追踪成长进度
           </p>
+
+          {/* 统计卡片 */}
+          {goals.length > 0 && (
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
+                <div className="text-sm text-muted-foreground">进行中</div>
+                <div className="text-2xl font-bold text-blue-500">{activeGoals}</div>
+              </div>
+              <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
+                <div className="text-sm text-muted-foreground">已完成</div>
+                <div className="text-2xl font-bold text-green-500">{completedGoals}</div>
+              </div>
+              <div className="p-4 bg-white dark:bg-gray-900 rounded-lg border shadow-sm">
+                <div className="text-sm text-muted-foreground">平均进度</div>
+                <div className="text-2xl font-bold text-purple-500">{avgProgress}%</div>
+              </div>
+            </div>
+          )}
         </div>
 
       <Tabs defaultValue="goals" className="space-y-6">
@@ -156,8 +194,9 @@ export default function GoalsPage() {
                 key={goal.id}
                 goal={goal}
                 onUpdateProgress={handleUpdateProgress}
-                onToggleMilestone={handleToggleMilestone}
                 onDelete={handleDeleteGoal}
+                linkedPathsCount={linkedPathsData[goal.id]?.count || 0}
+                linkedPathsProgress={linkedPathsData[goal.id]?.progress || 0}
               />
             ))}
           </div>

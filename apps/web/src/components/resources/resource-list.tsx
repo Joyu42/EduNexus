@@ -3,6 +3,7 @@
 import { ResourceCard } from "./resource-card";
 import type { Resource } from "@/lib/resources/resource-types";
 import { FileQuestion, Loader2 } from "lucide-react";
+import { useResourceSync } from "@/lib/sync";
 
 interface ResourceListProps {
   resources: Resource[];
@@ -11,6 +12,12 @@ interface ResourceListProps {
 }
 
 export function ResourceList({ resources, onRefresh, loading = false }: ResourceListProps) {
+  // 监听资源变化，自动刷新列表
+  useResourceSync(() => {
+    if (onRefresh) {
+      onRefresh();
+    }
+  });
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">

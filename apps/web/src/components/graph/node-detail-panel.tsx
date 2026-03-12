@@ -50,7 +50,7 @@ export function NodeDetailPanel({
   const StatusIcon = statusConfig.icon;
 
   return (
-    <div className="w-96 border-l bg-card/95 backdrop-blur-sm overflow-hidden flex flex-col">
+    <div className="w-96 border-l bg-card/95 backdrop-blur-sm overflow-hidden flex flex-col absolute right-0 top-0 bottom-0 z-30 pointer-events-auto">
       <ScrollArea className="flex-1">
         <div className="p-6 space-y-6">
           {/* 头部 */}

@@ -526,9 +526,9 @@ export default function EnhancedGraphPage() {
       </motion.div>
 
       {/* 主内容区 */}
-      <div className="flex-1 flex relative">
+      <div className="flex-1 flex relative overflow-hidden">
         {/* 图谱画布 */}
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <InteractiveGraph
             nodes={filteredNodes}
             edges={filteredEdges}
@@ -541,20 +541,20 @@ export default function EnhancedGraphPage() {
             pathNodes={currentPath?.nodes || []}
           />
 
-          {/* 学习路径叠加层 */}
-          {showLearningPath && (
-            <LearningPathOverlay
-              paths={recommendedPaths}
-              currentPath={currentPath}
-              nodes={graphData.nodes}
-              onSelectPath={handleSelectPath}
-              onClearPath={handleClearPath}
-            />
-          )}
-
           {/* 进度图例 */}
           <ProgressLegend stats={stats} />
         </div>
+
+        {/* 学习路径叠加层 - 移到外层避免影响布局 */}
+        {showLearningPath && (
+          <LearningPathOverlay
+            paths={recommendedPaths}
+            currentPath={currentPath}
+            nodes={graphData.nodes}
+            onSelectPath={handleSelectPath}
+            onClearPath={handleClearPath}
+          />
+        )}
 
         {/* 节点详情面板 */}
         {selectedNode && nodeDetail && (

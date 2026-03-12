@@ -49,8 +49,8 @@ const STATUS_CONFIG = [
 
 export function ProgressLegend({ stats }: ProgressLegendProps) {
   return (
-    <div className="absolute bottom-4 right-4 w-80 max-md:bottom-2 max-md:right-2 max-md:w-72 z-10">
-      <Card className="shadow-2xl border-2 border-primary/20 bg-card/95 backdrop-blur-sm">
+    <div className="absolute bottom-4 right-4 w-80 max-md:bottom-2 max-md:right-2 max-md:w-72 z-20 pointer-events-auto">
+      <Card className="shadow-2xl border-2 border-primary/20 bg-card/95 backdrop-blur-sm pointer-events-auto">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <Circle className="h-5 w-5 text-primary" />

@@ -1,5 +1,6 @@
 // 资源存储管理
 
+import { getDataSyncEventManager, SyncEventType } from '../sync/data-sync-events';
 import type {
   Resource,
   Bookmark,
@@ -47,6 +48,16 @@ export function createResource(
   resources.unshift(resource);
   localStorage.setItem(STORAGE_KEYS.RESOURCES, JSON.stringify(resources));
 
+  // 发布资源创建事件
+  const eventManager = getDataSyncEventManager();
+  eventManager.emit(SyncEventType.RESOURCE_CREATED, {
+    id: resource.id,
+    title: resource.title,
+    description: resource.description,
+    tags: resource.tags,
+    type: resource.type,
+  }, 'resource-storage');
+
   return resource;
 }
 
@@ -66,6 +77,17 @@ export function updateResource(
   };
 
   localStorage.setItem(STORAGE_KEYS.RESOURCES, JSON.stringify(resources));
+
+  // 发布资源更新事件
+  const eventManager = getDataSyncEventManager();
+  eventManager.emit(SyncEventType.RESOURCE_UPDATED, {
+    id: resources[index].id,
+    title: resources[index].title,
+    description: resources[index].description,
+    tags: resources[index].tags,
+    type: resources[index].type,
+  }, 'resource-storage');
+
   return resources[index];
 }
 
@@ -83,6 +105,12 @@ export function deleteResource(id: string): boolean {
 
   const notes = getAllNotes().filter((n) => n.resourceId !== id);
   localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes));
+
+  // 发布资源删除事件
+  const eventManager = getDataSyncEventManager();
+  eventManager.emit(SyncEventType.RESOURCE_DELETED, {
+    id,
+  }, 'resource-storage');
 
   return true;
 }

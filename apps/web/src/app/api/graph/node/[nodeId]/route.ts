@@ -5,10 +5,11 @@ export const runtime = "nodejs";
 
 export async function GET(
   _request: Request,
-  context: { params: { nodeId: string } }
+  context: { params: Promise<{ nodeId: string }> }
 ) {
   try {
-    const detail = await getGraphNodeDetail(context.params.nodeId);
+    const params = await context.params;
+    const detail = await getGraphNodeDetail(params.nodeId);
     if (!detail) {
       return fail(
         {

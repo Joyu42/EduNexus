@@ -118,26 +118,40 @@ function PathEditorInner({ initialPath, onSave, onPreview }: PathEditorProps) {
   );
 
   const handleSave = useCallback(async () => {
-    const totalTime = nodes.reduce(
-      (sum, node) => sum + (node.data.estimatedTime || 0),
-      0
-    );
+    try {
+      const totalTime = nodes.reduce(
+        (sum, node) => sum + (node.data.estimatedTime || 0),
+        0
+      );
 
-    const path: LearningPath = {
-      id: initialPath?.id || `path-${Date.now()}`,
-      ...pathInfo,
-      estimatedDuration: totalTime,
-      nodes: nodes as PathNode[],
-      edges: edges as PathEdge[],
-      isPublic: false,
-      createdAt: initialPath?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      version: (initialPath?.version || 0) + 1,
-    };
+      const path: LearningPath = {
+        id: initialPath?.id || `path-${Date.now()}`,
+        ...pathInfo,
+        estimatedDuration: totalTime,
+        nodes: nodes as PathNode[],
+        edges: edges as PathEdge[],
+        isPublic: false,
+        createdAt: initialPath?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        version: (initialPath?.version || 0) + 1,
+      };
 
-    await savePath(path);
-    onSave?.(path);
-    alert('路径已保存！');
+      console.log('[path-editor] 保存路径:', {
+        id: path.id,
+        title: path.title,
+        nodesCount: path.nodes.length,
+        edgesCount: path.edges.length,
+      });
+
+      await savePath(path);
+
+      console.log('[path-editor] 路径保存成功');
+      onSave?.(path);
+      alert('路径已保存！');
+    } catch (error) {
+      console.error('[path-editor] 保存路径失败:', error);
+      alert('保存失败：' + (error as Error).message);
+    }
   }, [nodes, edges, pathInfo, initialPath, onSave]);
 
   const handleExport = useCallback(async () => {

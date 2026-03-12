@@ -26,19 +26,19 @@ const STATUS_COLORS = {
 // 主题配置
 const THEMES = {
   tech: {
-    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e3a8a 100%)",
     particleColor: "#ffffff",
-    glowColor: "#667eea",
+    glowColor: "#818cf8",
   },
   nature: {
-    background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+    background: "linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a855f7 100%)",
     particleColor: "#ffffff",
-    glowColor: "#f093fb",
+    glowColor: "#c084fc",
   },
   minimal: {
-    background: "#ffffff",
-    particleColor: "#000000",
-    glowColor: "#3b82f6",
+    background: "linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%)",
+    particleColor: "#ffffff",
+    glowColor: "#94a3b8",
   },
 };
 
@@ -68,6 +68,7 @@ export function InteractiveGraph({
   const graphRef = useRef<any>(null);
   const [layoutedNodes, setLayoutedNodes] = useState<GraphNode[]>(nodes);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // 应用布局算法
   useEffect(() => {
@@ -80,14 +81,15 @@ export function InteractiveGraph({
     setLayoutedNodes(newNodes);
   }, [nodes, edges, layout, selectedNode]);
 
-  // 自动缩放到合适大小
+  // 只在初始化时自动缩放一次
   useEffect(() => {
-    if (graphRef.current && layoutedNodes.length > 0) {
+    if (graphRef.current && layoutedNodes.length > 0 && !hasInitialized) {
       setTimeout(() => {
         graphRef.current?.zoomToFit(400, 50);
+        setHasInitialized(true);
       }, 100);
     }
-  }, [layoutedNodes]);
+  }, [layoutedNodes, hasInitialized]);
 
   const handleNodeClick = useCallback(
     (node: any) => {
@@ -110,94 +112,94 @@ export function InteractiveGraph({
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const graphNode = node as GraphNode;
       const label = graphNode.name;
-      const fontSize = 12 / globalScale;
+      const fontSize = 11 / globalScale;
 
-      // 节点大小基于重要性和连接数
-      const baseSize = 3;
-      const importanceSize = graphNode.importance * 5;
+      // Obsidian 风格 - 节点大小更小更精致
+      const baseSize = 5;
+      const importanceSize = graphNode.importance * 6;
       const connectionSize = Math.min(graphNode.connections * 0.5, 3);
       const nodeSize = baseSize + importanceSize + connectionSize;
 
       // 节点颜色基于状态
       const nodeColor = STATUS_COLORS[graphNode.status];
 
-      // 绘制光晕效果（选中或悬停时）
-      if (
-        selectedNode?.id === graphNode.id ||
-        hoveredNode?.id === graphNode.id
-      ) {
-        const gradient = ctx.createRadialGradient(
-          graphNode.x || 0,
-          graphNode.y || 0,
-          nodeSize,
-          graphNode.x || 0,
-          graphNode.y || 0,
-          nodeSize * 2
-        );
-        gradient.addColorStop(0, nodeColor);
-        gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(graphNode.x || 0, graphNode.y || 0, nodeSize * 2, 0, 2 * Math.PI);
-        ctx.fill();
-      }
+      // 绘制外层光晕 - 更柔和
+      const gradient = ctx.createRadialGradient(
+        graphNode.x || 0,
+        graphNode.y || 0,
+        nodeSize * 0.3,
+        graphNode.x || 0,
+        graphNode.y || 0,
+        nodeSize * 1.8
+      );
+      gradient.addColorStop(0, nodeColor);
+      gradient.addColorStop(0.4, nodeColor + "60");
+      gradient.addColorStop(1, nodeColor + "00");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(graphNode.x || 0, graphNode.y || 0, nodeSize * 1.8, 0, 2 * Math.PI);
+      ctx.fill();
 
-      // 绘制节点圆圈
+      // 绘制节点主体
       ctx.beginPath();
       ctx.arc(graphNode.x || 0, graphNode.y || 0, nodeSize, 0, 2 * Math.PI);
       ctx.fillStyle = nodeColor;
       ctx.fill();
 
-      // 绘制边框
-      ctx.strokeStyle =
-        selectedNode?.id === graphNode.id
-          ? "#ffffff"
-          : hoveredNode?.id === graphNode.id
-            ? "#ffffff"
-            : "rgba(255, 255, 255, 0.5)";
-      ctx.lineWidth =
-        selectedNode?.id === graphNode.id || hoveredNode?.id === graphNode.id
-          ? 3 / globalScale
-          : 1.5 / globalScale;
+      // 绘制细边框
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.lineWidth = 1 / globalScale;
       ctx.stroke();
 
-      // 绘制进度环（掌握程度）
-      if (graphNode.mastery > 0) {
+      // 绘制高光
+      const highlightGradient = ctx.createRadialGradient(
+        (graphNode.x || 0) - nodeSize * 0.3,
+        (graphNode.y || 0) - nodeSize * 0.3,
+        0,
+        graphNode.x || 0,
+        graphNode.y || 0,
+        nodeSize
+      );
+      highlightGradient.addColorStop(0, "rgba(255, 255, 255, 0.5)");
+      highlightGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+      ctx.fillStyle = highlightGradient;
+      ctx.fill();
+
+      // 选中或悬停时的边框
+      if (selectedNode?.id === graphNode.id || hoveredNode?.id === graphNode.id) {
         ctx.beginPath();
-        ctx.arc(
-          graphNode.x || 0,
-          graphNode.y || 0,
-          nodeSize + 2 / globalScale,
-          -Math.PI / 2,
-          -Math.PI / 2 + graphNode.mastery * 2 * Math.PI
-        );
-        ctx.strokeStyle = "#10b981";
-        ctx.lineWidth = 2 / globalScale;
+        ctx.arc(graphNode.x || 0, graphNode.y || 0, nodeSize, 0, 2 * Math.PI);
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2.5 / globalScale;
+        ctx.shadowColor = nodeColor;
+        ctx.shadowBlur = 12;
         ctx.stroke();
+        ctx.shadowBlur = 0;
       }
 
-      // 绘制标签
-      ctx.font = `${fontSize}px Inter, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = "#1a1a1a";
-      ctx.fillText(
-        label,
-        graphNode.x || 0,
-        (graphNode.y || 0) + nodeSize + fontSize + 2
-      );
+      // 绘制标签 - Obsidian 风格
+      if (globalScale > 0.5) {
+        ctx.font = `500 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
 
-      // 绘制图标（笔记和练习数量）
-      if (graphNode.noteCount > 0 || graphNode.practiceCount > 0) {
-        const iconSize = 8 / globalScale;
-        const iconY = (graphNode.y || 0) - nodeSize - iconSize;
-        ctx.font = `${iconSize}px Inter, sans-serif`;
-        ctx.fillStyle = "#6b7280";
-        ctx.fillText(
-          `📝${graphNode.noteCount} 🎯${graphNode.practiceCount}`,
-          graphNode.x || 0,
-          iconY
+        // 标签背景
+        const textWidth = ctx.measureText(label).width;
+        const padding = 4 / globalScale;
+        const bgHeight = fontSize + padding * 2;
+        const bgY = (graphNode.y || 0) + nodeSize + fontSize / 2 + 6;
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.fillRect(
+          (graphNode.x || 0) - textWidth / 2 - padding,
+          bgY - bgHeight / 2,
+          textWidth + padding * 2,
+          bgHeight
         );
+
+        // 标签文字
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(label, graphNode.x || 0, bgY);
       }
     },
     [selectedNode, hoveredNode]
@@ -222,33 +224,38 @@ export function InteractiveGraph({
         pathNodes.includes(sourceId) &&
         pathNodes.includes(targetId)
       ) {
-        return "#3b82f6";
+        return "#60a5fa";
       }
 
-      // 根据关系类型设置颜色
-      const typeColors = {
-        prerequisite: "rgba(239, 68, 68, 0.4)",
-        related: "rgba(59, 130, 246, 0.4)",
-        contains: "rgba(16, 185, 129, 0.4)",
-        applies: "rgba(251, 191, 36, 0.4)",
-      };
-
-      return typeColors[graphLink.type] || "rgba(156, 163, 175, 0.3)";
+      // Obsidian 风格 - 非常细的半透明线
+      return "rgba(148, 163, 184, 0.25)";
     },
     [showLearningPath, pathNodes]
   );
 
-  // 连接线宽度基于强度
+  // 连接线宽度 - Obsidian 风格更细
   const linkWidth = useCallback((link: any) => {
     const graphLink = link as GraphEdge;
-    return 1 + graphLink.strength * 2;
-  }, []);
+    const sourceId = typeof graphLink.source === "string" ? graphLink.source : graphLink.source.id;
+    const targetId = typeof graphLink.target === "string" ? graphLink.target : graphLink.target.id;
+
+    if (showLearningPath && pathNodes.includes(sourceId) && pathNodes.includes(targetId)) {
+      return 2;
+    }
+    return 0.8;
+  }, [showLearningPath, pathNodes]);
 
   return (
     <div
-      className="w-full h-full relative"
-      style={{ background: THEMES[theme].background }}
+      className="w-full h-full relative overflow-hidden"
+      style={{ background: THEMES[theme].background, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
     >
+      {/* 背景装饰 - 添加一些动态光点 */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
+
       <ForceGraph2D
         ref={graphRef}
         graphData={{ nodes: layoutedNodes, links: edges }}
@@ -256,16 +263,29 @@ export function InteractiveGraph({
         nodeCanvasObject={nodeCanvasObject}
         linkColor={linkColor}
         linkWidth={linkWidth}
-        linkDirectionalParticles={showLearningPath ? 4 : 2}
-        linkDirectionalParticleWidth={3}
-        linkDirectionalParticleSpeed={0.005}
-        linkDirectionalParticleColor={() => THEMES[theme].particleColor}
+        linkDirectionalParticles={showLearningPath ? 3 : 0}
+        linkDirectionalParticleWidth={2}
+        linkDirectionalParticleSpeed={0.003}
+        linkDirectionalParticleColor={() => "#60a5fa"}
         onNodeClick={handleNodeClick}
         onNodeHover={handleNodeHover}
         cooldownTicks={layout === "force" ? 100 : 0}
         enableNodeDrag={layout === "force"}
         enableZoomInteraction={true}
         enablePanInteraction={true}
+        d3AlphaDecay={0.02}
+        d3VelocityDecay={0.3}
+        d3Force={{
+          charge: { strength: -300, distanceMax: 500 },
+          link: { distance: 100, strength: 0.5 },
+          collision: { radius: (node: any) => {
+            const graphNode = node as GraphNode;
+            const baseSize = 8;
+            const importanceSize = graphNode.importance * 10;
+            const connectionSize = Math.min(graphNode.connections * 0.8, 5);
+            return (baseSize + importanceSize + connectionSize) * 2;
+          }, strength: 1 }
+        }}
       />
     </div>
   );

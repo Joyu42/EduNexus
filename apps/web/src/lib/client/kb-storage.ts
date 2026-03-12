@@ -3,6 +3,8 @@
  * 支持 IndexedDB 存储和 File System Access API
  */
 
+import { getDataSyncEventManager, SyncEventType } from '../sync/data-sync-events';
+
 // 文档类型定义
 export type KBDocument = {
   id: string;
@@ -248,7 +250,18 @@ export class KBStorageManager {
       const store = transaction.objectStore(STORE_DOCUMENTS);
       const request = store.add(doc);
 
-      request.onsuccess = () => resolve(doc);
+      request.onsuccess = () => {
+        // 发布文档创建事件
+        const eventManager = getDataSyncEventManager();
+        eventManager.emit(SyncEventType.KB_DOCUMENT_CREATED, {
+          id: doc.id,
+          title: doc.title,
+          content: doc.content,
+          tags: doc.tags,
+          vaultId: doc.vaultId,
+        }, 'kb-storage');
+        resolve(doc);
+      };
       request.onerror = () => reject(request.error);
     });
   }
@@ -270,7 +283,18 @@ export class KBStorageManager {
       const store = transaction.objectStore(STORE_DOCUMENTS);
       const request = store.put(updatedDoc);
 
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        // 发布文档更新事件
+        const eventManager = getDataSyncEventManager();
+        eventManager.emit(SyncEventType.KB_DOCUMENT_UPDATED, {
+          id: updatedDoc.id,
+          title: updatedDoc.title,
+          content: updatedDoc.content,
+          tags: updatedDoc.tags,
+          vaultId: updatedDoc.vaultId,
+        }, 'kb-storage');
+        resolve();
+      };
       request.onerror = () => reject(request.error);
     });
   }
@@ -286,7 +310,14 @@ export class KBStorageManager {
       const store = transaction.objectStore(STORE_DOCUMENTS);
       const request = store.delete(docId);
 
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => {
+        // 发布文档删除事件
+        const eventManager = getDataSyncEventManager();
+        eventManager.emit(SyncEventType.KB_DOCUMENT_DELETED, {
+          id: docId,
+        }, 'kb-storage');
+        resolve();
+      };
       request.onerror = () => reject(request.error);
     });
   }
