@@ -134,7 +134,7 @@ export function KnowledgeStarMap({
       });
 
       // 处理反向链接
-      doc.backlinks?.forEach((backlink) => {
+      (doc as any).backlinks?.forEach((backlink: string) => {
         const targetId = `doc-${backlink}`;
         if (nodeMap.has(targetId)) {
           links.push({
@@ -434,7 +434,7 @@ export function KnowledgeStarMap({
         linkColor={() => "rgba(100, 100, 100, 0.3)"}
         linkWidth={1}
         linkDirectionalParticles={0}
-        onNodeClick={handleNodeClick}
+        onNodeClick={(node) => handleNodeClick(node as GraphNode)}
         onNodeHover={(node) => setHoveredNode(node as GraphNode | null)}
         enableNodeDrag={true}
         enableZoomInteraction={true}

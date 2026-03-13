@@ -91,6 +91,14 @@ export function InteractiveGraph({
     }
   }, [layoutedNodes, hasInitialized]);
 
+  // 配置 d3 力导向参数
+  useEffect(() => {
+    if (!graphRef.current) return;
+    const fg = graphRef.current;
+    fg.d3Force('charge')?.strength(-300).distanceMax(500);
+    fg.d3Force('link')?.distance(100).strength(0.5);
+  }, []);
+
   const handleNodeClick = useCallback(
     (node: any) => {
       onNodeClick(node as GraphNode);
@@ -275,17 +283,6 @@ export function InteractiveGraph({
         enablePanInteraction={true}
         d3AlphaDecay={0.02}
         d3VelocityDecay={0.3}
-        d3Force={{
-          charge: { strength: -300, distanceMax: 500 },
-          link: { distance: 100, strength: 0.5 },
-          collision: { radius: (node: any) => {
-            const graphNode = node as GraphNode;
-            const baseSize = 8;
-            const importanceSize = graphNode.importance * 10;
-            const connectionSize = Math.min(graphNode.connections * 0.8, 5);
-            return (baseSize + importanceSize + connectionSize) * 2;
-          }, strength: 1 }
-        }}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 // 资源存储管理
 
 import { getDataSyncEventManager, SyncEventType } from '../sync/data-sync-events';
-import type {
+export type {
   Resource,
   Bookmark,
   BookmarkFolder,

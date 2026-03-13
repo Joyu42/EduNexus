@@ -124,15 +124,6 @@ export class PathStorageManager {
   }
 
   /**
-   * 根据 ID 获取路径
-   */
-  async getPath(id: string): Promise<LearningPath | undefined> {
-    await this.initialize();
-    const path = await this.db!.get('paths', id);
-    return path ? this.deserializePath(path) : undefined;
-  }
-
-  /**
    * 创建新路径
    */
   async createPath(data: Omit<LearningPath, 'id' | 'createdAt' | 'updatedAt'>): Promise<LearningPath> {

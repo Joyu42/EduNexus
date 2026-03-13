@@ -259,7 +259,7 @@ class KGSyncCoordinator {
           ...existingNode,
           mastery,
           practiceCompleted: completedNodes?.length || 0,
-          status: mastery >= 0.8 ? 'mastered' : mastery > 0 ? 'learning' : 'not_started',
+          status: mastery >= 0.8 ? 'mastered' : mastery > 0 ? 'learning' : 'unlearned',
           updatedAt: new Date(),
         });
         console.debug('[KGCoordinator] Updated path progress in graph:', nodeId, 'mastery:', mastery);

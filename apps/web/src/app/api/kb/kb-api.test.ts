@@ -92,7 +92,7 @@ describe("kb api", () => {
     expect(noteCandidate?.reason).toContain("id_exact");
 
     const docRes = await getDoc(new Request("http://localhost"), {
-      params: { id: "source_ch5" }
+      params: Promise.resolve({ id: "source_ch5" })
     });
     expect(docRes.status).toBe(200);
     const docJson = (await docRes.json()) as {

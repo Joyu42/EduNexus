@@ -100,7 +100,7 @@ describe("workspace api", () => {
     expect(streamText.includes("\"type\":\"done\"")).toBe(true);
 
     const detailRes = await getSessionDetail(new Request("http://localhost"), {
-      params: { id: sessionId }
+      params: Promise.resolve({ id: sessionId })
     });
     expect(detailRes.status).toBe(200);
     const detailJson = (await detailRes.json()) as {
