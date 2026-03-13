@@ -7,9 +7,9 @@ import { updateQuestionSchema } from "@/lib/server/schema";
  */
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
+  const { id } = await params;
   return NextResponse.json({
     success: true,
     message: "请使用客户端 IndexedDB 获取题目",
@@ -23,10 +23,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
   try {
+    const { id } = await params;
     const body = await request.json();
     const validated = updateQuestionSchema.parse(body);
 
@@ -53,9 +53,9 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await context.params;
+  const { id } = await params;
   return NextResponse.json({
     success: true,
     message: "请使用客户端 IndexedDB 删除题目",

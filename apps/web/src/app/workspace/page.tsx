@@ -142,15 +142,7 @@ export default function WorkspacePage() {
   const [currentTeacher, setCurrentTeacher] = useState<AITeacher | null>(null);
   const [teachers, setTeachers] = useState<AITeacher[]>([]);
   const [kbQAMode, setKbQAMode] = useState(false); // 知识库问答模式开关
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content: "你好！我是你的智能学习伙伴。我可以帮你：\n\n- 🔍 搜索知识宝库和星图\n- 📝 生成个性化练习题\n- 🗺️ 规划成长地图\n- 💡 解释复杂概念\n- 🤔 通过提问引导思考\n- 🖼️ 分析图片和图表（支持多模态）\n- 💻 解释和调试代码\n\n有什么想学习或探讨的吗？",
-      timestamp: new Date(),
-      mode: "normal",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [socraticMode, setSocraticMode] = useState(true);
@@ -158,6 +150,7 @@ export default function WorkspacePage() {
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [taskContext, setTaskContext] = useState<WorkspaceTaskContext | null>(null);
   const [activeTab, setActiveTab] = useState<"status" | "teachers" | "notes" | "plan" | "kb-qa" | "history">("status");
+  const [isMounted, setIsMounted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,6 +160,17 @@ export default function WorkspacePage() {
 
   // 加载知识库文档、历史会话和老师列表
   useEffect(() => {
+    setIsMounted(true);
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content: "你好！我是你的智能学习伙伴。我可以帮你：\n\n- 🔍 搜索知识宝库和星图\n- 📝 生成个性化练习题\n- 🗺️ 规划成长地图\n- 💡 解释复杂概念\n- 🤔 通过提问引导思考\n- 🖼️ 分析图片和图表（支持多模态）\n- 💻 解释和调试代码\n\n有什么想学习或探讨的吗？",
+        timestamp: new Date(),
+        mode: "normal",
+      },
+    ]);
+
     const loadKBDocuments = async () => {
       try {
         await storage.initialize();
@@ -658,7 +662,7 @@ export default function WorkspacePage() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
           <div className="max-w-4xl mx-auto space-y-4">
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence>
               {messages.map((message, index) => (
                 <motion.div
                   key={message.id}
@@ -770,7 +774,7 @@ export default function WorkspacePage() {
                       <MarkdownRenderer content={message.content} />
                     </div>
                     <div className="text-xs opacity-70 mt-2 flex items-center justify-between">
-                      <span>{message.timestamp.toLocaleTimeString()}</span>
+                      <span suppressHydrationWarning>{isMounted ? message.timestamp.toLocaleTimeString() : ""}</span>
                       {message.mode && (
                         <Badge
                           variant="outline"

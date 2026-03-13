@@ -17,8 +17,10 @@ interface SyncStatusIndicatorProps {
 export function SyncStatusIndicator({ className, showDetails = false }: SyncStatusIndicatorProps) {
   const { syncState, retryFailed } = useDataSync();
   const [isOnline, setIsOnline] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
@@ -114,8 +116,8 @@ export function SyncStatusIndicator({ className, showDetails = false }: SyncStat
               </button>
             )}
             {syncState.lastSyncTime && status === 'synced' && (
-              <span className="text-xs text-gray-500">
-                {syncState.lastSyncTime.toLocaleTimeString()}
+              <span className="text-xs text-gray-500" suppressHydrationWarning>
+                {isMounted ? syncState.lastSyncTime.toLocaleTimeString() : ""}
               </span>
             )}
           </>

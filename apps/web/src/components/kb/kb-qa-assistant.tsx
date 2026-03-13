@@ -34,18 +34,24 @@ interface KBQAAssistantProps {
 }
 
 export function KBQAAssistant({ documents }: KBQAAssistantProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "你好！我可以基于你的知识库内容回答问题。请随时提问！",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content:
+          "你好！我可以基于你的知识库内容回答问题。请随时提问！",
+        timestamp: new Date(),
+      },
+    ]);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -194,13 +200,14 @@ export function KBQAAssistant({ documents }: KBQAAssistantProps) {
                     )}
                   </div>
                   <div
-                    className={`text-xs mt-2 ${
-                      message.role === "user"
-                        ? "text-purple-100"
+                    className={`text-xs mt-1 ${
+                      message.role === "assistant"
+                        ? "text-purple-400"
                         : "text-gray-500"
                     }`}
+                    suppressHydrationWarning
                   >
-                    {message.timestamp.toLocaleTimeString()}
+                    {isMounted ? message.timestamp.toLocaleTimeString() : ""}
                   </div>
                 </div>
 

@@ -8,7 +8,7 @@ import LearningPathMarket from '@/components/path/learning-path-market';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LearningPath } from '@/lib/path/path-types';
-import { getPath } from '@/lib/path/path-storage';
+import { getPath, getAllPaths } from '@/lib/path/path-storage';
 import { ArrowLeft, Plus } from 'lucide-react';
 
 function PathEditorContent() {
@@ -143,7 +143,7 @@ function PathEditorContent() {
 
 export default function PathEditorPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<div className="h-screen flex items-center justify-center">加载中...</div>}>
       <PathEditorContent />
     </Suspense>
   );

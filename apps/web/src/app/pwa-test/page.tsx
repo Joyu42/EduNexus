@@ -184,7 +184,7 @@ export default function PWATestPage() {
           <div className="space-y-4">
             <InfoRow label="支持状态" value={isPushSupported() ? '支持' : '不支持'} />
             <InfoRow label="订阅状态" value={isSubscribed ? '已订阅' : '未订阅'} />
-            <InfoRow label="通知权限" value={Notification.permission} />
+            <InfoRow label="通知权限" value={typeof Notification !== 'undefined' ? Notification.permission : 'default'} />
 
             <div className="flex gap-2">
               {!isSubscribed ? (
