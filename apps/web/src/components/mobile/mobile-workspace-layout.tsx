@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, Sparkles, Image as ImageIcon } from "lucide-react";
 import { useIsMobile } from "@/lib/hooks/use-media-query";
 import { MobileHeader } from "@/components/mobile/mobile-header";
@@ -29,7 +29,12 @@ export function MobileWorkspaceLayout({
   isLoading = false,
 }: MobileWorkspaceLayoutProps) {
   const [inputValue, setInputValue] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleSend = () => {
     if (inputValue.trim() && !isLoading) {
@@ -74,11 +79,11 @@ export function MobileWorkspaceLayout({
               <p className="text-sm whitespace-pre-wrap break-words">
                 {message.content}
               </p>
-              <p className="text-xs opacity-70 mt-1">
-                {message.timestamp.toLocaleTimeString("zh-CN", {
+              <p className="text-xs opacity-70 mt-1" suppressHydrationWarning>
+                {isMounted ? message.timestamp.toLocaleTimeString("zh-CN", {
                   hour: "2-digit",
                   minute: "2-digit",
-                })}
+                }) : ""}
               </p>
             </div>
           </div>

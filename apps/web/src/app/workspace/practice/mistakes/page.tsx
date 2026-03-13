@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Check, BookOpen, Calendar, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import {
   Question,
 } from "@/lib/client/practice-storage";
 
-export default function MistakesPage() {
+function MistakesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const bankId = searchParams.get("bankId");
@@ -230,5 +230,13 @@ export default function MistakesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MistakesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">加载中...</div>}>
+      <MistakesContent />
+    </Suspense>
   );
 }

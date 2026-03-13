@@ -34,3 +34,6 @@ temp/
 
 # Runtime local data
 .edunexus/
+
+# AI config
+GEMINI.md

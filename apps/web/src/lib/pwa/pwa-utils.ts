@@ -124,14 +124,14 @@ export function getBrowserName(): string {
  * Check if service worker is supported
  */
 export function isServiceWorkerSupported(): boolean {
-  return 'serviceWorker' in navigator;
+  return typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
 }
 
 /**
  * Check if push notifications are supported
  */
 export function isPushSupported(): boolean {
-  return 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
+  return typeof window !== 'undefined' && typeof navigator !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
 }
 
 /**

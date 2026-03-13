@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Check, X, Clock, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
 } from "@/lib/client/practice-storage";
 import { QuestionRenderer } from "@/components/practice/question-renderer";
 
-export default function DrillPage() {
+function DrillContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const bankId = searchParams.get("bankId");
@@ -256,5 +256,13 @@ export default function DrillPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function DrillPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">加载中...</div>}>
+      <DrillContent />
+    </Suspense>
   );
 }
