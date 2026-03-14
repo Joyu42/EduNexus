@@ -40,3 +40,4 @@ GEMINI.md
 
 # Auto deploy scripts
 deploy.sh
+deploy.log
