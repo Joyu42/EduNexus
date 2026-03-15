@@ -2,10 +2,8 @@
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
-import { z } from 'zod';
-
-// 注意：暂时先不导入 user-service，因为 Task 2.1 才会创建
-// 我们先创建一个临时的 authorize 函数，后面再完善
+import { getUserByEmail, verifyPassword } from "./lib/server/user-service";
+import type { User } from "./lib/server/types/user";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -17,10 +15,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "密码", type: "password" }
       },
       async authorize(credentials) {
-        // TODO: Task 2.1 会实现真正的用户验证
-        // 目前返回 null 表示无法通过凭证登录
-        // 用户需要通过 GitHub OAuth 登录
-        return null;
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        const email = credentials.email as string;
+        const password = credentials.password as string;
+
+        const user = await getUserByEmail(email);
+        if (!user || !user.password) {
+          return null;
+        }
+
+        const isValid = await verifyPassword(password, user.password);
+        if (!isValid) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        };
       },
     }),
   ],

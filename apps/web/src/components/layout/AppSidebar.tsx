@@ -29,6 +29,7 @@ import {
   Users,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { UserMenu } from './user-menu'
 
 const navigation = [
   {
@@ -244,10 +245,11 @@ export function AppSidebar() {
 
         <div
           className={cn(
-            'border-t border-sidebar-border p-3',
+            'border-t border-sidebar-border p-3 space-y-2',
             isCollapsed && 'px-2'
           )}
         >
+          <UserMenu />
           <div className={cn(
             'flex items-center',
             isCollapsed ? 'justify-center' : 'justify-end'
