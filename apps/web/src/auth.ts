@@ -1,13 +1,10 @@
 // apps/web/auth.ts
 import NextAuth from "next-auth";
-import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import { getUserByEmail, verifyPassword } from "./lib/server/user-service";
-import type { User } from "./lib/server/types/user";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    GitHub,
     Credentials({
       name: 'Credentials',
       credentials: {

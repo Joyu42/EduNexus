@@ -74,11 +74,7 @@
     "lucide-react": "^0.577.0",
     "monaco-editor": "^0.55.1",
     "next": "^16.1.6",
-<<<<<<< Updated upstream
     "next-auth": "5.0.0-beta.30",
-=======
-    "next-auth": "5.0.0-beta.30",
->>>>>>> Stashed changes
     "next-themes": "^0.4.6",
     "openai": "^4.86.1",
     "pyodide": "^0.26.4",
