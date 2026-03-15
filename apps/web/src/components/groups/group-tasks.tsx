@@ -12,7 +12,7 @@ interface GroupTasksProps {
 }
 
 const statusConfig = {
-  pending: { label: '待处理', color: 'text-gray-500', bgColor: 'bg-gray-100', icon: Circle },
+  pending: { label: '待处理', color: 'text-muted-foreground', bgColor: 'bg-muted', icon: Circle },
   in_progress: { label: '进行中', color: 'text-blue-600', bgColor: 'bg-blue-100', icon: Clock },
   completed: { label: '已完成', color: 'text-green-600', bgColor: 'bg-green-100', icon: CheckCircle2 },
 };
@@ -43,7 +43,7 @@ export function GroupTasks({ tasks, members, onCreateTask, onUpdateStatus }: Gro
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">任务管理</h3>
+        <h3 className="text-lg font-semibold text-foreground">任务管理</h3>
         <button
           onClick={() => setShowNewTask(!showNewTask)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-2"
@@ -54,34 +54,34 @@ export function GroupTasks({ tasks, members, onCreateTask, onUpdateStatus }: Gro
       </div>
 
       {showNewTask && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+        <div className="bg-card rounded-lg border border-border p-4 space-y-3">
           <input
             type="text"
             placeholder="任务标题"
             value={newTask.title}
             onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background"
           />
           <textarea
             placeholder="任务描述"
             value={newTask.description}
             onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-background"
           />
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-gray-400" />
+            <Calendar className="w-4 h-4 text-muted-foreground/60" />
             <input
               type="date"
               value={newTask.dueDate}
               onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background"
             />
           </div>
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setShowNewTask(false)}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-muted-foreground hover:bg-accent/20 rounded-lg transition-colors"
             >
               取消
             </button>
@@ -101,11 +101,11 @@ export function GroupTasks({ tasks, members, onCreateTask, onUpdateStatus }: Gro
           const StatusIcon = config.icon;
 
           return (
-            <div key={status} className="bg-gray-50 rounded-lg p-4">
+            <div key={status} className="bg-background rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
                 <StatusIcon className={`w-5 h-5 ${config.color}`} />
-                <h4 className="font-semibold text-gray-900">{config.label}</h4>
-                <span className="text-sm text-gray-500">({statusTasks.length})</span>
+                <h4 className="font-semibold text-foreground">{config.label}</h4>
+                <span className="text-sm text-muted-foreground">({statusTasks.length})</span>
               </div>
 
               <div className="space-y-2">
@@ -115,14 +115,14 @@ export function GroupTasks({ tasks, members, onCreateTask, onUpdateStatus }: Gro
                   return (
                     <div
                       key={task.id}
-                      className="bg-white rounded-lg border border-gray-200 p-3 hover:border-gray-300 transition-colors"
+                      className="bg-card rounded-lg border border-border p-3 hover:border-border transition-colors"
                     >
-                      <h5 className="font-medium text-gray-900 mb-1">{task.title}</h5>
+                      <h5 className="font-medium text-foreground mb-1">{task.title}</h5>
                       {task.description && (
-                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">{task.description}</p>
+                        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{task.description}</p>
                       )}
 
-                      <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
@@ -137,7 +137,7 @@ export function GroupTasks({ tasks, members, onCreateTask, onUpdateStatus }: Gro
                       {onUpdateStatus && task.status !== 'completed' && (
                         <button
                           onClick={() => onUpdateStatus(task.id, task.status === 'pending' ? 'in_progress' : 'completed')}
-                          className="mt-2 w-full px-3 py-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors text-xs font-medium"
+                          className="mt-2 w-full px-3 py-1.5 bg-accent/10 text-blue-600 rounded hover:bg-accent/20 transition-colors text-xs font-medium"
                         >
                           {task.status === 'pending' ? '开始任务' : '完成任务'}
                         </button>

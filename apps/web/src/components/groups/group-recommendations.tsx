@@ -62,10 +62,10 @@ export function GroupRecommendations({ userId, onGroupClick }: GroupRecommendati
   ];
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">为你推荐</h2>
+    <div className="bg-card rounded-lg border border-border p-6">
+      <h2 className="text-xl font-bold text-foreground mb-4">为你推荐</h2>
 
-      <div className="flex gap-2 mb-6 border-b border-gray-200">
+      <div className="flex gap-2 mb-6 border-b border-border">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -75,12 +75,12 @@ export function GroupRecommendations({ userId, onGroupClick }: GroupRecommendati
               className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors relative ${
                 activeTab === tab.id
                   ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
-              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
+              <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded-full text-xs">
                 {tab.count}
               </span>
             </button>
@@ -102,8 +102,8 @@ export function GroupRecommendations({ userId, onGroupClick }: GroupRecommendati
                     </div>
                     <ul className="space-y-1">
                       {rec.reasons.map((reason, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                          <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" />
+                        <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground/60" />
                           <span>{reason}</span>
                         </li>
                       ))}
@@ -112,8 +112,8 @@ export function GroupRecommendations({ userId, onGroupClick }: GroupRecommendati
                 </div>
               ))
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Sparkles className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <div className="text-center py-8 text-muted-foreground">
+                <Sparkles className="w-12 h-12 mx-auto mb-2 text-muted-foreground/60" />
                 <p>暂无推荐小组</p>
                 <p className="text-sm mt-1">加入一些小组后，我们会为你推荐更多相关小组</p>
               </div>

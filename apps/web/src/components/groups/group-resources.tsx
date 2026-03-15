@@ -60,7 +60,7 @@ export function GroupResources({ resources, onAddResource, onDownload }: GroupRe
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">共享资源</h3>
+        <h3 className="text-lg font-semibold text-foreground">共享资源</h3>
         <button
           onClick={() => setShowAddResource(!showAddResource)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center gap-2"
@@ -71,7 +71,7 @@ export function GroupResources({ resources, onAddResource, onDownload }: GroupRe
       </div>
 
       {showAddResource && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+        <div className="bg-card rounded-lg border border-border p-4 space-y-3">
           <div className="flex gap-2">
             {(['file', 'link', 'note'] as const).map((type) => (
               <button
@@ -80,7 +80,7 @@ export function GroupResources({ resources, onAddResource, onDownload }: GroupRe
                 className={`flex-1 px-3 py-2 rounded-lg border-2 transition-colors ${
                   newResource.type === type
                     ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-border hover:border-border bg-background'
                 }`}
               >
                 {typeLabels[type]}
@@ -93,7 +93,7 @@ export function GroupResources({ resources, onAddResource, onDownload }: GroupRe
             placeholder="资源标题"
             value={newResource.title}
             onChange={(e) => setNewResource({ ...newResource, title: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background"
           />
 
           <textarea
@@ -101,7 +101,7 @@ export function GroupResources({ resources, onAddResource, onDownload }: GroupRe
             value={newResource.description}
             onChange={(e) => setNewResource({ ...newResource, description: e.target.value })}
             rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-background"
           />
 
           {newResource.type === 'link' && (
@@ -110,22 +110,22 @@ export function GroupResources({ resources, onAddResource, onDownload }: GroupRe
               placeholder="资源链接"
               value={newResource.url}
               onChange={(e) => setNewResource({ ...newResource, url: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background"
             />
           )}
 
           {newResource.type === 'file' && (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
-              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">点击上传文件或拖拽文件到此处</p>
-              <p className="text-xs text-gray-500 mt-1">支持 PDF, DOC, PPT, ZIP 等格式</p>
+            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer bg-background/50">
+              <Upload className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">点击上传文件或拖拽文件到此处</p>
+              <p className="text-xs text-muted-foreground mt-1">支持 PDF, DOC, PPT, ZIP 等格式</p>
             </div>
           )}
 
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setShowAddResource(false)}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-muted-foreground hover:bg-accent/20 rounded-lg transition-colors"
             >
               取消
             </button>
@@ -146,7 +146,7 @@ export function GroupResources({ resources, onAddResource, onDownload }: GroupRe
           return (
             <div
               key={resource.id}
-              className="bg-white rounded-lg border border-gray-200 p-4 hover:border-gray-300 transition-colors"
+              className="bg-card rounded-lg border border-border p-4 hover:border-border transition-colors"
             >
               <div className="flex items-start gap-3">
                 <div className={`p-2 rounded-lg ${typeColors[resource.type]}`}>
@@ -154,10 +154,10 @@ export function GroupResources({ resources, onAddResource, onDownload }: GroupRe
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-gray-900 mb-1 line-clamp-1">{resource.title}</h4>
-                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">{resource.description}</p>
+                  <h4 className="font-medium text-foreground mb-1 line-clamp-1">{resource.title}</h4>
+                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{resource.description}</p>
 
-                  <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-3">
                       <span>{resource.uploadedByName}</span>
                       {resource.fileSize && <span>{formatFileSize(resource.fileSize)}</span>}
@@ -189,7 +189,7 @@ export function GroupResources({ resources, onAddResource, onDownload }: GroupRe
                   {resource.type === 'file' && (
                     <button
                       onClick={() => onDownload?.(resource.id)}
-                      className="mt-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors text-xs font-medium flex items-center gap-1"
+                      className="mt-2 px-3 py-1.5 bg-accent/10 text-blue-600 rounded hover:bg-accent/20 transition-colors text-xs font-medium flex items-center gap-1"
                     >
                       <Download className="w-3 h-3" />
                       下载文件
@@ -203,10 +203,10 @@ export function GroupResources({ resources, onAddResource, onDownload }: GroupRe
       </div>
 
       {resources.length === 0 && (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-600">还没有共享资源</p>
-          <p className="text-sm text-gray-500 mt-1">上传文件或分享链接，与小组成员共享学习资料</p>
+        <div className="text-center py-12 bg-background rounded-lg">
+          <FileText className="w-12 h-12 text-muted-foreground/60 mx-auto mb-3" />
+          <p className="text-muted-foreground">还没有共享资源</p>
+          <p className="text-sm text-muted-foreground mt-1">上传文件或分享链接，与小组成员共享学习资料</p>
         </div>
       )}
     </div>

@@ -26,7 +26,7 @@ const roleLabels = {
 const roleColors = {
   owner: 'text-yellow-600',
   admin: 'text-blue-600',
-  member: 'text-gray-600',
+  member: 'text-muted-foreground',
 };
 
 export function GroupMembers({ members, currentUserId, isAdmin, onRoleChange, onRemove }: GroupMembersProps) {
@@ -47,7 +47,7 @@ export function GroupMembers({ members, currentUserId, isAdmin, onRoleChange, on
         return (
           <div
             key={member.id}
-            className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+            className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:border-border transition-colors"
           >
             <div className="flex items-center gap-3 flex-1">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
@@ -60,16 +60,16 @@ export function GroupMembers({ members, currentUserId, isAdmin, onRoleChange, on
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-foreground">
                     {member.userName}
-                    {isCurrentUser && <span className="text-xs text-gray-500 ml-1">(你)</span>}
+                    {isCurrentUser && <span className="text-xs text-muted-foreground ml-1">(你)</span>}
                   </span>
                   <div className={`flex items-center gap-1 ${roleColors[member.role]}`}>
                     <RoleIcon className="w-4 h-4" />
                     <span className="text-xs">{roleLabels[member.role]}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                   <span>贡献度: {member.contribution}</span>
                   <span>加入于 {new Date(member.joinedAt).toLocaleDateString()}</span>
                 </div>
@@ -77,8 +77,8 @@ export function GroupMembers({ members, currentUserId, isAdmin, onRoleChange, on
             </div>
 
             {isAdmin && !isCurrentUser && member.role !== 'owner' && (
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <MoreVertical className="w-4 h-4 text-gray-400" />
+              <button className="p-2 hover:bg-accent/20 rounded-lg transition-colors">
+                <MoreVertical className="w-4 h-4 text-muted-foreground/60" />
               </button>
             )}
           </div>

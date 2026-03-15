@@ -17,7 +17,7 @@ export function GroupLeaderboard({ members }: GroupLeaderboardProps) {
       case 1:
         return <Trophy className="w-6 h-6 text-yellow-500" />;
       case 2:
-        return <Medal className="w-6 h-6 text-gray-400" />;
+        return <Medal className="w-6 h-6 text-muted-foreground/60" />;
       case 3:
         return <Award className="w-6 h-6 text-orange-600" />;
       default:
@@ -34,7 +34,7 @@ export function GroupLeaderboard({ members }: GroupLeaderboardProps) {
       case 3:
         return 'bg-gradient-to-br from-orange-400 to-orange-600 text-white';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -42,7 +42,7 @@ export function GroupLeaderboard({ members }: GroupLeaderboardProps) {
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp className="w-6 h-6 text-blue-600" />
-        <h3 className="text-xl font-bold text-gray-900">贡献度排行榜</h3>
+        <h3 className="text-xl font-bold text-foreground">贡献度排行榜</h3>
       </div>
 
       {topThree.length > 0 && (
@@ -69,7 +69,7 @@ export function GroupLeaderboard({ members }: GroupLeaderboardProps) {
                     {getRankIcon(rank)}
                   </div>
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-1">{member.userName}</h4>
+                <h4 className="font-semibold text-foreground mb-1">{member.userName}</h4>
                 <div className="flex items-center justify-center gap-1 text-orange-600">
                   <Flame className="w-4 h-4" />
                   <span className="font-bold">{member.contribution}</span>
@@ -87,7 +87,7 @@ export function GroupLeaderboard({ members }: GroupLeaderboardProps) {
           return (
             <div
               key={member.id}
-              className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+              className="flex items-center justify-between p-3 bg-card rounded-lg border border-border hover:border-border transition-colors"
             >
               <div className="flex items-center gap-3">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${getRankBadge(rank)}`}>
@@ -103,8 +103,8 @@ export function GroupLeaderboard({ members }: GroupLeaderboardProps) {
                 </div>
 
                 <div>
-                  <div className="font-medium text-gray-900">{member.userName}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="font-medium text-foreground">{member.userName}</div>
+                  <div className="text-xs text-muted-foreground">
                     {member.role === 'owner' && '组长'}
                     {member.role === 'admin' && '管理员'}
                     {member.role === 'member' && '成员'}
@@ -122,9 +122,9 @@ export function GroupLeaderboard({ members }: GroupLeaderboardProps) {
       </div>
 
       {members.length === 0 && (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-600">还没有成员数据</p>
+        <div className="text-center py-12 bg-background rounded-lg">
+          <Trophy className="w-12 h-12 text-muted-foreground/60 mx-auto mb-3" />
+          <p className="text-muted-foreground">还没有成员数据</p>
         </div>
       )}
     </div>

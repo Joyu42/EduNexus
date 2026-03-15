@@ -145,9 +145,9 @@ export default function GroupDetailPage() {
 
   if (!group) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">加载中...</p>
+          <p className="text-muted-foreground">加载中...</p>
         </div>
       </div>
     );
@@ -163,7 +163,7 @@ export default function GroupDetailPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <button
@@ -204,7 +204,7 @@ export default function GroupDetailPage() {
             {!isMember && (
               <button
                 onClick={handleJoinGroup}
-                className="px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-card text-blue-600 rounded-lg hover:bg-accent/20 transition-colors flex items-center gap-2 font-medium"
               >
                 <UserPlus className="w-5 h-5" />
                 加入小组
@@ -214,7 +214,7 @@ export default function GroupDetailPage() {
             {isMember && (
               <button
                 onClick={() => setShowShareDialog(true)}
-                className="px-6 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-card text-blue-600 rounded-lg hover:bg-accent/20 transition-colors flex items-center gap-2 font-medium"
               >
                 <Share2 className="w-5 h-5" />
                 分享小组
@@ -225,8 +225,8 @@ export default function GroupDetailPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg border border-gray-200 mb-6">
-          <div className="flex border-b border-gray-200">
+        <div className="bg-card rounded-lg border border-border mb-6">
+          <div className="flex border-b border-border">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -236,13 +236,13 @@ export default function GroupDetailPage() {
                   className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors relative ${
                     activeTab === tab.id
                       ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
                   <span>{tab.label}</span>
                   {tab.count !== undefined && (
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">
+                    <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded-full text-xs">
                       {tab.count}
                     </span>
                   )}

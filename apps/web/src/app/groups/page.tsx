@@ -87,25 +87,25 @@ export default function GroupsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">学习小组</h1>
-              <p className="text-gray-600">加入小组，与志同道合的伙伴一起学习进步</p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">学习小组</h1>
+              <p className="text-muted-foreground">加入小组，与志同道合的伙伴一起学习进步</p>
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowInviteCodeDialog(true)}
-                className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-card border border-border text-foreground rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-2 font-medium"
               >
                 <Key className="w-5 h-5" />
                 邀请码加入
               </button>
               <button
                 onClick={() => router.push('/groups/create')}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 font-medium"
               >
                 <Plus className="w-5 h-5" />
                 创建小组
@@ -113,15 +113,15 @@ export default function GroupsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+          <div className="bg-card rounded-lg border border-border p-4 space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="搜索小组名称、描述或标签..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               />
             </div>
 

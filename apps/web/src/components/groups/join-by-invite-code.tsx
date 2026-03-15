@@ -30,24 +30,24 @@ export function JoinByInviteCode({ onJoin, onClose }: JoinByInviteCodeProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full p-6">
+      <div className="bg-card rounded-lg max-w-md w-full p-6 border border-border shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">通过邀请码加入</h3>
+          <h3 className="text-lg font-semibold text-foreground">通过邀请码加入</h3>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1 hover:bg-accent/20 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               邀请码
             </label>
             <div className="relative">
-              <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/60" />
               <input
                 type="text"
                 value={inviteCode}
@@ -56,14 +56,14 @@ export function JoinByInviteCode({ onJoin, onClose }: JoinByInviteCodeProps) {
                   setError('');
                 }}
                 placeholder="输入8位邀请码"
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase ${
-                  error ? 'border-red-500' : 'border-gray-300'
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase bg-background ${
+                  error ? 'border-red-500' : 'border-border'
                 }`}
                 maxLength={8}
               />
             </div>
             {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-muted-foreground">
               私密小组需要邀请码才能加入
             </p>
           </div>
@@ -72,7 +72,7 @@ export function JoinByInviteCode({ onJoin, onClose }: JoinByInviteCodeProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2 border border-border text-foreground rounded-lg hover:bg-accent/10 transition-colors"
             >
               取消
             </button>
