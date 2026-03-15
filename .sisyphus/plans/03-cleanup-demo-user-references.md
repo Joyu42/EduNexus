@@ -118,15 +118,15 @@ const userId = session?.user?.id;
 ### Task 2: API 路由修复
 - [x] `workspace/agent/run/route.ts`
 - [x] `workspace/session/route.ts`
-- [ ] `user/level/route.ts`
-- [ ] `user/achievements/route.ts`
-- [ ] `analytics/weekly-report/route.ts`
-- [ ] `analytics/monthly-report/route.ts`
-- [ ] `analytics/insights/route.ts`
-- [ ] `collab/session/route.ts`
-- [ ] `user/experience/add/route.ts`
+- [x] `user/level/route.ts`
+- [x] `user/achievements/route.ts`
+- [x] `analytics/weekly-report/route.ts`
+- [x] `analytics/monthly-report/route.ts`
+- [x] `analytics/insights/route.ts`
+- [x] `collab/session/route.ts`
+- [x] `user/experience/add/route.ts`
 
-### Task 3: 前端页面修复
+### Task 3: 前端页面修复（剩余 16 个文件）
 - [ ] community/page.tsx
 - [ ] community/topic/[name]/page.tsx
 - [ ] community/user/[id]/page.tsx
@@ -134,14 +134,15 @@ const userId = session?.user?.id;
 - [ ] resources/page.tsx
 - [ ] collab/page.tsx
 - [ ] collab/[sessionId]/page.tsx
+- [ ] user-level/page.tsx
 
 ### Task 4: 组件修复
 - [ ] compact-level-display.tsx
 - [ ] resources/resource-card.tsx
+- [ ] resources/resource-upload.tsx
 
 ### Task 5: 验证
 - [ ] `pnpm typecheck` 通过
-- [ ] 测试已登录用户 vs 未登录用户行为
 
 ---
 

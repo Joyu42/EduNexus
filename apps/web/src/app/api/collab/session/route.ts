@@ -186,7 +186,13 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get("id");
-    const userId = searchParams.get("userId") || "demo_user";
+    const queryUserId = searchParams.get("userId");
+    const currentUserId = await getCurrentUserId();
+    
+    const userId = queryUserId || currentUserId;
+    if (!userId) {
+      return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    }
 
     if (!sessionId) {
       return NextResponse.json({ error: "缺少会话ID" }, { status: 400 });
