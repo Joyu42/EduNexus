@@ -4,7 +4,7 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
-
+apps/web/next-env.d.ts
 # Environment
 .env
 .env.*
@@ -37,7 +37,3 @@ temp/
 
 # AI config
 GEMINI.md
-
-# Auto deploy scripts
-deploy.sh
-deploy.log
