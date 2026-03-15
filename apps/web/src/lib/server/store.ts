@@ -1,6 +1,7 @@
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { User } from './types/user';
 import type { UserLevel, UserExperience, UserAchievement, UserStats, ExpGainEvent } from './user-level-types';
 import type { Resource, Bookmark, BookmarkFolder, ResourceNote } from '../resources/resource-types';
 import type { CollabSession, CollabMessage, CollabVersion } from '../collab/collab-types';
@@ -78,6 +79,7 @@ type DbSchema = {
   collabSessions: CollabSession[];
   collabMessages: CollabMessage[];
   collabVersions: CollabVersion[];
+  users: User[];
 };
 
 const DEFAULT_DB: DbSchema = {
@@ -96,7 +98,8 @@ const DEFAULT_DB: DbSchema = {
   resourceNotes: [],
   collabSessions: [],
   collabMessages: [],
-  collabVersions: []
+  collabVersions: [],
+  users: []
 };
 
 async function ensureDir(dir: string) {
@@ -168,7 +171,8 @@ export async function loadDb(): Promise<DbSchema> {
       resourceNotes: parsed.resourceNotes ?? [],
       collabSessions: parsed.collabSessions ?? [],
       collabMessages: parsed.collabMessages ?? [],
-      collabVersions: parsed.collabVersions ?? []
+      collabVersions: parsed.collabVersions ?? [],
+      users: parsed.users ?? []
     };
   } catch {
     await fs.writeFile(filePath, JSON.stringify(DEFAULT_DB, null, 2), "utf8");
