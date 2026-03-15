@@ -230,7 +230,7 @@ pnpm install
 # 启动开发服务器
 pnpm dev
 
-# 访问 http://localhost:3002
+# 访问 http://localhost:3000
 ```
 
 ### 构建
