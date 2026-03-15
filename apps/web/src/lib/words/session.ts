@@ -8,16 +8,11 @@ export function selectSessionWordIds(
 ): string[] {
   const recordByWord = new Map(records.map((record) => [record.wordId, record]));
 
-  const reviewWordIds = records
-    .filter((record) => record.nextReviewDate <= today)
-    .map((record) => record.wordId)
-    .filter((id, index, arr) => arr.indexOf(id) === index);
-
-  const newCapacity = Math.max(0, size - reviewWordIds.length);
+  const newCapacity = Math.max(0, size);
   const newWordIds = words
     .filter((word) => !recordByWord.has(word.id))
     .slice(0, newCapacity)
     .map((word) => word.id);
 
-  return [...reviewWordIds, ...newWordIds].slice(0, size);
+  return newWordIds.slice(0, size);
 }

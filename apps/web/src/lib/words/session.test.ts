@@ -69,7 +69,7 @@ describe("selectSessionWordIds", () => {
 
     const session = selectSessionWordIds(words, records, "2026-03-15", 20);
 
-    expect(session[0]).toBe("w5");
+    expect(session.includes("w5")).toBe(false);
     expect(session).toHaveLength(20);
   });
 });

@@ -75,7 +75,7 @@ describe("words scheduler", () => {
     );
 
     expect(calls).toHaveLength(1);
-    expect(calls[0].status).toBe("learning");
+    expect(calls[0].status).toBe("mastered");
     expect(calls[0].nextReviewDate).toBe("2026-03-16");
     expect(calls[0].retentionScore).toBe(1);
   });

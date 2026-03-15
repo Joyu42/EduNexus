@@ -73,7 +73,7 @@ export async function updateWordStatus(
     wordId,
     bookId,
     learnDate: current?.learnDate ?? today,
-    status: known ? "learning" : "reviewing",
+    status: known ? "mastered" : "reviewing",
     nextReviewDate,
     interval: next.nextInterval,
     easeFactor: next.newEaseFactor,
