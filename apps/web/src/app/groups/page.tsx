@@ -127,8 +127,8 @@ export default function GroupsPage() {
 
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">分类:</span>
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">分类:</span>
                 <div className="flex gap-2">
                   {categories.map((cat) => (
                     <button
@@ -136,8 +136,8 @@ export default function GroupsPage() {
                       onClick={() => setSelectedCategory(cat.value)}
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         selectedCategory === cat.value
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                       }`}
                     >
                       {cat.label}
@@ -147,11 +147,11 @@ export default function GroupsPage() {
               </div>
 
               <div className="flex items-center gap-2 ml-auto">
-                <span className="text-sm font-medium text-gray-700">排序:</span>
+                <span className="text-sm font-medium text-foreground">排序:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortBy)}
-                  className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="px-3 py-1.5 border border-input bg-background rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                 >
                   <option value="activity">活跃度</option>
                   <option value="members">成员数</option>
@@ -176,12 +176,12 @@ export default function GroupsPage() {
 
             {filteredGroups.length === 0 && (
               <div className="text-center py-12">
-                <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">没有找到小组</h3>
-                <p className="text-gray-600 mb-4">试试其他搜索条件，或创建一个新小组</p>
+                <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">没有找到小组</h3>
+                <p className="text-muted-foreground mb-4">试试其他搜索条件，或创建一个新小组</p>
                 <button
                   onClick={() => router.push('/groups/create')}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   创建小组
                 </button>
