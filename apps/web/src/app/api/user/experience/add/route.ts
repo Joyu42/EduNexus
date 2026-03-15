@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { addExperience } from '@/lib/server/user-level-service';
+import { getCurrentUserId } from '@/lib/server/auth-utils';
 import { z } from 'zod';
 
 const addExpSchema = z.object({
@@ -15,16 +16,20 @@ const addExpSchema = z.object({
   metadata: z.record(z.any()).optional()
 });
 
-/**
- * POST /api/user/experience/add
- * 添加经验值
- */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const validated = addExpSchema.parse(body);
 
-    const userId = validated.userId || 'demo_user';
+    const currentUserId = await getCurrentUserId();
+    const userId = validated.userId || currentUserId;
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: '请先登录' },
+        { status: 401 }
+      );
+    }
+    
     const result = await addExperience(userId, validated.eventType, validated.metadata);
 
     return NextResponse.json({

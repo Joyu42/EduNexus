@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { loadDb, saveDb } from "@/lib/server/store";
+import { getCurrentUserId } from "@/lib/server/auth-utils";
 import type { CollabSession, CollabUser } from "@/lib/collab/collab-types";
 
 const createSessionSchema = z.object({
@@ -26,13 +27,17 @@ const inviteUserSchema = z.object({
   role: z.enum(["owner", "editor", "viewer", "commenter"]),
 });
 
-// GET /api/collab/session - 获取会话列表
-// GET /api/collab/session?id=xxx - 获取单个会话
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get("id");
-    const userId = searchParams.get("userId") || "demo_user";
+    const queryUserId = searchParams.get("userId");
+    const currentUserId = await getCurrentUserId();
+    
+    const userId = queryUserId || currentUserId;
+    if (!userId) {
+      return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    }
 
     const db = await loadDb();
 
@@ -70,7 +75,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = createSessionSchema.parse(body);
-    const userId = body.userId || "demo_user";
+    const userId = body.userId;
     const userName = body.userName || "演示用户";
 
     const db = await loadDb();
@@ -131,7 +136,7 @@ export async function PATCH(req: NextRequest) {
 
     const body = await req.json();
     const data = updateSessionSchema.parse(body);
-    const userId = body.userId || "demo_user";
+    const userId = body.userId;
 
     const db = await loadDb();
     const sessionIndex = db.collabSessions?.findIndex(

@@ -14,10 +14,15 @@ export async function GET(request: Request) {
     const queryUserId = searchParams.get('userId');
     const currentUserId = await getCurrentUserId();
     
-    // 如果 query 中指定了 userId，且当前用户已登录，则使用 query 中的值
-    // 否则使用当前登录用户的 ID
-    // 如果未登录且没有指定 query，返回 demo_user（向后兼容）
-    const userId = queryUserId || currentUserId || 'demo_user';
+    // 如果 query 中指定了 userId，使用 query 中的值；否则使用当前登录用户的 ID
+    // 必须登录才能查看用户信息
+    const userId = queryUserId || currentUserId;
+    if (!userId) {
+      return NextResponse.json(
+        { error: '请先登录' },
+        { status: 401 }
+      );
+    }
 
     const [level, experience, stats] = await Promise.all([
       getUserLevel(userId),

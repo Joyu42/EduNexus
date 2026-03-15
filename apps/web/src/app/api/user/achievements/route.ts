@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
 import { getUserAchievements, getBadgeProgress } from '@/lib/server/user-level-service';
 import { BADGE_CONFIGS, getBadgesByCategory } from '@/lib/server/badge-config';
+import { getCurrentUserId } from '@/lib/server/auth-utils';
 
-/**
- * GET /api/user/achievements
- * 获取用户成就和徽章
- */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || 'demo_user';
+    const queryUserId = searchParams.get('userId');
+    const currentUserId = await getCurrentUserId();
+    
+    const userId = queryUserId || currentUserId;
+    if (!userId) {
+      return NextResponse.json(
+        { error: '请先登录' },
+        { status: 401 }
+      );
+    }
+    
     const category = searchParams.get('category') as any;
 
     const userAchievements = await getUserAchievements(userId);

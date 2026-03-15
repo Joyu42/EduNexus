@@ -1,13 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadDb } from "@/lib/server/store";
 import { generateWeeklyReport } from "@/lib/analytics/report-generator";
+import { getCurrentUserId } from "@/lib/server/auth-utils";
 import type { LearningSession } from "@/lib/analytics/learning-session";
 import type { UserStats } from "@/lib/server/user-level-types";
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get("userId") || "demo_user";
+    const queryUserId = searchParams.get("userId");
+    const currentUserId = await getCurrentUserId();
+    
+    const userId = queryUserId || currentUserId;
+    if (!userId) {
+      return NextResponse.json(
+        { error: '请先登录' },
+        { status: 401 }
+      );
+    }
+    
     const date = searchParams.get("date");
 
     // 加载数据库
