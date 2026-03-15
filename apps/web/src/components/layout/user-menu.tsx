@@ -76,8 +76,8 @@ export function UserMenu() {
           {user?.email}
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a href="/settings" className="cursor-pointer">
+        <DropdownMenuItem>
+          <a href="/settings" className="cursor-pointer flex items-center w-full">
             <UserIcon className="h-4 w-4 mr-2" />
             个人设置
           </a>
