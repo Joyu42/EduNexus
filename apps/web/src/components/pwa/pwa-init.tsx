@@ -6,6 +6,20 @@ import { offlineStorage } from '@/lib/pwa/offline-storage';
 
 export function PWAInit() {
   useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      const cleanupDevServiceWorkers = async () => {
+        if (!('serviceWorker' in navigator)) {
+          return;
+        }
+
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((registration) => registration.unregister()));
+      };
+
+      cleanupDevServiceWorkers();
+      return;
+    }
+
     // Initialize PWA features
     const initPWA = async () => {
       // Register service worker
