@@ -11,9 +11,19 @@ type WordCardProps = {
   word: Word;
   showDefinition?: boolean;
   showExample?: boolean;
+  mnemonic?: string;
+  mnemonicLoading?: boolean;
+  onGenerateMnemonic?: (word: Word) => void;
 };
 
-export function WordCard({ word, showDefinition = false, showExample = false }: WordCardProps) {
+export function WordCard({
+  word,
+  showDefinition = false,
+  showExample = false,
+  mnemonic,
+  mnemonicLoading,
+  onGenerateMnemonic,
+}: WordCardProps) {
   const [definitionVisible, setDefinitionVisible] = useState(showDefinition);
   const [exampleVisible, setExampleVisible] = useState(showExample);
 
@@ -55,6 +65,26 @@ export function WordCard({ word, showDefinition = false, showExample = false }: 
           </div>
         </CardHeader>
         <CardContent className="space-y-4 p-5">
+          <div className="rounded-lg border border-cyan-200 bg-cyan-50/70 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-cyan-900">记忆技巧</p>
+              {onGenerateMnemonic ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-8 border-cyan-300 bg-white text-cyan-800 hover:bg-cyan-100"
+                  onClick={() => onGenerateMnemonic(word)}
+                  disabled={mnemonicLoading}
+                >
+                  {mnemonicLoading ? "生成中..." : "AI 生成"}
+                </Button>
+              ) : null}
+            </div>
+            <p className="mt-2 text-sm leading-6 text-cyan-900/90">
+              {mnemonic ?? "点击 AI 生成，获取这个单词的联想记忆法。"}
+            </p>
+          </div>
+
           <div className="space-y-2 rounded-lg border border-slate-200 bg-white/80 p-3">
             <button
               type="button"

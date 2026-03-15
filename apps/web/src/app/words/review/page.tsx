@@ -1,28 +1,53 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Timer } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReviewButtons, WordCard } from "@/components/words";
-import { mockLearningRecords, mockWords } from "@/lib/words/mock-data";
+import { ensureWordsBootstrap } from "@/lib/words/bootstrap";
+import { syncWordsProgressToGoal } from "@/lib/words/integration";
+import { wordsStorage } from "@/lib/words/storage";
+import { updateWordStatus } from "@/lib/words/scheduler";
+import type { LearningRecord, Word } from "@/lib/words/types";
 
 export default function ReviewWordsPage() {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
+  const [allWords, setAllWords] = useState<Word[]>([]);
+  const [learningRecords, setLearningRecords] = useState<LearningRecord[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      await ensureWordsBootstrap();
+      const [words, records] = await Promise.all([
+        wordsStorage.getAllWords(),
+        wordsStorage.getAllLearningRecords(),
+      ]);
+      if (!active) return;
+      setAllWords(words);
+      setLearningRecords(records);
+    };
+    void load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const dueWordIds = useMemo(
     () =>
-      mockLearningRecords
+      learningRecords
         .filter((record) => record.nextReviewDate <= today)
         .map((record) => record.wordId),
-    [today]
+    [learningRecords, today]
   );
 
   const queue = useMemo(
-    () => mockWords.filter((word) => dueWordIds.includes(word.id)),
-    [dueWordIds]
+    () => allWords.filter((word) => dueWordIds.includes(word.id)),
+    [allWords, dueWordIds]
   );
 
   const [quickRecallMode, setQuickRecallMode] = useState(false);
@@ -33,13 +58,25 @@ export default function ReviewWordsPage() {
   const current = queue[index];
   const finished = queue.length > 0 && index >= queue.length;
 
-  const onAnswer = (isCorrect: boolean) => {
+  const onAnswer = async (isCorrect: boolean) => {
+    const currentWord = queue[index];
+    if (!currentWord) {
+      return;
+    }
+
+    await updateWordStatus(wordsStorage, currentWord.bookId, currentWord.id, isCorrect, today);
+
     if (isCorrect) {
       setCorrect((count) => count + 1);
     } else {
       setIncorrect((count) => count + 1);
     }
     setIndex((currentIndex) => currentIndex + 1);
+
+    const records = await wordsStorage.getAllLearningRecords();
+    setLearningRecords(records);
+    const completed = records.filter((record) => record.lastReviewedAt === today).length;
+    syncWordsProgressToGoal(today, 20, completed);
   };
 
   const reset = () => {
@@ -105,7 +142,7 @@ export default function ReviewWordsPage() {
         ) : current ? (
           <>
             <WordCard word={current} showDefinition={!quickRecallMode} showExample={!quickRecallMode} />
-            <ReviewButtons onKnow={() => onAnswer(true)} onDontKnow={() => onAnswer(false)} />
+            <ReviewButtons onKnow={() => void onAnswer(true)} onDontKnow={() => void onAnswer(false)} />
           </>
         ) : null}
       </div>

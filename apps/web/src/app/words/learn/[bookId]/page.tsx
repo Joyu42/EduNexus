@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
@@ -14,7 +14,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ReviewButtons, WordCard } from "@/components/words";
-import { getWordsByBookId } from "@/lib/words/mock-data";
+import { ensureWordsBootstrap } from "@/lib/words/bootstrap";
+import { generateWordMnemonic } from "@/lib/words/ai";
+import { suggestRelatedWords, syncWordsProgressToGoal } from "@/lib/words/integration";
+import { wordsStorage } from "@/lib/words/storage";
+import { updateWordStatus } from "@/lib/words/scheduler";
 import type { Word } from "@/lib/words/types";
 
 type LearnPageProps = {
@@ -43,18 +47,80 @@ export default function LearnWordsPage({ params }: LearnPageProps) {
   const [knownCount, setKnownCount] = useState(0);
   const [unknownCount, setUnknownCount] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [bookWords, setBookWords] = useState<Word[]>([]);
+  const [mnemonic, setMnemonic] = useState<string>("");
+  const [mnemonicLoading, setMnemonicLoading] = useState(false);
+  const [relatedWords, setRelatedWords] = useState<Word[]>([]);
 
-  const bookId = resolvedParams?.bookId ?? "cet4-core";
-  const queue = useMemo(() => buildLearningQueue(getWordsByBookId(bookId), 20), [bookId]);
+  const bookId = resolvedParams?.bookId ?? "cet4";
+  const queue = useMemo(() => buildLearningQueue(bookWords, 20), [bookWords]);
   const currentWord = queue[currentIndex];
   const progress = queue.length === 0 ? 0 : ((currentIndex + 1) / queue.length) * 100;
 
-  const moveNext = (isKnown: boolean) => {
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      await ensureWordsBootstrap();
+      const words = await wordsStorage.getWordsByBook(bookId);
+      if (!active) return;
+      setBookWords(words);
+    };
+
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [bookId]);
+
+  useEffect(() => {
+    let active = true;
+    if (!currentWord) {
+      setRelatedWords([]);
+      return;
+    }
+
+    const run = async () => {
+      const related = await suggestRelatedWords(currentWord.id, bookId, 3);
+      if (!active) return;
+      setRelatedWords(related);
+    };
+
+    void run();
+    return () => {
+      active = false;
+    };
+  }, [bookId, currentWord]);
+
+  const generateMnemonic = async (word: Word) => {
+    setMnemonicLoading(true);
+    const text = await generateWordMnemonic({
+      word: word.word,
+      definition: word.definition,
+      example: word.example,
+    });
+    setMnemonic(text);
+    setMnemonicLoading(false);
+  };
+
+  const moveNext = async (isKnown: boolean) => {
+    if (!currentWord) {
+      return;
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    await updateWordStatus(wordsStorage, bookId, currentWord.id, isKnown, today);
+
     if (isKnown) {
       setKnownCount((count) => count + 1);
     } else {
       setUnknownCount((count) => count + 1);
     }
+
+    const records = await wordsStorage.getAllLearningRecords();
+    const completed = records.filter((record) => record.lastReviewedAt === today).length;
+    syncWordsProgressToGoal(today, 20, completed);
+
+    setMnemonic("");
 
     if (currentIndex >= queue.length - 1) {
       setFinished(true);
@@ -68,6 +134,7 @@ export default function LearnWordsPage({ params }: LearnPageProps) {
     setKnownCount(0);
     setUnknownCount(0);
     setFinished(false);
+    setMnemonic("");
   };
 
   if (!currentWord) {
@@ -96,9 +163,27 @@ export default function LearnWordsPage({ params }: LearnPageProps) {
           <Progress value={progress} />
         </header>
 
-        <WordCard word={currentWord} />
+        <WordCard
+          word={currentWord}
+          mnemonic={mnemonic}
+          mnemonicLoading={mnemonicLoading}
+          onGenerateMnemonic={generateMnemonic}
+        />
 
-        <ReviewButtons onKnow={() => moveNext(true)} onDontKnow={() => moveNext(false)} />
+        {relatedWords.length > 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white/85 p-4 text-sm shadow-sm">
+            <p className="mb-2 font-medium text-slate-800">关联单词推荐</p>
+            <div className="flex flex-wrap gap-2">
+              {relatedWords.map((word) => (
+                <span key={word.id} className="rounded-full bg-cyan-100 px-3 py-1 text-cyan-800">
+                  {word.word}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <ReviewButtons onKnow={() => void moveNext(true)} onDontKnow={() => void moveNext(false)} />
       </div>
 
       <Dialog open={finished} onOpenChange={setFinished}>
