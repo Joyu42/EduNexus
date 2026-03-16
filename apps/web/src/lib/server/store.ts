@@ -1,10 +1,6 @@
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { User } from './types/user';
-import type { UserLevel, UserExperience, UserAchievement, UserStats, ExpGainEvent } from './user-level-types';
-import type { Resource, Bookmark, BookmarkFolder, ResourceNote } from '../resources/resource-types';
-import type { CollabSession, CollabMessage, CollabVersion } from '../collab/collab-types';
 
 type SessionRecord = {
   id: string;
@@ -41,66 +37,96 @@ type PlanRecord = {
   updatedAt: string;
 };
 
-type SyncedPathTaskRecord = {
-  taskId: string;
-  title: string;
-  description?: string;
-  estimatedTime?: string;
-  status?: "not_started" | "in_progress" | "completed";
-  progress?: number;
-  dependencies?: string[];
-};
-
-type SyncedPathRecord = {
-  pathId: string;
-  title: string;
-  description: string;
-  status: "not_started" | "in_progress" | "completed";
-  progress: number;
-  tags: string[];
-  tasks: SyncedPathTaskRecord[];
-  updatedAt: string;
-};
-
 type DbSchema = {
   sessions: SessionRecord[];
   plans: PlanRecord[];
-  syncedPaths: SyncedPathRecord[];
   masteryByNode: Record<string, number>;
-  userLevels: Record<string, UserLevel>;
-  userExperience: Record<string, UserExperience>;
-  userAchievements: UserAchievement[];
-  userStats: Record<string, UserStats>;
-  expGainHistory: ExpGainEvent[];
-  resources: Resource[];
-  bookmarks: Bookmark[];
-  bookmarkFolders: BookmarkFolder[];
-  resourceNotes: ResourceNote[];
-  collabSessions: CollabSession[];
-  collabMessages: CollabMessage[];
-  collabVersions: CollabVersion[];
-  users: User[];
 };
 
 const DEFAULT_DB: DbSchema = {
   sessions: [],
   plans: [],
-  syncedPaths: [],
-  masteryByNode: {},
-  userLevels: {},
-  userExperience: {},
-  userAchievements: [],
-  userStats: {},
-  expGainHistory: [],
-  resources: [],
-  bookmarks: [],
-  bookmarkFolders: [],
-  resourceNotes: [],
-  collabSessions: [],
-  collabMessages: [],
-  collabVersions: [],
-  users: []
+  masteryByNode: {}
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeSessionMessage(input: unknown, fallbackCreatedAt: string): SessionMessage | null {
+  if (!isRecord(input)) return null;
+  const role = input.role;
+  if (role !== "user" && role !== "assistant" && role !== "system") {
+    return null;
+  }
+
+  const content = typeof input.content === "string" ? input.content : "";
+  const createdAt = typeof input.createdAt === "string" ? input.createdAt : fallbackCreatedAt;
+  return {
+    role,
+    content,
+    createdAt
+  };
+}
+
+function normalizeSessionRecord(input: unknown): SessionRecord | null {
+  if (!isRecord(input)) return null;
+  const now = new Date().toISOString();
+  const messagesSource = Array.isArray(input.messages) ? input.messages : [];
+  const messages = messagesSource
+    .map((message) => normalizeSessionMessage(message, now))
+    .filter((message): message is SessionMessage => message !== null);
+
+  return {
+    id: typeof input.id === "string" ? input.id : "",
+    title: typeof input.title === "string" ? input.title : "未命名学习会话",
+    userId: typeof input.userId === "string" ? input.userId : "guest",
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now,
+    lastLevel: typeof input.lastLevel === "number" ? input.lastLevel : 1,
+    messages
+  };
+}
+
+function normalizePlanTask(input: unknown): PlanRecord["tasks"][number] | null {
+  if (!isRecord(input)) return null;
+  return {
+    taskId: typeof input.taskId === "string" ? input.taskId : "",
+    title: typeof input.title === "string" ? input.title : "",
+    priority: typeof input.priority === "number" ? input.priority : 0,
+    reason: typeof input.reason === "string" ? input.reason : "",
+    dueDate: typeof input.dueDate === "string" ? input.dueDate : ""
+  };
+}
+
+function normalizePlanRecord(input: unknown): PlanRecord | null {
+  if (!isRecord(input)) return null;
+  const tasksSource = Array.isArray(input.tasks) ? input.tasks : [];
+  const tasks = tasksSource
+    .map((task) => normalizePlanTask(task))
+    .filter((task): task is PlanRecord["tasks"][number] => task !== null);
+  const now = new Date().toISOString();
+
+  return {
+    planId: typeof input.planId === "string" ? input.planId : "",
+    goalType:
+      input.goalType === "exam" || input.goalType === "project" || input.goalType === "certificate"
+        ? input.goalType
+        : "project",
+    goal: typeof input.goal === "string" ? input.goal : "",
+    tasks,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now
+  };
+}
+
+function normalizeMasteryByNode(input: unknown): Record<string, number> {
+  if (!isRecord(input)) return {};
+  const entries = Object.entries(input)
+    .filter(([, value]) => typeof value === "number")
+    .map(([key, value]) => [key, value]);
+  return Object.fromEntries(entries);
+}
 
 async function ensureDir(dir: string) {
   await fs.mkdir(dir, { recursive: true });
@@ -146,33 +172,19 @@ export async function loadDb(): Promise<DbSchema> {
   try {
     const raw = await fs.readFile(filePath, "utf8");
     const parsed = JSON.parse(raw) as Partial<DbSchema>;
-    const sessions = (parsed.sessions ?? []).map((session) => ({
-      id: session.id ?? "",
-      title: session.title ?? "未命名学习会话",
-      userId: session.userId ?? "demo_user",
-      createdAt: session.createdAt ?? new Date().toISOString(),
-      updatedAt: session.updatedAt ?? new Date().toISOString(),
-      lastLevel: session.lastLevel ?? 1,
-      messages: session.messages ?? []
-    }));
+    const sessionsSource = Array.isArray(parsed.sessions) ? parsed.sessions : [];
+    const plansSource = Array.isArray(parsed.plans) ? parsed.plans : [];
+    const sessions = sessionsSource
+      .map((session) => normalizeSessionRecord(session))
+      .filter((session): session is SessionRecord => session !== null);
+    const plans = plansSource
+      .map((plan) => normalizePlanRecord(plan))
+      .filter((plan): plan is PlanRecord => plan !== null);
+
     return {
       sessions,
-      plans: parsed.plans ?? [],
-      syncedPaths: parsed.syncedPaths ?? [],
-      masteryByNode: parsed.masteryByNode ?? {},
-      userLevels: parsed.userLevels ?? {},
-      userExperience: parsed.userExperience ?? {},
-      userAchievements: parsed.userAchievements ?? [],
-      userStats: parsed.userStats ?? {},
-      expGainHistory: parsed.expGainHistory ?? [],
-      resources: parsed.resources ?? [],
-      bookmarks: parsed.bookmarks ?? [],
-      bookmarkFolders: parsed.bookmarkFolders ?? [],
-      resourceNotes: parsed.resourceNotes ?? [],
-      collabSessions: parsed.collabSessions ?? [],
-      collabMessages: parsed.collabMessages ?? [],
-      collabVersions: parsed.collabVersions ?? [],
-      users: parsed.users ?? []
+      plans,
+      masteryByNode: normalizeMasteryByNode(parsed.masteryByNode)
     };
   } catch {
     await fs.writeFile(filePath, JSON.stringify(DEFAULT_DB, null, 2), "utf8");

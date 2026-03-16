@@ -26,7 +26,6 @@ const navGroups = [
     title: "生态支撑",
     items: [
       { href: "/kb", label: "本地知识库", hint: "双链检索与证据沉淀" },
-      { href: "/dashboard", label: "生态看板", hint: "趋势、风险与闭环事件" },
       { href: "/settings", label: "配置中心", hint: "模板、策略与参数管理" }
     ]
   }

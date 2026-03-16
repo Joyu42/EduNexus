@@ -4,12 +4,6 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { AppShell } from "@/components/layout/AppShell";
 import { QueryProvider } from "@/lib/providers/query-provider";
-import { PWAInit } from "@/components/pwa/pwa-init";
-import { InstallPrompt } from "@/components/pwa/install-prompt";
-import { OfflineIndicator } from "@/components/pwa/offline-indicator";
-import { NotificationPermission } from "@/components/pwa/notification-permission";
-import { UpdatePrompt } from "@/components/pwa/update-prompt";
-import { GlobalAIAssistant } from "@/components/global/global-ai-assistant";
 import { DocumentProvider } from "@/lib/ai/document-context";
 import { Toaster } from "@/components/ui/sonner";
 import { KGSyncBootstrap } from "@/components/sync/kg-sync-bootstrap";
@@ -61,14 +55,8 @@ export default function RootLayout({
         <Providers>
           <QueryProvider>
             <DocumentProvider>
-              <PWAInit />
               <KGSyncBootstrap />
               <AppShell>{children}</AppShell>
-              <InstallPrompt />
-              <OfflineIndicator />
-              <NotificationPermission />
-              <UpdatePrompt />
-              <GlobalAIAssistant />
               <Toaster />
             </DocumentProvider>
           </QueryProvider>

@@ -28,4 +28,6 @@ model Document {
   updatedAt DateTime @updatedAt
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
+
+  @@index([authorId])
 }

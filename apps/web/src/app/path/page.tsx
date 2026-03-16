@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, Suspense } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -28,6 +29,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoginPrompt } from "@/components/ui/login-prompt";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -64,6 +66,7 @@ import {
 import { goalStorage } from "@/lib/goals/goal-storage";
 
 function PathPageContent() {
+  const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   // 状态管理
@@ -661,6 +664,10 @@ function PathPageContent() {
     if (searchQuery && !path.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  if (status === 'loading' || status === 'unauthenticated') {
+    return <LoginPrompt title="成长地图" />;
+  }
 
   if (loading) {
     return (

@@ -11,7 +11,6 @@ import {
   BookOpen,
   Network,
   Route,
-  BarChart3,
   Database,
   Settings,
   ArrowRight,
@@ -47,13 +46,6 @@ const coreEntries = [
 ];
 
 const supportEntries = [
-  {
-    href: "/dashboard",
-    title: "生态看板",
-    description: "统一追踪学习增益、提示依赖和风险干预结果。",
-    tag: "趋势与干预",
-    icon: BarChart3
-  },
   {
     href: "/kb",
     title: "📚 知识宝库",
@@ -132,12 +124,12 @@ export default function HomePage() {
           title="从「会做题」升级为「会学习、会迁移、会复盘」"
           description="工作区负责引导，星图负责定位，地图负责执行，宝库负责沉淀。每次学习都会进入可检索、可回放、可复用的长期资产。"
           quote="同一套界面里完成「问题理解 -> 结构化思考 -> 证据沉淀 -> 路径回写」，避免碎片化跳转。"
-          chips={["LangGraph 工作流", "ModelScope 模型接入", "本地优先沉淀", "Web 全链路"]}
-          metrics={[
-            { label: "核心工作台", value: "3", hint: "工作区 / 星图 / 地图" },
-            { label: "生态模块", value: "8", hint: "覆盖学习与教学协同" },
-            { label: "上线形态", value: "Web", hint: "可直接部署到 Vercel" }
-          ]}
+            chips={["LangGraph 工作流", "ModelScope 模型接入", "本地优先沉淀", "Web 全链路"]}
+            metrics={[
+              { label: "核心工作台", value: "3", hint: "工作区 / 星图 / 地图" },
+              { label: "生态模块", value: "2", hint: "知识库 / 配置中心" },
+              { label: "上线形态", value: "Web", hint: "可直接部署到 Vercel" }
+            ]}
           actions={
             <>
               <Link href="/workspace">
@@ -237,7 +229,7 @@ export default function HomePage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary/50">
-              <BarChart3 className="h-5 w-5 text-secondary-foreground" />
+              <Database className="h-5 w-5 text-secondary-foreground" />
             </div>
             <div>
               <h2 className="text-2xl font-bold">生态支撑模块</h2>

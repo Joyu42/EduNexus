@@ -3,6 +3,8 @@
  * 支持题库、题目、练习记录和错题本管理
  */
 
+import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
+
 // 题目类型枚举
 export enum QuestionType {
   MULTIPLE_CHOICE = "multiple_choice",
@@ -98,7 +100,12 @@ export type WrongQuestion = {
 };
 
 // IndexedDB 配置
-const DB_NAME = "EduNexusPractice";
+// 获取用户特定的数据库名
+function getDBName(): string {
+  const userId = getClientUserIdentity();
+  return userId ? `EduNexusPractice_${userId}` : 'EduNexusPractice_anonymous';
+}
+
 const DB_VERSION = 1;
 const STORE_BANKS = "question_banks";
 const STORE_QUESTIONS = "questions";
@@ -109,6 +116,7 @@ const STORE_WRONG = "wrong_questions";
  * 初始化 IndexedDB
  */
 function openDatabase(): Promise<IDBDatabase> {
+  const DB_NAME = getDBName();
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 

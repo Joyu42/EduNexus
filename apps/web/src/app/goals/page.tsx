@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Goal, goalStorage, Habit, habitStorage } from '@/lib/goals/goal-storage';
 import { pathStorage } from '@/lib/client/path-storage';
 import { GoalWizard } from '@/components/goals/goal-wizard';
@@ -8,6 +10,8 @@ import { GoalCard } from '@/components/goals/goal-card';
 import { HabitCalendar } from '@/components/goals/habit-calendar';
 import { HabitTracker } from '@/components/goals/habit-tracker';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { LoginPrompt } from '@/components/ui/login-prompt';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -17,6 +21,8 @@ import { Plus, Target, Calendar, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function GoalsPage() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [showWizard, setShowWizard] = useState(false);
@@ -25,8 +31,10 @@ export default function GoalsPage() {
   const [linkedPathsData, setLinkedPathsData] = useState<Record<string, { count: number; progress: number }>>({});
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (status === 'authenticated') {
+      loadData();
+    }
+  }, [status]);
 
   const loadData = async () => {
     setGoals(goalStorage.getGoals());
@@ -111,6 +119,21 @@ export default function GoalsPage() {
   const avgProgress = goals.length > 0
     ? Math.round(goals.reduce((sum, g) => sum + g.progress, 0) / goals.length)
     : 0;
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
+          <p className="text-muted-foreground mt-4">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return <LoginPrompt title="目标管理" />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { KBLayout } from "@/components/kb/kb-layout";
+import { LoginPrompt } from "@/components/ui/login-prompt";
 import { type KBDocument, fetchDocumentsFromServer, createDocumentOnServer } from "@/lib/client/kb-storage";
 import { useDocument } from "@/lib/ai/document-context";
 import { useSession } from "next-auth/react";
@@ -80,6 +81,10 @@ export default function KnowledgeBasePage() {
 
   if (status === 'loading') {
     return <div>Loading Authentication...</div>;
+  }
+  
+  if (status === 'unauthenticated') {
+    return <LoginPrompt title="知识宝库" />;
   }
   
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import {
   Settings,
   Cpu,
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { LoginPrompt } from "@/components/ui/login-prompt";
 import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { ModelConfigPanel } from "@/components/settings/model-config-panel";
 import { JsonImportPanel } from "@/components/settings/json-import-panel";
@@ -68,7 +70,23 @@ const navigationItems = [
 ];
 
 export default function SettingsPage() {
+  const { status } = useSession();
   const [activeSection, setActiveSection] = useState<SettingsSection>("general");
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return <LoginPrompt title="配置中心" />;
+  }
 
   // Settings state
   const [theme, setTheme] = useState("light");

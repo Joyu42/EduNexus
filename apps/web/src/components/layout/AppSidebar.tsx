@@ -22,11 +22,8 @@ import {
   Settings,
   ChevronLeft,
   Menu,
-  BarChart3,
   Target,
-  FolderOpen,
   GitBranch,
-  Users,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { UserMenu } from './user-menu'
@@ -41,16 +38,12 @@ const navigation = [
       { name: '🎮 成长地图', href: '/path', icon: Route },
       { name: '🛤️ 学习路径', href: '/learning-paths', icon: GitBranch },
       { name: '🎯 目标管理', href: '/goals', icon: Target },
-      { name: '📦 资源中心', href: '/resources', icon: FolderOpen },
-      { name: '👥 学习小组', href: '/groups', icon: Users },
-      { name: '💬 学习社区', href: '/community', icon: Users },
     ],
   },
   {
     title: '工作区',
     items: [
       { name: '学习工作区', href: '/workspace', icon: Briefcase },
-      { name: '学习分析', href: '/workspace/analytics', icon: BarChart3 },
     ],
   },
   {

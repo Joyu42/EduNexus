@@ -1,3 +1,5 @@
+import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
+
 export interface FileNode {
   id: string;
   name: string;
@@ -175,6 +177,12 @@ document.addEventListener('DOMContentLoaded', () => {
   },
 ];
 
+// 获取用户特定的存储键
+function getStorageKey(): string {
+  const userId = getClientUserIdentity() || 'anonymous';
+  return `edunexus_projects_${userId}`;
+}
+
 export class ProjectManager {
   private projects: Map<string, Project> = new Map();
   private currentProjectId: string | null = null;
@@ -185,7 +193,7 @@ export class ProjectManager {
 
   private loadFromStorage() {
     if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("edunexus_projects");
+    const stored = localStorage.getItem(getStorageKey());
     if (stored) {
       try {
         const data = JSON.parse(stored);
@@ -208,7 +216,7 @@ export class ProjectManager {
       projects: Array.from(this.projects.values()),
       currentProjectId: this.currentProjectId,
     };
-    localStorage.setItem("edunexus_projects", JSON.stringify(data));
+    localStorage.setItem(getStorageKey(), JSON.stringify(data));
   }
 
   createProject(name: string, description: string, template?: ProjectTemplate): Project {

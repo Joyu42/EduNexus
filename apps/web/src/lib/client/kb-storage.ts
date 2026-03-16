@@ -3,6 +3,7 @@
  * 支持 IndexedDB 存储和 File System Access API
  */
 
+import { getClientUserIdentity } from "@/lib/auth/client-user-cache";
 import { getDataSyncEventManager, SyncEventType } from '../sync/data-sync-events';
 
 // 文档类型定义
@@ -42,8 +43,13 @@ const STORAGE_KEYS = {
   DOCUMENTS_PREFIX: "edunexus_kb_docs_",
 } as const;
 
+// 获取用户特定的数据库名
+function getDBName(): string {
+  const userId = getClientUserIdentity();
+  return userId ? `EduNexusKB_${userId}` : 'EduNexusKB_anonymous';
+}
+
 // IndexedDB 配置
-const DB_NAME = "EduNexusKB";
 const DB_VERSION = 1;
 const STORE_DOCUMENTS = "documents";
 const STORE_VAULTS = "vaults";
@@ -52,6 +58,7 @@ const STORE_VAULTS = "vaults";
  * 初始化 IndexedDB
  */
 function openDatabase(): Promise<IDBDatabase> {
+  const DB_NAME = getDBName();
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 

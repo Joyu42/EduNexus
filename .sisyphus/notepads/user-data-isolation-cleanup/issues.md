@@ -1,0 +1,2 @@
+2026-03-16: Project-wide `pnpm typecheck` and `pnpm build` still fail on pre-existing errors in `apps/web/src/app/collab/page.tsx` and community pages unrelated to the client user cache refactor, so global verification remains blocked outside the changed files.
+2026-03-16: Removing `apps/web/src/app/pwa-test/page.tsx` left a stale generated import in `apps/web/.next/types/validator.ts`; deleting `apps/web/.next` before rerunning `pnpm typecheck` and `pnpm build` resolved the false missing-module error.

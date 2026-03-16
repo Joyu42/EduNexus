@@ -4,16 +4,24 @@
  */
 
 import type { LearningPath, Task, Milestone, PathStatus, TaskStatus } from './path-storage';
+import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
 
-const STORAGE_KEY = 'edunexus_learning_paths';
+function getStorageKey(): string {
+  const userId = getClientUserIdentity();
+  return userId ? `edunexus_learning_paths_${userId}` : 'edunexus_learning_paths_anonymous';
+}
 
 export class LocalStoragePathManager {
+  private getStorageKey(): string {
+    return getStorageKey();
+  }
+
   /**
    * 获取所有学习路径
    */
   getAllPaths(): LearningPath[] {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
+      const data = localStorage.getItem(this.getStorageKey());
       if (!data) return [];
 
       const paths = JSON.parse(data);
@@ -108,7 +116,7 @@ export class LocalStoragePathManager {
   private savePaths(paths: LearningPath[]): void {
     try {
       const serialized = paths.map(this.serializePath);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
+      localStorage.setItem(this.getStorageKey(), JSON.stringify(serialized));
     } catch (error) {
       console.error('[LocalStorage] 保存失败:', error);
       throw error;

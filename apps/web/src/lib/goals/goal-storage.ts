@@ -1,3 +1,5 @@
+import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
+
 // 目标存储和管理
 export type GoalType = 'long-term' | 'mid-term' | 'short-term';
 export type GoalStatus = 'active' | 'completed' | 'paused' | 'cancelled';
@@ -39,17 +41,27 @@ export interface Habit {
   createdAt: string;
 }
 
-const STORAGE_KEY = 'edunexus_goals';
-const HABITS_KEY = 'edunexus_habits';
+// 获取用户特定的存储键
+function getStorageKeys(userId: string | null) {
+  const suffix = userId ? `_${userId}` : '_anonymous';
+  return {
+    goals: `edunexus_goals${suffix}`,
+    habits: `edunexus_habits${suffix}`,
+  };
+}
 
 export const goalStorage = {
   getGoals(): Goal[] {
     if (typeof window === 'undefined') return [];
-    const data = localStorage.getItem(STORAGE_KEY);
+    const userId = getClientUserIdentity();
+    const keys = getStorageKeys(userId);
+    const data = localStorage.getItem(keys.goals);
     return data ? JSON.parse(data) : [];
   },
 
   saveGoal(goal: Goal): void {
+    const userId = getClientUserIdentity();
+    const keys = getStorageKeys(userId);
     const goals = this.getGoals();
     const index = goals.findIndex(g => g.id === goal.id);
     if (index >= 0) {
@@ -57,15 +69,19 @@ export const goalStorage = {
     } else {
       goals.push(goal);
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
+    localStorage.setItem(keys.goals, JSON.stringify(goals));
   },
 
   deleteGoal(id: string): void {
+    const userId = getClientUserIdentity();
+    const keys = getStorageKeys(userId);
     const goals = this.getGoals().filter(g => g.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
+    localStorage.setItem(keys.goals, JSON.stringify(goals));
   },
 
   updateProgress(id: string, progress: number): void {
+    const userId = getClientUserIdentity();
+    const keys = getStorageKeys(userId);
     const goals = this.getGoals();
     const goal = goals.find(g => g.id === id);
     if (goal) {
@@ -74,7 +90,26 @@ export const goalStorage = {
       if (progress >= 100) {
         goal.status = 'completed';
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(goals));
+      localStorage.setItem(keys.goals, JSON.stringify(goals));
+    }
+  },
+
+  // 迁移旧数据到新格式（一次性操作）
+  migrateData(userId: string): void {
+    if (typeof window === 'undefined') return;
+    const keys = getStorageKeys(userId);
+    // 检查是否已经迁移过
+    if (localStorage.getItem(keys.goals)) return;
+    
+    // 迁移旧数据
+    const oldGoals = localStorage.getItem('edunexus_goals');
+    const oldHabits = localStorage.getItem('edunexus_habits');
+    
+    if (oldGoals) {
+      localStorage.setItem(keys.goals, oldGoals);
+    }
+    if (oldHabits) {
+      localStorage.setItem(keys.habits, oldHabits);
     }
   },
 };
@@ -82,11 +117,15 @@ export const goalStorage = {
 export const habitStorage = {
   getHabits(): Habit[] {
     if (typeof window === 'undefined') return [];
-    const data = localStorage.getItem(HABITS_KEY);
+    const userId = getClientUserIdentity();
+    const keys = getStorageKeys(userId);
+    const data = localStorage.getItem(keys.habits);
     return data ? JSON.parse(data) : [];
   },
 
   saveHabit(habit: Habit): void {
+    const userId = getClientUserIdentity();
+    const keys = getStorageKeys(userId);
     const habits = this.getHabits();
     const index = habits.findIndex(h => h.id === habit.id);
     if (index >= 0) {
@@ -94,17 +133,19 @@ export const habitStorage = {
     } else {
       habits.push(habit);
     }
-    localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+    localStorage.setItem(keys.habits, JSON.stringify(habits));
   },
 
   checkIn(habitId: string, date: string): void {
+    const userId = getClientUserIdentity();
+    const keys = getStorageKeys(userId);
     const habits = this.getHabits();
     const habit = habits.find(h => h.id === habitId);
     if (habit) {
       habit.checkIns[date] = true;
       habit.streak = this.calculateStreak(habit);
       habit.longestStreak = Math.max(habit.longestStreak, habit.streak);
-      localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+      localStorage.setItem(keys.habits, JSON.stringify(habits));
     }
   },
 
@@ -125,7 +166,9 @@ export const habitStorage = {
   },
 
   deleteHabit(id: string): void {
+    const userId = getClientUserIdentity();
+    const keys = getStorageKeys(userId);
     const habits = this.getHabits().filter(h => h.id !== id);
-    localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+    localStorage.setItem(keys.habits, JSON.stringify(habits));
   },
 };

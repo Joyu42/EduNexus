@@ -4,6 +4,7 @@
  */
 
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
 import { localStoragePathManager } from './path-storage-fallback';
 import { getDataSyncEventManager, SyncEventType } from '../sync/data-sync-events';
 
@@ -63,7 +64,12 @@ interface PathDB extends DBSchema {
   };
 }
 
-const DB_NAME = 'EduNexusPath';
+// 获取用户特定的数据库名
+function getDBName(): string {
+  const userId = getClientUserIdentity();
+  return userId ? `EduNexusPath_${userId}` : 'EduNexusPath_anonymous';
+}
+
 const DB_VERSION = 1;
 
 const toSafeCategory = (path: Pick<LearningPath, 'tags' | 'status'>): string => {
@@ -179,7 +185,7 @@ export class PathStorageManager {
 
     try {
       console.log('[PathStorage] 初始化数据库...');
-      this.db = await openDB<PathDB>(DB_NAME, DB_VERSION, {
+      this.db = await openDB<PathDB>(getDBName(), DB_VERSION, {
         upgrade(db) {
           // 创建路径存储
           if (!db.objectStoreNames.contains('paths')) {

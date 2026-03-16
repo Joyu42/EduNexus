@@ -43,7 +43,7 @@ describe("register api", () => {
   });
 
   it("returns a structured conflict error when email already exists", async () => {
-    getUserByEmail.mockResolvedValueOnce({ id: "user_1" });
+    getUserByEmail.mockResolvedValueOnce({ id: "existing_user" });
 
     const response = await POST(
       new Request("http://localhost/api/auth/register", {

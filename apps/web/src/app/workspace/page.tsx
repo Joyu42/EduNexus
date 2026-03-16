@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -26,6 +27,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoginPrompt } from "@/components/ui/login-prompt";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +36,6 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { LearningNotes } from "@/components/workspace/learning-notes";
-import { CompactLevelDisplay } from "@/components/compact-level-display";
 import { LearningPlanner } from "@/components/kb/learning-planner";
 import { KBQAAssistant } from "@/components/kb/kb-qa-assistant";
 import { TeacherManager } from "@/components/workspace/teacher-manager";
@@ -134,6 +135,8 @@ const teachingStyleLabels = {
 };
 
 function WorkspacePageContent() {
+  const { status } = useSession();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const storage = getKBStorage();
   const [kbDocuments, setKbDocuments] = useState<any[]>([]);
@@ -157,6 +160,21 @@ function WorkspacePageContent() {
   const pathContextSeededTaskRef = useRef<string | null>(null);
   const pathContextSentTaskRef = useRef<string | null>(null);
   const taskFeedbackSyncedRef = useRef(new Set<string>());
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return <LoginPrompt title="学习工作区" />;
+  }
 
   // 加载知识库文档、历史会话和老师列表
   useEffect(() => {
@@ -1153,8 +1171,6 @@ function WorkspacePageContent() {
                 animate={{ opacity: 1 }}
                 transition={{ staggerChildren: 0.1 }}
               >
-                <CompactLevelDisplay className="mb-4" />
-
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

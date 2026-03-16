@@ -1,7 +1,7 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -18,7 +18,7 @@ function getSafeCallbackUrl(callbackUrl: string | null) {
   return '/';
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useSession();
@@ -115,5 +115,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">加载中...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

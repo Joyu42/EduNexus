@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +33,7 @@ import { InteractiveGraph } from "@/components/graph/interactive-graph";
 import { NodeDetailPanel } from "@/components/graph/node-detail-panel";
 import { LearningPathOverlay } from "@/components/graph/learning-path-overlay";
 import { ProgressLegend } from "@/components/graph/progress-legend";
+import { LoginPrompt } from "@/components/ui/login-prompt";
 import { RecommendationEngine } from "@/lib/graph/recommendation-engine";
 import { ProgressTracker } from "@/lib/graph/progress-tracker";
 import { cn } from "@/lib/utils";
@@ -230,6 +233,9 @@ const generateMockData = (): { nodes: GraphNode[]; edges: GraphEdge[] } => {
 };
 
 export default function EnhancedGraphPage() {
+  const { status } = useSession();
+  const router = useRouter();
+
   // 状态管理
   const [graphData, setGraphData] = useState<{
     nodes: GraphNode[];
@@ -251,66 +257,88 @@ export default function EnhancedGraphPage() {
   const [recommendedPaths, setRecommendedPaths] = useState<LearningPath[]>([]);
   const [nodeDetail, setNodeDetail] = useState<NodeDetail | null>(null);
 
-  // 初始化数据
   useEffect(() => {
+    if (status !== "authenticated") {
+      setGraphData({ nodes: [], edges: [] });
+      setRecommendedPaths([]);
+      return;
+    }
+
+    const controller = new AbortController();
+
     const fetchGraphData = async () => {
       try {
-        const res = await fetch('/api/graph/view');
-        const json = await res.json();
-        if (json.success && json.data) {
-          const serverNodes = json.data.nodes || [];
-          const serverEdges = json.data.edges || [];
+        const res = await fetch("/api/graph/view", {
+          signal: controller.signal,
+        });
 
-          const nodes: GraphNode[] = serverNodes.map((n: any) => ({
-            id: n.id,
-            name: n.label,
-            type: (n.domain === 'learning_path' ? 'topic' : n.domain === 'learning_task' ? 'skill' : 'concept') as NodeType,
-            status: (n.mastery >= 0.7 ? 'mastered' : n.mastery > 0 ? 'learning' : 'unlearned') as NodeStatus,
-            importance: n.risk || 0.5,
-            mastery: n.mastery || 0,
-            connections: serverEdges.filter((e: any) => e.source === n.id || e.target === n.id).length,
-            noteCount: 0,
-            practiceCount: 0,
-            practiceCompleted: 0,
-            documentIds: [],
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }));
+        const json = (await res.json().catch(() => null)) as {
+          success?: boolean;
+          data?: { nodes?: unknown[]; edges?: unknown[] };
+        } | null;
 
-          const edges: GraphEdge[] = serverEdges.map((e: any) => ({
-            id: `${e.source}-${e.target}`,
-            source: e.source,
-            target: e.target,
-            type: 'prerequisite',
-            strength: e.weight || 1,
-          }));
-
-          setGraphData({ nodes, edges });
-
-          const engine = new RecommendationEngine(nodes, edges);
-          const paths = engine.recommendLearningPaths(3);
-          setRecommendedPaths(paths);
-        } else {
-          const data = generateMockData();
-          setGraphData(data);
-
-          const engine = new RecommendationEngine(data.nodes, data.edges);
-          const paths = engine.recommendLearningPaths(3);
-          setRecommendedPaths(paths);
+        if (!res.ok || !json?.success || !json.data) {
+          setGraphData({ nodes: [], edges: [] });
+          setRecommendedPaths([]);
+          return;
         }
-      } catch (error) {
-        console.error('Failed to fetch graph data:', error);
-        const data = generateMockData();
-        setGraphData(data);
 
-        const engine = new RecommendationEngine(data.nodes, data.edges);
+        const serverNodes = Array.isArray(json.data.nodes) ? json.data.nodes : [];
+        const serverEdges = Array.isArray(json.data.edges) ? json.data.edges : [];
+
+        const nodes: GraphNode[] = serverNodes.map((n: any) => ({
+          id: n.id,
+          name: n.label,
+          type: (n.domain === "learning_path"
+            ? "topic"
+            : n.domain === "learning_task"
+              ? "skill"
+              : "concept") as NodeType,
+          status: (n.mastery >= 0.7
+            ? "mastered"
+            : n.mastery > 0
+              ? "learning"
+              : "unlearned") as NodeStatus,
+          importance: n.risk || 0.5,
+          mastery: n.mastery || 0,
+          connections: serverEdges.filter(
+            (e: any) => e.source === n.id || e.target === n.id
+          ).length,
+          noteCount: 0,
+          practiceCount: 0,
+          practiceCompleted: 0,
+          documentIds: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }));
+
+        const edges: GraphEdge[] = serverEdges.map((e: any) => ({
+          id: `${e.source}-${e.target}`,
+          source: e.source,
+          target: e.target,
+          type: "prerequisite",
+          strength: e.weight || 1,
+        }));
+
+        setGraphData({ nodes, edges });
+
+        const engine = new RecommendationEngine(nodes, edges);
         const paths = engine.recommendLearningPaths(3);
         setRecommendedPaths(paths);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        console.error("Failed to fetch graph data:", error);
+        setGraphData({ nodes: [], edges: [] });
+        setRecommendedPaths([]);
       }
     };
 
-    fetchGraphData();
-  }, []);
+    void fetchGraphData();
+
+    return () => controller.abort();
+  }, [status]);
 
   // 筛选节点
   const filteredNodes = graphData.nodes.filter((node) => {
@@ -421,6 +449,21 @@ export default function EnhancedGraphPage() {
   const handleShare = () => {
     alert("分享功能：生成分享链接");
   };
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return <LoginPrompt title="知识星图" />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
