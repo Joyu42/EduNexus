@@ -1,9 +1,10 @@
-// apps/web/auth.ts
 import NextAuth from "next-auth";
+import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { getUserByEmail, verifyPassword } from "./lib/server/user-service";
+import { isAuthorizedRouteRequest } from "./lib/server/auth-route-protection";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const authConfig = {
   providers: [
     Credentials({
       name: 'Credentials',
@@ -38,16 +39,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    authorized({ auth, request }) {
+      return isAuthorizedRouteRequest({ auth, request });
+    },
     jwt({ token, user }) {
-      if (user) {
+      if (user && typeof user.id === "string") {
         token.id = user.id;
+      } else if (!token.id && typeof token.sub === "string") {
+        token.id = token.sub;
       }
+
       return token;
     },
     session({ session, token }) {
-      if (session.user && token.id) {
-        session.user.id = token.id as string;
+      if (session.user && typeof token.id === "string") {
+        session.user.id = token.id;
       }
+
       return session;
     },
   },
@@ -55,4 +63,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: '/login',
   },
   session: { strategy: 'jwt' },
-});
+} satisfies NextAuthConfig;
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
