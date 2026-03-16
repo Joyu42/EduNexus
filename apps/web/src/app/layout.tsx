@@ -11,6 +11,7 @@ import { UpdatePrompt } from "@/components/pwa/update-prompt";
 import { GlobalAIAssistant } from "@/components/global/global-ai-assistant";
 import { DocumentProvider } from "@/lib/ai/document-context";
 import { Toaster } from "@/components/ui/sonner";
+import { KGSyncBootstrap } from "@/components/sync/kg-sync-bootstrap";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -59,6 +60,7 @@ export default function RootLayout({
         <QueryProvider>
           <DocumentProvider>
             <PWAInit />
+            <KGSyncBootstrap />
             <AppShell>{children}</AppShell>
             <InstallPrompt />
             <OfflineIndicator />

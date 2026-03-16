@@ -7,6 +7,9 @@
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { getModelscopeClient } from "@/lib/server/modelscope";
+import { searchVault, getVaultDocById } from "@/lib/server/kb-lite";
+import { getGraphView } from "@/lib/server/graph-service";
+import { loadDb } from "@/lib/server/store";
 
 /**
  * 搜索知识库工具（真实实现）
@@ -20,35 +23,37 @@ export const searchKnowledgeBaseTool = new DynamicStructuredTool({
   }),
   func: async ({ query, limit = 5 }) => {
     try {
-      // TODO: 实现真实的知识库搜索
-      // 这里应该连接到 IndexedDB 或后端 API
-      // const results = await searchKBDocuments(query, limit);
+      const normalizedLimit = Math.max(1, Math.min(20, Math.floor(Number(limit) || 5)));
+      const searchResult = await searchVault(query, {});
 
-      // 临时使用模拟数据
-      const results = [
-        {
-          id: "doc1",
-          title: `${query} - 基础概念`,
-          content: `关于 ${query} 的详细说明和基础概念介绍...`,
-          relevance: 0.95,
-          tags: [query, "基础"],
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: "doc2",
-          title: `${query} - 实践应用`,
-          content: `${query} 在实际项目中的应用案例和最佳实践...`,
-          relevance: 0.87,
-          tags: [query, "应用"],
-          createdAt: new Date().toISOString(),
-        },
-      ].slice(0, limit);
+      const ranked = searchResult.candidates.slice(0, normalizedLimit);
+      const docs = await Promise.all(
+        ranked.map(async (candidate) => {
+          const doc = await getVaultDocById(candidate.docId);
+          return {
+            id: candidate.docId,
+            title: doc?.title || candidate.docId,
+            content: doc?.content ? doc.content.slice(0, 500) : candidate.snippet,
+            relevance: candidate.score,
+            tags: doc?.tags || [],
+            domain: doc?.domain,
+            type: doc?.type,
+            reason: candidate.reason,
+            sourcePath: doc?.path,
+            updatedAt: doc?.updatedAt,
+          };
+        })
+      );
 
-      return JSON.stringify({
-        query,
-        count: results.length,
-        results,
-      }, null, 2);
+      return JSON.stringify(
+        {
+          query,
+          count: docs.length,
+          results: docs,
+        },
+        null,
+        2
+      );
     } catch (error) {
       return JSON.stringify({
         error: "搜索失败",
@@ -70,31 +75,105 @@ export const queryKnowledgeGraphTool = new DynamicStructuredTool({
   }),
   func: async ({ concept, depth = 2 }) => {
     try {
-      // TODO: 实现真实的图谱查询
-      // 这里应该连接到 Neo4j 或图数据库
-      // const graph = await queryNeo4j(concept, depth);
+      const normalizedDepth = Math.max(1, Math.min(4, Math.floor(Number(depth) || 2)));
+      const graphView = await getGraphView({});
 
-      // 临时使用模拟数据
-      const graph = {
-        concept,
-        depth,
-        nodes: [
-          { id: concept, type: "concept", label: concept },
-          { id: "prerequisite1", type: "concept", label: "前置知识1" },
-          { id: "prerequisite2", type: "concept", label: "前置知识2" },
-          { id: "application1", type: "application", label: "应用场景1" },
-        ],
-        edges: [
-          { from: "prerequisite1", to: concept, relation: "前置知识", strength: 0.9 },
-          { from: "prerequisite2", to: concept, relation: "前置知识", strength: 0.85 },
-          { from: concept, to: "application1", relation: "应用于", strength: 0.8 },
-        ],
-        prerequisites: ["前置知识1", "前置知识2"],
-        applications: ["应用场景1", "应用场景2"],
-        relatedConcepts: ["相关概念1", "相关概念2"],
-      };
+      const lowerConcept = concept.trim().toLowerCase();
+      const allNodes = graphView.nodes;
+      const nodeById = new Map(allNodes.map((node) => [node.id, node]));
 
-      return JSON.stringify(graph, null, 2);
+      const seedNodes = allNodes.filter((node) => {
+        const label = (node.label || "").toLowerCase();
+        const id = node.id.toLowerCase();
+        return label.includes(lowerConcept) || id.includes(lowerConcept);
+      });
+
+      if (seedNodes.length === 0) {
+        return JSON.stringify(
+          {
+            concept,
+            depth: normalizedDepth,
+            matched: false,
+            message: "未在知识图谱中找到直接匹配节点。",
+            nodes: [],
+            edges: [],
+            relatedConcepts: [],
+          },
+          null,
+          2
+        );
+      }
+
+      const selectedNodeIds = new Set(seedNodes.map((node) => node.id));
+      let frontier = new Set(seedNodes.map((node) => node.id));
+
+      for (let level = 0; level < normalizedDepth; level += 1) {
+        const nextFrontier = new Set<string>();
+        for (const edge of graphView.edges) {
+          if (frontier.has(edge.source) && !selectedNodeIds.has(edge.target)) {
+            selectedNodeIds.add(edge.target);
+            nextFrontier.add(edge.target);
+          }
+          if (frontier.has(edge.target) && !selectedNodeIds.has(edge.source)) {
+            selectedNodeIds.add(edge.source);
+            nextFrontier.add(edge.source);
+          }
+        }
+        frontier = nextFrontier;
+        if (frontier.size === 0) break;
+      }
+
+      const nodes = Array.from(selectedNodeIds)
+        .map((id) => nodeById.get(id))
+        .filter((node): node is NonNullable<typeof node> => Boolean(node))
+        .map((node) => ({
+          id: node.id,
+          label: node.label,
+          domain: node.domain,
+          mastery: node.mastery,
+          risk: node.risk,
+          type: "concept",
+        }));
+
+      const edges = graphView.edges
+        .filter((edge) => selectedNodeIds.has(edge.source) && selectedNodeIds.has(edge.target))
+        .map((edge) => ({
+          from: edge.source,
+          to: edge.target,
+          relation: "related",
+          strength: edge.weight,
+        }));
+
+      const prerequisites = edges
+        .filter((edge) => seedNodes.some((seed) => seed.id === edge.to))
+        .map((edge) => nodeById.get(edge.from)?.label || edge.from)
+        .slice(0, 10);
+
+      const applications = edges
+        .filter((edge) => seedNodes.some((seed) => seed.id === edge.from))
+        .map((edge) => nodeById.get(edge.to)?.label || edge.to)
+        .slice(0, 10);
+
+      const relatedConcepts = nodes
+        .filter((node) => !seedNodes.some((seed) => seed.id === node.id))
+        .map((node) => node.label)
+        .slice(0, 12);
+
+      return JSON.stringify(
+        {
+          concept,
+          depth: normalizedDepth,
+          matched: true,
+          seeds: seedNodes.map((node) => ({ id: node.id, label: node.label })),
+          nodes,
+          edges,
+          prerequisites,
+          applications,
+          relatedConcepts,
+        },
+        null,
+        2
+      );
     } catch (error) {
       return JSON.stringify({
         error: "图谱查询失败",
@@ -414,12 +493,59 @@ export const checkUnderstandingTool = new DynamicStructuredTool({
 });
 
 /**
+ * 查询学习进度工具
+ */
+export const queryLearningProgressTool = new DynamicStructuredTool({
+  name: "query_learning_progress",
+  description: "查询学习进度和学习路径信息。当用户询问学习进度、学习路径、任务完成情况时使用。",
+  schema: z.object({
+    pathId: z.string().optional().describe("学习路径ID，不提供则返回所有路径"),
+  }),
+  func: async ({ pathId }) => {
+    try {
+      const db = await loadDb();
+      const paths = pathId
+        ? db.syncedPaths.filter(p => p.pathId === pathId)
+        : db.syncedPaths;
+
+      const result = paths.map(path => ({
+        pathId: path.pathId,
+        title: path.title,
+        description: path.description,
+        status: path.status,
+        progress: path.progress,
+        tags: path.tags,
+        totalTasks: path.tasks.length,
+        completedTasks: path.tasks.filter(t => t.status === 'completed').length,
+        tasks: path.tasks.map(task => ({
+          taskId: task.taskId,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          progress: task.progress,
+          estimatedTime: task.estimatedTime,
+          dependencies: task.dependencies,
+        })),
+      }));
+
+      return JSON.stringify({ count: result.length, paths: result }, null, 2);
+    } catch (error) {
+      return JSON.stringify({
+        error: "查询学习进度失败",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  },
+});
+
+/**
  * 获取所有工具
  */
 export function getAllTools() {
   return [
     searchKnowledgeBaseTool,
     queryKnowledgeGraphTool,
+    queryLearningProgressTool,
     generateExerciseTool,
     recommendLearningPathTool,
     explainConceptTool,

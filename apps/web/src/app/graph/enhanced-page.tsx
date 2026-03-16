@@ -253,13 +253,63 @@ export default function EnhancedGraphPage() {
 
   // 初始化数据
   useEffect(() => {
-    const data = generateMockData();
-    setGraphData(data);
+    const fetchGraphData = async () => {
+      try {
+        const res = await fetch('/api/graph/view');
+        const json = await res.json();
+        if (json.success && json.data) {
+          const serverNodes = json.data.nodes || [];
+          const serverEdges = json.data.edges || [];
 
-    // 生成推荐路径
-    const engine = new RecommendationEngine(data.nodes, data.edges);
-    const paths = engine.recommendLearningPaths(3);
-    setRecommendedPaths(paths);
+          const nodes: GraphNode[] = serverNodes.map((n: any) => ({
+            id: n.id,
+            name: n.label,
+            type: (n.domain === 'learning_path' ? 'topic' : n.domain === 'learning_task' ? 'skill' : 'concept') as NodeType,
+            status: (n.mastery >= 0.7 ? 'mastered' : n.mastery > 0 ? 'learning' : 'unlearned') as NodeStatus,
+            importance: n.risk || 0.5,
+            mastery: n.mastery || 0,
+            connections: serverEdges.filter((e: any) => e.source === n.id || e.target === n.id).length,
+            noteCount: 0,
+            practiceCount: 0,
+            practiceCompleted: 0,
+            documentIds: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }));
+
+          const edges: GraphEdge[] = serverEdges.map((e: any) => ({
+            id: `${e.source}-${e.target}`,
+            source: e.source,
+            target: e.target,
+            type: 'prerequisite',
+            strength: e.weight || 1,
+          }));
+
+          setGraphData({ nodes, edges });
+
+          const engine = new RecommendationEngine(nodes, edges);
+          const paths = engine.recommendLearningPaths(3);
+          setRecommendedPaths(paths);
+        } else {
+          const data = generateMockData();
+          setGraphData(data);
+
+          const engine = new RecommendationEngine(data.nodes, data.edges);
+          const paths = engine.recommendLearningPaths(3);
+          setRecommendedPaths(paths);
+        }
+      } catch (error) {
+        console.error('Failed to fetch graph data:', error);
+        const data = generateMockData();
+        setGraphData(data);
+
+        const engine = new RecommendationEngine(data.nodes, data.edges);
+        const paths = engine.recommendLearningPaths(3);
+        setRecommendedPaths(paths);
+      }
+    };
+
+    fetchGraphData();
   }, []);
 
   // 筛选节点

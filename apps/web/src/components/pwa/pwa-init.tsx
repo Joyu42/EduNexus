@@ -8,6 +8,12 @@ export function PWAInit() {
   useEffect(() => {
     // Initialize PWA features
     const initPWA = async () => {
+      // Skip service worker in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PWA: Skipping service worker registration in development');
+        return;
+      }
+
       // Register service worker
       await swManager.register();
 

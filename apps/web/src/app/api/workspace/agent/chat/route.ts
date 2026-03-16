@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runAgentConversation, createChatHistory } from "@/lib/agent/learning-agent";
+import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ export const maxDuration = 60; // 最长执行时间 60 秒
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { message, images, history = [], config = {} } = body;
+    const { message, images, history = [], config = {}, taskContext } = body;
 
     if (!message || typeof message !== "string") {
       return NextResponse.json(
@@ -24,8 +25,19 @@ export async function POST(request: Request) {
     // 转换历史消息格式
     const chatHistory = createChatHistory(history);
 
+    const graphContext = await buildWorkspaceGraphContext({
+      taskId: typeof taskContext?.taskId === "string" ? taskContext.taskId : undefined,
+      taskTitle: typeof taskContext?.taskTitle === "string" ? taskContext.taskTitle : undefined,
+    });
+
+    const mergedConfig = {
+      ...config,
+      taskContext,
+      graphContext,
+    };
+
     // 执行 Agent 对话（支持多模态）
-    const result = await runAgentConversation(message, chatHistory, config, images);
+    const result = await runAgentConversation(message, chatHistory, mergedConfig, images);
 
     return NextResponse.json({
       success: true,

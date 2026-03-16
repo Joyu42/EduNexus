@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -63,6 +64,8 @@ import {
 import { goalStorage } from "@/lib/goals/goal-storage";
 
 export default function PathPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   // 状态管理
   const [paths, setPaths] = useState<LearningPath[]>([]);
   const [selectedPath, setSelectedPath] = useState<LearningPath | null>(null);
@@ -95,7 +98,37 @@ export default function PathPage() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!selectedPath) {
+      return;
+    }
+
+    void fetch('/api/path/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pathId: selectedPath.id,
+        title: selectedPath.title,
+        description: selectedPath.description,
+        status: selectedPath.status,
+        progress: selectedPath.progress,
+        tags: selectedPath.tags,
+        tasks: selectedPath.tasks.map((task) => ({
+          taskId: task.id,
+          title: task.title,
+          description: task.description,
+          estimatedTime: task.estimatedTime,
+          status: task.status,
+          progress: task.progress,
+          dependencies: task.dependencies,
+        })),
+      }),
+    }).catch((error) => {
+      console.warn('[PathPage] 服务端路径同步失败:', error);
+    });
+  }, [selectedPath]);
 
   const loadPaths = async () => {
     try {
@@ -103,6 +136,17 @@ export default function PathPage() {
       console.log('[PathPage] 加载路径...');
       const loadedPaths = await pathStorage.getAllPaths();
       console.log('[PathPage] 加载成功:', loadedPaths.length, '个路径');
+      const pathCreatedByEditor = searchParams.get("selected");
+      let editorSelectionApplied = false;
+      if (pathCreatedByEditor) {
+        const created = loadedPaths.find((path) => path.id === pathCreatedByEditor);
+        if (created) {
+          setSelectedPath(created);
+          setSelectedTask(created.tasks[0] || null);
+          editorSelectionApplied = true;
+          toast.success(`已加载新路径：${created.title}`);
+        }
+      }
 
       // 如果没有路径，创建示例数据
       if (loadedPaths.length === 0) {
@@ -119,7 +163,7 @@ export default function PathPage() {
         }
       } else {
         setPaths(loadedPaths);
-        if (loadedPaths.length > 0 && !selectedPath) {
+        if (!editorSelectionApplied && loadedPaths.length > 0 && !selectedPath) {
           setSelectedPath(loadedPaths[0]);
           if (loadedPaths[0].tasks.length > 0) {
             setSelectedTask(loadedPaths[0].tasks[0]);
@@ -507,13 +551,40 @@ export default function PathPage() {
 
       setPaths(paths.map(p => p.id === updated.id ? updated : p));
       setSelectedPath(updated);
-      setSelectedTask(updated.tasks.find(t => t.id === selectedTask.id) || null);
-      toast.success("开始学习任务");
+      const latestTask = updated.tasks.find(t => t.id === selectedTask.id) || selectedTask;
+      setSelectedTask(latestTask);
+      toast.success("开始学习任务，正在进入学习工作区");
+
+      const workspaceParams = new URLSearchParams({
+        source: "path",
+        autoStart: "1",
+        pathId: updated.id,
+        pathTitle: updated.title,
+        taskId: latestTask.id,
+        taskTitle: latestTask.title,
+        taskStatus: latestTask.status,
+        taskProgress: String(latestTask.progress),
+      });
+
+      if (latestTask.description) {
+        workspaceParams.set("taskDescription", latestTask.description);
+      }
+      if (latestTask.estimatedTime) {
+        workspaceParams.set("taskEstimatedTime", latestTask.estimatedTime);
+      }
+      if (latestTask.dependencies.length > 0) {
+        workspaceParams.set("taskDependencies", latestTask.dependencies.join(","));
+      }
+      if (updated.tasks.length > 0) {
+        workspaceParams.set("pathTaskCount", String(updated.tasks.length));
+      }
+
+      router.push(`/workspace?${workspaceParams.toString()}`);
     } catch (error) {
       console.error("Failed to start task:", error);
       toast.error("操作失败");
     }
-  }, [selectedPath, selectedTask, paths]);
+  }, [selectedPath, selectedTask, paths, router]);
 
   // 标记任务完成
   const handleCompleteTask = useCallback(async () => {

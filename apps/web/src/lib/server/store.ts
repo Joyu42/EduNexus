@@ -25,6 +25,10 @@ type PlanRecord = {
   planId: string;
   goalType: "exam" | "project" | "certificate";
   goal: string;
+  focusNodeId?: string | null;
+  focusNodeLabel?: string | null;
+  focusNodeRisk?: number | null;
+  relatedNodes?: string[];
   tasks: Array<{
     taskId: string;
     title: string;
@@ -36,9 +40,31 @@ type PlanRecord = {
   updatedAt: string;
 };
 
+type SyncedPathTaskRecord = {
+  taskId: string;
+  title: string;
+  description?: string;
+  estimatedTime?: string;
+  status?: "not_started" | "in_progress" | "completed";
+  progress?: number;
+  dependencies?: string[];
+};
+
+type SyncedPathRecord = {
+  pathId: string;
+  title: string;
+  description: string;
+  status: "not_started" | "in_progress" | "completed";
+  progress: number;
+  tags: string[];
+  tasks: SyncedPathTaskRecord[];
+  updatedAt: string;
+};
+
 type DbSchema = {
   sessions: SessionRecord[];
   plans: PlanRecord[];
+  syncedPaths: SyncedPathRecord[];
   masteryByNode: Record<string, number>;
   userLevels: Record<string, UserLevel>;
   userExperience: Record<string, UserExperience>;
@@ -57,6 +83,7 @@ type DbSchema = {
 const DEFAULT_DB: DbSchema = {
   sessions: [],
   plans: [],
+  syncedPaths: [],
   masteryByNode: {},
   userLevels: {},
   userExperience: {},
@@ -128,6 +155,7 @@ export async function loadDb(): Promise<DbSchema> {
     return {
       sessions,
       plans: parsed.plans ?? [],
+      syncedPaths: parsed.syncedPaths ?? [],
       masteryByNode: parsed.masteryByNode ?? {},
       userLevels: parsed.userLevels ?? {},
       userExperience: parsed.userExperience ?? {},
@@ -155,4 +183,4 @@ export async function saveDb(db: DbSchema): Promise<void> {
   await fs.writeFile(filePath, JSON.stringify(db, null, 2), "utf8");
 }
 
-export type { DbSchema, SessionRecord, PlanRecord };
+export type { DbSchema, SessionRecord, PlanRecord, SyncedPathRecord, SyncedPathTaskRecord };

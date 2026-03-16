@@ -4,12 +4,14 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
 import { getModelscopeClient } from "@/lib/server/modelscope";
+import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { question, documents, history } = body;
+    const { question, documents, history, config, taskContext } = body;
 
     if (!question) {
       return NextResponse.json(
@@ -18,8 +20,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = getModelscopeClient();
-    const model = process.env.MODELSCOPE_CHAT_MODEL || "Qwen/Qwen3.5-122B-A10B";
+    let client: OpenAI;
+    try {
+      client = getModelscopeClient();
+    } catch {
+      if (!config?.apiKey || !config?.apiEndpoint) {
+        throw new Error("知识库问答缺少可用模型配置：请在设置中配置 API，或在服务端设置 MODELSCOPE_API_KEY。");
+      }
+      client = new OpenAI({
+        apiKey: config.apiKey,
+        baseURL: config.apiEndpoint,
+      });
+    }
+    const model = config?.modelName || process.env.MODELSCOPE_CHAT_MODEL || "Qwen/Qwen3.5-122B-A10B";
 
     // 准备上下文
     const context = documents
@@ -32,6 +45,25 @@ export async function POST(request: NextRequest) {
           .join("\n")
       : "";
 
+    const graphContext = await buildWorkspaceGraphContext({
+      taskId: typeof taskContext?.taskId === "string" ? taskContext.taskId : undefined,
+      taskTitle: typeof taskContext?.taskTitle === "string" ? taskContext.taskTitle : undefined,
+    });
+
+    const taskContextBlock = taskContext?.taskTitle
+      ? `\n\n当前学习任务：\n- 路径：${taskContext.pathTitle || taskContext.pathId || "未命名路径"}\n- 任务：${taskContext.taskTitle}\n- 进度：${Math.round(taskContext.taskProgress ?? 0)}%\n请回答时优先贴合该任务。`
+      : "";
+
+    const graphContextBlock = graphContext.taskNode
+      ? `\n\n当前任务知识图谱上下文：\n- 任务节点：${graphContext.taskNode.label}（id=${graphContext.taskNode.id}${graphContext.taskNode.domain ? `，domain=${graphContext.taskNode.domain}` : ""}${typeof graphContext.taskNode.mastery === "number" ? `，mastery=${Math.round(graphContext.taskNode.mastery * 100)}%` : ""}${typeof graphContext.taskNode.risk === "number" ? `，risk=${Math.round(graphContext.taskNode.risk * 100)}%` : ""}）${graphContext.relatedNodes.length > 0 ? `\n- 关联节点：\n${graphContext.relatedNodes
+          .slice(0, 12)
+          .map((node, index) => `${index + 1}. ${node.label}（id=${node.id}${node.domain ? `，domain=${node.domain}` : ""}${typeof node.mastery === "number" ? `，mastery=${Math.round(node.mastery * 100)}%` : ""}${typeof node.risk === "number" ? `，risk=${Math.round(node.risk * 100)}%` : ""}）`)
+          .join("\n")}` : "\n- 关联节点：无"}${graphContext.relatedEdges.length > 0 ? `\n- 关联边：\n${graphContext.relatedEdges
+          .slice(0, 20)
+          .map((edge) => `${edge.source} -> ${edge.target}${typeof edge.weight === "number" ? `（weight=${edge.weight}）` : ""}`)
+          .join("\n")}` : "\n- 关联边：无"}\n请结合任务节点在知识图谱中的关系回答。`
+      : "";
+
     // 构建消息
     const messages: any[] = [
       {
@@ -39,7 +71,7 @@ export async function POST(request: NextRequest) {
         content: `你是一个基于知识库的智能问答助手。请根据提供的知识库内容回答用户的问题。
 
 知识库内容：
-${context}
+${context}${taskContextBlock}${graphContextBlock}
 
 要求：
 - 优先使用知识库中的信息回答

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -16,7 +17,6 @@ import {
   Paperclip,
   X,
   Download,
-  Save,
   Code,
   FileText,
   Zap,
@@ -50,6 +50,7 @@ import {
   generateSessionTitle,
   type ChatSession,
   type ChatMessage,
+  type AgentToolStep,
 } from "@/lib/workspace/chat-history-storage";
 import {
   getAllTeachers,
@@ -64,8 +65,64 @@ type Message = {
   images?: string[]; // Base64 encoded images
   attachments?: { name: string; type: string; url: string }[];
   thinking?: string;
+  toolSteps?: AgentToolStep[];
   timestamp: Date;
   mode?: "normal" | "kb-qa"; // 标记消息来自哪种模式
+};
+
+type WorkspaceTaskContext = {
+  source: string;
+  autoStart: boolean;
+  pathId?: string;
+  pathTitle?: string;
+  pathTaskCount?: number;
+  taskId?: string;
+  taskTitle?: string;
+  taskDescription?: string;
+  taskEstimatedTime?: string;
+  taskDependencies?: string[];
+  taskStatus?: string;
+  taskProgress?: number;
+};
+
+const normalizeToolSteps = (value: unknown): AgentToolStep[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const normalized: AgentToolStep[] = [];
+
+  for (const item of value) {
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+
+    const maybeStep = item as {
+      type?: unknown;
+      tool?: unknown;
+      content?: unknown;
+      args?: unknown;
+    };
+
+    if (
+      (maybeStep.type !== "tool_call" && maybeStep.type !== "tool_result") ||
+      typeof maybeStep.tool !== "string" ||
+      typeof maybeStep.content !== "string"
+    ) {
+      continue;
+    }
+
+    const step: AgentToolStep = {
+      type: maybeStep.type,
+      tool: maybeStep.tool,
+      content: maybeStep.content,
+      ...(typeof maybeStep.args !== "undefined" ? { args: maybeStep.args } : {}),
+    };
+
+    normalized.push(step);
+  }
+
+  return normalized.length > 0 ? normalized : undefined;
 };
 
 const teachingStyleLabels = {
@@ -77,6 +134,7 @@ const teachingStyleLabels = {
 };
 
 export default function WorkspacePage() {
+  const searchParams = useSearchParams();
   const storage = getKBStorage();
   const [kbDocuments, setKbDocuments] = useState<any[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -98,10 +156,14 @@ export default function WorkspacePage() {
   const [socraticMode, setSocraticMode] = useState(true);
   const [showThinking, setShowThinking] = useState(true);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [taskContext, setTaskContext] = useState<WorkspaceTaskContext | null>(null);
   const [activeTab, setActiveTab] = useState<"status" | "teachers" | "notes" | "plan" | "kb-qa" | "history">("status");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pathContextSeededTaskRef = useRef<string | null>(null);
+  const pathContextSentTaskRef = useRef<string | null>(null);
+  const taskFeedbackSyncedRef = useRef(new Set<string>());
 
   // 加载知识库文档、历史会话和老师列表
   useEffect(() => {
@@ -144,6 +206,71 @@ export default function WorkspacePage() {
     loadRecentSessions();
     loadTeachers();
   }, []);
+
+  useEffect(() => {
+    const source = searchParams.get("source") || "";
+    const autoStart = searchParams.get("autoStart") === "1";
+    const taskId = searchParams.get("taskId") || undefined;
+
+    if (source !== "path" || !taskId) {
+      setTaskContext(null);
+      return;
+    }
+
+    if (taskFeedbackSyncedRef.current.size > 0 && !taskFeedbackSyncedRef.current.has(taskId)) {
+      taskFeedbackSyncedRef.current.clear();
+      pathContextSentTaskRef.current = null;
+    }
+
+    const parsedProgress = Number(searchParams.get("taskProgress") || "0");
+    const parsedTaskCount = Number(searchParams.get("pathTaskCount") || "0");
+    const dependenciesRaw = searchParams.get("taskDependencies") || "";
+    const parsedDependencies = dependenciesRaw
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const context: WorkspaceTaskContext = {
+      source,
+      autoStart,
+      pathId: searchParams.get("pathId") || undefined,
+      pathTitle: searchParams.get("pathTitle") || undefined,
+      pathTaskCount: Number.isFinite(parsedTaskCount) ? parsedTaskCount : undefined,
+      taskId,
+      taskTitle: searchParams.get("taskTitle") || undefined,
+      taskDescription: searchParams.get("taskDescription") || undefined,
+      taskEstimatedTime: searchParams.get("taskEstimatedTime") || undefined,
+      taskDependencies: parsedDependencies,
+      taskStatus: searchParams.get("taskStatus") || undefined,
+      taskProgress: Number.isFinite(parsedProgress) ? parsedProgress : 0,
+    };
+
+    setTaskContext(context);
+
+    if (!autoStart || pathContextSeededTaskRef.current === taskId) {
+      return;
+    }
+
+    const details: string[] = [];
+    if (context.taskDescription) {
+      details.push(`- 任务描述：${context.taskDescription}`);
+    }
+    if (context.taskEstimatedTime) {
+      details.push(`- 预计时长：${context.taskEstimatedTime}`);
+    }
+    if (context.taskDependencies && context.taskDependencies.length > 0) {
+      details.push(`- 前置任务：${context.taskDependencies.join("、")}`);
+    }
+    if (context.pathTaskCount && context.pathTaskCount > 0) {
+      details.push(`- 路径任务总数：${context.pathTaskCount}`);
+    }
+
+    const guidedPrompt = context.taskTitle
+      ? `我从学习路径进入工作区，请按任务引导我学习：\n- 路径：${context.pathTitle || "未命名路径"}\n- 任务：${context.taskTitle}\n- 当前进度：${context.taskProgress ?? 0}%${details.length > 0 ? `\n${details.join("\n")}` : ""}\n请先给我一个 3 步学习推进方案，再从第 1 步开始提问引导。`
+      : "我从学习路径进入工作区，请按当前任务引导我学习。";
+
+    pathContextSeededTaskRef.current = taskId;
+    setInputValue(guidedPrompt);
+  }, [searchParams]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -224,8 +351,54 @@ export default function WorkspacePage() {
     toast.success("已开始新对话");
   };
 
-  const handleSend = async () => {
-    if ((!inputValue.trim() && uploadedImages.length === 0) || isLoading) return;
+  const modelConfig = getModelConfig();
+
+  const syncTaskFocusFeedback = async (assistantContent: string) => {
+    if (!taskContext?.taskId || !taskContext.pathId || taskFeedbackSyncedRef.current.has(taskContext.taskId)) {
+      return;
+    }
+
+    const quality: "light" | "solid" | "deep" =
+      assistantContent.length > 800 ? "deep" : assistantContent.length > 300 ? "solid" : "light";
+    const normalizedPlanId = taskContext.pathId.startsWith("plan_") ? taskContext.pathId : undefined;
+
+    try {
+      const response = await fetch("/api/path/focus/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(normalizedPlanId ? { planId: normalizedPlanId } : {}),
+          taskId: taskContext.taskId,
+          nodeId: taskContext.taskId,
+          nodeLabel: taskContext.taskTitle || taskContext.taskId,
+          relatedNodes: [],
+          quality,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || data?.success === false) {
+        throw new Error(data?.error?.message || data?.error || "反馈写回失败");
+      }
+
+      taskFeedbackSyncedRef.current.add(taskContext.taskId);
+
+      if (process.env.NODE_ENV !== "production") {
+        console.debug("[workspace:path-feedback] synced", {
+          taskId: taskContext.taskId,
+          planId: normalizedPlanId ?? null,
+          quality,
+        });
+      }
+    } catch (error) {
+      console.error("同步任务学习反馈失败:", error);
+    }
+  };
+
+  const sendMessage = async (overrideMessage?: string) => {
+    const effectiveMessage = (overrideMessage ?? inputValue).trim();
+
+    if ((!effectiveMessage && uploadedImages.length === 0) || isLoading) return;
 
     // 知识库问答模式检查
     if (kbQAMode && kbDocuments.length === 0) {
@@ -236,7 +409,7 @@ export default function WorkspacePage() {
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: inputValue || "请分析这些图片",
+      content: effectiveMessage || "请分析这些图片",
       images: uploadedImages.length > 0 ? [...uploadedImages] : undefined,
       timestamp: new Date(),
       mode: kbQAMode ? "kb-qa" : "normal",
@@ -256,7 +429,7 @@ export default function WorkspacePage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            question: inputValue || "请分析这些图片",
+            question: effectiveMessage || "请分析这些图片",
             documents: kbDocuments.map((doc) => ({
               id: doc.id,
               title: doc.title,
@@ -270,6 +443,12 @@ export default function WorkspacePage() {
                 role: m.role,
                 content: m.content,
               })),
+            config: {
+              apiKey: modelConfig.apiKey,
+              apiEndpoint: modelConfig.apiEndpoint,
+              modelName: modelConfig.model,
+            },
+            taskContext,
           }),
         });
 
@@ -288,13 +467,12 @@ export default function WorkspacePage() {
         }
       } else {
         // 普通对话模式
-        const modelConfig = getModelConfig();
 
         const response = await fetch("/api/workspace/agent/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            message: inputValue || "请分析这些图片",
+            message: effectiveMessage || "请分析这些图片",
             images: uploadedImages.length > 0 ? uploadedImages : undefined,
             history: messages
               .filter((m) => m.mode === "normal")
@@ -312,6 +490,7 @@ export default function WorkspacePage() {
               modelName: modelConfig.model,
               systemPrompt: currentTeacher?.systemPrompt,
             },
+            taskContext,
           }),
         });
 
@@ -323,6 +502,7 @@ export default function WorkspacePage() {
             role: "assistant",
             content: data.response,
             thinking: data.thinking,
+            toolSteps: normalizeToolSteps(data.steps),
             timestamp: new Date(),
             mode: "normal",
           };
@@ -332,6 +512,7 @@ export default function WorkspacePage() {
       }
 
       setMessages((prev) => [...prev, assistantMessage]);
+      void syncTaskFocusFeedback(assistantMessage.content);
 
       // 保存对话到历史记录
       try {
@@ -364,10 +545,19 @@ export default function WorkspacePage() {
     }
   };
 
+  useEffect(() => {
+    if (!taskContext?.autoStart || !inputValue.trim() || isLoading || pathContextSentTaskRef.current === taskContext.taskId) {
+      return;
+    }
+
+    pathContextSentTaskRef.current = taskContext.taskId || null;
+    void sendMessage(inputValue);
+  }, [taskContext?.autoStart, taskContext?.taskId, inputValue, isLoading]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      sendMessage();
     }
   };
 
@@ -412,7 +602,11 @@ export default function WorkspacePage() {
                   )}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {currentTeacher ? currentTeacher.description : '智能学习伙伴 · 随时为你答疑解惑'}
+                  {taskContext?.taskTitle
+                    ? `任务模式：${taskContext.taskTitle}（${Math.round(taskContext.taskProgress ?? 0)}%）`
+                    : currentTeacher
+                    ? currentTeacher.description
+                    : '智能学习伙伴 · 随时为你答疑解惑'}
                 </p>
               </div>
             </div>
@@ -526,6 +720,34 @@ export default function WorkspacePage() {
                           className="mt-2 p-3 bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg text-xs whitespace-pre-wrap border border-orange-100"
                         >
                           {message.thinking}
+                        </motion.div>
+                      </details>
+                    )}
+                    {message.toolSteps && message.toolSteps.length > 0 && showThinking && (
+                      <details className="mb-3 text-sm">
+                        <summary className="cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-2 transition-colors">
+                          <Code className="h-4 w-4" />
+                          工具调用轨迹（{message.toolSteps.length}）
+                        </summary>
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className="mt-2 space-y-2"
+                        >
+                          {message.toolSteps.map((step, stepIndex) => (
+                            <div
+                              key={`${message.id}-tool-step-${stepIndex}`}
+                              className="rounded-lg border border-blue-100 bg-gradient-to-br from-blue-50/70 to-cyan-50/50 p-2"
+                            >
+                              <div className="text-xs font-medium text-blue-700">
+                                {step.type === "tool_call" ? "调用" : "结果"} · {step.tool}
+                              </div>
+                              <div className="mt-1 text-xs whitespace-pre-wrap break-words text-gray-700">
+                                {step.content}
+                              </div>
+                            </div>
+                          ))}
                         </motion.div>
                       </details>
                     )}
@@ -771,7 +993,7 @@ export default function WorkspacePage() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Button
-                  onClick={handleSend}
+                  onClick={() => void sendMessage()}
                   disabled={(!inputValue.trim() && uploadedImages.length === 0) || isLoading}
                   className={cn(
                     "shadow-md hover:shadow-lg transition-all",

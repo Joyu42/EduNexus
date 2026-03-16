@@ -5,6 +5,7 @@
 
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 import { localStoragePathManager } from './path-storage-fallback';
+import { getDataSyncEventManager, SyncEventType } from '../sync/data-sync-events';
 
 // 数据类型定义
 export type PathStatus = 'not_started' | 'in_progress' | 'completed';
@@ -65,6 +66,103 @@ interface PathDB extends DBSchema {
 const DB_NAME = 'EduNexusPath';
 const DB_VERSION = 1;
 
+const toSafeCategory = (path: Pick<LearningPath, 'tags' | 'status'>): string => {
+  if (Array.isArray(path.tags) && path.tags.length > 0 && path.tags[0]) {
+    return path.tags[0];
+  }
+  return path.status;
+};
+
+const emitPathSyncEvent = (
+  type: SyncEventType.PATH_CREATED | SyncEventType.PATH_UPDATED,
+  path: LearningPath
+): void => {
+  const eventManager = getDataSyncEventManager();
+  eventManager.emit(
+    type,
+    {
+      id: path.id,
+      title: path.title,
+      description: path.description,
+      category: toSafeCategory(path),
+      progress: path.progress,
+      status: path.status,
+      taskCount: path.tasks.length,
+      tags: path.tags,
+      updatedAt: path.updatedAt.toISOString(),
+    },
+    'client-path-storage'
+  );
+};
+
+const emitPathDeletedEvent = (pathId: string): void => {
+  const eventManager = getDataSyncEventManager();
+  eventManager.emit(SyncEventType.PATH_DELETED, { id: pathId }, 'client-path-storage');
+};
+
+const emitPathProgressEvent = (path: LearningPath): void => {
+  const eventManager = getDataSyncEventManager();
+  const completedTaskIds = path.tasks.filter((task) => task.status === 'completed').map((task) => task.id);
+  eventManager.emit(
+    SyncEventType.PATH_PROGRESS_UPDATED,
+    {
+      pathId: path.id,
+      progress: path.progress,
+      completedNodes: completedTaskIds,
+      completedTasks: completedTaskIds.length,
+      totalTasks: path.tasks.length,
+      status: path.status,
+    },
+    'client-path-storage'
+  );
+};
+
+const syncPathToServerGraph = async (path: LearningPath): Promise<void> => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    await fetch('/api/path/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pathId: path.id,
+        title: path.title,
+        description: path.description,
+        status: path.status,
+        progress: path.progress,
+        tags: path.tags,
+        tasks: path.tasks.map((task) => ({
+          taskId: task.id,
+          title: task.title,
+          description: task.description,
+          estimatedTime: task.estimatedTime,
+          status: task.status,
+          progress: task.progress,
+          dependencies: task.dependencies,
+        })),
+      }),
+    });
+  } catch (error) {
+    console.warn('[PathStorage] 服务端路径图谱同步失败:', error);
+  }
+};
+
+const deletePathFromServerGraph = async (pathId: string): Promise<void> => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    await fetch(`/api/path/sync?pathId=${encodeURIComponent(pathId)}`, {
+      method: 'DELETE',
+    });
+  } catch (error) {
+    console.warn('[PathStorage] 服务端路径图谱删除失败:', error);
+  }
+};
+
 /**
  * 学习路径存储管理类
  */
@@ -92,11 +190,38 @@ export class PathStorageManager {
           }
         },
       });
+
+      await this.hydrateFromLocalStorage();
       console.log('[PathStorage] 数据库初始化成功');
     } catch (error) {
       console.error('[PathStorage] 数据库初始化失败，切换到 LocalStorage:', error);
       this.useLocalStorage = true;
       this.db = null;
+    }
+  }
+
+  private async hydrateFromLocalStorage(): Promise<void> {
+    if (!this.db) {
+      return;
+    }
+
+    try {
+      const existing = await this.db.getAll('paths');
+      if (existing.length > 0) {
+        return;
+      }
+
+      const fallbackPaths = localStoragePathManager.getAllPaths();
+      if (fallbackPaths.length === 0) {
+        return;
+      }
+
+      await Promise.all(
+        fallbackPaths.map((path) => this.db!.put('paths', this.serializePath(path)))
+      );
+      console.log('[PathStorage] 已从 LocalStorage 迁移路径:', fallbackPaths.length, '个');
+    } catch (error) {
+      console.error('[PathStorage] 从 LocalStorage 迁移失败:', error);
     }
   }
 
@@ -133,7 +258,11 @@ export class PathStorageManager {
       // 使用 LocalStorage 备用方案
       if (this.useLocalStorage) {
         console.log('[PathStorage] 使用 LocalStorage 创建路径');
-        return localStoragePathManager.createPath(data);
+        const created = localStoragePathManager.createPath(data);
+        emitPathSyncEvent(SyncEventType.PATH_CREATED, created);
+        emitPathProgressEvent(created);
+        void syncPathToServerGraph(created);
+        return created;
       }
 
       const path: LearningPath = {
@@ -155,11 +284,18 @@ export class PathStorageManager {
       }
       console.log('[PathStorage] 验证成功，路径已保存');
 
+      emitPathSyncEvent(SyncEventType.PATH_CREATED, path);
+      emitPathProgressEvent(path);
+      void syncPathToServerGraph(path);
       return path;
     } catch (error) {
       console.error('[PathStorage] 创建路径失败，尝试 LocalStorage:', error);
       this.useLocalStorage = true;
-      return localStoragePathManager.createPath(data);
+      const created = localStoragePathManager.createPath(data);
+      emitPathSyncEvent(SyncEventType.PATH_CREATED, created);
+      emitPathProgressEvent(created);
+      void syncPathToServerGraph(created);
+      return created;
     }
   }
 
@@ -217,6 +353,9 @@ export class PathStorageManager {
       await this.db!.put('paths', this.serializePath(updated));
       console.log('[PathStorage] 路径已更新');
 
+      emitPathSyncEvent(SyncEventType.PATH_UPDATED, updated);
+      emitPathProgressEvent(updated);
+      void syncPathToServerGraph(updated);
       return updated;
     } catch (error) {
       console.error('[PathStorage] 更新路径失败:', error);
@@ -229,7 +368,17 @@ export class PathStorageManager {
    */
   async deletePath(id: string): Promise<void> {
     await this.initialize();
+
+    if (this.useLocalStorage) {
+      localStoragePathManager.deletePath(id);
+      emitPathDeletedEvent(id);
+      void deletePathFromServerGraph(id);
+      return;
+    }
+
     await this.db!.delete('paths', id);
+    emitPathDeletedEvent(id);
+    void deletePathFromServerGraph(id);
   }
 
   /**
@@ -267,6 +416,9 @@ export class PathStorageManager {
     };
 
     await this.db!.put('paths', this.serializePath(duplicate));
+    emitPathSyncEvent(SyncEventType.PATH_CREATED, duplicate);
+    emitPathProgressEvent(duplicate);
+    void syncPathToServerGraph(duplicate);
     return duplicate;
   }
 
@@ -296,6 +448,9 @@ export class PathStorageManager {
     };
 
     await this.db!.put('paths', this.serializePath(path));
+    emitPathSyncEvent(SyncEventType.PATH_CREATED, path);
+    emitPathProgressEvent(path);
+    void syncPathToServerGraph(path);
     return path;
   }
 

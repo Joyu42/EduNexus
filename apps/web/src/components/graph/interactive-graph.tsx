@@ -76,10 +76,10 @@ export function InteractiveGraph({
       nodes,
       edges,
       layout,
-      selectedNode?.id
+      undefined
     );
     setLayoutedNodes(newNodes);
-  }, [nodes, edges, layout, selectedNode]);
+  }, [nodes, edges, layout]);
 
   // 只在初始化时自动缩放一次
   useEffect(() => {
@@ -95,8 +95,9 @@ export function InteractiveGraph({
   useEffect(() => {
     if (!graphRef.current) return;
     const fg = graphRef.current;
-    fg.d3Force('charge')?.strength(-300).distanceMax(500);
-    fg.d3Force('link')?.distance(100).strength(0.5);
+    fg.d3Force('charge')?.strength(-400).distanceMax(600);
+    fg.d3Force('link')?.distance(120).strength(0.4);
+    fg.d3Force('center')?.strength(0.05);
   }, []);
 
   const handleNodeClick = useCallback(
@@ -277,12 +278,13 @@ export function InteractiveGraph({
         linkDirectionalParticleColor={() => "#60a5fa"}
         onNodeClick={handleNodeClick}
         onNodeHover={handleNodeHover}
-        cooldownTicks={layout === "force" ? 100 : 0}
+        cooldownTicks={layout === "force" ? 200 : 0}
+        warmupTicks={50}
         enableNodeDrag={layout === "force"}
         enableZoomInteraction={true}
         enablePanInteraction={true}
-        d3AlphaDecay={0.02}
-        d3VelocityDecay={0.3}
+        d3AlphaDecay={0.03}
+        d3VelocityDecay={0.35}
       />
     </div>
   );

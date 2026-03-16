@@ -5,12 +5,20 @@
 
 import Dexie, { Table } from 'dexie';
 
+export interface AgentToolStep {
+  type: 'tool_call' | 'tool_result';
+  tool: string;
+  content: string;
+  args?: unknown;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   images?: string[];
   thinking?: string;
+  toolSteps?: AgentToolStep[];
   timestamp: Date;
 }
 

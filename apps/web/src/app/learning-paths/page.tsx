@@ -102,7 +102,7 @@ export default function LearningPathsPage() {
             <Wand2 className="w-4 h-4 mr-2" />
             AI 生成路径
           </Button>
-          <Button onClick={() => router.push('/path/new-editor')} className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+          <Button onClick={() => router.push('/path')} className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
             <Plus className="w-4 h-4 mr-2" />
             创建路径
           </Button>
@@ -125,7 +125,7 @@ export default function LearningPathsPage() {
                 <Button onClick={() => router.push('/path/new-editor')} variant="outline" className="border-purple-300">
                   <Wand2 className="w-4 h-4 mr-2" />AI 生成
                 </Button>
-                <Button onClick={() => router.push('/path/new-editor')} className="bg-gradient-to-r from-blue-500 to-purple-500">
+                <Button onClick={() => router.push('/path')} className="bg-gradient-to-r from-blue-500 to-purple-500">
                   <Plus className="w-4 h-4 mr-2" />手动创建
                 </Button>
               </div>
