@@ -1,15 +1,42 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+
+function getSafeCallbackUrl(callbackUrl: string | null) {
+  if (
+    callbackUrl?.startsWith('/') &&
+    !callbackUrl.startsWith('//') &&
+    callbackUrl !== '/login' &&
+    callbackUrl !== '/register'
+  ) {
+    return callbackUrl;
+  }
+
+  return '/';
+}
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { status } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const callbackUrl = useMemo(
+    () => getSafeCallbackUrl(searchParams.get('callbackUrl')),
+    [searchParams]
+  );
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace(callbackUrl);
+      router.refresh();
+    }
+  }, [callbackUrl, router, status]);
 
   const handleCredentialsLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,15 +45,16 @@ export default function LoginPage() {
 
     try {
       const result = await signIn('credentials', {
-        email,
+        email: email.trim(),
         password,
         redirect: false,
+        callbackUrl,
       });
 
       if (result?.error) {
         setError('邮箱或密码错误');
       } else {
-        router.push('/');
+        router.replace(callbackUrl);
         router.refresh();
       }
     } catch {

@@ -1,17 +1,51 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+
+function getSafeCallbackUrl(callbackUrl: string | null) {
+  if (
+    callbackUrl?.startsWith('/') &&
+    !callbackUrl.startsWith('//') &&
+    callbackUrl !== '/login' &&
+    callbackUrl !== '/register'
+  ) {
+    return callbackUrl;
+  }
+
+  return '/';
+}
+
+type RegisterErrorResponse = {
+  error?: {
+    code?: string;
+    message?: string;
+  };
+};
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { status } = useSession();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const callbackUrl = useMemo(
+    () => getSafeCallbackUrl(searchParams.get('callbackUrl')),
+    [searchParams]
+  );
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace(callbackUrl);
+      router.refresh();
+    }
+  }, [callbackUrl, router, status]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,26 +67,27 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, password }),
+        body: JSON.stringify({ email: email.trim(), name, password }),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as RegisterErrorResponse;
 
       if (!res.ok) {
-        setError(data.error || '注册失败，请重试');
+        setError(data.error?.message || '注册失败，请重试');
         return;
       }
 
       const result = await signIn('credentials', {
-        email,
+        email: email.trim(),
         password,
         redirect: false,
+        callbackUrl,
       });
 
       if (result?.error) {
         setError('注册成功但登录失败，请尝试手动登录');
       } else {
-        router.push('/');
+        router.replace(callbackUrl);
         router.refresh();
       }
     } catch {
