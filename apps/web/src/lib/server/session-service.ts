@@ -1,13 +1,57 @@
 import { createTraceId } from "./trace";
 import { loadDb, saveDb } from "./store";
 
-export async function createSession(input: { title?: string }, userId: string) {
+const DEFAULT_SESSION_TITLE = "未命名学习会话";
+const SESSION_TITLE_LIMIT = 30;
+const MAX_SESSIONS_PER_USER = 10;
+
+function sortSessionsByUpdatedAt<T extends { updatedAt: string }>(sessions: T[]) {
+  return sessions.sort((a, b) => Number(new Date(b.updatedAt)) - Number(new Date(a.updatedAt)));
+}
+
+function resolveSessionTitle(input: { title?: string; firstMessage?: string }) {
+  const explicitTitle = input.title?.trim();
+  if (explicitTitle) {
+    return explicitTitle;
+  }
+
+  const generatedTitle = input.firstMessage?.trim().slice(0, SESSION_TITLE_LIMIT);
+  if (generatedTitle) {
+    return generatedTitle;
+  }
+
+  return DEFAULT_SESSION_TITLE;
+}
+
+function enforceSessionCap<T extends { id: string; userId: string; updatedAt: string }>(
+  sessions: T[],
+  userId: string
+) {
+  const rankedUserSessions = sortSessionsByUpdatedAt(sessions.filter((session) => session.userId === userId));
+  const removableIds = new Set(rankedUserSessions.slice(MAX_SESSIONS_PER_USER).map((session) => session.id));
+  if (removableIds.size === 0) {
+    return sessions;
+  }
+
+  return sessions.filter((session) => {
+    if (session.userId !== userId) {
+      return true;
+    }
+    if (!removableIds.has(session.id)) {
+      return true;
+    }
+    removableIds.delete(session.id);
+    return false;
+  });
+}
+
+export async function createSession(input: { title?: string; firstMessage?: string }, userId: string) {
   if (!userId) throw new Error('userId is required');
   const db = await loadDb();
   const now = new Date().toISOString();
   const session = {
     id: `ws_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
-    title: input.title ?? "未命名学习会话",
+    title: resolveSessionTitle(input),
     userId: userId,
     createdAt: now,
     updatedAt: now,
@@ -20,7 +64,8 @@ export async function createSession(input: { title?: string }, userId: string) {
       }
     ]
   };
-  db.sessions.unshift(session);
+  db.sessions = enforceSessionCap([session, ...db.sessions], userId);
+  sortSessionsByUpdatedAt(db.sessions);
   await saveDb(db);
   return session;
 }
@@ -50,7 +95,8 @@ export async function listSessions(query: string | undefined, userId: string) {
   if (!userId) throw new Error('userId is required');
   const db = await loadDb();
   const normalized = query?.trim().toLowerCase();
-  const sessions = db.sessions
+  const sessions = sortSessionsByUpdatedAt(
+    db.sessions
     .filter((session) => {
       if (session.userId !== userId) return false;
       if (!normalized) return true;
@@ -61,7 +107,7 @@ export async function listSessions(query: string | undefined, userId: string) {
       );
     })
     .slice()
-    .sort((a, b) => Number(new Date(b.updatedAt)) - Number(new Date(a.updatedAt)));
+  );
 
   return sessions.map((session) => ({
       id: session.id,
