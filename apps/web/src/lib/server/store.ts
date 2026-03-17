@@ -37,16 +37,58 @@ type PlanRecord = {
   updatedAt: string;
 };
 
+type PublicPostRecord = {
+  id: string;
+  title: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type PublicTopicRecord = {
+  id: string;
+  name: string;
+  createdAt: string;
+};
+
+type PublicGroupRecord = {
+  id: string;
+  name: string;
+  description: string;
+  memberCount: number;
+  createdBy: string;
+  createdAt: string;
+};
+
+type PublicResourceRecord = {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  createdBy: string;
+  createdAt: string;
+};
+
 type DbSchema = {
   sessions: SessionRecord[];
   plans: PlanRecord[];
   masteryByNode: Record<string, number>;
+  publicPosts: PublicPostRecord[];
+  publicTopics: PublicTopicRecord[];
+  publicGroups: PublicGroupRecord[];
+  publicResources: PublicResourceRecord[];
 };
 
 const DEFAULT_DB: DbSchema = {
   sessions: [],
   plans: [],
-  masteryByNode: {}
+  masteryByNode: {},
+  publicPosts: [],
+  publicTopics: [],
+  publicGroups: [],
+  publicResources: []
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -72,6 +114,10 @@ function normalizeSessionMessage(input: unknown, fallbackCreatedAt: string): Ses
 function normalizeSessionRecord(input: unknown): SessionRecord | null {
   if (!isRecord(input)) return null;
   const now = new Date().toISOString();
+  const userId = typeof input.userId === "string" ? input.userId.trim() : "";
+  if (!userId) {
+    return null;
+  }
   const messagesSource = Array.isArray(input.messages) ? input.messages : [];
   const messages = messagesSource
     .map((message) => normalizeSessionMessage(message, now))
@@ -80,7 +126,7 @@ function normalizeSessionRecord(input: unknown): SessionRecord | null {
   return {
     id: typeof input.id === "string" ? input.id : "",
     title: typeof input.title === "string" ? input.title : "未命名学习会话",
-    userId: typeof input.userId === "string" ? input.userId : "guest",
+    userId,
     createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
     updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now,
     lastLevel: typeof input.lastLevel === "number" ? input.lastLevel : 1,
@@ -126,6 +172,81 @@ function normalizeMasteryByNode(input: unknown): Record<string, number> {
     .filter(([, value]) => typeof value === "number")
     .map(([key, value]) => [key, value]);
   return Object.fromEntries(entries);
+}
+
+function normalizePublicPostRecord(input: unknown): PublicPostRecord | null {
+  if (!isRecord(input)) return null;
+  const now = new Date().toISOString();
+  const id = typeof input.id === "string" ? input.id : "";
+  const title = typeof input.title === "string" ? input.title : "";
+  const content = typeof input.content === "string" ? input.content : "";
+  const authorId = typeof input.authorId === "string" ? input.authorId : "";
+  const authorName = typeof input.authorName === "string" ? input.authorName : "匿名用户";
+
+  if (!id || !title || !content || !authorId) {
+    return null;
+  }
+
+  return {
+    id,
+    title,
+    content,
+    authorId,
+    authorName,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now
+  };
+}
+
+function normalizePublicTopicRecord(input: unknown): PublicTopicRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const name = typeof input.name === "string" ? input.name : "";
+  if (!id || !name) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : new Date().toISOString()
+  };
+}
+
+function normalizePublicGroupRecord(input: unknown): PublicGroupRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const name = typeof input.name === "string" ? input.name : "";
+  if (!id || !name) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    description: typeof input.description === "string" ? input.description : "",
+    memberCount: typeof input.memberCount === "number" ? input.memberCount : 1,
+    createdBy: typeof input.createdBy === "string" ? input.createdBy : "",
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : new Date().toISOString()
+  };
+}
+
+function normalizePublicResourceRecord(input: unknown): PublicResourceRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const title = typeof input.title === "string" ? input.title : "";
+  if (!id || !title) {
+    return null;
+  }
+
+  return {
+    id,
+    title,
+    description: typeof input.description === "string" ? input.description : "",
+    url: typeof input.url === "string" ? input.url : "",
+    createdBy: typeof input.createdBy === "string" ? input.createdBy : "",
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : new Date().toISOString()
+  };
 }
 
 async function ensureDir(dir: string) {
@@ -180,11 +301,29 @@ export async function loadDb(): Promise<DbSchema> {
     const plans = plansSource
       .map((plan) => normalizePlanRecord(plan))
       .filter((plan): plan is PlanRecord => plan !== null);
+    const postsSource = Array.isArray(parsed.publicPosts) ? parsed.publicPosts : [];
+    const topicsSource = Array.isArray(parsed.publicTopics) ? parsed.publicTopics : [];
+    const groupsSource = Array.isArray(parsed.publicGroups) ? parsed.publicGroups : [];
+    const resourcesSource = Array.isArray(parsed.publicResources)
+      ? parsed.publicResources
+      : [];
 
     return {
       sessions,
       plans,
-      masteryByNode: normalizeMasteryByNode(parsed.masteryByNode)
+      masteryByNode: normalizeMasteryByNode(parsed.masteryByNode),
+      publicPosts: postsSource
+        .map((post) => normalizePublicPostRecord(post))
+        .filter((post): post is PublicPostRecord => post !== null),
+      publicTopics: topicsSource
+        .map((topic) => normalizePublicTopicRecord(topic))
+        .filter((topic): topic is PublicTopicRecord => topic !== null),
+      publicGroups: groupsSource
+        .map((group) => normalizePublicGroupRecord(group))
+        .filter((group): group is PublicGroupRecord => group !== null),
+      publicResources: resourcesSource
+        .map((resource) => normalizePublicResourceRecord(resource))
+        .filter((resource): resource is PublicResourceRecord => resource !== null)
     };
   } catch {
     await fs.writeFile(filePath, JSON.stringify(DEFAULT_DB, null, 2), "utf8");

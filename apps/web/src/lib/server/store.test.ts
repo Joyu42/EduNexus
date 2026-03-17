@@ -24,7 +24,7 @@ describe("server store", () => {
     }
   });
 
-  it("returns only core workspace keys when loading legacy db payload", async () => {
+  it("returns normalized workspace and public content keys for legacy db payload", async () => {
     const dataDir = await createDataDir();
     process.env.EDUNEXUS_DATA_DIR = dataDir;
 
@@ -48,9 +48,54 @@ describe("server store", () => {
 
     const db = await loadDb();
 
-    expect(Object.keys(db).sort()).toEqual(["masteryByNode", "plans", "sessions"]);
+    expect(Object.keys(db).sort()).toEqual([
+      "masteryByNode",
+      "plans",
+      "publicGroups",
+      "publicPosts",
+      "publicResources",
+      "publicTopics",
+      "sessions"
+    ]);
     expect(db.sessions[0]?.id).toBe("ws_legacy");
     expect(db.masteryByNode.seq).toBe(0.4);
+
+    await fs.rm(dataDir, { recursive: true, force: true });
+  });
+
+  it("drops session records that do not include an authenticated user id", async () => {
+    const dataDir = await createDataDir();
+    process.env.EDUNEXUS_DATA_DIR = dataDir;
+
+    await writeDbFile(dataDir, {
+      sessions: [
+        {
+          id: "ws_missing_user",
+          title: "旧匿名会话",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          lastLevel: 1,
+          messages: []
+        },
+        {
+          id: "ws_user_scoped",
+          title: "用户会话",
+          userId: "user-1",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          lastLevel: 2,
+          messages: []
+        }
+      ],
+      plans: [],
+      masteryByNode: {}
+    });
+
+    const db = await loadDb();
+
+    expect(db.sessions).toEqual([
+      expect.objectContaining({ id: "ws_user_scoped", userId: "user-1" })
+    ]);
 
     await fs.rm(dataDir, { recursive: true, force: true });
   });
