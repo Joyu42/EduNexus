@@ -1,6 +1,7 @@
 import { fail, ok } from "@/lib/server/response";
 import { createResource } from "@/lib/server/resources-service";
 import { loadDb } from "@/lib/server/store";
+import { getCurrentUserId } from "@/lib/server/auth-utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,17 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return fail(
+      {
+        code: "UNAUTHORIZED",
+        message: "请先登录后再添加资源。"
+      },
+      401
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -37,7 +49,6 @@ export async function POST(req: Request) {
 
   const payload = (body ?? {}) as Record<string, unknown>;
   const title = typeof payload.title === "string" ? payload.title.trim() : "";
-  const createdBy = typeof payload.createdBy === "string" ? payload.createdBy.trim() : "";
 
   if (!title) {
     return fail(
@@ -60,7 +71,7 @@ export async function POST(req: Request) {
       title,
       description,
       url,
-      createdBy: createdBy || `guest_${Date.now()}`
+      createdBy: userId
     });
     return ok({ resource });
   } catch (error) {

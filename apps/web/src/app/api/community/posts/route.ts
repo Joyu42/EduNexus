@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { fail, ok } from "@/lib/server/response";
 import { createPost } from "@/lib/server/community-service";
 import { loadDb } from "@/lib/server/store";
+import { getCurrentUserId } from "@/lib/server/auth-utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,10 +25,20 @@ export async function GET(_request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return fail(
+        {
+          code: "UNAUTHORIZED",
+          message: "请先登录后再发布帖子。"
+        },
+        401
+      );
+    }
+
     const json = await request.json().catch(() => ({}));
     const title = typeof json.title === "string" ? json.title.trim() : "";
     const content = typeof json.content === "string" ? json.content.trim() : "";
-    const authorId = typeof json.authorId === "string" ? json.authorId.trim() : "";
     const authorName = typeof json.authorName === "string" ? json.authorName.trim() : "";
 
     if (!title || !content) {
@@ -43,8 +54,8 @@ export async function POST(request: Request) {
     const post = await createPost({
       title,
       content,
-      authorId: authorId || `guest_${Date.now()}`,
-      authorName: authorName || "匿名用户"
+      authorId: userId,
+      authorName: authorName || undefined
     });
 
     return NextResponse.json(
