@@ -2,6 +2,8 @@
 
 import { BarChart3 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { LoginPrompt } from "@/components/ui/login-prompt";
 
 interface AnalyticsStats {
   totalSessions: number;
@@ -27,6 +29,12 @@ function StatCard({
 }
 
 export default function AnalyticsPage() {
+  const { status } = useSession();
+
+  if (status === "unauthenticated") {
+    return <LoginPrompt title="学习分析" />;
+  }
+
   const { data, isLoading } = useQuery<AnalyticsStats>({
     queryKey: ["analytics-stats"],
     queryFn: async () => {
