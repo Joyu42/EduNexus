@@ -324,8 +324,7 @@ export function NodeDetailPanel({
               className="w-full justify-start gap-2"
               variant="outline"
               onClick={() => {
-                // 跳转到练习页面
-                window.location.href = `/workspace/practice?node=${node.id}`;
+                window.location.href = `/workspace/practice/questions?node=${node.id}`;
               }}
             >
               <BookOpen className="h-4 w-4" />
