@@ -54,8 +54,7 @@ function LoginPageContent() {
       if (result?.error) {
         setError('邮箱或密码错误');
       } else {
-        router.replace(callbackUrl);
-        router.refresh();
+        window.location.href = callbackUrl;
       }
     } catch {
       setError('登录失败，请重试');
