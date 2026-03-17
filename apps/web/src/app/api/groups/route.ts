@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 import { fail, ok } from "@/lib/server/response";
-import { getCurrentUserId } from "@/lib/server/auth-utils";
-import { loadDb, saveDb } from "@/lib/server/store";
+import { createGroup } from "@/lib/server/groups-service";
+import { loadDb } from "@/lib/server/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function createId(prefix: string): string {
-  const token = Math.random().toString(36).slice(2, 10);
-  return `${prefix}_${Date.now().toString(36)}_${token}`;
-}
 
 export async function GET() {
   try {
@@ -29,20 +24,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return fail(
-        {
-          code: "FORBIDDEN",
-          message: "匿名用户不能创建学习小组。"
-        },
-        403
-      );
-    }
-
     const json = await request.json().catch(() => ({}));
     const name = typeof json.name === "string" ? json.name.trim() : "";
     const description = typeof json.description === "string" ? json.description.trim() : "";
+    const createdBy = typeof json.createdBy === "string" ? json.createdBy.trim() : "";
+    const category = typeof json.category === "string" ? json.category.trim() : "";
 
     if (!name) {
       return fail(
@@ -54,19 +40,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = await loadDb();
-    const group = {
-      id: createId("group"),
+    if (!createdBy) {
+      return fail(
+        {
+          code: "INVALID_REQUEST",
+          message: "创建者不能为空。"
+        },
+        400
+      );
+    }
+
+    void category;
+    const group = await createGroup({
       name,
       description,
-      memberCount: 1,
-      createdBy: userId,
-      createdAt: new Date().toISOString()
-    };
-
-    await saveDb({
-      ...db,
-      publicGroups: [group, ...db.publicGroups]
+      createdBy
     });
 
     return NextResponse.json(
