@@ -40,6 +40,8 @@ export async function createCommunityPost(input: {
   return record;
 }
 
+export const createPost = createCommunityPost;
+
 export async function updateCommunityPost(
   postId: string,
   input: Partial<Pick<PublicPostRecord, "title" | "content" | "authorName">>

@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 import { fail, ok } from "@/lib/server/response";
-import { getCurrentUserId } from "@/lib/server/auth-utils";
-import { loadDb, saveDb } from "@/lib/server/store";
+import { createPost } from "@/lib/server/community-service";
+import { loadDb } from "@/lib/server/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function createId(prefix: string): string {
-  const token = Math.random().toString(36).slice(2, 10);
-  return `${prefix}_${Date.now().toString(36)}_${token}`;
-}
 
 export async function GET(_request: Request) {
   try {
@@ -29,47 +24,27 @@ export async function GET(_request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return fail(
-        {
-          code: "FORBIDDEN",
-          message: "匿名用户不能发布社区帖子。"
-        },
-        403
-      );
-    }
-
     const json = await request.json().catch(() => ({}));
     const title = typeof json.title === "string" ? json.title.trim() : "";
     const content = typeof json.content === "string" ? json.content.trim() : "";
+    const authorId = typeof json.authorId === "string" ? json.authorId.trim() : "";
     const authorName = typeof json.authorName === "string" ? json.authorName.trim() : "";
 
-    if (!title || !content) {
+    if (!title || !content || !authorId) {
       return fail(
         {
           code: "INVALID_REQUEST",
-          message: "帖子标题和正文不能为空。"
+          message: "帖子标题、正文和作者信息不能为空。"
         },
         400
       );
     }
 
-    const db = await loadDb();
-    const now = new Date().toISOString();
-    const post = {
-      id: createId("post"),
+    const post = await createPost({
       title,
       content,
-      authorId: userId,
-      authorName: authorName || "已登录用户",
-      createdAt: now,
-      updatedAt: now
-    };
-
-    await saveDb({
-      ...db,
-      publicPosts: [post, ...db.publicPosts]
+      authorId,
+      authorName: authorName || undefined
     });
 
     return NextResponse.json(
