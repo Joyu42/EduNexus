@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { pathStorage, type LearningPath } from '@/lib/client/path-storage';
 import { goalStorage, type Goal } from '@/lib/goals/goal-storage';
+import { fetchDemoPathBootstrap, buildDemoStarterContent } from '@/lib/client/demo-bootstrap';
+import { getLearningPathsPageState } from '@/lib/client/path-goal-view-state';
 
 export default function LearningPathsPage() {
   const router = useRouter();
@@ -32,10 +34,30 @@ export default function LearningPathsPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [loadedPaths, loadedGoals] = await Promise.all([
+      let [loadedPaths, loadedGoals] = await Promise.all([
         pathStorage.getAllPaths(),
         Promise.resolve(goalStorage.getGoals())
       ]);
+
+      const state = getLearningPathsPageState({
+        isLoading: false,
+        pathCount: loadedPaths.length,
+        isDemoUser: session?.user?.isDemo === true,
+      });
+
+      if (state.kind === 'bootstrap_demo') {
+        const bootstrap = await fetchDemoPathBootstrap();
+        if (bootstrap) {
+          const starter = buildDemoStarterContent(bootstrap);
+          goalStorage.saveGoal(starter.goal);
+          await pathStorage.createPath(starter.path);
+          [loadedPaths, loadedGoals] = await Promise.all([
+            pathStorage.getAllPaths(),
+            Promise.resolve(goalStorage.getGoals()),
+          ]);
+        }
+      }
+
       setPaths(loadedPaths);
       setGoals(loadedGoals);
     } catch (error) {
