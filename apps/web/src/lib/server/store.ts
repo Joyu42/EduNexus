@@ -93,6 +93,136 @@ type PublicResourceRecord = {
   createdAt: string;
 };
 
+type ResourceBookmarkRecord = {
+  id: string;
+  userId: string;
+  resourceId: string;
+  createdAt: string;
+};
+
+type ResourceFolderRecord = {
+  id: string;
+  userId: string;
+  name: string;
+  description: string;
+  resourceIds: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ResourceNoteRecord = {
+  id: string;
+  userId: string;
+  resourceId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ResourceRatingRecord = {
+  id: string;
+  userId: string;
+  resourceId: string;
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type GroupMemberRecord = {
+  id: string;
+  groupId: string;
+  userId: string;
+  role: "owner" | "admin" | "member";
+  status: "active" | "invited" | "removed";
+  joinedAt: string;
+};
+
+type GroupPostRecord = {
+  id: string;
+  groupId: string;
+  authorId: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type GroupTaskRecord = {
+  id: string;
+  groupId: string;
+  title: string;
+  description: string;
+  status: "todo" | "in_progress" | "done";
+  assigneeId: string | null;
+  dueDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type GroupSharedResourceRecord = {
+  id: string;
+  groupId: string;
+  resourceId: string;
+  sharedBy: string;
+  note: string;
+  createdAt: string;
+};
+
+type CommunityCommentRecord = {
+  id: string;
+  postId: string;
+  authorId: string;
+  content: string;
+  parentCommentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type CommunityReactionRecord = {
+  id: string;
+  targetType: "post" | "comment";
+  targetId: string;
+  actorId: string;
+  reactionType: string;
+  createdAt: string;
+};
+
+type CommunityFollowRecord = {
+  id: string;
+  followerId: string;
+  followeeId: string;
+  createdAt: string;
+};
+
+type CommunityTopicRecord = {
+  id: string;
+  name: string;
+  description: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type JsonScalar = string | number | boolean | null;
+
+type AnalyticsEventRecord = {
+  id: string;
+  userId: string | null;
+  name: string;
+  category: string;
+  occurredAt: string;
+  payload: Record<string, JsonScalar>;
+};
+
+type AnalyticsSnapshotRecord = {
+  id: string;
+  userId: string | null;
+  scope: string;
+  period: string;
+  metrics: Record<string, number>;
+  capturedAt: string;
+};
+
 type DbSchema = {
   sessions: SessionRecord[];
   plans: PlanRecord[];
@@ -102,6 +232,20 @@ type DbSchema = {
   publicTopics: PublicTopicRecord[];
   publicGroups: PublicGroupRecord[];
   publicResources: PublicResourceRecord[];
+  resourceBookmarks: ResourceBookmarkRecord[];
+  resourceFolders: ResourceFolderRecord[];
+  resourceNotes: ResourceNoteRecord[];
+  resourceRatings: ResourceRatingRecord[];
+  groupMembers: GroupMemberRecord[];
+  groupPosts: GroupPostRecord[];
+  groupTasks: GroupTaskRecord[];
+  groupSharedResources: GroupSharedResourceRecord[];
+  communityComments: CommunityCommentRecord[];
+  communityReactions: CommunityReactionRecord[];
+  communityFollows: CommunityFollowRecord[];
+  communityTopics: CommunityTopicRecord[];
+  analyticsEvents: AnalyticsEventRecord[];
+  analyticsSnapshots: AnalyticsSnapshotRecord[];
 };
 
 const DEFAULT_DB: DbSchema = {
@@ -112,7 +256,21 @@ const DEFAULT_DB: DbSchema = {
   publicPosts: [],
   publicTopics: [],
   publicGroups: [],
-  publicResources: []
+  publicResources: [],
+  resourceBookmarks: [],
+  resourceFolders: [],
+  resourceNotes: [],
+  resourceRatings: [],
+  groupMembers: [],
+  groupPosts: [],
+  groupTasks: [],
+  groupSharedResources: [],
+  communityComments: [],
+  communityReactions: [],
+  communityFollows: [],
+  communityTopics: [],
+  analyticsEvents: [],
+  analyticsSnapshots: []
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -207,6 +365,29 @@ function normalizeMasteryByNode(input: unknown): Record<string, number> {
   const entries = Object.entries(input)
     .filter(([, value]) => typeof value === "number")
     .map(([key, value]) => [key, value]);
+  return Object.fromEntries(entries);
+}
+
+function normalizeStringArray(input: unknown): string[] {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  return input
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeJsonScalarRecord(input: unknown): Record<string, JsonScalar> {
+  if (!isRecord(input)) {
+    return {};
+  }
+
+  const entries = Object.entries(input).filter(([, value]) => {
+    return value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean";
+  }) as [string, JsonScalar][];
+
   return Object.fromEntries(entries);
 }
 
@@ -351,6 +532,299 @@ function normalizePublicResourceRecord(input: unknown): PublicResourceRecord | n
   };
 }
 
+function normalizeResourceBookmarkRecord(input: unknown): ResourceBookmarkRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const userId = typeof input.userId === "string" ? input.userId.trim() : "";
+  const resourceId = typeof input.resourceId === "string" ? input.resourceId : "";
+  if (!id || !userId || !resourceId) {
+    return null;
+  }
+
+  return {
+    id,
+    userId,
+    resourceId,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : new Date().toISOString()
+  };
+}
+
+function normalizeResourceFolderRecord(input: unknown): ResourceFolderRecord | null {
+  if (!isRecord(input)) return null;
+  const now = new Date().toISOString();
+  const id = typeof input.id === "string" ? input.id : "";
+  const userId = typeof input.userId === "string" ? input.userId.trim() : "";
+  const name = typeof input.name === "string" ? input.name.trim() : "";
+  if (!id || !userId || !name) {
+    return null;
+  }
+
+  return {
+    id,
+    userId,
+    name,
+    description: typeof input.description === "string" ? input.description : "",
+    resourceIds: normalizeStringArray(input.resourceIds),
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now
+  };
+}
+
+function normalizeResourceNoteRecord(input: unknown): ResourceNoteRecord | null {
+  if (!isRecord(input)) return null;
+  const now = new Date().toISOString();
+  const id = typeof input.id === "string" ? input.id : "";
+  const userId = typeof input.userId === "string" ? input.userId.trim() : "";
+  const resourceId = typeof input.resourceId === "string" ? input.resourceId : "";
+  const content = typeof input.content === "string" ? input.content : "";
+  if (!id || !userId || !resourceId) {
+    return null;
+  }
+
+  return {
+    id,
+    userId,
+    resourceId,
+    content,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now
+  };
+}
+
+function normalizeResourceRatingRecord(input: unknown): ResourceRatingRecord | null {
+  if (!isRecord(input)) return null;
+  const now = new Date().toISOString();
+  const id = typeof input.id === "string" ? input.id : "";
+  const userId = typeof input.userId === "string" ? input.userId.trim() : "";
+  const resourceId = typeof input.resourceId === "string" ? input.resourceId : "";
+  const rating = typeof input.rating === "number" ? Math.max(1, Math.min(5, Math.round(input.rating))) : null;
+  if (!id || !userId || !resourceId || rating === null) {
+    return null;
+  }
+
+  return {
+    id,
+    userId,
+    resourceId,
+    rating,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now
+  };
+}
+
+function normalizeGroupMemberRecord(input: unknown): GroupMemberRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const groupId = typeof input.groupId === "string" ? input.groupId : "";
+  const userId = typeof input.userId === "string" ? input.userId.trim() : "";
+  const role = input.role;
+  const status = input.status;
+  if (
+    !id ||
+    !groupId ||
+    !userId ||
+    (role !== "owner" && role !== "admin" && role !== "member") ||
+    (status !== "active" && status !== "invited" && status !== "removed")
+  ) {
+    return null;
+  }
+
+  return {
+    id,
+    groupId,
+    userId,
+    role,
+    status,
+    joinedAt: typeof input.joinedAt === "string" ? input.joinedAt : new Date().toISOString()
+  };
+}
+
+function normalizeGroupPostRecord(input: unknown): GroupPostRecord | null {
+  if (!isRecord(input)) return null;
+  const now = new Date().toISOString();
+  const id = typeof input.id === "string" ? input.id : "";
+  const groupId = typeof input.groupId === "string" ? input.groupId : "";
+  const authorId = typeof input.authorId === "string" ? input.authorId.trim() : "";
+  const title = typeof input.title === "string" ? input.title.trim() : "";
+  const content = typeof input.content === "string" ? input.content : "";
+  if (!id || !groupId || !authorId || !title || !content) {
+    return null;
+  }
+
+  return {
+    id,
+    groupId,
+    authorId,
+    title,
+    content,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now
+  };
+}
+
+function normalizeGroupTaskRecord(input: unknown): GroupTaskRecord | null {
+  if (!isRecord(input)) return null;
+  const now = new Date().toISOString();
+  const id = typeof input.id === "string" ? input.id : "";
+  const groupId = typeof input.groupId === "string" ? input.groupId : "";
+  const title = typeof input.title === "string" ? input.title.trim() : "";
+  const status = input.status;
+  if (!id || !groupId || !title || (status !== "todo" && status !== "in_progress" && status !== "done")) {
+    return null;
+  }
+
+  return {
+    id,
+    groupId,
+    title,
+    description: typeof input.description === "string" ? input.description : "",
+    status,
+    assigneeId: typeof input.assigneeId === "string" && input.assigneeId.trim() ? input.assigneeId : null,
+    dueDate: typeof input.dueDate === "string" && input.dueDate ? input.dueDate : null,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now
+  };
+}
+
+function normalizeGroupSharedResourceRecord(input: unknown): GroupSharedResourceRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const groupId = typeof input.groupId === "string" ? input.groupId : "";
+  const resourceId = typeof input.resourceId === "string" ? input.resourceId : "";
+  const sharedBy = typeof input.sharedBy === "string" ? input.sharedBy.trim() : "";
+  if (!id || !groupId || !resourceId || !sharedBy) {
+    return null;
+  }
+
+  return {
+    id,
+    groupId,
+    resourceId,
+    sharedBy,
+    note: typeof input.note === "string" ? input.note : "",
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : new Date().toISOString()
+  };
+}
+
+function normalizeCommunityCommentRecord(input: unknown): CommunityCommentRecord | null {
+  if (!isRecord(input)) return null;
+  const now = new Date().toISOString();
+  const id = typeof input.id === "string" ? input.id : "";
+  const postId = typeof input.postId === "string" ? input.postId : "";
+  const authorId = typeof input.authorId === "string" ? input.authorId.trim() : "";
+  const content = typeof input.content === "string" ? input.content : "";
+  if (!id || !postId || !authorId || !content) {
+    return null;
+  }
+
+  return {
+    id,
+    postId,
+    authorId,
+    content,
+    parentCommentId:
+      typeof input.parentCommentId === "string" && input.parentCommentId ? input.parentCommentId : null,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now
+  };
+}
+
+function normalizeCommunityReactionRecord(input: unknown): CommunityReactionRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const targetType = input.targetType;
+  const targetId = typeof input.targetId === "string" ? input.targetId : "";
+  const actorId = typeof input.actorId === "string" ? input.actorId.trim() : "";
+  const reactionType = typeof input.reactionType === "string" ? input.reactionType.trim() : "";
+  if (!id || !targetId || !actorId || !reactionType || (targetType !== "post" && targetType !== "comment")) {
+    return null;
+  }
+
+  return {
+    id,
+    targetType,
+    targetId,
+    actorId,
+    reactionType,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : new Date().toISOString()
+  };
+}
+
+function normalizeCommunityFollowRecord(input: unknown): CommunityFollowRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const followerId = typeof input.followerId === "string" ? input.followerId.trim() : "";
+  const followeeId = typeof input.followeeId === "string" ? input.followeeId.trim() : "";
+  if (!id || !followerId || !followeeId) {
+    return null;
+  }
+
+  return {
+    id,
+    followerId,
+    followeeId,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : new Date().toISOString()
+  };
+}
+
+function normalizeCommunityTopicRecord(input: unknown): CommunityTopicRecord | null {
+  if (!isRecord(input)) return null;
+  const now = new Date().toISOString();
+  const id = typeof input.id === "string" ? input.id : "";
+  const name = typeof input.name === "string" ? input.name.trim() : "";
+  const createdBy = typeof input.createdBy === "string" ? input.createdBy.trim() : "";
+  if (!id || !name || !createdBy) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    description: typeof input.description === "string" ? input.description : "",
+    createdBy,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : now,
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : now
+  };
+}
+
+function normalizeAnalyticsEventRecord(input: unknown): AnalyticsEventRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const name = typeof input.name === "string" ? input.name.trim() : "";
+  const category = typeof input.category === "string" ? input.category.trim() : "";
+  if (!id || !name || !category) {
+    return null;
+  }
+
+  return {
+    id,
+    userId: typeof input.userId === "string" && input.userId.trim() ? input.userId : null,
+    name,
+    category,
+    occurredAt: typeof input.occurredAt === "string" ? input.occurredAt : new Date().toISOString(),
+    payload: normalizeJsonScalarRecord(input.payload)
+  };
+}
+
+function normalizeAnalyticsSnapshotRecord(input: unknown): AnalyticsSnapshotRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const scope = typeof input.scope === "string" ? input.scope.trim() : "";
+  const period = typeof input.period === "string" ? input.period.trim() : "";
+  if (!id || !scope || !period) {
+    return null;
+  }
+
+  return {
+    id,
+    userId: typeof input.userId === "string" && input.userId.trim() ? input.userId : null,
+    scope,
+    period,
+    metrics: normalizeMasteryByNode(input.metrics),
+    capturedAt: typeof input.capturedAt === "string" ? input.capturedAt : new Date().toISOString()
+  };
+}
+
 async function ensureDir(dir: string) {
   await fs.mkdir(dir, { recursive: true });
 }
@@ -413,6 +887,22 @@ export async function loadDb(): Promise<DbSchema> {
     const resourcesSource = Array.isArray(parsed.publicResources)
       ? parsed.publicResources
       : [];
+    const resourceBookmarksSource = Array.isArray(parsed.resourceBookmarks) ? parsed.resourceBookmarks : [];
+    const resourceFoldersSource = Array.isArray(parsed.resourceFolders) ? parsed.resourceFolders : [];
+    const resourceNotesSource = Array.isArray(parsed.resourceNotes) ? parsed.resourceNotes : [];
+    const resourceRatingsSource = Array.isArray(parsed.resourceRatings) ? parsed.resourceRatings : [];
+    const groupMembersSource = Array.isArray(parsed.groupMembers) ? parsed.groupMembers : [];
+    const groupPostsSource = Array.isArray(parsed.groupPosts) ? parsed.groupPosts : [];
+    const groupTasksSource = Array.isArray(parsed.groupTasks) ? parsed.groupTasks : [];
+    const groupSharedResourcesSource = Array.isArray(parsed.groupSharedResources)
+      ? parsed.groupSharedResources
+      : [];
+    const communityCommentsSource = Array.isArray(parsed.communityComments) ? parsed.communityComments : [];
+    const communityReactionsSource = Array.isArray(parsed.communityReactions) ? parsed.communityReactions : [];
+    const communityFollowsSource = Array.isArray(parsed.communityFollows) ? parsed.communityFollows : [];
+    const communityTopicsSource = Array.isArray(parsed.communityTopics) ? parsed.communityTopics : [];
+    const analyticsEventsSource = Array.isArray(parsed.analyticsEvents) ? parsed.analyticsEvents : [];
+    const analyticsSnapshotsSource = Array.isArray(parsed.analyticsSnapshots) ? parsed.analyticsSnapshots : [];
 
     return {
       sessions,
@@ -430,7 +920,49 @@ export async function loadDb(): Promise<DbSchema> {
         .filter((group): group is PublicGroupRecord => group !== null),
       publicResources: resourcesSource
         .map((resource) => normalizePublicResourceRecord(resource))
-        .filter((resource): resource is PublicResourceRecord => resource !== null)
+        .filter((resource): resource is PublicResourceRecord => resource !== null),
+      resourceBookmarks: resourceBookmarksSource
+        .map((bookmark) => normalizeResourceBookmarkRecord(bookmark))
+        .filter((bookmark): bookmark is ResourceBookmarkRecord => bookmark !== null),
+      resourceFolders: resourceFoldersSource
+        .map((folder) => normalizeResourceFolderRecord(folder))
+        .filter((folder): folder is ResourceFolderRecord => folder !== null),
+      resourceNotes: resourceNotesSource
+        .map((note) => normalizeResourceNoteRecord(note))
+        .filter((note): note is ResourceNoteRecord => note !== null),
+      resourceRatings: resourceRatingsSource
+        .map((rating) => normalizeResourceRatingRecord(rating))
+        .filter((rating): rating is ResourceRatingRecord => rating !== null),
+      groupMembers: groupMembersSource
+        .map((member) => normalizeGroupMemberRecord(member))
+        .filter((member): member is GroupMemberRecord => member !== null),
+      groupPosts: groupPostsSource
+        .map((post) => normalizeGroupPostRecord(post))
+        .filter((post): post is GroupPostRecord => post !== null),
+      groupTasks: groupTasksSource
+        .map((task) => normalizeGroupTaskRecord(task))
+        .filter((task): task is GroupTaskRecord => task !== null),
+      groupSharedResources: groupSharedResourcesSource
+        .map((resource) => normalizeGroupSharedResourceRecord(resource))
+        .filter((resource): resource is GroupSharedResourceRecord => resource !== null),
+      communityComments: communityCommentsSource
+        .map((comment) => normalizeCommunityCommentRecord(comment))
+        .filter((comment): comment is CommunityCommentRecord => comment !== null),
+      communityReactions: communityReactionsSource
+        .map((reaction) => normalizeCommunityReactionRecord(reaction))
+        .filter((reaction): reaction is CommunityReactionRecord => reaction !== null),
+      communityFollows: communityFollowsSource
+        .map((follow) => normalizeCommunityFollowRecord(follow))
+        .filter((follow): follow is CommunityFollowRecord => follow !== null),
+      communityTopics: communityTopicsSource
+        .map((topic) => normalizeCommunityTopicRecord(topic))
+        .filter((topic): topic is CommunityTopicRecord => topic !== null),
+      analyticsEvents: analyticsEventsSource
+        .map((event) => normalizeAnalyticsEventRecord(event))
+        .filter((event): event is AnalyticsEventRecord => event !== null),
+      analyticsSnapshots: analyticsSnapshotsSource
+        .map((snapshot) => normalizeAnalyticsSnapshotRecord(snapshot))
+        .filter((snapshot): snapshot is AnalyticsSnapshotRecord => snapshot !== null)
     };
   } catch {
     await fs.writeFile(filePath, JSON.stringify(DEFAULT_DB, null, 2), "utf8");
@@ -445,4 +977,29 @@ export async function saveDb(db: DbSchema): Promise<void> {
   await fs.writeFile(filePath, JSON.stringify(db, null, 2), "utf8");
 }
 
-export type { DbSchema, SessionRecord, PlanRecord, SyncedPathRecord, SyncedPathTaskRecord };
+export type {
+  AnalyticsEventRecord,
+  AnalyticsSnapshotRecord,
+  CommunityCommentRecord,
+  CommunityFollowRecord,
+  CommunityReactionRecord,
+  CommunityTopicRecord,
+  DbSchema,
+  GroupMemberRecord,
+  GroupPostRecord,
+  GroupSharedResourceRecord,
+  GroupTaskRecord,
+  JsonScalar,
+  PlanRecord,
+  PublicGroupRecord,
+  PublicPostRecord,
+  PublicResourceRecord,
+  PublicTopicRecord,
+  ResourceBookmarkRecord,
+  ResourceFolderRecord,
+  ResourceNoteRecord,
+  ResourceRatingRecord,
+  SessionRecord,
+  SyncedPathRecord,
+  SyncedPathTaskRecord
+};
