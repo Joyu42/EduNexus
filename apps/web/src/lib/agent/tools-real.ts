@@ -7,76 +7,81 @@
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { getModelscopeClient } from "@/lib/server/modelscope";
-import { searchVault, getVaultDocById } from "@/lib/server/kb-lite";
+import { searchDocuments, getDocument } from "@/lib/server/document-service";
 import { getGraphView } from "@/lib/server/graph-service";
 import { loadDb } from "@/lib/server/store";
 
-/**
- * 搜索知识库工具（真实实现）
- */
-export const searchKnowledgeBaseTool = new DynamicStructuredTool({
-  name: "search_knowledge_base",
-  description: "搜索知识库中的文档和笔记。当用户询问某个概念或需要查找相关资料时使用。",
-  schema: z.object({
-    query: z.string().describe("搜索查询词"),
-    limit: z.number().optional().describe("返回结果数量限制，默认5"),
-  }),
-  func: async ({ query, limit = 5 }) => {
-    try {
-      const normalizedLimit = Math.max(1, Math.min(20, Math.floor(Number(limit) || 5)));
-      const searchResult = await searchVault(query, {});
+function requireUserId(userId?: string) {
+  const normalized = typeof userId === "string" ? userId.trim() : "";
+  if (!normalized) {
+    throw new Error("缺少 userId：请先登录后再使用该工具。");
+  }
+  return normalized;
+}
 
-      const ranked = searchResult.candidates.slice(0, normalizedLimit);
-      const docs = await Promise.all(
-        ranked.map(async (candidate) => {
-          const doc = await getVaultDocById(candidate.docId);
-          return {
-            id: candidate.docId,
-            title: doc?.title || candidate.docId,
-            content: doc?.content ? doc.content.slice(0, 500) : candidate.snippet,
-            relevance: candidate.score,
-            tags: doc?.tags || [],
-            domain: doc?.domain,
-            type: doc?.type,
-            reason: candidate.reason,
-            sourcePath: doc?.path,
-            updatedAt: doc?.updatedAt,
-          };
-        })
-      );
+function createSearchKnowledgeBaseTool(userId?: string) {
+  return new DynamicStructuredTool({
+    name: "search_knowledge_base",
+    description: "搜索知识库中的文档和笔记。当用户询问某个概念或需要查找相关资料时使用。",
+    schema: z.object({
+      query: z.string().describe("搜索查询词"),
+      limit: z.number().optional().describe("返回结果数量限制，默认5"),
+    }),
+    func: async ({ query, limit = 5 }) => {
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const normalizedLimit = Math.max(1, Math.min(20, Math.floor(Number(limit) || 5)));
+        const candidates = await searchDocuments(query, effectiveUserId);
 
-      return JSON.stringify(
-        {
-          query,
-          count: docs.length,
-          results: docs,
-        },
-        null,
-        2
-      );
-    } catch (error) {
-      return JSON.stringify({
-        error: "搜索失败",
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  },
-});
+        const selected = candidates.slice(0, normalizedLimit);
+        const docs = await Promise.all(
+          selected.map(async (candidate, index) => {
+            const doc = await getDocument(candidate.docId, effectiveUserId);
+            return {
+              id: candidate.docId,
+              title: doc?.title || candidate.docId,
+              content: doc?.content ? doc.content.slice(0, 500) : candidate.snippet,
+              relevance: Math.max(0, 1 - index * 0.05),
+              updatedAt: doc?.updatedAt,
+            };
+          })
+        );
+
+        return JSON.stringify(
+          {
+            query,
+            count: docs.length,
+            results: docs,
+          },
+          null,
+          2
+        );
+      } catch (error) {
+        return JSON.stringify({
+          error: "搜索失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
 
 /**
  * 查询知识图谱工具（真实实现）
  */
-export const queryKnowledgeGraphTool = new DynamicStructuredTool({
-  name: "query_knowledge_graph",
-  description: "查询知识图谱，获取概念之间的关系。当需要了解知识点之间的联系时使用。",
-  schema: z.object({
-    concept: z.string().describe("要查询的概念"),
-    depth: z.number().optional().describe("查询深度，默认2"),
-  }),
-  func: async ({ concept, depth = 2 }) => {
-    try {
-      const normalizedDepth = Math.max(1, Math.min(4, Math.floor(Number(depth) || 2)));
-      const graphView = await getGraphView({});
+function createQueryKnowledgeGraphTool(userId?: string) {
+  return new DynamicStructuredTool({
+    name: "query_knowledge_graph",
+    description: "查询知识图谱，获取概念之间的关系。当需要了解知识点之间的联系时使用。",
+    schema: z.object({
+      concept: z.string().describe("要查询的概念"),
+      depth: z.number().optional().describe("查询深度，默认2"),
+    }),
+    func: async ({ concept, depth = 2 }) => {
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const normalizedDepth = Math.max(1, Math.min(4, Math.floor(Number(depth) || 2)));
+        const graphView = await getGraphView(effectiveUserId);
 
       const lowerConcept = concept.trim().toLowerCase();
       const allNodes = graphView.nodes;
@@ -159,29 +164,30 @@ export const queryKnowledgeGraphTool = new DynamicStructuredTool({
         .map((node) => node.label)
         .slice(0, 12);
 
-      return JSON.stringify(
-        {
-          concept,
-          depth: normalizedDepth,
-          matched: true,
-          seeds: seedNodes.map((node) => ({ id: node.id, label: node.label })),
-          nodes,
-          edges,
-          prerequisites,
-          applications,
-          relatedConcepts,
-        },
-        null,
-        2
-      );
-    } catch (error) {
-      return JSON.stringify({
-        error: "图谱查询失败",
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  },
-});
+        return JSON.stringify(
+          {
+            concept,
+            depth: normalizedDepth,
+            matched: true,
+            seeds: seedNodes.map((node) => ({ id: node.id, label: node.label })),
+            nodes,
+            edges,
+            prerequisites,
+            applications,
+            relatedConcepts,
+          },
+          null,
+          2
+        );
+      } catch (error) {
+        return JSON.stringify({
+          error: "图谱查询失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
 
 /**
  * 生成练习题工具（使用 AI 生成）
@@ -541,10 +547,10 @@ export const queryLearningProgressTool = new DynamicStructuredTool({
 /**
  * 获取所有工具
  */
-export function getAllTools() {
+export function getAllTools(input?: { userId?: string }) {
   return [
-    searchKnowledgeBaseTool,
-    queryKnowledgeGraphTool,
+    createSearchKnowledgeBaseTool(input?.userId),
+    createQueryKnowledgeGraphTool(input?.userId),
     queryLearningProgressTool,
     generateExerciseTool,
     recommendLearningPathTool,

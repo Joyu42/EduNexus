@@ -10,13 +10,14 @@ import OpenAI from "openai";
 import { z } from "zod";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
 import { getGraphView } from "@/lib/server/graph-service";
-import { searchVault } from "@/lib/server/kb-lite";
+import { searchDocuments } from "@/lib/server/document-service";
 import { loadDb } from "@/lib/server/store";
 
 /**
  * Agent 配置
  */
 export interface AgentConfig {
+  userId?: string;
   modelName?: string;
   temperature?: number;
   maxIterations?: number;
@@ -247,22 +248,28 @@ async function runToolCallingLoop(input: {
 }
 
 async function getPrivateDataContext(input: {
+  userId?: string;
   userInput: string;
   taskContext?: AgentConfig["taskContext"];
   graphContext?: AgentConfig["graphContext"];
 }) {
+  const userId = typeof input.userId === "string" && input.userId.trim() ? input.userId.trim() : "";
+  if (!userId) {
+    return "";
+  }
+
   const query = input.userInput.trim();
   if (!query) {
     return "";
   }
 
   const [searchResult, graphView, db] = await Promise.all([
-    searchVault(query),
-    getGraphView({}),
+    searchDocuments(query, userId),
+    getGraphView(userId),
     loadDb(),
   ]);
 
-  const topCandidates = searchResult.candidates.slice(0, 5);
+  const topCandidates = searchResult.slice(0, 5);
   const graphNodes = graphView.nodes.slice(0, 15);
   const graphEdges = graphView.edges
     .filter((edge) => graphNodes.some((node) => node.id === edge.source || node.id === edge.target))
@@ -304,7 +311,7 @@ async function getPrivateDataContext(input: {
     `- 检索词：${query}`,
     topCandidates.length > 0
       ? `- 命中知识条目（Top ${topCandidates.length}）：\n${topCandidates
-          .map((candidate, index) => `${index + 1}. ${candidate.docId}（score=${candidate.score}）\n   片段：${candidate.snippet}`)
+          .map((candidate, index) => `${index + 1}. ${candidate.docId}\n   片段：${candidate.snippet}`)
           .join("\n")}`
       : "- 命中知识条目：无（知识库未检索到直接匹配）",
     graphNodes.length > 0
@@ -381,6 +388,7 @@ export async function runAgentConversation(
       : "";
 
     const privateDataContext = await getPrivateDataContext({
+      userId: config.userId,
       userInput: input,
       taskContext,
       graphContext,
@@ -445,7 +453,7 @@ ${toolsDesc}
       messages.push({ role: "user" as const, content: input });
     }
 
-    const tools = getAllTools();
+    const tools = getAllTools({ userId: config.userId });
 
     const result = await runToolCallingLoop({
       client,

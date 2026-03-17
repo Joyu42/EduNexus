@@ -2,7 +2,7 @@ import { prisma } from './prisma';
 
 const MAX_NODES_PER_USER = 200;
 
-type GraphNode = {
+export type GraphNode = {
   id: string;
   label: string;
   mastery: number;
@@ -10,13 +10,13 @@ type GraphNode = {
   domain: string;
 };
 
-type GraphEdge = {
+export type GraphEdge = {
   source: string;
   target: string;
   weight: number;
 };
 
-type GraphView = {
+export type GraphView = {
   nodes: GraphNode[];
   edges: GraphEdge[];
 };
