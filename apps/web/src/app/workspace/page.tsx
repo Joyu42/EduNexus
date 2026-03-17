@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, Suspense } from "react";
+import { useState, useRef, useEffect, Suspense, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,14 +37,16 @@ import { LearningNotes } from "@/components/workspace/learning-notes";
 import { LearningPlanner } from "@/components/kb/learning-planner";
 import { KBQAAssistant } from "@/components/kb/kb-qa-assistant";
 import { TeacherManager } from "@/components/workspace/teacher-manager";
-import { getKBStorage } from "@/lib/client/kb-storage";
+import { getKBStorage, type KBDocument } from "@/lib/client/kb-storage";
 import { getModelConfig } from "@/lib/client/model-config";
 import { exportChatSessionAsMarkdown, type ChatSession } from "@/lib/workspace/chat-history-storage";
 import {
   getAllTeachers,
   type AITeacher,
 } from "@/lib/workspace/teacher-storage";
-import { useWorkspaceSessionController } from "@/lib/workspace/use-workspace-session-controller";
+import {
+  useWorkspaceSessionController,
+} from "@/lib/workspace/use-workspace-session-controller";
 import { toast } from "sonner";
 
 type WorkspaceTaskContext = {
@@ -74,7 +76,7 @@ function WorkspacePageContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const storage = getKBStorage();
-  const [kbDocuments, setKbDocuments] = useState<any[]>([]);
+  const [kbDocuments, setKbDocuments] = useState<KBDocument[]>([]);
   const [currentTeacher, setCurrentTeacher] = useState<AITeacher | null>(null);
   const [kbQAMode, setKbQAMode] = useState(false); // 知识库问答模式开关
   const [inputValue, setInputValue] = useState("");
@@ -94,7 +96,6 @@ function WorkspacePageContent() {
     recentSessions,
     messages,
     isLoading,
-    refreshSessions,
     selectSession,
     startNewConversation,
     deleteSession,
@@ -135,7 +136,7 @@ function WorkspacePageContent() {
 
     loadKBDocuments();
     loadTeachers();
-  }, [storage]);
+  }, [currentTeacher, storage]);
 
   useEffect(() => {
     const source = searchParams.get("source") || "";
@@ -273,7 +274,7 @@ function WorkspacePageContent() {
 
   const modelConfig = getModelConfig();
 
-  const syncTaskFocusFeedback = async (assistantContent: string) => {
+  const syncTaskFocusFeedback = useCallback(async (assistantContent: string) => {
     if (!taskContext?.taskId || !taskContext.pathId || taskFeedbackSyncedRef.current.has(taskContext.taskId)) {
       return;
     }
@@ -313,33 +314,36 @@ function WorkspacePageContent() {
     } catch (error) {
       console.error("同步任务学习反馈失败:", error);
     }
-  };
+  }, [taskContext]);
 
   const handleStartNewConversation = () => {
     startNewConversation();
     toast.success("已开始新对话");
   };
 
-  const handleSendMessage = async (overrideMessage?: string) => {
-    const effectiveMessage = overrideMessage ?? inputValue;
-    if (kbQAMode && kbDocuments.length === 0) {
-      toast.error("知识库中没有文档，请先添加文档或切换到普通对话模式");
-      return;
-    }
+  const handleSendMessage = useCallback(
+    async (overrideMessage?: string) => {
+      const effectiveMessage = overrideMessage ?? inputValue;
+      if (kbQAMode && kbDocuments.length === 0) {
+        toast.error("知识库中没有文档，请先添加文档或切换到普通对话模式");
+        return;
+      }
 
-    await sendMessage({
-      inputValue: effectiveMessage,
-      uploadedImages,
-      kbQAMode,
-      kbDocuments,
-      modelConfig,
-      currentTeacher,
-      taskContext,
-      onAssistantResponse: syncTaskFocusFeedback,
-    });
-    setInputValue("");
-    setUploadedImages([]);
-  };
+      await sendMessage({
+        inputValue: effectiveMessage,
+        uploadedImages,
+        kbQAMode,
+        kbDocuments,
+        modelConfig,
+        currentTeacher,
+        taskContext,
+        onAssistantResponse: syncTaskFocusFeedback,
+      });
+      setInputValue("");
+      setUploadedImages([]);
+    },
+    [currentTeacher, inputValue, kbDocuments, kbQAMode, modelConfig, sendMessage, syncTaskFocusFeedback, taskContext, uploadedImages]
+  );
 
   useEffect(() => {
     if (!taskContext?.autoStart || !inputValue.trim() || isLoading || pathContextSentTaskRef.current === taskContext.taskId) {
@@ -348,7 +352,7 @@ function WorkspacePageContent() {
 
     pathContextSentTaskRef.current = taskContext.taskId || null;
     void handleSendMessage(inputValue);
-  }, [taskContext?.autoStart, taskContext?.taskId, inputValue, isLoading]);
+  }, [handleSendMessage, inputValue, isLoading, taskContext?.autoStart, taskContext?.taskId]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -1172,7 +1176,7 @@ function WorkspacePageContent() {
                   </Card>
                 ) : (
                   <div className="space-y-2">
-                    {recentSessions.map((session) => (
+                    {recentSessions.slice(0, 10).map((session) => (
                       <Card
                         key={session.id}
                         className={cn(
