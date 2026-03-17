@@ -35,6 +35,13 @@ temp/
 # Runtime local data
 .edunexus/
 
-# AI config
-GEMINI.md
-/generated/prisma
+
+# OpenCode OmO Agent scratchpad / plans
+.sisyphus/
+
+# Local Claude/Agent config
+.claude/
+
+# Use pnpm only
+package-lock.json
+apps/web/package-lock.json
