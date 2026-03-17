@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { runAgentConversation, createChatHistory } from "@/lib/agent/learning-agent";
 import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
+import { auth } from "@/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,13 +26,21 @@ export async function POST(request: Request) {
     // 转换历史消息格式
     const chatHistory = createChatHistory(history);
 
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const userId = session.user.id;
+
     const graphContext = await buildWorkspaceGraphContext({
+      userId,
       taskId: typeof taskContext?.taskId === "string" ? taskContext.taskId : undefined,
       taskTitle: typeof taskContext?.taskTitle === "string" ? taskContext.taskTitle : undefined,
     });
 
     const mergedConfig = {
       ...config,
+      userId,
       taskContext,
       graphContext,
     };

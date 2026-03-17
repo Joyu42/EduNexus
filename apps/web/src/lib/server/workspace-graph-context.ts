@@ -32,10 +32,11 @@ function createTaskNodeCandidates(taskId: string) {
 }
 
 export async function buildWorkspaceGraphContext(input: {
+  userId?: string;
   taskId?: string;
   taskTitle?: string;
 }): Promise<WorkspaceGraphContext> {
-  const graph = await getGraphView({});
+  const graph = input.userId ? await getGraphView(input.userId) : { nodes: [], edges: [] };
   const db = await loadDb();
 
   const normalizedTaskId =

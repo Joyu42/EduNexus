@@ -1,6 +1,7 @@
 import { streamAgentConversation, createChatHistory } from "@/lib/agent/learning-agent";
 import { streamLangGraphAgent } from "@/lib/server/langgraph-agent";
 import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
+import { auth } from "@/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,12 @@ export async function POST(request: Request) {
       return new Response("Invalid message", { status: 400 });
     }
 
+    const session = await auth();
+    if (!session?.user?.id) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+    const userId = session.user.id;
+
     const normalizedLevel =
       typeof currentLevel === "number"
         ? currentLevel
@@ -36,6 +43,7 @@ export async function POST(request: Request) {
     const chatHistory = createChatHistory(history);
 
     const graphContext = await buildWorkspaceGraphContext({
+      userId,
       taskId: typeof taskContext?.taskId === "string" ? taskContext.taskId : undefined,
       taskTitle: typeof taskContext?.taskTitle === "string" ? taskContext.taskTitle : undefined,
     });
@@ -48,6 +56,7 @@ export async function POST(request: Request) {
           if (shouldUseLangGraph) {
             for await (const chunk of streamLangGraphAgent({
               sessionId: typeof sessionId === "string" && sessionId.trim() ? sessionId : undefined,
+              userId,
               userInput: effectiveInput,
               currentLevel: levelForStream,
             })) {
@@ -57,6 +66,7 @@ export async function POST(request: Request) {
           } else {
             const mergedConfig = {
               ...config,
+              userId,
               taskContext,
               graphContext,
             };
