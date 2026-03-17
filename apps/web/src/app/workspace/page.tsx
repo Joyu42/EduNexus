@@ -1259,11 +1259,11 @@ function WorkspacePageContent() {
                     </CardHeader>
                     <CardContent className="space-y-2 text-xs">
                       {[
-                        { icon: BookOpen, label: "搜索知识宝库", desc: "查找相关文档", color: "blue" },
-                        { icon: Brain, label: "查询知识星图", desc: "获取知识关系", color: "purple" },
-                        { icon: Target, label: "生成练习", desc: "个性化题目", color: "green" },
-                        { icon: Lightbulb, label: "成长地图", desc: "智能规划", color: "orange" },
-                        { icon: ImageIcon, label: "图片分析", desc: "多模态理解", color: "pink" },
+                        { icon: BookOpen, label: "搜索知识宝库", desc: "查找相关文档", color: "blue", prompt: "搜索知识宝库:" },
+                        { icon: Brain, label: "查询知识星图", desc: "获取知识关系", color: "purple", prompt: "查询知识星图:" },
+                        { icon: Target, label: "生成练习", desc: "个性化题目", color: "green", prompt: "我想练习" },
+                        { icon: Lightbulb, label: "成长地图", desc: "智能规划", color: "orange", prompt: "帮我规划成长地图" },
+                        { icon: ImageIcon, label: "图片分析", desc: "多模态理解", color: "pink", prompt: "分析这张图片:" },
                       ].map((tool, idx) => {
                         const Icon = tool.icon;
                         return (
@@ -1274,6 +1274,7 @@ function WorkspacePageContent() {
                             transition={{ delay: 0.3 + idx * 0.05 }}
                             whileHover={{ x: 4, scale: 1.02 }}
                             className="flex items-start gap-2 p-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 transition-all cursor-pointer"
+                            onClick={() => setInputValue(tool.prompt)}
                           >
                             <div className={`p-1 rounded bg-${tool.color}-100`}>
                               <Icon className={`h-3 w-3 text-${tool.color}-600`} />
