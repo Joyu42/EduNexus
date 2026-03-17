@@ -49,12 +49,26 @@ describe("server store", () => {
     const db = await loadDb();
 
     expect(Object.keys(db).sort()).toEqual([
+      "analyticsEvents",
+      "analyticsSnapshots",
+      "communityComments",
+      "communityFollows",
+      "communityReactions",
+      "communityTopics",
+      "groupMembers",
+      "groupPosts",
+      "groupSharedResources",
+      "groupTasks",
       "masteryByNode",
       "plans",
       "publicGroups",
       "publicPosts",
       "publicResources",
       "publicTopics",
+      "resourceBookmarks",
+      "resourceFolders",
+      "resourceNotes",
+      "resourceRatings",
       "sessions",
       "syncedPaths"
     ]);
