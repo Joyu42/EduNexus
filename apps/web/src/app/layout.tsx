@@ -6,7 +6,6 @@ import { AppShell } from "@/components/layout/AppShell";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { DocumentProvider } from "@/lib/ai/document-context";
 import { Toaster } from "@/components/ui/sonner";
-import { KGSyncBootstrap } from "@/components/sync/kg-sync-bootstrap";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,7 +54,6 @@ export default function RootLayout({
         <Providers>
           <QueryProvider>
             <DocumentProvider>
-              <KGSyncBootstrap />
               <AppShell>{children}</AppShell>
               <Toaster />
             </DocumentProvider>
