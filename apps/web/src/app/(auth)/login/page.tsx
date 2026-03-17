@@ -15,7 +15,7 @@ function getSafeCallbackUrl(callbackUrl: string | null) {
     return callbackUrl;
   }
 
-  return '/';
+  return '/workspace';
 }
 
 function LoginPageContent() {
