@@ -19,6 +19,7 @@ vi.mock("@/lib/server/langgraph-agent", () => ({
 const { POST: createSession } = await import("./session/route");
 const { GET: listSessions } = await import("./sessions/route");
 const { GET: getSessionDetail } = await import("./session/[id]/route");
+const { POST: appendSessionMessage } = await import("./session/[id]/messages/route");
 const { POST: runAgent } = await import("./agent/run/route");
 
 type Sandbox = Awaited<ReturnType<typeof createSandbox>>;
@@ -74,7 +75,7 @@ describe("workspace api", () => {
   it("returns 401 for unauthenticated workspace session endpoints", async () => {
     getCurrentUserId.mockResolvedValue(null);
 
-    const [createRes, listRes, detailRes, agentRes] = await Promise.all([
+    const [createRes, listRes, detailRes, appendRes, agentRes] = await Promise.all([
       createSession(
         new Request("http://localhost/api/workspace/session", {
           method: "POST",
@@ -86,6 +87,16 @@ describe("workspace api", () => {
       getSessionDetail(new Request("http://localhost"), {
         params: Promise.resolve({ id: "ws_missing" })
       }),
+      appendSessionMessage(
+        new Request("http://localhost/api/workspace/session/ws_missing/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: "user", content: "未登录追加消息" })
+        }),
+        {
+          params: Promise.resolve({ id: "ws_missing" })
+        }
+      ),
       runAgent(
         new Request("http://localhost/api/workspace/agent/run", {
           method: "POST",
@@ -102,8 +113,127 @@ describe("workspace api", () => {
     expect(createRes.status).toBe(401);
     expect(listRes.status).toBe(401);
     expect(detailRes.status).toBe(401);
+    expect(appendRes.status).toBe(401);
     expect(agentRes.status).toBe(401);
     expect(runLangGraphAgent).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed append-message payloads", async () => {
+    const createRes = await createSession(
+      new Request("http://localhost/api/workspace/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "非法消息测试" })
+      })
+    );
+    expect(createRes.status).toBe(200);
+    const createJson = (await createRes.json()) as {
+      data: { session: { id: string } };
+    };
+
+    const appendRes = await appendSessionMessage(
+      new Request(`http://localhost/api/workspace/session/${createJson.data.session.id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "tool", content: "" })
+      }),
+      {
+        params: Promise.resolve({ id: createJson.data.session.id })
+      }
+    );
+
+    expect(appendRes.status).toBe(400);
+  });
+
+  it("denies appending messages to another user's workspace session", async () => {
+    const createRes = await createSession(
+      new Request("http://localhost/api/workspace/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "跨用户消息会话" })
+      })
+    );
+    expect(createRes.status).toBe(200);
+    const createJson = (await createRes.json()) as {
+      data: { session: { id: string } };
+    };
+
+    getCurrentUserId.mockResolvedValue("user-2");
+
+    const appendRes = await appendSessionMessage(
+      new Request(`http://localhost/api/workspace/session/${createJson.data.session.id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "user", content: "越权追加" })
+      }),
+      {
+        params: Promise.resolve({ id: createJson.data.session.id })
+      }
+    );
+
+    expect(appendRes.status).toBe(404);
+  });
+
+  it("appends a sanitized message and returns updated session metadata", async () => {
+    const createRes = await createSession(
+      new Request("http://localhost/api/workspace/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "消息追加成功" })
+      })
+    );
+    expect(createRes.status).toBe(200);
+    const createJson = (await createRes.json()) as {
+      data: { session: { id: string; updatedAt: string } };
+    };
+    const sessionId = createJson.data.session.id;
+
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    const appendRes = await appendSessionMessage(
+      new Request(`http://localhost/api/workspace/session/${sessionId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: "assistant",
+          content: "已整理为安全消息内容",
+          ignored: "should-not-pass"
+        })
+      }),
+      {
+        params: Promise.resolve({ id: sessionId })
+      }
+    );
+
+    expect(appendRes.status).toBe(200);
+    const appendJson = (await appendRes.json()) as {
+      success: boolean;
+      data: {
+        session: {
+          id: string;
+          updatedAt: string;
+          messageCount: number;
+        };
+      };
+    };
+    expect(appendJson.success).toBe(true);
+    expect(appendJson.data.session.id).toBe(sessionId);
+    expect(appendJson.data.session.messageCount).toBe(2);
+    expect(new Date(appendJson.data.session.updatedAt).getTime()).toBeGreaterThan(
+      new Date(createJson.data.session.updatedAt).getTime()
+    );
+
+    const detailRes = await getSessionDetail(new Request("http://localhost"), {
+      params: Promise.resolve({ id: sessionId })
+    });
+    expect(detailRes.status).toBe(200);
+    const detailJson = (await detailRes.json()) as {
+      data: { messages: Array<{ role: string; content: string }> };
+    };
+    expect(detailJson.data.messages.at(-1)).toMatchObject({
+      role: "assistant",
+      content: "已整理为安全消息内容"
+    });
   });
 
   it("creates session, runs agent and persists messages for the authenticated user", async () => {
