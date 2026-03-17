@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Plus,
   Search,
@@ -25,12 +26,17 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  fetchDemoPracticeBootstrap,
+  seedDemoPracticeContent,
+} from "@/lib/client/demo-bootstrap";
+import {
   getPracticeStorage,
   QuestionBank,
 } from "@/lib/client/practice-storage";
 
 export default function QuestionBanksPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [banks, setBanks] = useState<QuestionBank[]>([]);
   const [filteredBanks, setFilteredBanks] = useState<QuestionBank[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,7 +54,7 @@ export default function QuestionBanksPage() {
 
   useEffect(() => {
     loadBanks();
-  }, []);
+  }, [session?.user]);
 
   useEffect(() => {
     // 搜索过滤
@@ -71,7 +77,17 @@ export default function QuestionBanksPage() {
     try {
       setIsLoading(true);
       const storage = getPracticeStorage();
-      const allBanks = await storage.getAllBanks();
+      let allBanks = await storage.getAllBanks();
+      if (
+        allBanks.length === 0 &&
+        (session?.user as { isDemo?: boolean } | undefined)?.isDemo === true
+      ) {
+        const demoBanks = await fetchDemoPracticeBootstrap();
+        if (demoBanks.length > 0) {
+          await seedDemoPracticeContent(storage, demoBanks);
+          allBanks = await storage.getAllBanks();
+        }
+      }
       setBanks(allBanks);
       setFilteredBanks(allBanks);
     } catch (error) {
@@ -398,4 +414,3 @@ export default function QuestionBanksPage() {
     </div>
   );
 }
-
