@@ -29,6 +29,14 @@ import { LoginPrompt } from "@/components/ui/login-prompt";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -85,18 +93,25 @@ function WorkspacePageContent() {
   const [taskContext, setTaskContext] = useState<WorkspaceTaskContext | null>(null);
   const [activeTab, setActiveTab] = useState<"status" | "teachers" | "notes" | "plan" | "kb-qa" | "history">("status");
   const [isMounted, setIsMounted] = useState(false);
+  const [pendingDeleteSession, setPendingDeleteSession] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [isSessionActionPending, setIsSessionActionPending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pathContextSeededTaskRef = useRef<string | null>(null);
   const pathContextSentTaskRef = useRef<string | null>(null);
   const taskFeedbackSyncedRef = useRef(new Set<string>());
+  const sessionActionQueueRef = useRef<Promise<void>>(Promise.resolve());
   const {
     currentSessionId,
     currentSession,
     recentSessions,
     messages,
     isLoading,
+    refreshSessions,
     selectSession,
     startNewConversation,
     deleteSession,
@@ -317,10 +332,72 @@ function WorkspacePageContent() {
     }
   }, [taskContext]);
 
-  const handleStartNewConversation = async () => {
-    await startNewConversation();
-    toast.success("已开始新对话");
-  };
+  const runSessionAction = useCallback(async (action: () => Promise<void>) => {
+    const queued = sessionActionQueueRef.current.then(async () => {
+      setIsSessionActionPending(true);
+      try {
+        await action();
+      } finally {
+        setIsSessionActionPending(false);
+      }
+    });
+
+    sessionActionQueueRef.current = queued.catch(() => undefined);
+    await queued;
+  }, []);
+
+  const handleSelectSession = useCallback(async (sessionId: string) => {
+    try {
+      await runSessionAction(async () => {
+        await selectSession(sessionId);
+      });
+      toast.success("已加载对话");
+    } catch (error) {
+      console.error("加载对话失败:", error);
+      toast.error("加载对话失败");
+    }
+  }, [runSessionAction, selectSession]);
+
+  const handleStartNewConversation = useCallback(async () => {
+    try {
+      await runSessionAction(async () => {
+        await startNewConversation();
+      });
+      toast.success("已开始新对话");
+    } catch (error) {
+      console.error("创建新对话失败:", error);
+      toast.error("创建新对话失败");
+    }
+  }, [runSessionAction, startNewConversation]);
+
+  const requestDeleteSession = useCallback((sessionId: string, title: string) => {
+    setPendingDeleteSession({ id: sessionId, title });
+  }, []);
+
+  const handleConfirmDeleteSession = useCallback(async () => {
+    if (!pendingDeleteSession) {
+      return;
+    }
+
+    const deletingSession = pendingDeleteSession;
+    setPendingDeleteSession(null);
+
+    try {
+      await runSessionAction(async () => {
+        const deletingActiveSession = currentSessionId === deletingSession.id;
+        const fallbackSessionId = deletingActiveSession
+          ? (recentSessions.find((session) => session.id !== deletingSession.id)?.id ?? null)
+          : currentSessionId;
+
+        await deleteSession(deletingSession.id);
+        await refreshSessions(fallbackSessionId);
+      });
+      toast.success("已删除对话");
+    } catch (error) {
+      console.error("删除对话失败:", error);
+      toast.error("删除对话失败");
+    }
+  }, [currentSessionId, deleteSession, pendingDeleteSession, recentSessions, refreshSessions, runSessionAction]);
 
   const handleSendMessage = useCallback(
     async (overrideMessage?: string) => {
@@ -402,7 +479,8 @@ function WorkspacePageContent() {
             variant="ghost" 
             size="icon" 
             className="h-8 w-8 hover:bg-orange-50 hover:text-orange-600 transition-colors" 
-            onClick={handleStartNewConversation}
+            onClick={() => void handleStartNewConversation()}
+            disabled={isSessionActionPending}
             title="新对话"
           >
             <Plus className="h-4 w-4" />
@@ -419,10 +497,7 @@ function WorkspacePageContent() {
             recentSessions.slice(0, 10).map((session) => (
               <div
                 key={session.id}
-                onClick={async () => {
-                  await selectSession(session.id);
-                  toast.success("已加载对话");
-                }}
+                onClick={() => void handleSelectSession(session.id)}
                 className={cn(
                   "group p-3 rounded-xl cursor-pointer transition-all border",
                   currentSessionId === session.id
@@ -445,13 +520,11 @@ function WorkspacePageContent() {
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-muted-foreground hover:text-red-500 hover:bg-red-50 -mr-1 -mt-1"
-                    onClick={async (e) => {
+                    onClick={(e) => {
                       e.stopPropagation();
-                      if (confirm("确定要删除这个对话吗？")) {
-                        await deleteSession(session.id);
-                        toast.success("已删除对话");
-                      }
+                      requestDeleteSession(session.id, session.title);
                     }}
+                    disabled={isSessionActionPending}
                     title="删除"
                   >
                     <Trash2 className="h-3 w-3" />
@@ -1239,7 +1312,8 @@ function WorkspacePageContent() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={handleStartNewConversation}
+                    onClick={() => void handleStartNewConversation()}
+                    disabled={isSessionActionPending}
                     className="text-xs"
                   >
                     <Plus className="h-3 w-3 mr-1" />
@@ -1261,10 +1335,7 @@ function WorkspacePageContent() {
                           "p-3 cursor-pointer hover:shadow-md transition-all",
                           currentSessionId === session.id && "border-orange-500 bg-orange-50"
                         )}
-                        onClick={async () => {
-                          await selectSession(session.id);
-                          toast.success("已加载对话");
-                        }}
+                        onClick={() => void handleSelectSession(session.id)}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
@@ -1279,13 +1350,11 @@ function WorkspacePageContent() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={async (e) => {
+                            onClick={(e) => {
                               e.stopPropagation();
-                              if (confirm("确定要删除这个对话吗？")) {
-                                await deleteSession(session.id);
-                                toast.success("已删除对话");
-                              }
+                              requestDeleteSession(session.id, session.title);
                             }}
+                            disabled={isSessionActionPending}
                             className="h-6 w-6 p-0"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -1300,6 +1369,41 @@ function WorkspacePageContent() {
           </motion.div>
         </AnimatePresence>
       </motion.div>
+
+      <Dialog
+        open={pendingDeleteSession !== null}
+        onOpenChange={(open) => {
+          if (!open && !isSessionActionPending) {
+            setPendingDeleteSession(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>删除对话</DialogTitle>
+            <DialogDescription>
+              {`确定要删除「${pendingDeleteSession?.title ?? "当前对话"}」吗？该操作不可撤销。`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPendingDeleteSession(null)}
+              disabled={isSessionActionPending}
+            >
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void handleConfirmDeleteSession()}
+              disabled={isSessionActionPending}
+            >
+              {isSessionActionPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
-  Filter,
   Clock,
   CheckCircle2,
   Circle,
@@ -46,6 +45,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Timestamp } from "@/components/ui/timestamp";
 import { cn } from "@/lib/utils";
 import { GrowthMapVisualization } from "@/components/path/growth-map-visualization";
@@ -85,6 +92,20 @@ function PathPageContent() {
   const [taskCreateOpen, setTaskCreateOpen] = useState(false);
   const [taskEditOpen, setTaskEditOpen] = useState(false);
   const [milestoneOpen, setMilestoneOpen] = useState(false);
+  const [pendingDeleteAction, setPendingDeleteAction] = useState<
+    | {
+        type: "path";
+        pathId: string;
+        pathTitle: string;
+      }
+    | {
+        type: "task";
+        pathId: string;
+        taskId: string;
+        taskTitle: string;
+      }
+    | null
+  >(null);
 
   // 加载数据 - 每次页面可见时都重新加载
   useEffect(() => {
@@ -97,7 +118,6 @@ function PathPageContent() {
     // 监听页面可见性变化
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[PathPage] 页面重新可见，重新加载数据');
         loadPaths();
       }
     };
@@ -112,7 +132,6 @@ function PathPageContent() {
   const loadPaths = async () => {
     try {
       setLoading(true);
-      console.log('[PathPage] 加载路径...');
       let loadedPaths = await pathStorage.getAllPaths();
 
       const pathCreatedByEditor = searchParams.get("selected");
@@ -138,7 +157,6 @@ function PathPageContent() {
         loadedPaths = await pathStorage.getAllPaths();
       }
 
-      console.log('[PathPage] 加载成功:', loadedPaths.length, '个路径');
       setPaths(loadedPaths);
       if (!editorSelectionApplied && loadedPaths.length > 0 && !selectedPath) {
         setSelectedPath(loadedPaths[0]);
@@ -162,7 +180,6 @@ function PathPageContent() {
     goalId?: string;
   }) => {
     try {
-      console.log('[PathPage] 创建路径:', data);
       const newPath = await pathStorage.createPath({
         title: data.title,
         description: data.description,
@@ -173,8 +190,6 @@ function PathPageContent() {
         tasks: [],
         milestones: [],
       });
-
-      console.log('[PathPage] 路径创建成功:', newPath.id);
 
       // 如果关联了目标，更新目标的 linkedPathIds
       if (data.goalId) {
@@ -190,15 +205,14 @@ function PathPageContent() {
 
       // 选中新创建的路径
       setSelectedPath(newPath);
+      setSelectedTask(newPath.tasks[0] || null);
       setPathCreateOpen(false);
       toast.success("成功创建学习路径");
 
       // 验证保存
       setTimeout(async () => {
         const saved = await pathStorage.getPath(newPath.id);
-        if (saved) {
-          console.log('[PathPage] 验证成功，路径已保存');
-        } else {
+        if (!saved) {
           console.error('[PathPage] 验证失败，路径未保存');
           toast.error("路径保存验证失败，请刷新页面");
         }
@@ -230,25 +244,74 @@ function PathPageContent() {
   }, [selectedPath, paths]);
 
   // 删除路径
-  const handleDeletePath = useCallback(async () => {
+  const handleDeletePath = useCallback(() => {
     if (!selectedPath) return;
 
-    if (!confirm(`确定要删除"${selectedPath.title}"吗？此操作无法撤销。`)) {
+    setPendingDeleteAction({
+      type: "path",
+      pathId: selectedPath.id,
+      pathTitle: selectedPath.title,
+    });
+    toast("请在弹窗中确认删除路径");
+  }, [selectedPath]);
+
+  const handleDeleteTask = useCallback(() => {
+    if (!selectedPath || !selectedTask) return;
+
+    setPendingDeleteAction({
+      type: "task",
+      pathId: selectedPath.id,
+      taskId: selectedTask.id,
+      taskTitle: selectedTask.title,
+    });
+    toast("请在弹窗中确认删除任务");
+  }, [selectedPath, selectedTask]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!pendingDeleteAction) {
       return;
     }
 
+    const deleteAction = pendingDeleteAction;
+    setPendingDeleteAction(null);
+
     try {
-      await pathStorage.deletePath(selectedPath.id);
-      const newPaths = paths.filter(p => p.id !== selectedPath.id);
-      setPaths(newPaths);
-      setSelectedPath(newPaths[0] || null);
-      setSelectedTask(null);
-      toast.success("成功删除路径");
+      if (deleteAction.type === "path") {
+        await pathStorage.deletePath(deleteAction.pathId);
+        const newPaths = paths.filter((path) => path.id !== deleteAction.pathId);
+        const nextSelectedPath = selectedPath?.id === deleteAction.pathId ? (newPaths[0] || null) : selectedPath;
+        setPaths(newPaths);
+        setSelectedPath(nextSelectedPath);
+        setSelectedTask(nextSelectedPath?.tasks[0] || null);
+        toast.success("成功删除路径");
+        return;
+      }
+
+      const currentPath = paths.find((path) => path.id === deleteAction.pathId);
+      if (!currentPath) {
+        toast.error("未找到要删除任务所属的路径");
+        return;
+      }
+
+      const updatedTasks = currentPath.tasks.filter((task) => task.id !== deleteAction.taskId);
+      const updatedPath = await pathStorage.updatePath(deleteAction.pathId, {
+        tasks: updatedTasks,
+      });
+
+      const updatedPaths = paths.map((path) => (path.id === updatedPath.id ? updatedPath : path));
+      setPaths(updatedPaths);
+
+      if (selectedPath?.id === updatedPath.id) {
+        setSelectedPath(updatedPath);
+        setSelectedTask(updatedPath.tasks.find((task) => task.id === selectedTask?.id) || updatedPath.tasks[0] || null);
+      }
+
+      toast.success("成功删除任务");
     } catch (error) {
-      console.error("Failed to delete path:", error);
-      toast.error("删除路径失败");
+      console.error("Failed to delete item:", error);
+      toast.error(deleteAction.type === "path" ? "删除路径失败" : "删除任务失败");
     }
-  }, [selectedPath, paths]);
+  }, [paths, pendingDeleteAction, selectedPath, selectedTask]);
 
   // 复制路径
   const handleDuplicatePath = useCallback(async () => {
@@ -315,7 +378,7 @@ function PathPageContent() {
     try {
       const newTask: Task = {
         ...data,
-        id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `task_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
         status: "not_started",
         progress: 0,
         createdAt: new Date(),
@@ -375,30 +438,6 @@ function PathPageContent() {
     } catch (error) {
       console.error("Failed to update task:", error);
       toast.error("更新任务失败");
-    }
-  }, [selectedPath, selectedTask, paths]);
-
-  // 删除任务
-  const handleDeleteTask = useCallback(async () => {
-    if (!selectedPath || !selectedTask) return;
-
-    if (!confirm(`确定要删除任务"${selectedTask.title}"吗？`)) {
-      return;
-    }
-
-    try {
-      const updatedTasks = selectedPath.tasks.filter(t => t.id !== selectedTask.id);
-      const updated = await pathStorage.updatePath(selectedPath.id, {
-        tasks: updatedTasks,
-      });
-
-      setPaths(paths.map(p => p.id === updated.id ? updated : p));
-      setSelectedPath(updated);
-      setSelectedTask(updated.tasks[0] || null);
-      toast.success("成功删除任务");
-    } catch (error) {
-      console.error("Failed to delete task:", error);
-      toast.error("删除任务失败");
     }
   }, [selectedPath, selectedTask, paths]);
 
@@ -1100,6 +1139,34 @@ function PathPageContent() {
         tasks={selectedPath?.tasks || []}
         onUpdate={handleUpdateMilestones}
       />
+
+      <Dialog
+        open={pendingDeleteAction !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingDeleteAction(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{pendingDeleteAction?.type === "path" ? "删除路径" : "删除任务"}</DialogTitle>
+            <DialogDescription>
+              {pendingDeleteAction?.type === "path"
+                ? `确定要删除「${pendingDeleteAction.pathTitle}」吗？此操作无法撤销。`
+                : `确定要删除任务「${pendingDeleteAction?.taskTitle ?? "当前任务"}」吗？此操作无法撤销。`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingDeleteAction(null)}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={() => void handleConfirmDelete()}>
+              删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
