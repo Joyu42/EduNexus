@@ -40,7 +40,7 @@ export async function createGroup(input: {
 
 export async function updateGroup(
   groupId: string,
-  input: Partial<Pick<PublicGroupRecord, "name" | "description" | "memberCount">>
+  input: Partial<Pick<PublicGroupRecord, "name" | "description">>
 ) {
   const db = await loadDb();
   const record = db.publicGroups.find((item) => item.id === groupId);
@@ -54,10 +54,21 @@ export async function updateGroup(
   if (typeof input.description === "string") {
     record.description = input.description;
   }
-  if (typeof input.memberCount === "number") {
-    record.memberCount = Math.max(0, Math.round(input.memberCount));
+  await saveDb(db);
+  return record;
+}
+
+export async function syncGroupMemberCount(groupId: string) {
+  const db = await loadDb();
+  const record = db.publicGroups.find((item) => item.id === groupId);
+  if (!record) {
+    return null;
   }
 
+  const activeMemberCount = db.groupMembers.filter(
+    (member) => member.groupId === groupId && member.status === "active"
+  ).length;
+  record.memberCount = activeMemberCount;
   await saveDb(db);
   return record;
 }

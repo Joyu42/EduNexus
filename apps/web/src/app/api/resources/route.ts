@@ -6,10 +6,42 @@ import { getCurrentUserId } from "@/lib/server/auth-utils";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const db = await loadDb();
-    return ok({ resources: db.publicResources });
+
+    const { searchParams } = new URL(req.url);
+    const q = (searchParams.get("q") ?? "").trim();
+    const sort = (searchParams.get("sort") ?? "newest").trim();
+    const rawLimit = (searchParams.get("limit") ?? "").trim();
+
+    const limitParsed = rawLimit ? Number.parseInt(rawLimit, 10) : Number.NaN;
+    const limit = Number.isFinite(limitParsed) ? Math.min(100, Math.max(1, limitParsed)) : 20;
+
+    const keyword = q ? q.toLowerCase() : "";
+    const filtered = keyword
+      ? db.publicResources.filter((resource) => {
+          const title = resource.title?.toLowerCase?.() ?? "";
+          const description = resource.description?.toLowerCase?.() ?? "";
+          return title.includes(keyword) || description.includes(keyword);
+        })
+      : db.publicResources;
+
+    const sorted = filtered.slice();
+    if (sort === "oldest") {
+      sorted.sort((a, b) => {
+        return Date.parse(a.createdAt) - Date.parse(b.createdAt);
+      });
+    } else if (sort === "title") {
+      sorted.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+    } else {
+      sorted.sort((a, b) => {
+        return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+      });
+    }
+
+    const resources = sorted.slice(0, limit);
+    return ok({ resources, total: filtered.length });
   } catch (error) {
     return fail(
       {

@@ -70,6 +70,15 @@ export async function deleteResource(resourceId: string) {
     return false;
   }
 
+   db.resourceBookmarks = db.resourceBookmarks.filter((item) => item.resourceId !== resourceId);
+   db.resourceNotes = db.resourceNotes.filter((item) => item.resourceId !== resourceId);
+   db.resourceRatings = db.resourceRatings.filter((item) => item.resourceId !== resourceId);
+   db.resourceFolders = db.resourceFolders.map((folder) => ({
+     ...folder,
+     resourceIds: folder.resourceIds.filter((id) => id !== resourceId),
+     updatedAt: folder.resourceIds.includes(resourceId) ? new Date().toISOString() : folder.updatedAt
+   }));
+
   await saveDb(db);
   return true;
 }

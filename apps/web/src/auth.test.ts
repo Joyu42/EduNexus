@@ -122,6 +122,13 @@ describe("auth callbacks", () => {
       password: "hashed-password",
       isDemo: true,
     });
+    const getUserById = vi.fn().mockResolvedValue({
+      id: "demo_123",
+      email: "demo@edunexus.com",
+      name: "Demo User",
+      password: "hashed-password",
+      isDemo: true,
+    });
     const verifyPassword = vi.fn().mockResolvedValue(true);
     const nextAuth = vi.fn((config) => ({
       handlers: {},
@@ -140,6 +147,7 @@ describe("auth callbacks", () => {
     }));
     vi.doMock("./lib/server/user-service", () => ({
       getUserByEmail,
+      getUserById,
       verifyPassword,
     }));
 

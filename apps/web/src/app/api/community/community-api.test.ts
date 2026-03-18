@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getCurrentUserId = vi.fn();
+const getUserById = vi.fn();
 const loadDb = vi.fn();
 const saveDb = vi.fn();
 const createPost = vi.fn();
 
 vi.mock("@/lib/server/auth-utils", () => ({
   getCurrentUserId
+}));
+
+vi.mock("@/lib/server/user-service", () => ({
+  getUserById
 }));
 
 vi.mock("@/lib/server/store", () => ({
@@ -24,6 +29,15 @@ describe("community api", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getCurrentUserId.mockResolvedValue("session-user");
+    getUserById.mockResolvedValue({
+      id: "session-user",
+      email: "demo@example.com",
+      name: "Alice",
+      password: "hashed",
+      isDemo: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
     loadDb.mockResolvedValue({
       sessions: [],
       plans: [],
@@ -59,14 +73,21 @@ describe("community api", () => {
         body: JSON.stringify({
           title: "可发布帖子",
           content: "登录用户可以发布",
-          authorId: "author_1",
-          authorName: "Alice"
+          authorName: "SHOULD_BE_IGNORED"
         })
       })
     );
 
     expect(response.status).toBe(201);
     expect(createPost).toHaveBeenCalledTimes(1);
+    expect(createPost).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "可发布帖子",
+        content: "登录用户可以发布",
+        authorId: "session-user",
+        authorName: "Alice"
+      })
+    );
 
     const body = await response.json();
     expect(body.data.post.authorId).toBe("author_1");

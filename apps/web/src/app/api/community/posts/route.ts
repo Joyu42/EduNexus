@@ -3,6 +3,7 @@ import { fail, ok } from "@/lib/server/response";
 import { createPost } from "@/lib/server/community-service";
 import { loadDb } from "@/lib/server/store";
 import { getCurrentUserId } from "@/lib/server/auth-utils";
+import { getUserById } from "@/lib/server/user-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,10 +37,20 @@ export async function POST(request: Request) {
       );
     }
 
+    const user = await getUserById(userId);
+    if (!user?.name) {
+      return fail(
+        {
+          code: "PROFILE_INCOMPLETE",
+          message: "请先在配置中心设置用户名后再发布。"
+        },
+        400
+      );
+    }
+
     const json = await request.json().catch(() => ({}));
     const title = typeof json.title === "string" ? json.title.trim() : "";
     const content = typeof json.content === "string" ? json.content.trim() : "";
-    const authorName = typeof json.authorName === "string" ? json.authorName.trim() : "";
 
     if (!title || !content) {
       return fail(
@@ -55,7 +66,7 @@ export async function POST(request: Request) {
       title,
       content,
       authorId: userId,
-      authorName: authorName || undefined
+      authorName: user.name
     });
 
     return NextResponse.json(

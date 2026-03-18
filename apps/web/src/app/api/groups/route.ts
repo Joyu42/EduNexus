@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { fail, ok } from "@/lib/server/response";
-import { createGroup } from "@/lib/server/groups-service";
+import { createGroup, createGroupMember, syncGroupMemberCount } from "@/lib/server/groups-service";
 import { loadDb } from "@/lib/server/store";
 import { getCurrentUserId } from "@/lib/server/auth-utils";
 
@@ -10,7 +10,11 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const db = await loadDb();
-    return ok({ groups: db.publicGroups });
+    const groups = db.publicGroups.map((group) => ({
+      ...group,
+      memberCount: db.groupMembers.filter((member) => member.groupId === group.id && member.status === "active").length
+    }));
+    return ok({ groups });
   } catch (error) {
     return fail(
       {
@@ -57,11 +61,18 @@ export async function POST(request: Request) {
       description,
       createdBy: userId
     });
+    await createGroupMember({
+      groupId: group.id,
+      userId,
+      role: "owner",
+      status: "active"
+    });
+    const synced = await syncGroupMemberCount(group.id);
 
     return NextResponse.json(
       {
         success: true,
-        data: { group }
+        data: { group: synced ?? group }
       },
       { status: 201 }
     );

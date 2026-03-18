@@ -7,6 +7,10 @@ import {
   DEMO_PATH_BOOTSTRAP,
   DEMO_PATH_SEEDS,
   DEMO_PRACTICE_BANKS,
+  DEMO_PUBLIC_GROUP_SEEDS,
+  DEMO_PUBLIC_POST_SEEDS,
+  DEMO_PUBLIC_RESOURCE_SEEDS,
+  DEMO_PUBLIC_TOPIC_SEEDS,
   DEMO_WORKSPACE_SESSIONS
 } from "@/lib/server/demo-content";
 import { buildDemoStarterBundle } from "@/lib/client/demo-bootstrap";
@@ -228,6 +232,98 @@ function seedDemoGraphEdgesToDb(
     } else {
       // Add new edge
       db.plans.push(edgeRecord);
+    }
+  }
+}
+
+function seedDemoSocialToDb(
+  db: Awaited<ReturnType<typeof loadDb>>,
+  now: string
+): void {
+  db.publicTopics = Array.isArray(db.publicTopics) ? db.publicTopics : [];
+  db.publicResources = Array.isArray(db.publicResources) ? db.publicResources : [];
+  db.publicGroups = Array.isArray(db.publicGroups) ? db.publicGroups : [];
+  db.publicPosts = Array.isArray(db.publicPosts) ? db.publicPosts : [];
+
+  const topicIds = new Set(DEMO_PUBLIC_TOPIC_SEEDS.map((item) => item.id));
+  db.publicTopics = db.publicTopics.filter(
+    (item) => !(item.id.startsWith("demo_topic_") && !topicIds.has(item.id))
+  );
+  for (const topic of DEMO_PUBLIC_TOPIC_SEEDS) {
+    const index = db.publicTopics.findIndex((item) => item.id === topic.id);
+    const record = {
+      id: topic.id,
+      name: topic.name,
+      createdAt: now
+    };
+    if (index >= 0) {
+      db.publicTopics[index] = record;
+    } else {
+      db.publicTopics.push(record);
+    }
+  }
+
+  const resourceIds = new Set(DEMO_PUBLIC_RESOURCE_SEEDS.map((item) => item.id));
+  db.publicResources = db.publicResources.filter(
+    (item) => !(item.id.startsWith("demo_public_res_") && !resourceIds.has(item.id))
+  );
+  for (const resource of DEMO_PUBLIC_RESOURCE_SEEDS) {
+    const index = db.publicResources.findIndex((item) => item.id === resource.id);
+    const record = {
+      id: resource.id,
+      title: resource.title,
+      description: resource.description,
+      url: resource.url,
+      createdBy: resource.createdBy,
+      createdAt: now
+    };
+    if (index >= 0) {
+      db.publicResources[index] = record;
+    } else {
+      db.publicResources.push(record);
+    }
+  }
+
+  const groupIds = new Set(DEMO_PUBLIC_GROUP_SEEDS.map((item) => item.id));
+  db.publicGroups = db.publicGroups.filter(
+    (item) => !(item.id.startsWith("demo_group_") && !groupIds.has(item.id))
+  );
+  for (const group of DEMO_PUBLIC_GROUP_SEEDS) {
+    const index = db.publicGroups.findIndex((item) => item.id === group.id);
+    const record = {
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      memberCount: group.memberCount,
+      createdBy: group.createdBy,
+      createdAt: now
+    };
+    if (index >= 0) {
+      db.publicGroups[index] = record;
+    } else {
+      db.publicGroups.push(record);
+    }
+  }
+
+  const postIds = new Set(DEMO_PUBLIC_POST_SEEDS.map((item) => item.id));
+  db.publicPosts = db.publicPosts.filter(
+    (item) => !(item.id.startsWith("demo_post_") && !postIds.has(item.id))
+  );
+  for (const post of DEMO_PUBLIC_POST_SEEDS) {
+    const index = db.publicPosts.findIndex((item) => item.id === post.id);
+    const record = {
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      authorId: post.authorId,
+      authorName: post.authorName,
+      createdAt: now,
+      updatedAt: now
+    };
+    if (index >= 0) {
+      db.publicPosts[index] = record;
+    } else {
+      db.publicPosts.push(record);
     }
   }
 }
@@ -502,6 +598,8 @@ export async function POST() {
     // 4. Seed graph edges to db.plans (idempotent)
     seedDemoGraphEdgesToDb(db, now);
 
+    seedDemoSocialToDb(db, now);
+
     // Always save after seeding (even if no changes, ensures data is persisted)
     await saveDb(db);
 
@@ -513,11 +611,21 @@ export async function POST() {
       goals: { items: DEMO_GOAL_SEEDS },
       paths: { items: DEMO_PATH_SEEDS },
       path: DEMO_PATH_BOOTSTRAP,
+      social: {
+        resources: DEMO_PUBLIC_RESOURCE_SEEDS,
+        groups: DEMO_PUBLIC_GROUP_SEEDS,
+        topics: DEMO_PUBLIC_TOPIC_SEEDS,
+        posts: DEMO_PUBLIC_POST_SEEDS
+      },
       seeded: {
         paths: DEMO_PATH_SEEDS.map(p => p.id),
         goals: DEMO_GOAL_SEEDS.map(g => g.id),
         graphNodes: DEMO_GRAPH_BOOTSTRAP.nodes.map(n => n.id),
-        graphEdges: DEMO_GRAPH_BOOTSTRAP.edges.map(e => e.id)
+        graphEdges: DEMO_GRAPH_BOOTSTRAP.edges.map(e => e.id),
+        resources: DEMO_PUBLIC_RESOURCE_SEEDS.map((item) => item.id),
+        groups: DEMO_PUBLIC_GROUP_SEEDS.map((item) => item.id),
+        topics: DEMO_PUBLIC_TOPIC_SEEDS.map((item) => item.id),
+        posts: DEMO_PUBLIC_POST_SEEDS.map((item) => item.id)
       }
     });
   } catch (error) {

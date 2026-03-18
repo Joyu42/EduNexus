@@ -1,6 +1,7 @@
 "use client";
 
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -15,15 +16,25 @@ import { Save } from "lucide-react";
 interface GeneralSettingsPanelProps {
   theme: string;
   language: string;
+  username: string;
+  email: string;
   onThemeChange: (theme: string) => void;
   onLanguageChange: (language: string) => void;
+  onUsernameChange: (username: string) => void;
+  onSave: () => void;
+  saving?: boolean;
 }
 
 export function GeneralSettingsPanel({
   theme,
   language,
+  username,
+  email,
   onThemeChange,
   onLanguageChange,
+  onUsernameChange,
+  onSave,
+  saving,
 }: GeneralSettingsPanelProps) {
   return (
     <div className="space-y-6">
@@ -80,10 +91,33 @@ export function GeneralSettingsPanel({
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>账号信息</CardTitle>
+          <CardDescription>用户名将用于社区展示（不可为空且不可重复）</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email">邮箱（唯一标识）</Label>
+            <Input id="email" value={email} disabled />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="username">用户名</Label>
+            <Input
+              id="username"
+              value={username}
+              onChange={(e) => onUsernameChange(e.target.value)}
+              placeholder="请输入用户名"
+              required
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end">
-        <Button onClick={() => alert('设置已保存')}>
+        <Button onClick={onSave} disabled={saving}>
           <Save className="h-4 w-4 mr-2" />
-          保存设置
+          {saving ? "保存中..." : "保存设置"}
         </Button>
       </div>
     </div>

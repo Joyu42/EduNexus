@@ -499,6 +499,113 @@ export const DEMO_GOAL_SEEDS: DemoGoalSeed[] = [
   }
 ];
 
+export const DEMO_PUBLIC_RESOURCE_SEEDS: Array<{
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  createdBy: string;
+}> = [
+  {
+    id: "demo_public_res_react_docs",
+    title: "React 官方文档",
+    description: "React 组件、Hooks 与最佳实践文档。",
+    url: "https://react.dev/",
+    createdBy: "demo_user"
+  },
+  {
+    id: "demo_public_res_js_info",
+    title: "JavaScript.info 现代教程",
+    description: "从基础到进阶的 JavaScript 体系化教程。",
+    url: "https://zh.javascript.info/",
+    createdBy: "demo_user"
+  },
+  {
+    id: "demo_public_res_mdn_css",
+    title: "MDN CSS 文档",
+    description: "CSS 参考与布局实践手册。",
+    url: "https://developer.mozilla.org/zh-CN/docs/Web/CSS",
+    createdBy: "demo_user"
+  },
+  {
+    id: "demo_public_res_algo",
+    title: "LeetCode 算法训练",
+    description: "数据结构与算法练习平台，适合刷题与复盘。",
+    url: "https://leetcode.cn/",
+    createdBy: "demo_user"
+  }
+];
+
+export const DEMO_PUBLIC_GROUP_SEEDS: Array<{
+  id: string;
+  name: string;
+  description: string;
+  memberCount: number;
+  createdBy: string;
+}> = [
+  {
+    id: "demo_group_frontend",
+    name: "前端冲刺小组",
+    description: "每周共学 HTML/CSS/React，产出可演示页面。",
+    memberCount: 18,
+    createdBy: "demo_user"
+  },
+  {
+    id: "demo_group_algo",
+    name: "算法刷题打卡营",
+    description: "每日一题，周末复盘，沉淀题解与模板。",
+    memberCount: 27,
+    createdBy: "demo_user"
+  },
+  {
+    id: "demo_group_project",
+    name: "项目作品集互评",
+    description: "围绕作品集项目进行 Code Review 与改进建议。",
+    memberCount: 12,
+    createdBy: "demo_user"
+  }
+];
+
+export const DEMO_PUBLIC_TOPIC_SEEDS: Array<{ id: string; name: string }> = [
+  { id: "demo_topic_react", name: "React" },
+  { id: "demo_topic_frontend", name: "前端学习" },
+  { id: "demo_topic_algo", name: "算法刷题" },
+  { id: "demo_topic_project", name: "项目实战" }
+] ;
+
+export const DEMO_PUBLIC_POST_SEEDS: Array<{
+  id: string;
+  title: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+}> = [
+  {
+    id: "demo_post_react_plan",
+    title: "React 路径怎么安排更稳？",
+    content:
+      "我把学习拆成 JS 复盘、组件化练习、项目交付三段，大家有更高效的节奏建议吗？",
+    authorId: "demo_user",
+    authorName: "Demo Learner"
+  },
+  {
+    id: "demo_post_css_review",
+    title: "本周 CSS 响应式改造复盘",
+    content:
+      "断点和间距体系统一后，页面稳定了很多。下周准备补无障碍标签。",
+    authorId: "demo_user",
+    authorName: "Demo Learner"
+  },
+  {
+    id: "demo_post_algo_habit",
+    title: "算法打卡 7 天小结",
+    content:
+      "从数组双指针到栈队列，关键是每天固定时间 + 及时写题解复盘。",
+    authorId: "demo_user",
+    authorName: "Demo Learner"
+  }
+];
+
 export const DEMO_PATH_BOOTSTRAP: DemoPathBootstrap = {
   goalType: DEMO_GOAL_SEEDS[0].goalType,
   goal: DEMO_PATH_SEEDS[0].title,
@@ -543,5 +650,297 @@ export const DEMO_PRACTICE_BANKS: DemoPracticeBankSeed[] = [
         explanation: "React 的组件与 Hooks 依赖闭包、状态更新与异步机制的扎实基础。"
       }
     ]
+  }
+];
+
+export const DEMO_RESOURCE_BOOKMARK_SEEDS: Array<{
+  id: string;
+  userId: string;
+  resourceId: string;
+  createdAt: string;
+}> = [
+  {
+    id: "demo_res_bookmark_1",
+    userId: "demo_user",
+    resourceId: "demo_public_res_react_docs",
+    createdAt: "2026-03-18T09:10:00Z"
+  },
+  {
+    id: "demo_res_bookmark_2",
+    userId: "demo_user",
+    resourceId: "demo_public_res_mdn_css",
+    createdAt: "2026-03-18T09:14:00Z"
+  },
+  {
+    id: "demo_res_bookmark_3",
+    userId: "demo_user",
+    resourceId: "demo_public_res_js_info",
+    createdAt: "2026-03-18T09:25:00Z"
+  }
+];
+
+export const DEMO_RESOURCE_NOTE_SEEDS: Array<{
+  id: string;
+  userId: string;
+  resourceId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}> = [
+  {
+    id: "demo_res_note_1",
+    userId: "demo_user",
+    resourceId: "demo_public_res_react_docs",
+    content: "Hooks 部分先通读 useState/useEffect，再做一个表单 + 列表的最小项目巩固。",
+    createdAt: "2026-03-18T10:05:00Z",
+    updatedAt: "2026-03-18T10:05:00Z"
+  },
+  {
+    id: "demo_res_note_2",
+    userId: "demo_user",
+    resourceId: "demo_public_res_mdn_css",
+    content: "复盘 Flex/Grid 常用布局套路：容器、间距体系、断点策略，统一命名避免样式发散。",
+    createdAt: "2026-03-18T10:20:00Z",
+    updatedAt: "2026-03-18T10:34:00Z"
+  }
+];
+
+export const DEMO_RESOURCE_RATING_SEEDS: Array<{
+  id: string;
+  userId: string;
+  resourceId: string;
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
+}> = [
+  {
+    id: "demo_res_rating_1",
+    userId: "demo_user",
+    resourceId: "demo_public_res_react_docs",
+    rating: 5,
+    createdAt: "2026-03-18T11:00:00Z",
+    updatedAt: "2026-03-18T11:00:00Z"
+  },
+  {
+    id: "demo_res_rating_2",
+    userId: "demo_user",
+    resourceId: "demo_public_res_js_info",
+    rating: 4,
+    createdAt: "2026-03-18T11:02:00Z",
+    updatedAt: "2026-03-18T11:15:00Z"
+  },
+  {
+    id: "demo_res_rating_3",
+    userId: "demo_user",
+    resourceId: "demo_public_res_algo",
+    rating: 4,
+    createdAt: "2026-03-18T11:06:00Z",
+    updatedAt: "2026-03-18T11:06:00Z"
+  }
+];
+
+export const DEMO_GROUP_MEMBER_SEEDS: Array<{
+  id: string;
+  groupId: string;
+  userId: string;
+  role: "owner" | "admin" | "member";
+  status: "active" | "invited" | "removed";
+  joinedAt: string;
+}> = [
+  {
+    id: "demo_group_member_frontend_owner",
+    groupId: "demo_group_frontend",
+    userId: "demo_user",
+    role: "owner",
+    status: "active",
+    joinedAt: "2026-03-16T09:00:00Z"
+  },
+  {
+    id: "demo_group_member_frontend_1",
+    groupId: "demo_group_frontend",
+    userId: "demo_user_alice",
+    role: "admin",
+    status: "active",
+    joinedAt: "2026-03-16T10:30:00Z"
+  },
+  {
+    id: "demo_group_member_algo_1",
+    groupId: "demo_group_algo",
+    userId: "demo_user",
+    role: "member",
+    status: "active",
+    joinedAt: "2026-03-17T08:40:00Z"
+  },
+  {
+    id: "demo_group_member_project_1",
+    groupId: "demo_group_project",
+    userId: "demo_user_bob",
+    role: "owner",
+    status: "active",
+    joinedAt: "2026-03-14T12:00:00Z"
+  },
+  {
+    id: "demo_group_member_project_2",
+    groupId: "demo_group_project",
+    userId: "demo_user",
+    role: "member",
+    status: "active",
+    joinedAt: "2026-03-17T12:25:00Z"
+  }
+];
+
+export const DEMO_GROUP_POST_SEEDS: Array<{
+  id: string;
+  groupId: string;
+  authorId: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}> = [
+  {
+    id: "demo_group_post_1",
+    groupId: "demo_group_frontend",
+    authorId: "demo_user",
+    title: "本周目标：完成响应式断点与间距体系",
+    content: "我打算先固定断点（mobile/tablet/desktop），再统一 spacing scale，最后补无障碍标签。",
+    createdAt: "2026-03-18T09:40:00Z",
+    updatedAt: "2026-03-18T09:40:00Z"
+  },
+  {
+    id: "demo_group_post_2",
+    groupId: "demo_group_algo",
+    authorId: "demo_user_alice",
+    title: "栈/队列题型怎么快速识别？",
+    content: "看到“最近更大/更小”优先考虑单调栈；看到“层级/最短路径”优先考虑 BFS。欢迎补充。",
+    createdAt: "2026-03-18T10:10:00Z",
+    updatedAt: "2026-03-18T10:18:00Z"
+  },
+  {
+    id: "demo_group_post_3",
+    groupId: "demo_group_project",
+    authorId: "demo_user_bob",
+    title: "作品集互评规则（简版）",
+    content: "每次互评聚焦 1) 目标是否清晰 2) 交互是否可用 3) 代码是否可维护。评论尽量给可执行建议。",
+    createdAt: "2026-03-17T13:00:00Z",
+    updatedAt: "2026-03-17T13:00:00Z"
+  }
+];
+
+export const DEMO_GROUP_TASK_SEEDS: Array<{
+  id: string;
+  groupId: string;
+  title: string;
+  description: string;
+  status: "todo" | "in_progress" | "done";
+  assigneeId: string | null;
+  dueDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}> = [
+  {
+    id: "demo_group_task_frontend_1",
+    groupId: "demo_group_frontend",
+    title: "完成响应式页面交付",
+    description: "补齐断点策略、间距体系与关键页面适配，并输出可演示链接。",
+    status: "in_progress",
+    assigneeId: "demo_user",
+    dueDate: "2026-03-24",
+    createdAt: "2026-03-18T09:50:00Z",
+    updatedAt: "2026-03-18T11:20:00Z"
+  },
+  {
+    id: "demo_group_task_algo_1",
+    groupId: "demo_group_algo",
+    title: "每日一题：栈与队列",
+    description: "完成 3 道典型题并写出题解模板（入栈/出栈条件、边界处理）。",
+    status: "todo",
+    assigneeId: null,
+    dueDate: "2026-03-20",
+    createdAt: "2026-03-18T10:22:00Z",
+    updatedAt: "2026-03-18T10:22:00Z"
+  },
+  {
+    id: "demo_group_task_project_1",
+    groupId: "demo_group_project",
+    title: "互评：完善 README 与截图",
+    description: "补齐项目目标、技术选型、运行方式，并提供至少 2 张关键页面截图。",
+    status: "done",
+    assigneeId: "demo_user_bob",
+    dueDate: "2026-03-18",
+    createdAt: "2026-03-15T08:00:00Z",
+    updatedAt: "2026-03-17T16:30:00Z"
+  }
+];
+
+export const DEMO_POST_COMMENT_SEEDS: Array<{
+  id: string;
+  postId: string;
+  authorId: string;
+  content: string;
+  parentCommentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}> = [
+  {
+    id: "demo_post_comment_1",
+    postId: "demo_post_react_plan",
+    authorId: "demo_user_alice",
+    content: "这个节奏很稳。我会建议在每一段都加一个小交付（可运行的小 demo），避免只看文档。",
+    parentCommentId: null,
+    createdAt: "2026-03-18T12:05:00Z",
+    updatedAt: "2026-03-18T12:05:00Z"
+  },
+  {
+    id: "demo_post_comment_2",
+    postId: "demo_post_react_plan",
+    authorId: "demo_user",
+    content: "同意！我准备每周做一个小页面：表单/列表/路由各一个。",
+    parentCommentId: "demo_post_comment_1",
+    createdAt: "2026-03-18T12:20:00Z",
+    updatedAt: "2026-03-18T12:20:00Z"
+  },
+  {
+    id: "demo_post_comment_3",
+    postId: "demo_post_css_review",
+    authorId: "demo_user_bob",
+    content: "间距体系统一真的很救命。你是用 4/8 的 scale 还是 2/4/8？",
+    parentCommentId: null,
+    createdAt: "2026-03-18T12:35:00Z",
+    updatedAt: "2026-03-18T12:35:00Z"
+  }
+];
+
+export const DEMO_POST_REACTION_SEEDS: Array<{
+  id: string;
+  targetType: "post" | "comment";
+  targetId: string;
+  actorId: string;
+  reactionType: string;
+  createdAt: string;
+}> = [
+  {
+    id: "demo_post_reaction_1",
+    targetType: "post",
+    targetId: "demo_post_react_plan",
+    actorId: "demo_user",
+    reactionType: "like",
+    createdAt: "2026-03-18T12:01:00Z"
+  },
+  {
+    id: "demo_post_reaction_2",
+    targetType: "post",
+    targetId: "demo_post_css_review",
+    actorId: "demo_user_alice",
+    reactionType: "clap",
+    createdAt: "2026-03-18T12:33:00Z"
+  },
+  {
+    id: "demo_post_reaction_3",
+    targetType: "post",
+    targetId: "demo_post_algo_habit",
+    actorId: "demo_user_bob",
+    reactionType: "insightful",
+    createdAt: "2026-03-18T12:40:00Z"
   }
 ];

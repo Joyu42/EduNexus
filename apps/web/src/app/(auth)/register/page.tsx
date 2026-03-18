@@ -15,7 +15,7 @@ function getSafeCallbackUrl(callbackUrl: string | null) {
     return callbackUrl;
   }
 
-  return '/';
+  return '/workspace';
 }
 
 type RegisterErrorResponse = {
@@ -56,6 +56,11 @@ function RegisterPageContent() {
       return;
     }
 
+    if (name.trim().length < 2) {
+      setError('用户名长度至少为 2 个字符');
+      return;
+    }
+
     if (password.length < 6) {
       setError('密码长度至少为 6 位');
       return;
@@ -87,8 +92,7 @@ function RegisterPageContent() {
       if (result?.error) {
         setError('注册成功但登录失败，请尝试手动登录');
       } else {
-        router.replace(callbackUrl);
-        router.refresh();
+        window.location.href = callbackUrl;
       }
     } catch {
       setError('注册失败，请重试');
@@ -104,13 +108,14 @@ function RegisterPageContent() {
         
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">昵称</label>
+            <label className="block text-sm font-medium text-foreground mb-1">用户名</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-primary/50 placeholder:text-muted-foreground"
-              placeholder="你的昵称"
+              placeholder="唯一用户名（不可重复）"
+              required
             />
           </div>
           

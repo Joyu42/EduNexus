@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { MessageSquareQuote, Plus, Search, Loader2, User } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
@@ -28,10 +31,20 @@ type CommunityPost = {
   createdAt: string;
 };
 
+type CommunityTopic = {
+  id: string;
+  name: string;
+  postCount?: number;
+};
+
 export default function CommunityPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [topicFilter, setTopicFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const displayName = session?.user?.name || session?.user?.email || "用户";
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["community-posts"],
@@ -45,11 +58,22 @@ export default function CommunityPage() {
     },
   });
 
+  const { data: topics = [] } = useQuery({
+    queryKey: ["community-topics"],
+    queryFn: async () => {
+      const response = await fetch("/api/community/topics");
+      if (!response.ok) {
+        throw new Error("获取话题失败");
+      }
+      const payload = await response.json();
+      return (payload.data?.topics ?? []) as CommunityTopic[];
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       const title = formData.get("title") as string;
       const content = formData.get("content") as string;
-      const authorName = formData.get("authorName") as string;
 
       const response = await fetch("/api/community/posts", {
         method: "POST",
@@ -59,13 +83,16 @@ export default function CommunityPage() {
         body: JSON.stringify({
           title,
           content,
-          authorName: authorName || "匿名用户",
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "发布帖子失败");
+        const errorData = await response.json().catch(() => ({}));
+        const message =
+          typeof errorData?.error?.message === "string"
+            ? errorData.error.message
+            : "发布帖子失败";
+        throw new Error(message);
       }
 
       return response.json();
@@ -82,11 +109,21 @@ export default function CommunityPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (status === "unauthenticated") {
+      toast.error("请先登录后再发布");
+      router.push(`/login?callbackUrl=${encodeURIComponent("/community")}`);
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     createMutation.mutate(formData);
   };
 
   const filteredPosts = posts.filter((post) => {
+    const byTopic =
+      topicFilter === "all"
+        ? true
+        : (`${post.title}\n${post.content}`.toLowerCase().includes(`#${topicFilter.toLowerCase()}`));
+    if (!byTopic) return false;
     if (!searchQuery) return true;
     const lowerQuery = searchQuery.toLowerCase();
     return (
@@ -146,13 +183,11 @@ export default function CommunityPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="authorName">昵称 (可选)</Label>
-                  <Input 
-                    id="authorName" 
-                    name="authorName" 
-                    placeholder="匿名用户" 
-                    autoComplete="off"
-                  />
+                  <Label>发布为</Label>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <User className="h-4 w-4" />
+                    <span className="font-medium text-foreground">{displayName}</span>
+                  </div>
                 </div>
                 <DialogFooter className="pt-4">
                   <Button 
@@ -183,6 +218,18 @@ export default function CommunityPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          <select
+            className="h-10 rounded-md border bg-background px-3 text-sm"
+            value={topicFilter}
+            onChange={(e) => setTopicFilter(e.target.value)}
+          >
+            <option value="all">全部话题</option>
+            {topics.map((topic) => (
+              <option key={topic.id} value={topic.name}>
+                #{topic.name}
+              </option>
+            ))}
+          </select>
           <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap shrink-0">
             <span>社区动态总数</span>
             <Badge variant="secondary" className="px-2 py-0.5">{posts.length}</Badge>
@@ -210,9 +257,9 @@ export default function CommunityPage() {
               {filteredPosts.map((post) => (
                 <Card key={post.id} className="p-5 flex flex-col transition-shadow hover:shadow-md border-border/50">
                   <div className="flex justify-between items-start gap-4 mb-3">
-                    <h2 className="text-xl font-semibold leading-tight group-hover:text-orange-600 transition-colors">
+                    <Link href={`/community/posts/${post.id}`} className="text-xl font-semibold leading-tight hover:text-orange-600 transition-colors">
                       {post.title}
-                    </h2>
+                    </Link>
                     <span className="shrink-0 text-xs text-muted-foreground tabular-nums bg-muted px-2 py-1 rounded-md">
                       {new Date(post.createdAt).toLocaleDateString("zh-CN", {
                         year: "numeric",
@@ -233,6 +280,9 @@ export default function CommunityPage() {
                       <User className="h-3 w-3" />
                       <span className="font-medium text-foreground">{post.authorName || "匿名用户"}</span>
                     </div>
+                    <Link href={`/community/posts/${post.id}`} className="ml-auto text-orange-600 hover:underline">
+                      查看详情
+                    </Link>
                   </div>
                 </Card>
               ))}

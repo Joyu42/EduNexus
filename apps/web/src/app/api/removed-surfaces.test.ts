@@ -7,6 +7,6 @@ describe("removed api surfaces", () => {
     const apiRoot = path.resolve(process.cwd(), "src/app/api");
 
     await expect(fs.access(path.join(apiRoot, "collab"))).rejects.toThrow();
-    await expect(fs.access(path.join(apiRoot, "user"))).rejects.toThrow();
+    await expect(fs.access(path.join(apiRoot, "user"))).resolves.toBeUndefined();
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { LogOut, User as UserIcon, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
 
 export function UserMenu() {
   const { data: session, status } = useSession();
@@ -75,13 +74,6 @@ export function UserMenu() {
         <div className="px-2 py-1.5 text-sm text-muted-foreground">
           {user?.email}
         </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <a href="/settings" className="cursor-pointer flex items-center w-full">
-            <UserIcon className="h-4 w-4 mr-2" />
-            个人设置
-          </a>
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => signOut({ callbackUrl: '/login' })}

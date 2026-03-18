@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { getUserByEmail, verifyPassword } from "./lib/server/user-service";
+import { getUserByEmail, getUserById, verifyPassword } from "./lib/server/user-service";
 import { isAuthorizedRouteRequest } from "./lib/server/auth-route-protection";
 
 export const authConfig = {
@@ -50,6 +50,10 @@ export const authConfig = {
         token.id = token.sub;
       }
 
+      if (user && typeof user.name === "string") {
+        token.name = user.name;
+      }
+
       if (user && typeof user.isDemo === "boolean") {
         token.isDemo = user.isDemo;
       } else if (typeof token.isDemo !== "boolean") {
@@ -58,10 +62,17 @@ export const authConfig = {
 
       return token;
     },
-    session({ session, token }) {
+    async session({ session, token }) {
       if (session.user && typeof token.id === "string") {
         session.user.id = token.id;
         session.user.isDemo = token.isDemo === true;
+      }
+
+      if (session.user && typeof token.id === "string") {
+        const user = await getUserById(token.id);
+        if (user?.name) {
+          session.user.name = user.name;
+        }
       }
 
       return session;

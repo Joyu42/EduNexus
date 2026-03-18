@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BookOpenText, Plus, Search, ExternalLink, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
@@ -31,27 +33,37 @@ type PublicResource = {
 
 export default function ResourcesPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest" | "title">("newest");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const displayName = session?.user?.name || session?.user?.email || "用户";
 
-  const { data: resources = [], isLoading } = useQuery({
-    queryKey: ["resources"],
+  const { data, isLoading } = useQuery({
+    queryKey: ["resources", { q: searchQuery, sort }],
     queryFn: async () => {
-      const response = await fetch("/api/resources");
+      const params = new URLSearchParams({ q: searchQuery, sort, limit: "100" });
+      const response = await fetch(`/api/resources?${params.toString()}`);
       if (!response.ok) {
         throw new Error("获取资源失败");
       }
       const payload = await response.json();
-      return (payload.data?.resources ?? []) as PublicResource[];
+      return {
+        resources: (payload.data?.resources ?? []) as PublicResource[],
+        total: typeof payload.data?.total === "number" ? payload.data.total : 0
+      };
     },
   });
+
+  const resources = data?.resources ?? [];
+  const total = data?.total ?? 0;
 
   const createMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       const title = formData.get("title") as string;
       const description = formData.get("description") as string;
       const url = formData.get("url") as string;
-      const createdBy = formData.get("createdBy") as string;
 
       const response = await fetch("/api/resources", {
         method: "POST",
@@ -62,13 +74,16 @@ export default function ResourcesPage() {
           title,
           description: description || undefined,
           url: url || undefined,
-          createdBy,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "创建资源失败");
+        const errorData = await response.json().catch(() => ({}));
+        const message =
+          typeof errorData?.error?.message === "string"
+            ? errorData.error.message
+            : "创建资源失败";
+        throw new Error(message);
       }
 
       return response.json();
@@ -85,19 +100,14 @@ export default function ResourcesPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (status === "unauthenticated") {
+      toast.error("请先登录后再分享资源");
+      router.push(`/login?callbackUrl=${encodeURIComponent("/resources")}`);
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     createMutation.mutate(formData);
   };
-
-  const filteredResources = resources.filter((r) => {
-    if (!searchQuery) return true;
-    const lowerQuery = searchQuery.toLowerCase();
-    return (
-      r.title.toLowerCase().includes(lowerQuery) ||
-      r.description?.toLowerCase().includes(lowerQuery) ||
-      r.createdBy?.toLowerCase().includes(lowerQuery)
-    );
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50/40 via-lime-50/20 to-teal-50/30">
@@ -159,14 +169,10 @@ export default function ResourcesPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="createdBy">分享者 <span className="text-destructive">*</span></Label>
-                  <Input 
-                    id="createdBy" 
-                    name="createdBy" 
-                    placeholder="你的名字或昵称" 
-                    required 
-                    autoComplete="off"
-                  />
+                  <Label>分享为</Label>
+                  <div className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">{displayName}</span>
+                  </div>
                 </div>
                 <DialogFooter className="pt-4">
                   <Button 
@@ -198,9 +204,18 @@ export default function ResourcesPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          <select
+            className="h-10 rounded-md border bg-background px-3 text-sm"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as "newest" | "oldest" | "title")}
+          >
+            <option value="newest">按最新</option>
+            <option value="oldest">按最早</option>
+            <option value="title">按标题</option>
+          </select>
           <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap shrink-0">
             <span>公共资源总数</span>
-            <Badge variant="secondary" className="px-2 py-0.5">{resources.length}</Badge>
+            <Badge variant="secondary" className="px-2 py-0.5">{total}</Badge>
           </div>
         </div>
 
@@ -211,7 +226,7 @@ export default function ResourcesPage() {
               <Loader2 className="h-8 w-8 animate-spin text-emerald-500/50" />
               <p>加载资源中...</p>
             </div>
-          ) : filteredResources.length === 0 ? (
+          ) : resources.length === 0 ? (
             <Card className="p-12 text-center border-dashed">
               <div className="mx-auto w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
                 <BookOpenText className="h-6 w-6 text-muted-foreground/50" />
@@ -223,12 +238,12 @@ export default function ResourcesPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredResources.map((resource) => (
+              {resources.map((resource) => (
                 <Card key={resource.id} className="p-5 flex flex-col transition-shadow hover:shadow-md border-border/50">
                   <div className="flex justify-between items-start gap-4 mb-3">
-                    <h2 className="text-lg font-semibold leading-tight group-hover:text-emerald-600 transition-colors line-clamp-2">
+                    <Link href={`/resources/${resource.id}`} className="text-lg font-semibold leading-tight hover:text-emerald-600 transition-colors line-clamp-2">
                       {resource.title}
-                    </h2>
+                    </Link>
                     {resource.url && (
                       <Link 
                         href={resource.url} 

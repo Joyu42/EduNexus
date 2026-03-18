@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Users, Plus, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +32,8 @@ type PublicGroup = {
 export default function GroupsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { status } = useSession();
 
   const { data: groups = [], isLoading: loading } = useQuery({
     queryKey: ["groups"],
@@ -60,8 +64,12 @@ export default function GroupsPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "创建小组失败");
+        const errorData = await response.json().catch(() => ({}));
+        const message =
+          typeof errorData?.error?.message === "string"
+            ? errorData.error.message
+            : "创建小组失败";
+        throw new Error(message);
       }
 
       return response.json();
@@ -78,6 +86,11 @@ export default function GroupsPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (status === "unauthenticated") {
+      toast.error("请先登录后再创建小组");
+      router.push(`/login?callbackUrl=${encodeURIComponent("/groups")}`);
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     createMutation.mutate(formData);
   };
