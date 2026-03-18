@@ -238,3 +238,45 @@ describe("auth callbacks", () => {
     });
   });
 });
+
+describe("auth callback url sanitization", () => {
+  it("returns /workspace when callbackUrl missing or unsafe", async () => {
+    let getSafeCallbackUrl: ((callbackUrl: string | null) => string) | undefined;
+
+    try {
+      ({ getSafeCallbackUrl } = await import("./lib/auth-callback"));
+    } catch (err) {
+      expect(err).toBeUndefined();
+      return;
+    }
+
+    if (!getSafeCallbackUrl) {
+      throw new Error("Expected getSafeCallbackUrl export");
+    }
+
+    expect(getSafeCallbackUrl(null)).toBe("/workspace");
+    expect(getSafeCallbackUrl("https://evil.example")).toBe("/workspace");
+    expect(getSafeCallbackUrl("//evil.example")).toBe("/workspace");
+    expect(getSafeCallbackUrl("/login")).toBe("/workspace");
+    expect(getSafeCallbackUrl("/register")).toBe("/workspace");
+  });
+
+  it("returns callbackUrl when it is a safe relative path", async () => {
+    let getSafeCallbackUrl: ((callbackUrl: string | null) => string) | undefined;
+
+    try {
+      ({ getSafeCallbackUrl } = await import("./lib/auth-callback"));
+    } catch (err) {
+      expect(err).toBeUndefined();
+      return;
+    }
+
+    if (!getSafeCallbackUrl) {
+      throw new Error("Expected getSafeCallbackUrl export");
+    }
+
+    expect(getSafeCallbackUrl("/workspace")).toBe("/workspace");
+    expect(getSafeCallbackUrl("/workspace?tab=recent")).toBe("/workspace?tab=recent");
+    expect(getSafeCallbackUrl("/kb/123")).toBe("/kb/123");
+  });
+});

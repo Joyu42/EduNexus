@@ -4,19 +4,7 @@ import { signIn } from 'next-auth/react';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-
-function getSafeCallbackUrl(callbackUrl: string | null) {
-  if (
-    callbackUrl?.startsWith('/') &&
-    !callbackUrl.startsWith('//') &&
-    callbackUrl !== '/login' &&
-    callbackUrl !== '/register'
-  ) {
-    return callbackUrl;
-  }
-
-  return '/workspace';
-}
+import { getSafeCallbackUrl } from '@/lib/auth-callback';
 
 function LoginPageContent() {
   const router = useRouter();
@@ -108,7 +96,10 @@ function LoginPageContent() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           还没有账号？{' '}
-          <a href="/register" className="font-medium text-primary hover:underline">
+          <a
+            href={`/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+            className="font-medium text-primary hover:underline"
+          >
             立即注册
           </a>
         </p>

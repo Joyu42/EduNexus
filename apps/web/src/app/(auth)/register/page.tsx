@@ -4,19 +4,7 @@ import { signIn } from 'next-auth/react';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-
-function getSafeCallbackUrl(callbackUrl: string | null) {
-  if (
-    callbackUrl?.startsWith('/') &&
-    !callbackUrl.startsWith('//') &&
-    callbackUrl !== '/login' &&
-    callbackUrl !== '/register'
-  ) {
-    return callbackUrl;
-  }
-
-  return '/workspace';
-}
+import { getSafeCallbackUrl } from '@/lib/auth-callback';
 
 type RegisterErrorResponse = {
   error?: {
@@ -170,7 +158,10 @@ function RegisterPageContent() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           已有账号？{' '}
-          <a href="/login" className="font-medium text-primary hover:underline">
+          <a
+            href={`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+            className="font-medium text-primary hover:underline"
+          >
             立即登录
           </a>
         </p>
