@@ -3,10 +3,40 @@
 import { useState, useEffect } from "react";
 import { KBLayout } from "@/components/kb/kb-layout";
 import { LoginPrompt } from "@/components/ui/login-prompt";
-import { type KBDocument, fetchDocumentsFromServer, createDocumentOnServer } from "@/lib/client/kb-storage";
+import {
+  type KBDocument,
+  type KBVault,
+  type ServerDocument,
+  fetchDocumentsFromServer,
+  createDocumentOnServer,
+  updateDocumentOnServer,
+  deleteDocumentOnServer,
+} from "@/lib/client/kb-storage";
 import { useDocument } from "@/lib/ai/document-context";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { getKnowledgeBaseViewState } from "./view-state";
+
+const SERVER_VAULT: KBVault = {
+  id: "server-vault",
+  name: "我的知识库",
+  path: "/kb",
+  createdAt: new Date(0),
+  lastAccessedAt: new Date(0),
+  isDefault: true,
+};
+
+function toKBDocument(doc: ServerDocument): KBDocument {
+  return {
+    id: doc.id,
+    title: doc.title,
+    content: doc.content,
+    tags: doc.tags ?? [],
+    createdAt: new Date(doc.createdAt),
+    updatedAt: new Date(doc.updatedAt),
+    vaultId: SERVER_VAULT.id,
+  };
+}
 
 export default function KnowledgeBasePage() {
   const { setCurrentDocument } = useDocument();
@@ -28,18 +58,11 @@ export default function KnowledgeBasePage() {
       if (status === 'authenticated') {
         try {
           const serverDocs = await fetchDocumentsFromServer();
-          const docsFromServer: KBDocument[] = serverDocs.map((d: any) => ({
-            id: d.id,
-            title: d.title,
-            content: d.content,
-            tags: d.tags || [],
-            createdAt: new Date(d.createdAt),
-            updatedAt: new Date(d.updatedAt),
-            vaultId: 'server-vault',
-          }));
+          const docsFromServer: KBDocument[] = serverDocs.map(toKBDocument);
           setDocuments(docsFromServer);
         } catch (error) {
           console.error("Failed to fetch documents from server:", error);
+          toast.error("加载文档失败");
         }
       }
       setIsLoading(false);
@@ -50,25 +73,19 @@ export default function KnowledgeBasePage() {
 
   const handleCreateDocument = async (title: string) => {
     if (status !== 'authenticated') {
-      alert('请先登录！');
+      toast.error('请先登录');
       return;
     }
+
     try {
-      const newDocFromServer = await createDocumentOnServer(title, '');
-      const newDoc: KBDocument = {
-        id: newDocFromServer.id,
-        title: newDocFromServer.title,
-        content: newDocFromServer.content,
-        tags: [],
-        createdAt: new Date(newDocFromServer.createdAt),
-        updatedAt: new Date(newDocFromServer.updatedAt),
-        vaultId: 'server-vault',
-      };
+      const newDocFromServer = await createDocumentOnServer(title, '# 新建文档\n');
+      const newDoc = toKBDocument(newDocFromServer);
       setDocuments(prev => [...prev, newDoc]);
       setCurrentDoc(newDoc);
     } catch (error) {
       console.error("Failed to create document on server:", error);
-      alert('创建文档失败！');
+      const message = error instanceof Error ? error.message : '创建文档失败';
+      toast.error(message);
     }
   };
   
@@ -76,9 +93,58 @@ export default function KnowledgeBasePage() {
     setCurrentDoc(doc);
   };
 
-  const handleVaultChange = (vaultId: string) => console.log("Vault change not implemented:", vaultId);
-  const handleDeleteDocument = async (docId: string) => console.log("Delete:", docId);
-  const handleUpdateDocument = async (doc: KBDocument) => console.log("Update:", doc.id);
+  const handleVaultChange = (vaultId: string) => {
+    if (vaultId !== SERVER_VAULT.id) {
+      toast.error("当前版本仅支持默认知识库");
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    try {
+      await deleteDocumentOnServer(docId);
+      setDocuments((prev) => {
+        const nextDocuments = prev.filter((doc) => doc.id !== docId);
+        setCurrentDoc((previousCurrentDoc) => {
+          if (previousCurrentDoc?.id !== docId) {
+            return previousCurrentDoc;
+          }
+
+          return nextDocuments[0] ?? null;
+        });
+        return nextDocuments;
+      });
+      toast.success("文档已删除");
+    } catch (error) {
+      console.error("Failed to delete document on server:", error);
+      const message = error instanceof Error ? error.message : "删除文档失败";
+      toast.error(message);
+    }
+  };
+
+  const handleUpdateDocument = async (doc: KBDocument) => {
+    try {
+      const updatedFromServer = await updateDocumentOnServer(doc.id, {
+        title: doc.title,
+        content: doc.content,
+        tags: doc.tags,
+      });
+      const updatedDoc = toKBDocument(updatedFromServer);
+
+      setDocuments((prev) =>
+        prev.map((existingDoc) =>
+          existingDoc.id === updatedDoc.id ? updatedDoc : existingDoc
+        )
+      );
+
+      setCurrentDoc((previousCurrentDoc) =>
+        previousCurrentDoc?.id === updatedDoc.id ? updatedDoc : previousCurrentDoc
+      );
+    } catch (error) {
+      console.error("Failed to update document on server:", error);
+      const message = error instanceof Error ? error.message : "更新文档失败";
+      toast.error(message);
+    }
+  };
 
   if (status === 'loading') {
     return <div>Loading Authentication...</div>;
@@ -111,8 +177,8 @@ export default function KnowledgeBasePage() {
   
   return (
     <KBLayout
-      vaults={[]}
-      currentVault={null}
+      vaults={[SERVER_VAULT]}
+      currentVault={SERVER_VAULT}
       documents={documents}
       currentDoc={currentDoc}
       onVaultChange={handleVaultChange}

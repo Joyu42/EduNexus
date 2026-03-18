@@ -392,9 +392,65 @@ export type ServerDocument = {
   id: string;
   title: string;
   content: string;
+  tags?: string[];
   createdAt: Date | string;
   updatedAt: Date | string;
 };
+
+type ApiErrorPayload = {
+  error?: {
+    message?: string;
+  };
+};
+
+function parseApiData<T>(payload: unknown, fallback: T): T {
+  if (!payload || typeof payload !== "object") {
+    return fallback;
+  }
+
+  const maybeData = (payload as { data?: unknown }).data;
+  if (maybeData !== undefined) {
+    return maybeData as T;
+  }
+
+  return payload as T;
+}
+
+async function getErrorMessage(response: Response, fallback: string): Promise<string> {
+  const payload = (await response.json().catch(() => null)) as ApiErrorPayload | null;
+  const message = payload?.error?.message;
+  return typeof message === "string" && message.length > 0 ? message : fallback;
+}
+
+function isServerDocument(payload: unknown): payload is ServerDocument {
+  if (!payload || typeof payload !== "object") {
+    return false;
+  }
+
+  const candidate = payload as Partial<ServerDocument>;
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.title === "string" &&
+    typeof candidate.content === "string" &&
+    (typeof candidate.createdAt === "string" || candidate.createdAt instanceof Date) &&
+    (typeof candidate.updatedAt === "string" || candidate.updatedAt instanceof Date)
+  );
+}
+
+function parseServerDocument(payload: unknown, fallbackMessage: string): ServerDocument {
+  const data = parseApiData<Record<string, unknown>>(payload, {});
+
+  if (isServerDocument(data)) {
+    return data;
+  }
+
+  const nestedDocument = (data as { document?: unknown }).document;
+  if (isServerDocument(nestedDocument)) {
+    return nestedDocument;
+  }
+
+  throw new Error(fallbackMessage);
+}
 
 /**
  * 从服务器获取当前用户的文档列表
@@ -409,10 +465,12 @@ export async function fetchDocumentsFromServer(): Promise<ServerDocument[]> {
       console.warn('User not logged in, cannot fetch documents from server');
       return [];
     }
-    throw new Error(`Failed to fetch documents: ${response.status}`);
+    const message = await getErrorMessage(response, `Failed to fetch documents: ${response.status}`);
+    throw new Error(message);
   }
   
-  const data = await response.json();
+  const payload = await response.json();
+  const data = parseApiData<{ documents?: ServerDocument[] }>(payload, {});
   return data.documents || [];
 }
 
@@ -433,11 +491,12 @@ export async function createDocumentOnServer(
   });
   
   if (!response.ok) {
-    throw new Error(`Failed to create document: ${response.status}`);
+    const message = await getErrorMessage(response, `Failed to create document: ${response.status}`);
+    throw new Error(message);
   }
   
-  const data = await response.json();
-  return data.document;
+  const payload = await response.json();
+  return parseServerDocument(payload, "Server returned an invalid document payload");
 }
 
 /**
@@ -452,11 +511,46 @@ export async function getDocumentFromServer(id: string): Promise<ServerDocument 
     if (response.status === 404) {
       return null;
     }
-    throw new Error(`Failed to fetch document: ${response.status}`);
+    const message = await getErrorMessage(response, `Failed to fetch document: ${response.status}`);
+    throw new Error(message);
   }
   
-  const data = await response.json();
-  return data;
+  const payload = await response.json();
+  return parseServerDocument(payload, "Server returned an invalid document payload");
+}
+
+export async function updateDocumentOnServer(
+  id: string,
+  updates: Pick<ServerDocument, "title" | "content"> & { tags?: string[] }
+): Promise<ServerDocument> {
+  const response = await fetch(`/api/kb/doc/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(updates),
+  });
+
+  if (!response.ok) {
+    const message = await getErrorMessage(response, `Failed to update document: ${response.status}`);
+    throw new Error(message);
+  }
+
+  const payload = await response.json();
+  return parseServerDocument(payload, "Server returned an invalid document payload");
+}
+
+export async function deleteDocumentOnServer(id: string): Promise<void> {
+  const response = await fetch(`/api/kb/doc/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const message = await getErrorMessage(response, `Failed to delete document: ${response.status}`);
+    throw new Error(message);
+  }
 }
 
 // 单例实例
