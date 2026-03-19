@@ -3,8 +3,10 @@
 import { use, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { LoginPrompt } from "@/components/ui/login-prompt";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +26,7 @@ import {
 import { wordsStorage } from "@/lib/words/storage";
 import { updateWordStatus } from "@/lib/words/scheduler";
 import { getWordsToday, listenForWordsTodayChange } from "@/lib/words/date";
-import { selectSessionWordIds } from "@/lib/words/session";
+import { selectNewWordIds } from "@/lib/words/session";
 import type { Word, WordAnswerGrade } from "@/lib/words/types";
 
 type LearnPageProps = {
@@ -35,19 +37,20 @@ function buildLearningQueue(words: Word[], size = 20): Word[] {
   return words.slice(0, size);
 }
 
-async function buildSmartLearningQueue(bookId: string, today: string): Promise<Word[]> {
+async function buildSmartLearningQueue(bookId: string): Promise<Word[]> {
   const [words, records] = await Promise.all([
     wordsStorage.getWordsByBook(bookId),
     wordsStorage.getAllLearningRecords(),
   ]);
 
-  const sessionWordIds = selectSessionWordIds(words, records, today, 20);
+  const sessionWordIds = selectNewWordIds(words, records, 20);
   const byId = new Map(words.map((word) => [word.id, word]));
   return sessionWordIds.map((id) => byId.get(id)).filter((item): item is Word => Boolean(item));
 }
 
 export default function LearnWordsPage({ params }: LearnPageProps) {
   const router = useRouter();
+  const { status } = useSession();
   const resolvedParams = use(params);
   const [today, setToday] = useState(getWordsToday());
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -73,12 +76,18 @@ export default function LearnWordsPage({ params }: LearnPageProps) {
   }, []);
 
   useEffect(() => {
+    if (status !== "authenticated") {
+      setLoading(false);
+      setBookWords([]);
+      return;
+    }
+
     let active = true;
     setLoading(true);
 
     const load = async () => {
       await ensureWordsBootstrap();
-      const words = await buildSmartLearningQueue(bookId, today);
+      const words = await buildSmartLearningQueue(bookId);
       if (!active) return;
       setBookWords(words);
       setCurrentIndex(0);
@@ -93,11 +102,11 @@ export default function LearnWordsPage({ params }: LearnPageProps) {
     return () => {
       active = false;
     };
-  }, [bookId, today]);
+  }, [bookId, today, status]);
 
   useEffect(() => {
     let active = true;
-    if (!currentWord) {
+    if (!currentWord || status !== "authenticated") {
       setRelatedWords([]);
       return;
     }
@@ -112,7 +121,7 @@ export default function LearnWordsPage({ params }: LearnPageProps) {
     return () => {
       active = false;
     };
-  }, [bookId, currentWord]);
+  }, [bookId, currentWord, status]);
 
   const generateMnemonic = async (word: Word) => {
     setMnemonicLoading(true);
@@ -126,6 +135,10 @@ export default function LearnWordsPage({ params }: LearnPageProps) {
   };
 
   const moveNext = async (grade: WordAnswerGrade) => {
+    if (status !== "authenticated") {
+      return;
+    }
+
     if (!currentWord) {
       return;
     }
@@ -152,9 +165,13 @@ export default function LearnWordsPage({ params }: LearnPageProps) {
   };
 
   const restart = () => {
+    if (status !== "authenticated") {
+      return;
+    }
+
     void (async () => {
       setLoading(true);
-      const words = await buildSmartLearningQueue(bookId, today);
+      const words = await buildSmartLearningQueue(bookId);
       setBookWords(words);
       setCurrentIndex(0);
       setKnownCount(0);
@@ -164,6 +181,18 @@ export default function LearnWordsPage({ params }: LearnPageProps) {
       setLoading(false);
     })();
   };
+
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+        <p className="text-sm text-slate-600">正在检查登录状态...</p>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return <LoginPrompt title="单词学习" />;
+  }
 
   if (loading) {
     return (
@@ -180,9 +209,14 @@ export default function LearnWordsPage({ params }: LearnPageProps) {
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
         <div className="rounded-xl border bg-white p-6 text-center shadow-sm">
           <p className="text-base font-medium text-slate-900">当前词库暂无可学习单词</p>
-          <Button className="mt-4" onClick={() => router.push("/words")}>
-            返回仪表盘
-          </Button>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <Button variant="default" onClick={restart}>
+              再学一组
+            </Button>
+            <Button variant="outline" onClick={() => router.push("/words")}>
+              返回仪表盘
+            </Button>
+          </div>
         </div>
       </div>
     );

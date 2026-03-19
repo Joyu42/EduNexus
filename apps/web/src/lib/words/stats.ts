@@ -27,18 +27,26 @@ export function calculateTodayProgress(
   return { learned, reviewed, relearned, accuracy };
 }
 
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
 export function calculateStreakDays(activeDates: string[], today: string): number {
-  const sorted = Array.from(new Set(activeDates)).sort();
+  const sorted = Array.from(new Set(activeDates.filter(Boolean))).sort();
   if (sorted.length === 0) {
     return 0;
   }
 
   const set = new Set(sorted);
   const latestDate = sorted[sorted.length - 1];
-  const start = latestDate <= today ? latestDate : today;
+  const latest = new Date(`${latestDate}T00:00:00.000Z`);
+  const current = new Date(`${today}T00:00:00.000Z`);
+  const diff = Math.floor((current.getTime() - latest.getTime()) / DAY_IN_MS);
+
+  if (diff > 1 || diff < 0) {
+    return 0;
+  }
 
   let streak = 0;
-  const cursor = new Date(`${start}T00:00:00.000Z`);
+  const cursor = latest;
 
   while (true) {
     const iso = cursor.toISOString().split("T")[0];

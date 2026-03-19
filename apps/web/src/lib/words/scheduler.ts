@@ -31,6 +31,13 @@ const INITIAL_INTERVAL_BY_GRADE: Record<WordAnswerGrade, number> = {
   easy: 5,
 };
 
+const FIRST_EXPOSURE_DELAY: Record<WordAnswerGrade, number> = {
+  again: 1,
+  hard: 1,
+  good: 1,
+  easy: 2,
+};
+
 function toIsoDate(value: Date): string {
   return value.toISOString().split("T")[0];
 }
@@ -97,9 +104,10 @@ export async function updateWordStatus(
   const baseEase = current?.easeFactor ?? 2.5;
   const next = calculateNextReview(baseInterval, baseEase, quality);
   const nextInterval = current ? next.nextInterval : startingInterval;
-  const nextReviewDate = addDays(today, nextInterval);
-
   const isFirstSeen = !current;
+  const scheduledInterval = isFirstSeen ? FIRST_EXPOSURE_DELAY[normalizedGrade] : nextInterval;
+  const nextReviewDate = addDays(today, scheduledInterval);
+
   const status =
     normalizedGrade === "again"
       ? "learning"

@@ -3,23 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Flame, ListTodo, PlayCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { LoginPrompt } from "@/components/ui/login-prompt";
 import {
   BookSelector,
   ProgressRing,
   StatsCard,
   StreakCalendar,
 } from "@/components/words";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ensureWordsBootstrap } from "@/lib/words/bootstrap";
 import { getWordsToday, listenForWordsTodayChange } from "@/lib/words/date";
 import { wordsStorage } from "@/lib/words/storage";
@@ -27,13 +19,15 @@ import type {
   LearningRecord,
   LearningStats,
   WordBook,
-  WordsPlanSettings,
   WordsTodaySummary,
 } from "@/lib/words/types";
 import { getCompletedCountFromSummary, syncWordsProgressToGoal } from "@/lib/words/integration";
 
+const SELECTED_BOOK_STORAGE_KEY = "edunexus_words_selected_book";
+
 export default function WordsDashboardPage() {
   const router = useRouter();
+  const { status } = useSession();
   const [selectedBookId, setSelectedBookId] = useState<string>("");
   const [books, setBooks] = useState<WordBook[]>([]);
   const [records, setRecords] = useState<LearningRecord[]>([]);
@@ -41,9 +35,17 @@ export default function WordsDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [today, setToday] = useState(getWordsToday());
   const [stats, setStats] = useState<LearningStats | null>(null);
-  const [planSettings, setPlanSettings] = useState<WordsPlanSettings | null>(null);
 
   useEffect(() => {
+    if (status !== "authenticated") {
+      setLoading(false);
+      setBooks([]);
+      setRecords([]);
+      setDueTodayWordIds([]);
+      setStats(null);
+      return;
+    }
+
     let active = true;
 
     const load = async () => {
@@ -65,9 +67,6 @@ export default function WordsDashboardPage() {
       setDueTodayWordIds(dueWords.map((word) => word.id));
       setStats(loadedStats);
 
-      const current = loadedBooks[0]?.id ?? "";
-      setSelectedBookId((prev) => prev || current);
-
       const completed = getCompletedCountFromSummary(loadedStats.todaySummary);
       syncWordsProgressToGoal(today, 20, completed);
       setLoading(false);
@@ -77,7 +76,7 @@ export default function WordsDashboardPage() {
     return () => {
       active = false;
     };
-  }, [today]);
+  }, [today, status]);
 
   useEffect(() => {
     const cleanup = listenForWordsTodayChange(() => {
@@ -85,6 +84,34 @@ export default function WordsDashboardPage() {
     });
     return cleanup;
   }, []);
+
+  useEffect(() => {
+    if (books.length === 0 || selectedBookId) {
+      return;
+    }
+    if (typeof window === "undefined") {
+      return;
+    }
+    try {
+      const stored = localStorage.getItem(SELECTED_BOOK_STORAGE_KEY);
+      if (stored && books.some((book) => book.id === stored)) {
+        setSelectedBookId(stored);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [books, selectedBookId]);
+
+  const handleSelectBook = (bookId: string) => {
+    setSelectedBookId(bookId);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(SELECTED_BOOK_STORAGE_KEY, bookId);
+      } catch {
+        // ignore storage errors
+      }
+    }
+  };
 
   const progressByBook = useMemo(() => {
     return books.reduce<Record<string, number>>((acc, book) => {
@@ -115,6 +142,18 @@ export default function WordsDashboardPage() {
   const streakDays = stats?.streakDays ?? 0;
   const totalDueToday = stats?.dueToday ?? Object.values(dueByBook).reduce((sum, value) => sum + value, 0);
   const activeDates = Array.from(new Set(records.map((record) => record.lastReviewedAt))).filter(Boolean).sort();
+
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+        <p className="text-sm text-slate-600">正在检查登录状态...</p>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return <LoginPrompt title="单词学习" />;
+  }
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#ecfeff_0%,_transparent_40%),radial-gradient(circle_at_bottom_right,_#ecfdf5_0%,_transparent_45%),linear-gradient(160deg,_#f8fafc_0%,_#eef2ff_100%)] px-4 py-6 sm:px-6">
@@ -148,10 +187,10 @@ export default function WordsDashboardPage() {
                 router.push(`/words/learn/${selectedBookId || books[0]?.id || "cet4"}`)
               }
             >
-              快速开始学习
+              学习新词
             </Button>
             <Button variant="outline" onClick={() => router.push("/words/review")}>
-              进入复习模式
+              复习旧词
             </Button>
           </div>
         </section>
@@ -168,7 +207,7 @@ export default function WordsDashboardPage() {
             selectedBookId={selectedBookId}
             progressByBook={progressByBook}
             dueByBook={dueByBook}
-            onSelect={setSelectedBookId}
+            onSelect={handleSelectBook}
           />
         </section>
 

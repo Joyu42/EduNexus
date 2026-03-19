@@ -1,5 +1,4 @@
-import { openDB, type DBSchema, type IDBPDatabase } from "idb";
-
+import { listAllLocalWords, listLocalWordBooks, listLocalWordsByBook } from "./catalog";
 import { calculateRetention } from "./algorithm";
 import {
   calculateStreakDays,
@@ -16,35 +15,7 @@ import type {
   WordsPlanSettings,
 } from "./types";
 
-type StorageMode = "idb" | "memory";
-
-const DB_NAME = "edunexus-words";
-const DB_VERSION = 1;
-
-interface WordsDB extends DBSchema {
-  books: {
-    key: string;
-    value: WordBook;
-  };
-  words: {
-    key: string;
-    value: Word;
-    indexes: { "by-book": string };
-  };
-  records: {
-    key: string;
-    value: LearningRecord;
-    indexes: { "by-word": string; "by-next-review": string; "by-learn-date": string };
-  };
-  schedules: {
-    key: string;
-    value: ReviewSchedule;
-  };
-  planSettings: {
-    key: string;
-    value: WordsPlanSettings;
-  };
-}
+type StorageMode = "api" | "memory";
 
 export type WordsStorage = {
   saveWordBook: (book: WordBook) => Promise<void>;
@@ -69,20 +40,49 @@ const DEFAULT_PLAN_SETTINGS: WordsPlanSettings = {
   defaultRevealMode: "hidden",
 };
 
-export function createWordsStorage(options?: { mode?: StorageMode }): WordsStorage {
-  const mode = options?.mode ?? "idb";
-  if (mode === "memory") {
-    return createMemoryStorage();
-  }
-  return createIndexedDbStorage();
-}
-
 function toIsoDate(value: Date): string {
   return value.toISOString().split("T")[0];
 }
 
 function safeDate(today?: string): string {
   return today ?? toIsoDate(new Date());
+}
+
+function inferRetentionScore(record: LearningRecord): 0 | 1 {
+  if (record.retentionScore === 1) {
+    return 1;
+  }
+  if (record.retentionScore === 0) {
+    return 0;
+  }
+  if (record.lastGrade && record.lastGrade !== "again") {
+    return 1;
+  }
+  if (record.status === "mastered") {
+    return 1;
+  }
+  const successCount = typeof record.successCount === "number" ? record.successCount : 0;
+  const failureCount = typeof record.failureCount === "number" ? record.failureCount : 0;
+  return successCount > failureCount ? 1 : 0;
+}
+
+function normalizeLearningRecord(record: LearningRecord): LearningRecord {
+  const fallbackDate = record.learnDate || record.lastReviewedAt || record.nextReviewDate;
+  const safeLearnDate = record.learnDate || fallbackDate || safeDate();
+  const normalizedLastReviewedAt = record.lastReviewedAt || safeLearnDate;
+  const normalizedNextReviewDate = record.nextReviewDate || normalizedLastReviewedAt || safeLearnDate;
+
+  return {
+    ...record,
+    learnDate: safeLearnDate,
+    lastReviewedAt: normalizedLastReviewedAt,
+    nextReviewDate: normalizedNextReviewDate,
+    retentionScore: inferRetentionScore(record),
+  };
+}
+
+function normalizeRecords(records: LearningRecord[]): LearningRecord[] {
+  return records.map(normalizeLearningRecord);
 }
 
 function createEvents(records: LearningRecord[], today: string): StudyEvent[] {
@@ -125,6 +125,16 @@ function createCore(storage: {
   getPlanSettings: () => Promise<WordsPlanSettings | null>;
   savePlanSettings: (settings: WordsPlanSettings) => Promise<void>;
 }): WordsStorage {
+  const loadAllRecords = async (): Promise<LearningRecord[]> => {
+    const items = await storage.allRecords();
+    return normalizeRecords(items);
+  };
+
+  const loadRecordsByWord = async (wordId: string): Promise<LearningRecord[]> => {
+    const items = await storage.recordsByWord(wordId);
+    return normalizeRecords(items);
+  };
+
   return {
     saveWordBook: async (book) => {
       await storage.putBook(book);
@@ -138,11 +148,11 @@ function createCore(storage: {
     saveLearningRecord: async (record) => {
       await storage.putRecord(record);
     },
-    getLearningRecords: async (wordId) => storage.recordsByWord(wordId),
-    getAllLearningRecords: async () => storage.allRecords(),
+    getLearningRecords: async (wordId) => loadRecordsByWord(wordId),
+    getAllLearningRecords: async () => loadAllRecords(),
     getTodayReviewWords: async (today) => {
       const date = safeDate(today);
-      const [records, words] = await Promise.all([storage.allRecords(), storage.allWords()]);
+      const [records, words] = await Promise.all([loadAllRecords(), storage.allWords()]);
       const dueSet = new Set(
         records.filter((record) => record.nextReviewDate <= date).map((record) => record.wordId)
       );
@@ -157,13 +167,17 @@ function createCore(storage: {
       const [books, words, records] = await Promise.all([
         storage.allBooks(),
         storage.allWords(),
-        storage.allRecords(),
+        loadAllRecords(),
       ]);
 
       const events = createEvents(records, date);
       const todayProgress = calculateTodayProgress(events, date);
       const activeDates = Array.from(
-        new Set(records.map((record) => record.lastReviewedAt).filter(Boolean))
+        new Set(
+          records
+            .map((record) => record.lastReviewedAt || record.learnDate)
+            .filter((value): value is string => Boolean(value))
+        )
       );
       const masteredWords = calculateTotalLearned(records);
       const dueToday = records.filter((record) => record.nextReviewDate <= date).length;
@@ -229,91 +243,103 @@ function createMemoryStorage(): WordsStorage {
   });
 }
 
-function createIndexedDbStorage(): WordsStorage {
-  let dbInstance: IDBPDatabase<WordsDB> | null = null;
-
-  async function getDb(): Promise<IDBPDatabase<WordsDB>> {
-    if (dbInstance) {
-      return dbInstance;
-    }
-    dbInstance = await openDB<WordsDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains("books")) {
-          db.createObjectStore("books", { keyPath: "id" });
-        }
-        if (!db.objectStoreNames.contains("words")) {
-          const wordStore = db.createObjectStore("words", { keyPath: "id" });
-          wordStore.createIndex("by-book", "bookId");
-        }
-        if (!db.objectStoreNames.contains("records")) {
-          const recordStore = db.createObjectStore("records", { keyPath: "wordId" });
-          recordStore.createIndex("by-word", "wordId");
-          recordStore.createIndex("by-next-review", "nextReviewDate");
-          recordStore.createIndex("by-learn-date", "learnDate");
-        }
-        if (!db.objectStoreNames.contains("schedules")) {
-          db.createObjectStore("schedules", { keyPath: "date" });
-        }
-        if (!db.objectStoreNames.contains("planSettings")) {
-          db.createObjectStore("planSettings");
-        }
-      },
-    });
-    return dbInstance;
+async function parseApiResponse<T>(response: Response): Promise<T> {
+  const payload = await response.json();
+  if (!response.ok || !payload?.success) {
+    const message = payload?.error?.message ?? "Words API request failed";
+    throw new Error(message);
   }
+  return payload.data as T;
+}
 
+function createApiStorage(): WordsStorage {
   return createCore({
-    putBook: async (book) => {
-      const db = await getDb();
-      await db.put("books", book);
+    putBook: async () => {
+      // static books are served by /api/words/books
     },
     allBooks: async () => {
-      const db = await getDb();
-      return db.getAll("books");
+      const response = await fetch("/api/words/books", { cache: "no-store" });
+      const data = await parseApiResponse<{ books: WordBook[] }>(response);
+      return data.books;
     },
-    putWords: async (items) => {
-      const db = await getDb();
-      const tx = db.transaction("words", "readwrite");
-      await Promise.all(items.map((item) => tx.store.put(item)));
-      await tx.done;
+    putWords: async () => {
+      // static words are served by /api/words/words
     },
     wordsByBook: async (bookId) => {
-      const db = await getDb();
-      return db.getAllFromIndex("words", "by-book", bookId);
+      const response = await fetch(`/api/words/words?bookId=${encodeURIComponent(bookId)}`, {
+        cache: "no-store",
+      });
+      const data = await parseApiResponse<{ words: Word[] }>(response);
+      return data.words;
     },
     allWords: async () => {
-      const db = await getDb();
-      return db.getAll("words");
+      const response = await fetch("/api/words/words", { cache: "no-store" });
+      const data = await parseApiResponse<{ words: Word[] }>(response);
+      return data.words;
     },
     putRecord: async (record) => {
-      const db = await getDb();
-      await db.put("records", record);
+      const response = await fetch("/api/words/records", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(record),
+      });
+      await parseApiResponse<{ saved: boolean }>(response);
     },
     recordsByWord: async (wordId) => {
-      const db = await getDb();
-      return db.getAllFromIndex("records", "by-word", wordId);
+      const response = await fetch(`/api/words/records?wordId=${encodeURIComponent(wordId)}`, {
+        cache: "no-store",
+      });
+      const data = await parseApiResponse<{ records: LearningRecord[] }>(response);
+      return data.records;
     },
     allRecords: async () => {
-      const db = await getDb();
-      return db.getAll("records");
+      const response = await fetch("/api/words/records", { cache: "no-store" });
+      const data = await parseApiResponse<{ records: LearningRecord[] }>(response);
+      return data.records;
     },
     putSchedule: async (schedule) => {
-      const db = await getDb();
-      await db.put("schedules", schedule);
+      const response = await fetch("/api/words/schedules", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(schedule),
+      });
+      await parseApiResponse<{ saved: boolean }>(response);
     },
     getSchedule: async (date) => {
-      const db = await getDb();
-      return (await db.get("schedules", date)) ?? null;
+      const response = await fetch(`/api/words/schedules?date=${encodeURIComponent(date)}`, {
+        cache: "no-store",
+      });
+      const data = await parseApiResponse<{ schedule: ReviewSchedule | null }>(response);
+      return data.schedule;
     },
     getPlanSettings: async () => {
-      const db = await getDb();
-      return (await db.get("planSettings", "default")) ?? null;
+      const response = await fetch("/api/words/settings", { cache: "no-store" });
+      const data = await parseApiResponse<{ settings: WordsPlanSettings }>(response);
+      return data.settings;
     },
     savePlanSettings: async (settings) => {
-      const db = await getDb();
-      await db.put("planSettings", settings, "default");
+      const response = await fetch("/api/words/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      await parseApiResponse<{ saved: boolean }>(response);
     },
   });
 }
 
+export function createWordsStorage(options?: { mode?: StorageMode }): WordsStorage {
+  const mode = options?.mode ?? "api";
+  if (mode === "memory") {
+    return createMemoryStorage();
+  }
+  return createApiStorage();
+}
+
 export const wordsStorage = createWordsStorage();
+
+export const wordsCatalog = {
+  listAllLocalWords,
+  listLocalWordBooks,
+  listLocalWordsByBook,
+};

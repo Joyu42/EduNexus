@@ -26,6 +26,8 @@ export interface AgentConfig {
   apiKey?: string;
   apiEndpoint?: string;
   systemPrompt?: string;
+  contextPrompt?: string;
+  wordsDate?: string;
   taskContext?: {
     source?: string;
     pathId?: string;
@@ -356,6 +358,8 @@ export async function runAgentConversation(
       apiKey,
       apiEndpoint,
       systemPrompt: customSystemPrompt,
+      contextPrompt,
+      wordsDate,
       taskContext,
       graphContext,
     } = config;
@@ -396,7 +400,7 @@ export async function runAgentConversation(
     });
 
     // 使用自定义系统提示词，如果没有则使用默认的
-    const systemPrompt = customSystemPrompt || `你是 EduNexus 的智能学习助手。
+    const defaultSystemPrompt = `你是 EduNexus 的智能学习助手。
 
 ## 你的角色
 - 学习引导者：通过提问引导学生思考
@@ -429,7 +433,38 @@ ${toolsDesc}
 ## 注意事项
 - 始终保持友好和鼓励的语气
 - 根据学生的理解程度调整解释深度
-- 主动关联相关知识点${taskContextPrompt}${privateDataContext ? `\n\n${privateDataContext}` : ""}`;
+- 主动关联相关知识点
+
+## 英语单词场景（必须遵循）
+- 当用户表达“学单词/背单词/复习单词/英语学习进度”意图时，优先调用单词工具：
+  - 进度查询：\`query_words_progress\`
+  - 路由建议：
+    - \`recommend_words_action\`
+- 当用户询问“最近一周/最近英语学习情况/汇报进度”时，必须调用 \`query_words_progress\`，并在回答里至少包含：
+  - 最近区间学习量（如最近7天）
+  - 平均每日学习量
+  - 累计已学单词
+  - 今日待复习
+  - 连续学习天数
+- 若需要引导页面跳转，请在最终回复中包含一行可解析路由：
+  - \`建议跳转: /words\`
+  - \`建议跳转: /words/review\`
+  - \`建议跳转: /words/learn/<bookId>\`
+- 进度回答必须基于工具返回的真实用户数据，不要凭空编造。${taskContextPrompt}${privateDataContext ? `\n\n${privateDataContext}` : ""}`;
+
+    const baseSystemPrompt = customSystemPrompt && customSystemPrompt.trim().length > 0
+      ? customSystemPrompt
+      : defaultSystemPrompt;
+
+    const contextPromptSection = contextPrompt && contextPrompt.trim().length > 0
+      ? `\n\n## 页面上下文提示\n${contextPrompt.trim()}`
+      : "";
+
+    const wordsDateSection = wordsDate && wordsDate.trim().length > 0
+      ? `\n\n## Words 日期对齐\n- 当前 Words 页面日期：${wordsDate.trim()}\n- 调用 query_words_progress 时请传入 date="${wordsDate.trim()}" 以保持与页面一致。`
+      : "";
+
+    const systemPrompt = `${baseSystemPrompt}${contextPromptSection}${wordsDateSection}`;
 
     // 构建消息历史
     const messages: any[] = [

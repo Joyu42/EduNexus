@@ -50,6 +50,19 @@ export function selectSessionWordIds(
   return ordered.slice(0, targetSize);
 }
 
+export function selectNewWordIds(
+  words: Word[],
+  records: LearningRecord[],
+  size = 20
+): string[] {
+  const recordByWord = new Set(records.map((record) => record.wordId));
+
+  return words
+    .filter((word) => !recordByWord.has(word.id))
+    .slice(0, size)
+    .map((word) => word.id);
+}
+
 export function selectReviewWordIds(
   words: Word[],
   records: LearningRecord[],

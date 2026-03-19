@@ -167,4 +167,56 @@ describe("words storage", () => {
       defaultRevealMode: "hidden",
     });
   });
+
+  it("normalizes legacy records missing review metadata", async () => {
+    const memory = createWordsStorage({ mode: "memory" });
+
+    await memory.saveWordBook({
+      id: "cet4",
+      name: "CET4",
+      description: "",
+      wordCount: 1,
+      category: "cet",
+    });
+
+    await memory.saveWords([
+      {
+        id: "legacy",
+        word: "legacy",
+        phonetic: "",
+        definition: "",
+        example: "",
+        bookId: "cet4",
+        difficulty: "easy",
+      },
+    ]);
+
+    await memory.saveLearningRecord({
+      wordId: "legacy",
+      bookId: "cet4",
+      learnDate: "2026-03-19",
+      status: "learning",
+      nextReviewDate: undefined as unknown as string,
+      interval: 1,
+      easeFactor: 2.5,
+      reviewCount: 1,
+      successCount: 1,
+      failureCount: 0,
+      lastReviewedAt: undefined as unknown as string,
+      retentionScore: undefined as unknown as 0,
+      lastGrade: "good",
+    } as LearningRecord);
+
+    const stats = await memory.getLearningStats("2026-03-20");
+    expect(stats.streakDays).toBe(1);
+    expect(stats.dueToday).toBe(1);
+
+    const dueWords = await memory.getTodayReviewWords("2026-03-20");
+    expect(dueWords.map((word) => word.id)).toEqual(["legacy"]);
+
+    const records = await memory.getAllLearningRecords();
+    expect(records[0].lastReviewedAt).toBe("2026-03-19");
+    expect(records[0].nextReviewDate).toBe("2026-03-19");
+    expect(records[0].retentionScore).toBe(1);
+  });
 });

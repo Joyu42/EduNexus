@@ -1,11 +1,89 @@
 import { NextResponse } from "next/server";
 import { runAgentConversation, createChatHistory } from "@/lib/agent/learning-agent";
 import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
+import { getWordsProgressSummary } from "@/lib/server/words-service";
 import { auth } from "@/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // 最长执行时间 60 秒
+
+function isIsoDate(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+const DIRECT_PROGRESS_PHRASES = [
+  "汇报进度",
+  "学习进度",
+  "最近学习情况",
+  "最近7天",
+  "最近七天",
+  "最近一周",
+];
+
+const WORDS_TOKENS = ["英语", "单词", "词汇", "背词", "words", "english", "cet4", "cet6"];
+const PROGRESS_TOKENS = [
+  "进度",
+  "学习进度",
+  "汇报",
+  "报告",
+  "情况",
+  "学习情况",
+  "学习数据",
+  "学习报告",
+  "最近7天",
+  "最近七天",
+  "最近一周",
+  "最近学习",
+  "progress",
+];
+
+function isWordsContextPrompt(value?: string): boolean {
+  if (typeof value !== "string") {
+    return false;
+  }
+  const lower = value.toLowerCase();
+  return lower.includes("words 模块") || lower.includes("单词学习助手") || lower.includes("/words");
+}
+
+function includesAny(text: string, keywords: string[]): boolean {
+  return keywords.some((keyword) => text.includes(keyword));
+}
+
+export function isWordsProgressQuery(message: string, contextPrompt?: string): boolean {
+  const text = message.toLowerCase();
+  const normalized = text.replace(/\s+/g, "");
+  const directIntent = DIRECT_PROGRESS_PHRASES.some((phrase) => normalized.includes(phrase));
+
+  if (directIntent) {
+    return true;
+  }
+
+  const mentionsWords = includesAny(text, WORDS_TOKENS);
+  const mentionsProgress = includesAny(text, PROGRESS_TOKENS);
+
+  if (mentionsWords && mentionsProgress) {
+    return true;
+  }
+
+  if (isWordsContextPrompt(contextPrompt) && mentionsProgress) {
+    return true;
+  }
+
+  return false;
+}
+
+function buildWordsProgressReport(summary: Awaited<ReturnType<typeof getWordsProgressSummary>>) {
+  const avg = summary.recentProgress.averageDailyLearnedWords.toFixed(1);
+  return [
+    `你的英语学习进度（截至 ${summary.date}）：`,
+    `- 连续学习：${summary.streakDays} 天`,
+    `- 今日待复习：${summary.dueToday} 个`,
+    `- 累计已学习：${summary.learnedWords} 个单词（掌握 ${summary.masteredWords} 个）`,
+    `- 最近 ${summary.recentProgress.rangeDays} 天：学习新词 ${summary.recentProgress.learnedWordsInRange} 个，平均每天 ${avg} 个`,
+    `- 最近 ${summary.recentProgress.rangeDays} 天活跃学习：${summary.recentProgress.activeDays} 天`,
+  ].join("\n");
+}
 
 function normalizeAgentError(error: unknown): { status: number; message: string } {
   const message = error instanceof Error ? error.message : "Unknown error";
@@ -65,6 +143,36 @@ export async function POST(request: Request) {
       taskId: typeof taskContext?.taskId === "string" ? taskContext.taskId : undefined,
       taskTitle: typeof taskContext?.taskTitle === "string" ? taskContext.taskTitle : undefined,
     });
+
+    const contextPrompt = typeof config.contextPrompt === "string" ? config.contextPrompt : undefined;
+
+    if (isWordsProgressQuery(message, contextPrompt)) {
+      const wordsDate =
+        typeof config.wordsDate === "string" && isIsoDate(config.wordsDate)
+          ? config.wordsDate
+          : undefined;
+      const summary = await getWordsProgressSummary(userId, wordsDate);
+      return NextResponse.json({
+        success: true,
+        response: buildWordsProgressReport(summary),
+        thinking: "words-progress-direct",
+        steps: [
+          {
+            type: "tool_result",
+            tool: "query_words_progress",
+            content: JSON.stringify({
+              date: summary.date,
+              streakDays: summary.streakDays,
+              dueToday: summary.dueToday,
+              learnedWords: summary.learnedWords,
+              masteredWords: summary.masteredWords,
+              recentProgress: summary.recentProgress,
+            }),
+          },
+        ],
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     const mergedConfig = {
       ...config,

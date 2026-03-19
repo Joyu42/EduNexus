@@ -23,6 +23,20 @@ function getRecentDates(days: number, today: string): string[] {
   return dateList;
 }
 
+function formatWeekday(date: string): string {
+  return new Date(`${date}T00:00:00.000Z`).toLocaleDateString("en-US", {
+    weekday: "short",
+    timeZone: "UTC",
+  });
+}
+
+function formatDayOfMonth(date: string): string {
+  return new Date(`${date}T00:00:00.000Z`).toLocaleDateString("en-US", {
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 export function StreakCalendar({ activeDates, today, days = 28 }: StreakCalendarProps) {
   // NOTE: This component renders date-derived attributes (title).
   // If users change local clock (or use our debug today override), server and client
@@ -47,21 +61,26 @@ export function StreakCalendar({ activeDates, today, days = 28 }: StreakCalendar
           {mounted
             ? recentDates.map((date) => {
                 const isActive = activeSet.has(date);
+                const isToday = date === today;
                 return (
                   <div
                     key={date}
                     title={date}
                     className={cn(
-                      "h-7 rounded-md border",
+                      "flex h-12 flex-col items-center justify-center rounded-md border px-1 text-center",
                       isActive
-                        ? "border-emerald-400 bg-emerald-400/80"
-                        : "border-slate-200 bg-slate-100"
+                        ? "border-emerald-400 bg-emerald-100 text-emerald-900"
+                        : "border-slate-200 bg-slate-100 text-slate-600",
+                      isToday && "ring-2 ring-cyan-400 ring-offset-1"
                     )}
-                  />
+                  >
+                    <span className="text-[10px] font-medium leading-none opacity-85">{formatWeekday(date)}</span>
+                    <span className="mt-1 text-sm font-semibold leading-none">{formatDayOfMonth(date)}</span>
+                  </div>
                 );
               })
             : Array.from({ length: days }, (_, index) => `placeholder-${index}`).map((key) => (
-                <div key={key} className="h-7 rounded-md border border-slate-200 bg-slate-100" />
+                <div key={key} className="h-12 rounded-md border border-slate-200 bg-slate-100" />
               ))}
         </div>
       </CardContent>

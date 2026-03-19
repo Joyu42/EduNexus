@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { selectSessionWordIds } from "./session";
+import { selectNewWordIds, selectSessionWordIds } from "./session";
 import type { LearningRecord, Word } from "./types";
 
 const baseWord = (id: string): Word => ({
@@ -78,5 +78,25 @@ describe("selectSessionWordIds", () => {
     });
 
     expect(session).toEqual(["new-1", "new-2", "due-1", "due-2"]);
+  });
+});
+
+describe("selectNewWordIds", () => {
+  it("returns only unseen words and does not include due review words", () => {
+    const words: Word[] = [
+      baseWord("due-1"),
+      baseWord("due-2"),
+      baseWord("new-1"),
+      baseWord("new-2"),
+    ];
+
+    const records: LearningRecord[] = [
+      record("due-1", { nextReviewDate: "2026-03-17" }),
+      record("due-2", { nextReviewDate: "2026-03-17" }),
+    ];
+
+    const selected = selectNewWordIds(words, records, 10);
+
+    expect(selected).toEqual(["new-1", "new-2"]);
   });
 });
