@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,11 +31,9 @@ import { InteractiveGraph } from "@/components/graph/interactive-graph";
 import { NodeDetailPanel } from "@/components/graph/node-detail-panel";
 import { LearningPathOverlay } from "@/components/graph/learning-path-overlay";
 import { ProgressLegend } from "@/components/graph/progress-legend";
-import { LoginPrompt } from "@/components/ui/login-prompt";
 import { RecommendationEngine } from "@/lib/graph/recommendation-engine";
 import { ProgressTracker } from "@/lib/graph/progress-tracker";
 import { cn } from "@/lib/utils";
-import { getGraphViewState, loadPrivateGraphView } from "./view-state";
 import type {
   GraphNode,
   GraphEdge,
@@ -57,10 +53,183 @@ const NODE_TYPE_CONFIG = {
   skill: { label: "技能", color: "bg-orange-500" },
 };
 
-export default function EnhancedGraphPage() {
-  const { status } = useSession();
-  const router = useRouter();
+// 生成模拟数据
+const generateMockData = (): { nodes: GraphNode[]; edges: GraphEdge[] } => {
+  const now = new Date();
+  const nodes: GraphNode[] = [
+    {
+      id: "1",
+      name: "React 基础",
+      type: "concept",
+      status: "mastered",
+      importance: 0.9,
+      mastery: 0.85,
+      connections: 5,
+      noteCount: 3,
+      practiceCount: 5,
+      practiceCompleted: 5,
+      documentIds: ["doc1", "doc2", "doc3"],
+      lastReviewedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000),
+      updatedAt: now,
+    },
+    {
+      id: "2",
+      name: "JSX 语法",
+      type: "concept",
+      status: "mastered",
+      importance: 0.7,
+      mastery: 0.9,
+      connections: 3,
+      noteCount: 2,
+      practiceCount: 3,
+      practiceCompleted: 3,
+      documentIds: ["doc4", "doc5"],
+      lastReviewedAt: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 55 * 24 * 60 * 60 * 1000),
+      updatedAt: now,
+    },
+    {
+      id: "3",
+      name: "组件化开发",
+      type: "topic",
+      status: "learning",
+      importance: 0.8,
+      mastery: 0.6,
+      connections: 4,
+      noteCount: 4,
+      practiceCount: 6,
+      practiceCompleted: 3,
+      documentIds: ["doc6", "doc7", "doc8", "doc9"],
+      createdAt: new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000),
+      updatedAt: now,
+    },
+    {
+      id: "4",
+      name: "Hooks",
+      type: "concept",
+      status: "learning",
+      importance: 0.85,
+      mastery: 0.5,
+      connections: 6,
+      noteCount: 5,
+      practiceCount: 8,
+      practiceCompleted: 4,
+      documentIds: ["doc10", "doc11", "doc12", "doc13", "doc14"],
+      createdAt: new Date(now.getTime() - 40 * 24 * 60 * 60 * 1000),
+      updatedAt: now,
+    },
+    {
+      id: "5",
+      name: "useState",
+      type: "skill",
+      status: "mastered",
+      importance: 0.6,
+      mastery: 0.8,
+      connections: 2,
+      noteCount: 2,
+      practiceCount: 4,
+      practiceCompleted: 4,
+      documentIds: ["doc15", "doc16"],
+      lastReviewedAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 35 * 24 * 60 * 60 * 1000),
+      updatedAt: now,
+    },
+    {
+      id: "6",
+      name: "useEffect",
+      type: "skill",
+      status: "learning",
+      importance: 0.7,
+      mastery: 0.55,
+      connections: 3,
+      noteCount: 3,
+      practiceCount: 5,
+      practiceCompleted: 2,
+      documentIds: ["doc17", "doc18", "doc19"],
+      createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+      updatedAt: now,
+    },
+    {
+      id: "7",
+      name: "状态管理",
+      type: "topic",
+      status: "unlearned",
+      importance: 0.75,
+      mastery: 0.2,
+      connections: 4,
+      noteCount: 1,
+      practiceCount: 6,
+      practiceCompleted: 0,
+      documentIds: ["doc20"],
+      createdAt: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000),
+      updatedAt: now,
+    },
+    {
+      id: "8",
+      name: "Redux",
+      type: "resource",
+      status: "unlearned",
+      importance: 0.5,
+      mastery: 0.1,
+      connections: 2,
+      noteCount: 0,
+      practiceCount: 4,
+      practiceCompleted: 0,
+      documentIds: [],
+      createdAt: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000),
+      updatedAt: now,
+    },
+    {
+      id: "9",
+      name: "Context API",
+      type: "resource",
+      status: "unlearned",
+      importance: 0.6,
+      mastery: 0.15,
+      connections: 2,
+      noteCount: 1,
+      practiceCount: 3,
+      practiceCompleted: 0,
+      documentIds: ["doc21"],
+      createdAt: new Date(now.getTime() - 18 * 24 * 60 * 60 * 1000),
+      updatedAt: now,
+    },
+    {
+      id: "10",
+      name: "路由",
+      type: "topic",
+      status: "review",
+      importance: 0.7,
+      mastery: 0.75,
+      connections: 3,
+      noteCount: 2,
+      practiceCount: 4,
+      practiceCompleted: 3,
+      documentIds: ["doc22", "doc23"],
+      lastReviewedAt: new Date(now.getTime() - 35 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(now.getTime() - 50 * 24 * 60 * 60 * 1000),
+      updatedAt: now,
+    },
+  ];
 
+  const edges: GraphEdge[] = [
+    { source: "1", target: "2", type: "contains", strength: 0.9 },
+    { source: "1", target: "3", type: "contains", strength: 0.8 },
+    { source: "1", target: "4", type: "contains", strength: 0.85 },
+    { source: "4", target: "5", type: "contains", strength: 0.7 },
+    { source: "4", target: "6", type: "contains", strength: 0.75 },
+    { source: "1", target: "7", type: "related", strength: 0.6 },
+    { source: "7", target: "8", type: "applies", strength: 0.5 },
+    { source: "7", target: "9", type: "applies", strength: 0.6 },
+    { source: "1", target: "10", type: "related", strength: 0.7 },
+    { source: "3", target: "7", type: "prerequisite", strength: 0.8 },
+  ];
+
+  return { nodes, edges };
+};
+
+export default function EnhancedGraphPage() {
   // 状态管理
   const [graphData, setGraphData] = useState<{
     nodes: GraphNode[];
@@ -81,48 +250,67 @@ export default function EnhancedGraphPage() {
   const [currentPath, setCurrentPath] = useState<LearningPath | null>(null);
   const [recommendedPaths, setRecommendedPaths] = useState<LearningPath[]>([]);
   const [nodeDetail, setNodeDetail] = useState<NodeDetail | null>(null);
-  const [isGraphLoading, setIsGraphLoading] = useState(true);
 
+  // 初始化数据
   useEffect(() => {
-    if (status !== 'authenticated') {
-      setGraphData({ nodes: [], edges: [] });
-      setRecommendedPaths([]);
-      setIsGraphLoading(status === 'loading');
-      return;
-    }
-
-    let isMounted = true;
-
-    const initializeGraph = async () => {
-      setIsGraphLoading(true);
+    const fetchGraphData = async () => {
       try {
-        const data = await loadPrivateGraphView();
-        if (!isMounted) {
-          return;
-        }
+        const res = await fetch('/api/graph/view');
+        const json = await res.json();
+        if (json.success && json.data) {
+          const serverNodes = json.data.nodes || [];
+          const serverEdges = json.data.edges || [];
 
-        setGraphData(data);
-        const engine = new RecommendationEngine(data.nodes, data.edges);
-        setRecommendedPaths(engine.recommendLearningPaths(3));
+          const nodes: GraphNode[] = serverNodes.map((n: any) => ({
+            id: n.id,
+            name: n.label,
+            type: (n.domain === 'learning_path' ? 'topic' : n.domain === 'learning_task' ? 'skill' : 'concept') as NodeType,
+            status: (n.mastery >= 0.7 ? 'mastered' : n.mastery > 0 ? 'learning' : 'unlearned') as NodeStatus,
+            importance: n.risk || 0.5,
+            mastery: n.mastery || 0,
+            connections: serverEdges.filter((e: any) => e.source === n.id || e.target === n.id).length,
+            noteCount: 0,
+            practiceCount: 0,
+            practiceCompleted: 0,
+            documentIds: [],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }));
+
+          const edges: GraphEdge[] = serverEdges.map((e: any) => ({
+            id: `${e.source}-${e.target}`,
+            source: e.source,
+            target: e.target,
+            type: 'prerequisite',
+            strength: e.weight || 1,
+          }));
+
+          setGraphData({ nodes, edges });
+
+          const engine = new RecommendationEngine(nodes, edges);
+          const paths = engine.recommendLearningPaths(3);
+          setRecommendedPaths(paths);
+        } else {
+          const data = generateMockData();
+          setGraphData(data);
+
+          const engine = new RecommendationEngine(data.nodes, data.edges);
+          const paths = engine.recommendLearningPaths(3);
+          setRecommendedPaths(paths);
+        }
       } catch (error) {
-        console.error("Failed to load graph view:", error);
-        if (isMounted) {
-          setGraphData({ nodes: [], edges: [] });
-          setRecommendedPaths([]);
-        }
-      } finally {
-        if (isMounted) {
-          setIsGraphLoading(false);
-        }
+        console.error('Failed to fetch graph data:', error);
+        const data = generateMockData();
+        setGraphData(data);
+
+        const engine = new RecommendationEngine(data.nodes, data.edges);
+        const paths = engine.recommendLearningPaths(3);
+        setRecommendedPaths(paths);
       }
     };
 
-    void initializeGraph();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [status]);
+    fetchGraphData();
+  }, []);
 
   // 筛选节点
   const filteredNodes = graphData.nodes.filter((node) => {
@@ -233,51 +421,6 @@ export default function EnhancedGraphPage() {
   const handleShare = () => {
     alert("分享功能：生成分享链接");
   };
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'unauthenticated') {
-    return <LoginPrompt title="知识星图" />;
-  }
-
-  const viewState = getGraphViewState({
-    isLoading: isGraphLoading,
-    nodes: graphData.nodes,
-  });
-
-  if (viewState.kind === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">加载图谱中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (viewState.kind === "empty") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-6">
-        <div className="max-w-lg rounded-3xl border bg-card p-10 text-center shadow-sm">
-          <h1 className="text-2xl font-semibold text-foreground">{viewState.title}</h1>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">{viewState.description}</p>
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <Button onClick={() => router.push('/kb')}>前往知识库</Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

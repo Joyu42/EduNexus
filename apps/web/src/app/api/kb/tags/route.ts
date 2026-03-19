@@ -1,16 +1,13 @@
+import { getVaultTagStats } from "@/lib/server/kb-lite";
 import { fail, ok } from "@/lib/server/response";
-import { getCurrentUserId } from "@/lib/server/auth-utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return fail({ code: "UNAUTHORIZED", message: "用户未登录。" }, 401);
-    }
-    return ok({ tags: [] });
+    const tags = await getVaultTagStats();
+    return ok({ tags });
   } catch (error) {
     return fail(
       {

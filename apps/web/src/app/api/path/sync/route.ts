@@ -1,6 +1,5 @@
 import { fail, ok } from "@/lib/server/response";
 import { deleteSyncedPath, upsertSyncedPath } from "@/lib/server/path-sync-service";
-import { auth } from "@/auth";
 import { z } from "zod";
 
 const taskSchema = z.object({
@@ -27,11 +26,6 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return fail({ code: "UNAUTHORIZED", message: "用户未登录。" }, 401);
-    }
-
     const json = await request.json().catch(() => ({}));
     const parsed = pathSyncSchema.safeParse(json);
     if (!parsed.success) {
@@ -42,10 +36,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const synced = await upsertSyncedPath({
-      ...parsed.data,
-      userId: session.user.id,
-    });
+    const synced = await upsertSyncedPath(parsed.data);
     return ok({
       pathId: synced.pathId,
       taskCount: synced.tasks.length,
@@ -65,11 +56,6 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return fail({ code: "UNAUTHORIZED", message: "用户未登录。" }, 401);
-    }
-
     const { searchParams } = new URL(request.url);
     const pathId = (searchParams.get("pathId") ?? "").trim();
     if (!pathId) {
@@ -79,7 +65,7 @@ export async function DELETE(request: Request) {
       });
     }
 
-    await deleteSyncedPath(pathId, session.user.id);
+    await deleteSyncedPath(pathId);
     return ok({ pathId });
   } catch (error) {
     return fail(

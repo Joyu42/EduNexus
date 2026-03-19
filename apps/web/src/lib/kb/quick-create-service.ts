@@ -1,5 +1,4 @@
 import { getKBStorage, type KBDocument } from '@/lib/client/kb-storage';
-import { getKGSyncService } from '@/lib/graph/kg-sync-service';
 
 /**
  * 快速创建选项
@@ -238,19 +237,10 @@ class QuickCreateService {
         finalTags
       );
 
-      // 关联到知识图谱节点
+      // 可以在这里添加与知识图谱的关联逻辑
       if (linkedNodeId) {
-        try {
-          const kgService = getKGSyncService();
-          await kgService.syncDocumentToGraph({
-            documentId: document.id,
-            title: finalTitle,
-            content: finalContent,
-            tags: finalTags,
-          });
-        } catch (error) {
-          console.warn('Failed to sync document to knowledge graph:', error);
-        }
+        // TODO: 关联到知识图谱节点
+        console.log('Linking to knowledge graph node:', linkedNodeId);
       }
 
       return {

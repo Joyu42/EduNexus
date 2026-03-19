@@ -1,19 +1,12 @@
-import { createResourcesBatch, createFoldersBatch, createBookmarksBatch } from "./resource-storage";
-import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
+// 资源中心示例数据生成器
 
-function getStorageKey(): string {
-  const userId = getUserId();
-  return `edunexus_resources_${userId}`;
-}
-
-function getUserId(): string {
-  return getClientUserIdentity() || 'anonymous';
-}
+import { createResource, createFolder, createBookmark, incrementViewCount } from "./resource-storage";
 
 export function generateSampleResources() {
+  // 检查是否已有数据
   if (typeof window === "undefined") return;
 
-  const existingData = localStorage.getItem(getStorageKey());
+  const existingData = localStorage.getItem("edunexus_resources");
   if (existingData && JSON.parse(existingData).length > 0) {
     console.log("Sample resources already exist");
     return;
@@ -21,7 +14,9 @@ export function generateSampleResources() {
 
   console.log("Generating sample resources...");
 
+  // 创建示例资源
   const resources = [
+    // Python 相关
     {
       title: "Python 官方文档",
       description: "Python 编程语言的官方文档，包含完整的语言参考和标准库说明。适合所有级别的 Python 开发者。",
@@ -56,6 +51,8 @@ export function generateSampleResources() {
       tags: ["Python", "教程", "Web开发", "数据科学"],
       source: "Real Python",
     },
+
+    // JavaScript 相关
     {
       title: "MDN Web 文档",
       description: "Mozilla 开发者网络提供的 Web 技术文档，包含 HTML、CSS、JavaScript 的完整参考。",
@@ -90,6 +87,8 @@ export function generateSampleResources() {
       author: "Evan You",
       source: "vuejs.org",
     },
+
+    // 机器学习相关
     {
       title: "吴恩达机器学习课程",
       description: "斯坦福大学的经典机器学习课程，适合初学者系统学习机器学习基础。",
@@ -125,6 +124,8 @@ export function generateSampleResources() {
       tags: ["数据科学", "机器学习", "竞赛", "实战"],
       source: "Kaggle",
     },
+
+    // 工具类
     {
       title: "VS Code",
       description: "微软开发的免费开源代码编辑器，支持多种编程语言和丰富的插件生态。",
@@ -156,6 +157,8 @@ export function generateSampleResources() {
       tags: ["API", "测试", "开发工具", "后端"],
       author: "Postman",
     },
+
+    // 算法和数据结构
     {
       title: "LeetCode",
       description: "在线编程练习平台，提供大量算法和数据结构题目，适合面试准备。",
@@ -178,6 +181,8 @@ export function generateSampleResources() {
       tags: ["算法", "数据结构", "面试", "刷题"],
       author: "代码随想录",
     },
+
+    // 设计相关
     {
       title: "Figma",
       description: "基于浏览器的协作式界面设计工具，支持实时协作和原型设计。",
@@ -203,37 +208,94 @@ export function generateSampleResources() {
     },
   ];
 
-  const userId = getUserId();
+  const userId = "demo_user";
+  const createdResources: string[] = [];
 
-  const createdResources = createResourcesBatch(
-    resources.map(r => ({ ...r, status: "active" as const, userId }))
-  );
+  // 创建资源并添加一些初始统计数据
+  resources.forEach((resource, index) => {
+    const created = createResource({
+      ...resource,
+      status: "active",
+      userId,
+    });
+    createdResources.push(created.id);
 
-  const folders = [
-    { name: "Python 学习", description: "Python 编程相关的学习资源", color: "#3b82f6", icon: "🐍", userId, isPublic: false },
-    { name: "前端开发", description: "Web 前端开发技术栈", color: "#10b981", icon: "🌐", userId, isPublic: false },
-    { name: "机器学习", description: "AI 和机器学习相关资源", color: "#8b5cf6", icon: "🤖", userId, isPublic: false },
-  ];
-
-  const createdFolders = createFoldersBatch(folders);
-
-  const bookmarks = [
-    { userId, resourceId: createdResources[0]?.id, folderId: createdFolders[0]?.id, rating: 5, notes: "非常有用的资源！" },
-    { userId, resourceId: createdResources[1]?.id, folderId: createdFolders[0]?.id, rating: 5 },
-    { userId, resourceId: createdResources[2]?.id, folderId: createdFolders[0]?.id, rating: 5 },
-    { userId, resourceId: createdResources[4]?.id, folderId: createdFolders[1]?.id, rating: 4 },
-    { userId, resourceId: createdResources[5]?.id, folderId: createdFolders[1]?.id, rating: 4 },
-    { userId, resourceId: createdResources[6]?.id, folderId: createdFolders[1]?.id, rating: 4 },
-    { userId, resourceId: createdResources[8]?.id, folderId: createdFolders[2]?.id, rating: 5 },
-    { userId, resourceId: createdResources[9]?.id, folderId: createdFolders[2]?.id, rating: 5 },
-  ].filter((b): b is { userId: string; resourceId: string; folderId: string; rating: number; notes?: string } => !!b.resourceId);
-
-  const resourceCounts = new Map<string, number>();
-  bookmarks.forEach(b => {
-    resourceCounts.set(b.resourceId, (resourceCounts.get(b.resourceId) || 0) + 1);
+    // 为资源添加一些初始浏览量（模拟真实使用）
+    const viewCount = Math.floor(Math.random() * 500) + 50;
+    for (let i = 0; i < viewCount; i++) {
+      incrementViewCount(created.id);
+    }
   });
 
-  createBookmarksBatch(bookmarks, resourceCounts);
+  // 创建示例收藏夹
+  const folders = [
+    {
+      name: "Python 学习",
+      description: "Python 编程相关的学习资源",
+      color: "#3b82f6",
+      icon: "🐍",
+    },
+    {
+      name: "前端开发",
+      description: "Web 前端开发技术栈",
+      color: "#10b981",
+      icon: "🌐",
+    },
+    {
+      name: "机器学习",
+      description: "AI 和机器学习相关资源",
+      color: "#8b5cf6",
+      icon: "🤖",
+    },
+  ];
+
+  const createdFolders: string[] = [];
+  folders.forEach((folder) => {
+    const created = createFolder({
+      ...folder,
+      userId,
+      isPublic: false,
+    });
+    createdFolders.push(created.id);
+  });
+
+  // 创建一些示例收藏
+  // Python 收藏夹
+  [0, 1, 2].forEach((index) => {
+    if (createdResources[index]) {
+      createBookmark({
+        userId,
+        resourceId: createdResources[index],
+        folderId: createdFolders[0],
+        rating: 5,
+        notes: "非常有用的资源！",
+      });
+    }
+  });
+
+  // 前端开发收藏夹
+  [3, 4, 5].forEach((index) => {
+    if (createdResources[index]) {
+      createBookmark({
+        userId,
+        resourceId: createdResources[index],
+        folderId: createdFolders[1],
+        rating: 4,
+      });
+    }
+  });
+
+  // 机器学习收藏夹
+  [6, 7].forEach((index) => {
+    if (createdResources[index]) {
+      createBookmark({
+        userId,
+        resourceId: createdResources[index],
+        folderId: createdFolders[2],
+        rating: 5,
+      });
+    }
+  });
 
   console.log("Sample resources generated successfully!");
   console.log(`Created ${createdResources.length} resources`);

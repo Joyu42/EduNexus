@@ -1,8 +1,7 @@
 import { fail, ok } from "@/lib/server/response";
 import { socraticNextSchema } from "@/lib/server/schema";
 import { buildSocraticGuidance } from "@/lib/server/socratic";
-import { auth } from "@/auth";
-import { searchDocuments } from "@/lib/server/document-service";
+import { searchVault } from "@/lib/server/kb-lite";
 import { appendSessionMessage, updateSessionLevel } from "@/lib/server/session-service";
 import { increaseMasteryByKeywords } from "@/lib/server/learning-update";
 import { chatWithModelscope } from "@/lib/server/modelscope";
@@ -21,23 +20,16 @@ export async function POST(request: Request) {
       });
     }
 
-    const session = await auth();
-    if (!session?.user?.id) {
-      return fail({ code: "UNAUTHORIZED", message: "用户未登录。" }, 401);
-    }
-    const userId = session.user.id;
-
     const guidance = buildSocraticGuidance(parsed.data);
     await updateSessionLevel(parsed.data.sessionId, guidance.nextLevel);
     await increaseMasteryByKeywords(parsed.data.userInput);
 
-    const kb = await searchDocuments(parsed.data.userInput, userId);
-    const citations = kb.slice(0, 2).map((candidate, index) => ({
+    const kb = await searchVault(parsed.data.userInput);
+    const citations = kb.candidates.slice(0, 2).map((candidate, index) => ({
       sourceId: candidate.docId,
       chunkRef: `match_${index + 1}`,
       quote: candidate.snippet
     }));
-
 
     let finalGuidance = guidance.guidance;
     if (process.env.MODELSCOPE_API_KEY) {
@@ -62,11 +54,11 @@ export async function POST(request: Request) {
     await appendSessionMessage(parsed.data.sessionId, {
       role: "user",
       content: parsed.data.userInput
-    }, userId);
+    });
     await appendSessionMessage(parsed.data.sessionId, {
       role: "assistant",
       content: finalGuidance
-    }, userId);
+    });
 
     return ok({
       nextLevel: guidance.nextLevel,

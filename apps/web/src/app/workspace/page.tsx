@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, Suspense, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,47 +14,61 @@ import {
   MessageSquare,
   Settings,
   Image as ImageIcon,
+  Paperclip,
   X,
   Download,
   Code,
   FileText,
   Zap,
+  TrendingUp,
   History,
   Trash2,
   Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LoginPrompt } from "@/components/ui/login-prompt";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { LearningNotes } from "@/components/workspace/learning-notes";
+import { CompactLevelDisplay } from "@/components/compact-level-display";
 import { LearningPlanner } from "@/components/kb/learning-planner";
 import { KBQAAssistant } from "@/components/kb/kb-qa-assistant";
 import { TeacherManager } from "@/components/workspace/teacher-manager";
-import { getKBStorage, type KBDocument } from "@/lib/client/kb-storage";
+import { getKBStorage } from "@/lib/client/kb-storage";
 import { getModelConfig } from "@/lib/client/model-config";
-import { exportChatSessionAsMarkdown, type ChatSession } from "@/lib/workspace/chat-history-storage";
+import {
+  createChatSession,
+  addMessageToSession,
+  getRecentChatSessions,
+  getChatSession,
+  deleteChatSession,
+  exportChatSessionAsMarkdown,
+  generateSessionTitle,
+  type ChatSession,
+  type ChatMessage,
+  type AgentToolStep,
+} from "@/lib/workspace/chat-history-storage";
 import {
   getAllTeachers,
   type AITeacher,
 } from "@/lib/workspace/teacher-storage";
-import {
-  useWorkspaceSessionController,
-} from "@/lib/workspace/use-workspace-session-controller";
 import { toast } from "sonner";
+
+type Message = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  images?: string[]; // Base64 encoded images
+  attachments?: { name: string; type: string; url: string }[];
+  thinking?: string;
+  toolSteps?: AgentToolStep[];
+  timestamp: Date;
+  mode?: "normal" | "kb-qa"; // 标记消息来自哪种模式
+};
 
 type WorkspaceTaskContext = {
   source: string;
@@ -72,6 +85,46 @@ type WorkspaceTaskContext = {
   taskProgress?: number;
 };
 
+const normalizeToolSteps = (value: unknown): AgentToolStep[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const normalized: AgentToolStep[] = [];
+
+  for (const item of value) {
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+
+    const maybeStep = item as {
+      type?: unknown;
+      tool?: unknown;
+      content?: unknown;
+      args?: unknown;
+    };
+
+    if (
+      (maybeStep.type !== "tool_call" && maybeStep.type !== "tool_result") ||
+      typeof maybeStep.tool !== "string" ||
+      typeof maybeStep.content !== "string"
+    ) {
+      continue;
+    }
+
+    const step: AgentToolStep = {
+      type: maybeStep.type,
+      tool: maybeStep.tool,
+      content: maybeStep.content,
+      ...(typeof maybeStep.args !== "undefined" ? { args: maybeStep.args } : {}),
+    };
+
+    normalized.push(step);
+  }
+
+  return normalized.length > 0 ? normalized : undefined;
+};
+
 const teachingStyleLabels = {
   socratic: '苏格拉底式',
   direct: '直接教学',
@@ -81,49 +134,42 @@ const teachingStyleLabels = {
 };
 
 function WorkspacePageContent() {
-  const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const storage = getKBStorage();
-  const [kbDocuments, setKbDocuments] = useState<KBDocument[]>([]);
+  const [kbDocuments, setKbDocuments] = useState<any[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [recentSessions, setRecentSessions] = useState<ChatSession[]>([]);
   const [currentTeacher, setCurrentTeacher] = useState<AITeacher | null>(null);
+  const [teachers, setTeachers] = useState<AITeacher[]>([]);
   const [kbQAMode, setKbQAMode] = useState(false); // 知识库问答模式开关
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [socraticMode, setSocraticMode] = useState(true);
   const [showThinking, setShowThinking] = useState(true);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [taskContext, setTaskContext] = useState<WorkspaceTaskContext | null>(null);
   const [activeTab, setActiveTab] = useState<"status" | "teachers" | "notes" | "plan" | "kb-qa" | "history">("status");
   const [isMounted, setIsMounted] = useState(false);
-  const [pendingDeleteSession, setPendingDeleteSession] = useState<{
-    id: string;
-    title: string;
-  } | null>(null);
-  const [isSessionActionPending, setIsSessionActionPending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pathContextSeededTaskRef = useRef<string | null>(null);
   const pathContextSentTaskRef = useRef<string | null>(null);
   const taskFeedbackSyncedRef = useRef(new Set<string>());
-  const sessionActionQueueRef = useRef<Promise<void>>(Promise.resolve());
-  const {
-    currentSessionId,
-    currentSession,
-    recentSessions,
-    messages,
-    isLoading,
-    refreshSessions,
-    selectSession,
-    startNewConversation,
-    deleteSession,
-    sendMessage,
-  } = useWorkspaceSessionController({
-    enabled: status === "authenticated",
-    isDemoUser: (session?.user as { isDemo?: boolean } | undefined)?.isDemo === true,
-  });
-  const socraticMode = currentTeacher?.teachingStyle === "socratic";
 
+  // 加载知识库文档、历史会话和老师列表
   useEffect(() => {
     setIsMounted(true);
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content: "你好！我是你的智能学习伙伴。我可以帮你：\n\n- 🔍 搜索知识宝库和星图\n- 📝 生成个性化练习题\n- 🗺️ 规划成长地图\n- 💡 解释复杂概念\n- 🤔 通过提问引导思考\n- 🖼️ 分析图片和图表（支持多模态）\n- 💻 解释和调试代码\n\n有什么想学习或探讨的吗？",
+        timestamp: new Date(),
+        mode: "normal",
+      },
+    ]);
 
     const loadKBDocuments = async () => {
       try {
@@ -138,9 +184,19 @@ function WorkspacePageContent() {
       }
     };
 
+    const loadRecentSessions = async () => {
+      try {
+        const sessions = await getRecentChatSessions(5);
+        setRecentSessions(sessions);
+      } catch (error) {
+        console.error("加载历史会话失败:", error);
+      }
+    };
+
     const loadTeachers = async () => {
       try {
         const allTeachers = await getAllTeachers();
+        setTeachers(allTeachers);
         // 默认选择第一个老师（苏格拉底老师）
         if (allTeachers.length > 0 && !currentTeacher) {
           setCurrentTeacher(allTeachers[0]);
@@ -151,8 +207,9 @@ function WorkspacePageContent() {
     };
 
     loadKBDocuments();
+    loadRecentSessions();
     loadTeachers();
-  }, [currentTeacher, storage]);
+  }, []);
 
   useEffect(() => {
     const source = searchParams.get("source") || "";
@@ -252,6 +309,7 @@ function WorkspacePageContent() {
 
   const exportConversation = async () => {
     if (!currentSessionId) {
+      // 如果没有会话ID，直接导出当前消息
       const content = messages
         .map((m) => `[${m.role}] ${m.content}`)
         .join("\n\n");
@@ -264,33 +322,42 @@ function WorkspacePageContent() {
       return;
     }
 
+    // 从数据库导出
     try {
-      const activeSession = currentSession;
-      const exportSession: ChatSession = {
-        id: currentSessionId,
-        title: activeSession?.title || recentSessions.find((session) => session.id === currentSessionId)?.title || "学习对话",
-        messages,
-        createdAt: activeSession ? new Date(activeSession.createdAt) : (messages[0]?.timestamp ?? new Date()),
-        updatedAt: activeSession ? new Date(activeSession.updatedAt) : (messages[messages.length - 1]?.timestamp ?? new Date()),
-        socraticMode: socraticMode ?? false,
-      };
-      const markdown = exportChatSessionAsMarkdown(exportSession);
-      const blob = new Blob([markdown], { type: "text/markdown" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${exportSession.title}_${new Date().toISOString().slice(0, 10)}.md`;
-      a.click();
-      toast.success("对话已导出");
+      const session = await getChatSession(currentSessionId);
+      if (session) {
+        const markdown = exportChatSessionAsMarkdown(session);
+        const blob = new Blob([markdown], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${session.title}_${new Date().toISOString().slice(0, 10)}.md`;
+        a.click();
+        toast.success("对话已导出");
+      }
     } catch (error) {
       console.error("导出失败:", error);
       toast.error("导出失败");
     }
   };
 
+  const startNewConversation = () => {
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content: "你好！我是你的智能学习伙伴。有什么想学习或探讨的吗？",
+        timestamp: new Date(),
+        mode: kbQAMode ? "kb-qa" : "normal",
+      },
+    ]);
+    setCurrentSessionId(null);
+    toast.success("已开始新对话");
+  };
+
   const modelConfig = getModelConfig();
 
-  const syncTaskFocusFeedback = useCallback(async (assistantContent: string) => {
+  const syncTaskFocusFeedback = async (assistantContent: string) => {
     if (!taskContext?.taskId || !taskContext.pathId || taskFeedbackSyncedRef.current.has(taskContext.taskId)) {
       return;
     }
@@ -330,98 +397,157 @@ function WorkspacePageContent() {
     } catch (error) {
       console.error("同步任务学习反馈失败:", error);
     }
-  }, [taskContext]);
+  };
 
-  const runSessionAction = useCallback(async (action: () => Promise<void>) => {
-    const queued = sessionActionQueueRef.current.then(async () => {
-      setIsSessionActionPending(true);
-      try {
-        await action();
-      } finally {
-        setIsSessionActionPending(false);
-      }
-    });
+  const sendMessage = async (overrideMessage?: string) => {
+    const effectiveMessage = (overrideMessage ?? inputValue).trim();
 
-    sessionActionQueueRef.current = queued.catch(() => undefined);
-    await queued;
-  }, []);
+    if ((!effectiveMessage && uploadedImages.length === 0) || isLoading) return;
 
-  const handleSelectSession = useCallback(async (sessionId: string) => {
-    try {
-      await runSessionAction(async () => {
-        await selectSession(sessionId);
-      });
-      toast.success("已加载对话");
-    } catch (error) {
-      console.error("加载对话失败:", error);
-      toast.error("加载对话失败");
-    }
-  }, [runSessionAction, selectSession]);
-
-  const handleStartNewConversation = useCallback(async () => {
-    try {
-      await runSessionAction(async () => {
-        await startNewConversation();
-      });
-      toast.success("已开始新对话");
-    } catch (error) {
-      console.error("创建新对话失败:", error);
-      toast.error("创建新对话失败");
-    }
-  }, [runSessionAction, startNewConversation]);
-
-  const requestDeleteSession = useCallback((sessionId: string, title: string) => {
-    setPendingDeleteSession({ id: sessionId, title });
-  }, []);
-
-  const handleConfirmDeleteSession = useCallback(async () => {
-    if (!pendingDeleteSession) {
+    // 知识库问答模式检查
+    if (kbQAMode && kbDocuments.length === 0) {
+      toast.error("知识库中没有文档，请先添加文档或切换到普通对话模式");
       return;
     }
 
-    const deletingSession = pendingDeleteSession;
-    setPendingDeleteSession(null);
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: effectiveMessage || "请分析这些图片",
+      images: uploadedImages.length > 0 ? [...uploadedImages] : undefined,
+      timestamp: new Date(),
+      mode: kbQAMode ? "kb-qa" : "normal",
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    setUploadedImages([]);
+    setIsLoading(true);
 
     try {
-      await runSessionAction(async () => {
-        const deletingActiveSession = currentSessionId === deletingSession.id;
-        const fallbackSessionId = deletingActiveSession
-          ? (recentSessions.find((session) => session.id !== deletingSession.id)?.id ?? null)
-          : currentSessionId;
+      let assistantMessage: Message;
 
-        await deleteSession(deletingSession.id);
-        await refreshSessions(fallbackSessionId);
-      });
-      toast.success("已删除对话");
-    } catch (error) {
-      console.error("删除对话失败:", error);
-      toast.error("删除对话失败");
-    }
-  }, [currentSessionId, deleteSession, pendingDeleteSession, recentSessions, refreshSessions, runSessionAction]);
+      if (kbQAMode) {
+        // 知识库问答模式
+        const response = await fetch("/api/kb/qa", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question: effectiveMessage || "请分析这些图片",
+            documents: kbDocuments.map((doc) => ({
+              id: doc.id,
+              title: doc.title,
+              content: doc.content,
+              tags: doc.tags,
+            })),
+            history: messages
+              .filter((m) => m.mode === "kb-qa")
+              .slice(-4)
+              .map((m) => ({
+                role: m.role,
+                content: m.content,
+              })),
+            config: {
+              apiKey: modelConfig.apiKey,
+              apiEndpoint: modelConfig.apiEndpoint,
+              modelName: modelConfig.model,
+            },
+            taskContext,
+          }),
+        });
 
-  const handleSendMessage = useCallback(
-    async (overrideMessage?: string) => {
-      const effectiveMessage = overrideMessage ?? inputValue;
-      if (kbQAMode && kbDocuments.length === 0) {
-        toast.error("知识库中没有文档，请先添加文档或切换到普通对话模式");
-        return;
+        const data = await response.json();
+
+        if (data.success) {
+          assistantMessage = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: data.answer,
+            timestamp: new Date(),
+            mode: "kb-qa",
+          };
+        } else {
+          throw new Error(data.error || "Unknown error");
+        }
+      } else {
+        // 普通对话模式
+
+        const response = await fetch("/api/workspace/agent/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: effectiveMessage || "请分析这些图片",
+            images: uploadedImages.length > 0 ? uploadedImages : undefined,
+            history: messages
+              .filter((m) => m.mode === "normal")
+              .map((m) => ({
+                role: m.role,
+                content: m.content,
+                images: m.images,
+              })),
+            config: {
+              socraticMode: currentTeacher?.teachingStyle === 'socratic',
+              temperature: currentTeacher?.temperature || modelConfig.temperature,
+              maxIterations: 5,
+              apiKey: modelConfig.apiKey,
+              apiEndpoint: modelConfig.apiEndpoint,
+              modelName: modelConfig.model,
+              systemPrompt: currentTeacher?.systemPrompt,
+            },
+            taskContext,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          assistantMessage = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: data.response,
+            thinking: data.thinking,
+            toolSteps: normalizeToolSteps(data.steps),
+            timestamp: new Date(),
+            mode: "normal",
+          };
+        } else {
+          throw new Error(data.error || "Unknown error");
+        }
       }
 
-      await sendMessage({
-        inputValue: effectiveMessage,
-        uploadedImages,
-        kbQAMode,
-        kbDocuments,
-        modelConfig,
-        currentTeacher,
-        taskContext,
-        onAssistantResponse: syncTaskFocusFeedback,
-      });
-      setInputValue("");
-      setUploadedImages([]);
-    },
-    [currentTeacher, inputValue, kbDocuments, kbQAMode, modelConfig, sendMessage, syncTaskFocusFeedback, taskContext, uploadedImages]
-  );
+      setMessages((prev) => [...prev, assistantMessage]);
+      void syncTaskFocusFeedback(assistantMessage.content);
+
+      // 保存对话到历史记录
+      try {
+        if (!currentSessionId) {
+          const title = generateSessionTitle([userMessage as ChatMessage]);
+          const session = await createChatSession(title, currentTeacher?.teachingStyle === 'socratic');
+          setCurrentSessionId(session.id);
+          await addMessageToSession(session.id, userMessage as ChatMessage);
+          await addMessageToSession(session.id, assistantMessage as ChatMessage);
+        } else {
+          await addMessageToSession(currentSessionId, userMessage as ChatMessage);
+          await addMessageToSession(currentSessionId, assistantMessage as ChatMessage);
+        }
+      } catch (storageError) {
+        console.error("保存对话历史失败:", storageError);
+      }
+    } catch (error) {
+      console.error("Chat error:", error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: error instanceof Error ? error.message : "抱歉，处理你的请求时出现了错误。请稍后重试。",
+        timestamp: new Date(),
+        mode: kbQAMode ? "kb-qa" : "normal",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      toast.error("发送失败：" + (error instanceof Error ? error.message : "未知错误"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!taskContext?.autoStart || !inputValue.trim() || isLoading || pathContextSentTaskRef.current === taskContext.taskId) {
@@ -429,13 +555,13 @@ function WorkspacePageContent() {
     }
 
     pathContextSentTaskRef.current = taskContext.taskId || null;
-    void handleSendMessage(inputValue);
-  }, [handleSendMessage, inputValue, isLoading, taskContext?.autoStart, taskContext?.taskId]);
+    void sendMessage(inputValue);
+  }, [taskContext?.autoStart, taskContext?.taskId, inputValue, isLoading]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      void handleSendMessage();
+      sendMessage();
     }
   };
 
@@ -446,98 +572,10 @@ function WorkspacePageContent() {
     { icon: Target, label: "检查理解", prompt: "测试我对...的理解" },
   ];
 
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === "unauthenticated") {
-    return <LoginPrompt title="学习工作区" />;
-  }
-
   return (
     <div className="flex h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30">
-      {/* Left Sidebar - History Sessions */}
-      <motion.div
-        initial={{ x: -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-        className="w-[280px] border-r bg-white/50 backdrop-blur-sm flex flex-col flex-shrink-0"
-      >
-        <div className="p-4 border-b bg-white/80 flex items-center justify-between">
-          <h2 className="font-semibold text-sm flex items-center gap-2 text-foreground">
-            <History className="h-4 w-4" />
-            历史会话
-          </h2>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 hover:bg-orange-50 hover:text-orange-600 transition-colors" 
-            onClick={() => void handleStartNewConversation()}
-            disabled={isSessionActionPending}
-            title="新对话"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-3 scrollbar-thin space-y-2">
-          {recentSessions.length === 0 ? (
-            <div className="text-center p-6 text-muted-foreground flex flex-col items-center">
-              <MessageSquare className="h-8 w-8 mb-2 opacity-20" />
-              <p className="text-sm">暂无历史记录</p>
-            </div>
-          ) : (
-            recentSessions.slice(0, 10).map((session) => (
-              <div
-                key={session.id}
-                onClick={() => void handleSelectSession(session.id)}
-                className={cn(
-                  "group p-3 rounded-xl cursor-pointer transition-all border",
-                  currentSessionId === session.id
-                    ? "bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 shadow-sm"
-                    : "bg-white/60 border-transparent hover:border-orange-100 hover:bg-white hover:shadow-sm"
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-foreground truncate">{session.title}</h4>
-                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
-                      <span className="truncate">{session.messageCount} 条消息</span>
-                      <span>•</span>
-                      <span className="truncate" suppressHydrationWarning>
-                        {isMounted ? new Date(session.updatedAt).toLocaleDateString() : ""}
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-muted-foreground hover:text-red-500 hover:bg-red-50 -mr-1 -mt-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      requestDeleteSession(session.id, session.title);
-                    }}
-                    disabled={isSessionActionPending}
-                    title="删除"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </motion.div>
-
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col w-0">
+      <div className="flex-1 flex flex-col">
         {/* Header */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -850,7 +888,7 @@ function WorkspacePageContent() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleStartNewConversation}
+                  onClick={startNewConversation}
                   className="flex-shrink-0 hover:bg-green-50 hover:border-green-300 transition-colors group"
                 >
                   <Plus className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
@@ -959,7 +997,7 @@ function WorkspacePageContent() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Button
-                  onClick={() => void handleSendMessage()}
+                  onClick={() => void sendMessage()}
                   disabled={(!inputValue.trim() && uploadedImages.length === 0) || isLoading}
                   className={cn(
                     "shadow-md hover:shadow-lg transition-all",
@@ -1115,6 +1153,8 @@ function WorkspacePageContent() {
                 animate={{ opacity: 1 }}
                 transition={{ staggerChildren: 0.1 }}
               >
+                <CompactLevelDisplay className="mb-4" />
+
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1187,11 +1227,11 @@ function WorkspacePageContent() {
                     </CardHeader>
                     <CardContent className="space-y-2 text-xs">
                       {[
-                        { icon: BookOpen, label: "搜索知识宝库", desc: "查找相关文档", color: "blue", prompt: "搜索知识宝库:" },
-                        { icon: Brain, label: "查询知识星图", desc: "获取知识关系", color: "purple", prompt: "查询知识星图:" },
-                        { icon: Target, label: "生成练习", desc: "个性化题目", color: "green", prompt: "我想练习" },
-                        { icon: Lightbulb, label: "成长地图", desc: "智能规划", color: "orange", prompt: "帮我规划成长地图" },
-                        { icon: ImageIcon, label: "图片分析", desc: "多模态理解", color: "pink", prompt: "分析这张图片:" },
+                        { icon: BookOpen, label: "搜索知识宝库", desc: "查找相关文档", color: "blue" },
+                        { icon: Brain, label: "查询知识星图", desc: "获取知识关系", color: "purple" },
+                        { icon: Target, label: "生成练习", desc: "个性化题目", color: "green" },
+                        { icon: Lightbulb, label: "成长地图", desc: "智能规划", color: "orange" },
+                        { icon: ImageIcon, label: "图片分析", desc: "多模态理解", color: "pink" },
                       ].map((tool, idx) => {
                         const Icon = tool.icon;
                         return (
@@ -1202,7 +1242,6 @@ function WorkspacePageContent() {
                             transition={{ delay: 0.3 + idx * 0.05 }}
                             whileHover={{ x: 4, scale: 1.02 }}
                             className="flex items-start gap-2 p-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 transition-all cursor-pointer"
-                            onClick={() => setInputValue(tool.prompt)}
                           >
                             <div className={`p-1 rounded bg-${tool.color}-100`}>
                               <Icon className={`h-3 w-3 text-${tool.color}-600`} />
@@ -1312,8 +1351,7 @@ function WorkspacePageContent() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => void handleStartNewConversation()}
-                    disabled={isSessionActionPending}
+                    onClick={startNewConversation}
                     className="text-xs"
                   >
                     <Plus className="h-3 w-3 mr-1" />
@@ -1328,20 +1366,31 @@ function WorkspacePageContent() {
                   </Card>
                 ) : (
                   <div className="space-y-2">
-                    {recentSessions.slice(0, 10).map((session) => (
+                    {recentSessions.map((session) => (
                       <Card
                         key={session.id}
                         className={cn(
                           "p-3 cursor-pointer hover:shadow-md transition-all",
                           currentSessionId === session.id && "border-orange-500 bg-orange-50"
                         )}
-                        onClick={() => void handleSelectSession(session.id)}
+                        onClick={async () => {
+                          const fullSession = await getChatSession(session.id);
+                          if (fullSession) {
+                            setMessages(fullSession.messages.map(m => ({
+                              ...m,
+                              timestamp: new Date(m.timestamp),
+                            })));
+                            setCurrentSessionId(session.id);
+                            setSocraticMode(session.socraticMode);
+                            toast.success("已加载对话");
+                          }
+                        }}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <h4 className="text-sm font-medium truncate">{session.title}</h4>
                             <p className="text-xs text-muted-foreground">
-                              {session.messageCount} 条消息
+                              {session.messages.length} 条消息
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {new Date(session.updatedAt).toLocaleString()}
@@ -1350,11 +1399,17 @@ function WorkspacePageContent() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
-                              requestDeleteSession(session.id, session.title);
+                              if (confirm("确定要删除这个对话吗？")) {
+                                await deleteChatSession(session.id);
+                                setRecentSessions(prev => prev.filter(s => s.id !== session.id));
+                                if (currentSessionId === session.id) {
+                                  startNewConversation();
+                                }
+                                toast.success("已删除对话");
+                              }
                             }}
-                            disabled={isSessionActionPending}
                             className="h-6 w-6 p-0"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -1369,41 +1424,6 @@ function WorkspacePageContent() {
           </motion.div>
         </AnimatePresence>
       </motion.div>
-
-      <Dialog
-        open={pendingDeleteSession !== null}
-        onOpenChange={(open) => {
-          if (!open && !isSessionActionPending) {
-            setPendingDeleteSession(null);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>删除对话</DialogTitle>
-            <DialogDescription>
-              {`确定要删除「${pendingDeleteSession?.title ?? "当前对话"}」吗？该操作不可撤销。`}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setPendingDeleteSession(null)}
-              disabled={isSessionActionPending}
-            >
-              取消
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => void handleConfirmDeleteSession()}
-              disabled={isSessionActionPending}
-            >
-              {isSessionActionPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              删除
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

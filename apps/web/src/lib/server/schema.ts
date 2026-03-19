@@ -6,11 +6,6 @@ export const createSessionSchema = z.object({
   initialGoal: z.string().min(1).max(500).optional()
 });
 
-export const appendMessageSchema = z.object({
-  role: z.enum(["user", "assistant", "system"]),
-  content: z.string().min(1).max(10000)
-});
-
 export const socraticNextSchema = z.object({
   sessionId: z.string().min(1),
   userInput: z.string().min(1).max(4000),
@@ -201,3 +196,4 @@ export const wrongQuestionNoteSchema = z.object({
   questionId: z.string().min(1),
   notes: z.string().max(1000).optional(),
 });
+

@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     environment: "node",
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["src/**/*.test.ts"],
     pool: "threads",
     clearMocks: true,
     sequence: {

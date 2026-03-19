@@ -19,6 +19,7 @@ console.log('🔍 开始验证第一阶段核心功能...\n');
 const criticalFiles = [
   'apps/web/src/lib/hooks/use-auto-save.ts',
   'apps/web/src/lib/hooks/use-global-shortcuts.ts',
+  'apps/web/src/lib/client/data-sync-manager.ts',
   'apps/web/src/lib/kb/content-extractor.ts',
   'apps/web/src/lib/graph/kg-sync-service.ts',
   'apps/web/src/lib/path/learning-tracker.ts',

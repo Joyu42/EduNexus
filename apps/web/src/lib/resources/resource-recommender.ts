@@ -1,6 +1,6 @@
 // 资源推荐引擎
 
-import type { Resource, Bookmark } from "./resource-types";
+import type { Resource } from "./resource-types";
 import { getAllResources, getAllBookmarks } from "./resource-storage";
 
 export interface RecommendationResult {
@@ -67,16 +67,15 @@ export function recommendByType(
 
 export function recommendPopular(
   limit: number = 10,
-  excludeIds: string[] = [],
-  resources?: Resource[]
+  excludeIds: string[] = []
 ): RecommendationResult[] {
-  const allResources = resources || getAllResources();
-  const filtered = allResources.filter(
+  const resources = getAllResources().filter(
     (r) => r.status === "active" && !excludeIds.includes(r.id)
   );
 
-  return filtered
+  return resources
     .sort((a, b) => {
+      // 综合评分：收藏数 * 0.5 + 评分 * 10 + 浏览数 * 0.1
       const scoreA = a.bookmarkCount * 0.5 + a.rating * 10 + a.viewCount * 0.1;
       const scoreB = b.bookmarkCount * 0.5 + b.rating * 10 + b.viewCount * 0.1;
       return scoreB - scoreA;
@@ -193,15 +192,14 @@ export function recommendPersonalized(
     recentSearches?: string[];
     skillLevel?: "beginner" | "intermediate" | "advanced";
   },
-  limit: number = 10,
-  resources?: Resource[],
-  bookmarks?: Bookmark[]
+  limit: number = 10
 ): RecommendationResult[] {
-  const userBookmarks = bookmarks || getAllBookmarks(userId);
-  const allResources = (resources || getAllResources()).filter((r) => r.status === "active");
+  const userBookmarks = getAllBookmarks(userId);
+  const allResources = getAllResources().filter((r) => r.status === "active");
 
+  // 如果用户没有收藏，返回热门推荐
   if (userBookmarks.length === 0) {
-    return recommendPopular(limit, [], resources);
+    return recommendPopular(limit);
   }
 
   const bookmarkedIds = userBookmarks.map((b) => b.resourceId);
@@ -209,6 +207,7 @@ export function recommendPersonalized(
     bookmarkedIds.includes(r.id)
   );
 
+  // 计算用户偏好
   const typePreference = new Map<string, number>();
   const tagPreference = new Map<string, number>();
   const authorPreference = new Map<string, number>();
@@ -223,6 +222,7 @@ export function recommendPersonalized(
     }
   });
 
+  // 推荐未收藏的资源
   const candidates = allResources.filter((r) => !bookmarkedIds.includes(r.id));
 
   const results: RecommendationResult[] = candidates.map((resource) => {

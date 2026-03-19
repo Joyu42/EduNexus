@@ -51,42 +51,6 @@ export function QuestionEditor({
     tags: question?.tags.join(", ") || "",
   });
 
-  const validateQuestionType = (
-    type: QuestionType,
-    existingQuestion?: Question | null
-  ): string | null => {
-    switch (type) {
-      case QuestionType.MULTIPLE_CHOICE: {
-        const options = existingQuestion?.options;
-        if (!options || options.length < 2) {
-          return "选择题需要至少2个选项。请先通过 AI 生成题目或手动添加选项。";
-        }
-        if (!options.some((option) => option.isCorrect)) {
-          return "选择题需要设置正确答案。请先通过 AI 生成题目或手动添加正确答案。";
-        }
-        return null;
-      }
-      case QuestionType.FILL_IN_BLANK: {
-        const blanks = existingQuestion?.blanks;
-        if (!blanks || blanks.length === 0) {
-          return "填空题需要设置填空内容。请先通过 AI 生成题目或手动添加填空。";
-        }
-        return null;
-      }
-      case QuestionType.CODING: {
-        const testCases = existingQuestion?.testCases;
-        if (!testCases || testCases.length === 0) {
-          return "编程题需要至少1个测试用例。请先通过 AI 生成题目或手动添加测试用例。";
-        }
-        return null;
-      }
-      case QuestionType.SHORT_ANSWER:
-        return null;
-      default:
-        return null;
-    }
-  };
-
   const handleSave = async () => {
     try {
       const storage = getPracticeStorage();
@@ -94,12 +58,6 @@ export function QuestionEditor({
         .split(",")
         .map((t) => t.trim())
         .filter((t) => t);
-
-      const validationError = validateQuestionType(formData.type, question);
-      if (validationError) {
-        alert(validationError);
-        return;
-      }
 
       if (question) {
         // 更新

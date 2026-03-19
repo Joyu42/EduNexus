@@ -80,29 +80,29 @@ export function TiptapEditor({
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-primary underline hover:text-primary/80",
+          class: "text-blue-600 underline hover:text-blue-800",
         },
       }),
       Image.configure({
         HTMLAttributes: {
-          class: "max-w-full h-auto rounded-lg shadow-md",
+          class: "max-w-full h-auto rounded-lg",
         },
       }),
       Table.configure({
         resizable: true,
         HTMLAttributes: {
-          class: "border-collapse table-auto w-full border-border",
+          class: "border-collapse table-auto w-full",
         },
       }),
       TableRow,
       TableCell.configure({
         HTMLAttributes: {
-          class: "border border-border px-4 py-2",
+          class: "border border-gray-300 px-4 py-2",
         },
       }),
       TableHeader.configure({
         HTMLAttributes: {
-          class: "border border-border px-4 py-2 bg-muted/50 font-bold",
+          class: "border border-gray-300 px-4 py-2 bg-gray-100 font-bold",
         },
       }),
       TaskList.configure({
@@ -119,7 +119,7 @@ export function TiptapEditor({
       CodeBlockLowlight.configure({
         lowlight,
         HTMLAttributes: {
-          class: "bg-muted text-foreground rounded-lg p-4 font-mono text-sm",
+          class: "bg-gray-900 text-gray-100 rounded-lg p-4 font-mono text-sm",
         },
       }),
       Placeholder.configure({
@@ -135,7 +135,7 @@ export function TiptapEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose lg:prose-lg xl:prose-xl dark:prose-invert focus:outline-none max-w-none p-6 min-h-[500px]",
+          "prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none max-w-none p-4",
       },
     },
   });
@@ -194,11 +194,9 @@ export function TiptapEditor({
   }
 
   return (
-    <div className="relative border border-border rounded-xl bg-card/50 overflow-hidden shadow-sm backdrop-blur-sm">
+    <div className="relative border border-gray-300 rounded-lg overflow-hidden">
       <TiptapToolbar editor={editor} />
-      <div className="scrollbar-thin overflow-y-auto max-h-[calc(100vh-160px)]">
-        <EditorContent editor={editor} />
-      </div>
+      <EditorContent editor={editor} />
       {showSlashMenu && (
         <SlashCommandMenu
           position={slashMenuPosition}
