@@ -13,7 +13,6 @@ import {
   GripVertical,
   Trash2,
   RotateCcw,
-  Settings,
   Maximize2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,6 +24,7 @@ import { useResizable } from '@/lib/hooks/use-resizable';
 import { getAIContext, type AIContext } from '@/lib/ai/context-adapter';
 import { useDocument } from '@/lib/ai/document-context';
 import { getModelConfig } from '@/lib/client/model-config';
+import { getWordsToday } from '@/lib/words/date';
 
 interface Message {
   id: string;
@@ -114,6 +114,7 @@ export function GlobalAIAssistant() {
 
     try {
       const modelConfig = getModelConfig();
+      const wordsDate = getWordsToday();
 
       const response = await fetch('/api/workspace/agent/chat', {
         method: 'POST',
@@ -125,7 +126,8 @@ export function GlobalAIAssistant() {
             content: m.content,
           })),
           config: {
-            systemPrompt: context.systemPrompt,
+            contextPrompt: context.systemPrompt,
+            wordsDate,
             apiKey: modelConfig.apiKey,
             apiEndpoint: modelConfig.apiEndpoint,
             modelName: modelConfig.model,

@@ -23,10 +23,18 @@ const navGroups = [
     ]
   },
   {
+    title: "学习生态",
+    items: [
+      { href: "/resources", label: "资源中心", hint: "学习资源分享与发现" },
+      { href: "/groups", label: "学习小组", hint: "协作学习与交流" },
+      { href: "/community", label: "学习社区", hint: "讨论与经验分享" },
+      { href: "/analytics", label: "学习分析", hint: "学习数据统计与分析" }
+    ]
+  },
+  {
     title: "生态支撑",
     items: [
       { href: "/kb", label: "本地知识库", hint: "双链检索与证据沉淀" },
-      { href: "/dashboard", label: "生态看板", hint: "趋势、风险与闭环事件" },
       { href: "/settings", label: "配置中心", hint: "模板、策略与参数管理" }
     ]
   }

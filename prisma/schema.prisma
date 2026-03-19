@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String                @id @default(cuid())
+  email                String                @unique
+  password             String
+  name                 String?
+  isDemo               Boolean               @default(false)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  documents            Document[]
+  wordsLearningRecords WordsLearningRecord[]
+  wordsPlanSetting     WordsPlanSetting?
+  wordsReviewSchedules WordsReviewSchedule[]
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+
+  @@index([authorId])
+}
+
+model WordsLearningRecord {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wordId         String
+  bookId         String
+  learnDate      String
+  status         String
+  nextReviewDate String
+  interval       Int
+  easeFactor     Float
+  reviewCount    Int
+  successCount   Int
+  failureCount   Int
+  lastReviewedAt String
+  retentionScore Int
+  lastStudyType  String?
+  lastGrade      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, wordId])
+  @@index([userId, nextReviewDate])
+  @@index([userId, bookId])
+}
+
+model WordsPlanSetting {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyNewLimit     Int      @default(20)
+  reviewFirst       Boolean  @default(true)
+  defaultRevealMode String   @default("hidden")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model WordsReviewSchedule {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        String
+  wordIds     Json
+  newCount    Int
+  reviewCount Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+}

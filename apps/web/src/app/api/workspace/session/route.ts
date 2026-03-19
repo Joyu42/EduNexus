@@ -1,6 +1,7 @@
 import { createSessionSchema } from "@/lib/server/schema";
 import { createSession } from "@/lib/server/session-service";
 import { fail, ok } from "@/lib/server/response";
+import { getCurrentUserId } from "@/lib/server/auth-utils";
 
 export const runtime = "nodejs";
 
@@ -16,9 +17,13 @@ export async function POST(request: Request) {
       });
     }
 
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return fail({ code: 'UNAUTHORIZED', message: '请先登录' }, 401);
+    }
     const session = await createSession({
       title: parsed.data.title
-    });
+    }, userId);
 
     return ok({ session });
   } catch (error) {

@@ -3,6 +3,8 @@
  * 从 localStorage 读取和保存模型配置
  */
 
+import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
+
 export interface ModelConfig {
   model: string;
   apiEndpoint: string;
@@ -13,6 +15,14 @@ export interface ModelConfig {
 }
 
 const CONFIG_KEY = "edunexus_model_config";
+
+function getScopedConfigKey(): string {
+  const userId = getClientUserIdentity();
+  if (!userId) {
+    return CONFIG_KEY;
+  }
+  return `${CONFIG_KEY}_${userId}`;
+}
 
 const DEFAULT_CONFIG: ModelConfig = {
   model: "Qwen/Qwen3.5-122B-A10B",
@@ -32,10 +42,20 @@ export function getModelConfig(): ModelConfig {
   }
 
   try {
-    const saved = localStorage.getItem(CONFIG_KEY);
+    const scopedKey = getScopedConfigKey();
+    const saved = localStorage.getItem(scopedKey);
     if (saved) {
       const config = JSON.parse(saved);
       return { ...DEFAULT_CONFIG, ...config };
+    }
+
+    if (scopedKey !== CONFIG_KEY) {
+      const legacy = localStorage.getItem(CONFIG_KEY);
+      if (legacy) {
+        const config = JSON.parse(legacy);
+        localStorage.setItem(scopedKey, JSON.stringify({ ...DEFAULT_CONFIG, ...config }));
+        return { ...DEFAULT_CONFIG, ...config };
+      }
     }
   } catch (error) {
     console.error("Failed to load model config:", error);
@@ -55,7 +75,7 @@ export function saveModelConfig(config: Partial<ModelConfig>): void {
   try {
     const current = getModelConfig();
     const updated = { ...current, ...config };
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(updated));
+    localStorage.setItem(getScopedConfigKey(), JSON.stringify(updated));
   } catch (error) {
     console.error("Failed to save model config:", error);
   }

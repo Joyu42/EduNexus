@@ -22,34 +22,48 @@ import {
   Settings,
   ChevronLeft,
   Menu,
-  BarChart3,
   Target,
-  FolderOpen,
   GitBranch,
+  FolderOpen,
   Users,
+  MessageSquare,
+  BarChart3,
+  Languages,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { UserMenu } from './user-menu'
 
 const navigation = [
   {
-    title: '核心功能',
+    title: '',
     items: [
       { name: '总览', href: '/', icon: Home },
+    ],
+  },
+  {
+    title: '学习系统',
+    items: [
       { name: '🌌 知识星图', href: '/graph', icon: Network },
       { name: '📚 知识宝库', href: '/kb', icon: BookOpen },
       { name: '🎮 成长地图', href: '/path', icon: Route },
       { name: '🛤️ 学习路径', href: '/learning-paths', icon: GitBranch },
+      { name: '🧠 单词学习', href: '/words', icon: Languages },
       { name: '🎯 目标管理', href: '/goals', icon: Target },
-      { name: '📦 资源中心', href: '/resources', icon: FolderOpen },
+      { name: '📊 学习分析', href: '/analytics', icon: BarChart3 },
+    ],
+  },
+  {
+    title: '学习生态',
+    items: [
+      { name: '📁 资源中心', href: '/resources', icon: FolderOpen },
       { name: '👥 学习小组', href: '/groups', icon: Users },
-      { name: '💬 学习社区', href: '/community', icon: Users },
+      { name: '💬 学习社区', href: '/community', icon: MessageSquare },
     ],
   },
   {
     title: '工作区',
     items: [
       { name: '学习工作区', href: '/workspace', icon: Briefcase },
-      { name: '学习分析', href: '/workspace/analytics', icon: BarChart3 },
     ],
   },
   {
@@ -158,7 +172,7 @@ export function AppSidebar() {
               )}
               <div className="space-y-1">
                 <AnimatePresence>
-                  {!isCollapsed && (
+                  {!isCollapsed && section.title && (
                     <motion.h3
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -244,10 +258,11 @@ export function AppSidebar() {
 
         <div
           className={cn(
-            'border-t border-sidebar-border p-3',
+            'border-t border-sidebar-border p-3 space-y-2',
             isCollapsed && 'px-2'
           )}
         >
+          <UserMenu />
           <div className={cn(
             'flex items-center',
             isCollapsed ? 'justify-center' : 'justify-end'

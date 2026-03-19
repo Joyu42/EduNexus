@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { getModelscopeClient } from "@/lib/server/modelscope";
 import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
+import { auth } from "@/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +35,12 @@ export async function POST(request: NextRequest) {
     }
     const model = config?.modelName || process.env.MODELSCOPE_CHAT_MODEL || "Qwen/Qwen3.5-122B-A10B";
 
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: "用户未登录" }, { status: 401 });
+    }
+    const userId = session.user.id;
+
     // 准备上下文
     const context = documents
       ? documents
@@ -46,6 +53,7 @@ export async function POST(request: NextRequest) {
       : "";
 
     const graphContext = await buildWorkspaceGraphContext({
+      userId,
       taskId: typeof taskContext?.taskId === "string" ? taskContext.taskId : undefined,
       taskTitle: typeof taskContext?.taskTitle === "string" ? taskContext.taskTitle : undefined,
     });

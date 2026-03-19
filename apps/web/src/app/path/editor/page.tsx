@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LearningPath } from '@/lib/path/path-types';
 import { getPath, getAllPaths } from '@/lib/path/path-storage';
 import { ArrowLeft, Plus } from 'lucide-react';
+import { toast } from '@/lib/toast';
 
 function PathEditorContent() {
   const router = useRouter();
@@ -36,7 +37,7 @@ function PathEditorContent() {
 
   const handleSavePath = (path: LearningPath) => {
     setCurrentPath(path);
-    alert('路径已保存！');
+    toast('路径已保存！', 'success');
   };
 
   const handlePreviewPath = (path: LearningPath) => {
@@ -118,7 +119,7 @@ function PathEditorContent() {
               {currentPath && (
                 <PathExecutor
                   path={currentPath}
-                  onComplete={() => alert('路径完成！')}
+                  onComplete={() => toast('路径完成！', 'success')}
                 />
               )}
             </TabsContent>
@@ -128,7 +129,7 @@ function PathEditorContent() {
                 <PathExecutor
                   path={currentPath}
                   onComplete={() => {
-                    alert('恭喜完成学习路径！');
+                    toast('恭喜完成学习路径！', 'success');
                     setActiveTab('market');
                   }}
                 />

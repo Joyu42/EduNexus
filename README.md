@@ -212,6 +212,7 @@ class StorageManager {
 ### 环境要求
 - Node.js >= 18.0.0
 - pnpm >= 8.0.0
+- PostgreSQL (可选，使用JSON文件存储时不需要)
 
 ### 安装
 
@@ -222,15 +223,87 @@ cd EduNexus
 
 # 安装依赖
 pnpm install
+```
 
+### 环境配置
 
-### 开发
+项目使用 JSON 文件存储数据（默认），无需数据库即可运行。
+
+```bash
+# 复制环境变量配置
+cp .env.example .env.local
+
+# 生成 NextAuth 密钥 (必须)
+# 运行以下命令生成随机密钥:
+npx auth secret
+
+# 或者手动编辑 .env.local 添加:
+# AUTH_SECRET=your-generated-secret-key
+# AUTH_URL=http://localhost:3000
+```
+
+### 启动开发服务器
 
 ```bash
 # 启动开发服务器
 pnpm dev
 
-# 访问 http://localhost:3002
+# 访问 http://localhost:3000
+```
+
+### 数据存储
+
+项目支持两种数据存储模式：
+
+#### 模式1: JSON 文件存储 (默认，推荐开发使用)
+- 数据保存在 `.edunexus/data/db.json`
+- 无需配置数据库，开箱即用
+- 适合本地开发和测试
+
+#### 模式2: PostgreSQL 数据库 (可选)
+如需使用数据库持久化，在 `.env.local` 中配置：
+
+```bash
+# PostgreSQL 连接字符串
+DATABASE_URL="postgresql://username:password@localhost:5432/edunexus"
+```
+
+配置后需要初始化数据库表结构（如果需要）。
+
+### 常用开发命令
+
+```bash
+# 类型检查
+pnpm --filter web typecheck
+
+# 运行测试
+cd apps/web && pnpm exec vitest run
+
+# 构建生产版本
+pnpm --filter web build
+
+# 启动生产服务器
+pnpm start
+```
+
+### 重置数据
+
+开发过程中如需重置数据：
+
+```bash
+# 删除数据文件 (JSON 模式)
+rm -rf .edunexus/data/db.json
+
+# 重新启动服务器后会自动创建空数据文件
+```
+
+### 访问演示数据
+
+项目内置演示数据 bootstrap 接口：
+
+```bash
+# 调用 bootstrap 接口初始化演示数据
+curl -X POST http://localhost:3000/api/demo/bootstrap
 ```
 
 ### 构建

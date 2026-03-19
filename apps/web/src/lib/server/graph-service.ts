@@ -1,128 +1,130 @@
-import { buildGraphFromVault } from "./kb-lite";
-import { loadDb } from "./store";
+import { prisma } from './prisma';
+import { loadDb } from './store';
+import { DEMO_GRAPH_BOOTSTRAP } from './demo-content';
 
-function toTaskNodeId(pathId: string, taskId: string) {
-  return `path_task:${pathId}:${taskId}`;
-}
+const MAX_NODES_PER_USER = 200;
 
-function createSlug(input: string) {
-  const normalized = input
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 64);
-  return normalized || "task";
-}
+export type GraphNode = {
+  id: string;
+  label: string;
+  mastery: number;
+  risk: number;
+  domain: string;
+};
 
-export async function getGraphView(input: { domain?: string; owner?: string }) {
-  const graph = await buildGraphFromVault();
-  const db = await loadDb();
+export type GraphEdge = {
+  source: string;
+  target: string;
+  weight: number;
+};
 
-  const baseNodes = graph.nodes.map((node) => {
-    const mastery = db.masteryByNode[node.id] ?? node.mastery ?? 0.45;
-    return {
-      ...node,
-      mastery,
-      risk: Number((1 - mastery).toFixed(2))
-    };
-  });
+export type GraphView = {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+};
 
-  const baseEdges = [...graph.edges];
+export async function getGraphView(userId: string, input?: { domain?: string }): Promise<GraphView>;
+export async function getGraphView(input?: { domain?: string; owner?: string }): Promise<GraphView>;
+export async function getGraphView(
+  arg1?: string | { domain?: string; owner?: string },
+  arg2?: { domain?: string }
+): Promise<GraphView> {
+  const userId = typeof arg1 === 'string' ? arg1 : arg1?.owner;
+  const domain = typeof arg1 === 'string' ? arg2?.domain : arg1?.domain;
 
-  const pathNodes = db.syncedPaths.map((path) => {
-    const pathNodeId = `path:${path.pathId}`;
-    const mastery = Number(Math.max(0, Math.min(1, path.progress / 100)).toFixed(2));
-    return {
-      id: pathNodeId,
-      label: path.title,
-      domain: "learning_path",
-      mastery,
-      risk: Number((1 - mastery).toFixed(2))
-    };
-  });
-
-  const taskNodes: Array<{
-    id: string;
-    label: string;
-    domain: string;
-    mastery: number;
-    risk: number;
-  }> = [];
-
-  const pathEdges: Array<{ source: string; target: string; weight: number }> = [];
-
-  for (const path of db.syncedPaths) {
-    const pathNodeId = `path:${path.pathId}`;
-    for (const task of path.tasks) {
-      const taskNodeId = toTaskNodeId(path.pathId, task.taskId);
-      const taskProgress = typeof task.progress === "number" ? task.progress : 0;
-      const taskMastery = Number(Math.max(0, Math.min(1, taskProgress / 100)).toFixed(2));
-      taskNodes.push({
-        id: taskNodeId,
-        label: task.title,
-        domain: "learning_task",
-        mastery: taskMastery,
-        risk: Number((1 - taskMastery).toFixed(2))
-      });
-
-      pathEdges.push({
-        source: pathNodeId,
-        target: taskNodeId,
-        weight: 1
-      });
-
-      const dependencies = Array.isArray(task.dependencies) ? task.dependencies : [];
-      for (const dependencyId of dependencies) {
-        const trimmed = dependencyId.trim();
-        if (!trimmed) continue;
-        pathEdges.push({
-          source: toTaskNodeId(path.pathId, trimmed),
-          target: taskNodeId,
-          weight: 1
-        });
-      }
-    }
+  if (!userId) {
+    return { nodes: [], edges: [] };
   }
 
-  const mergedNodes = [...baseNodes, ...pathNodes, ...taskNodes];
-  const mergedEdges = [...baseEdges, ...pathEdges].filter((edge) => edge.source !== edge.target);
-
-  const dedupedNodes = Array.from(new Map(mergedNodes.map((node) => [node.id, node])).values());
-  const nodeIds = new Set(dedupedNodes.map((node) => node.id));
-
-  const dedupedEdges = Array.from(
-    new Map(
-      mergedEdges
-        .filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
-        .map((edge) => [`${edge.source}->${edge.target}`, edge])
-    ).values()
+  const db = await loadDb();
+  const hasDemoPaths = db.syncedPaths.some(
+    (path) => path.userId === userId && path.pathId.startsWith("demo_path_")
   );
 
-  const nodes = dedupedNodes.filter((node) => (input.domain ? node.domain === input.domain : true));
-  const filteredNodeIds = new Set(nodes.map((node) => node.id));
-  const edges = dedupedEdges.filter(
-    (edge) => filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target)
-  );
+  if (hasDemoPaths) {
+    const demoNodeMeta = new Map(
+      DEMO_GRAPH_BOOTSTRAP.nodes.map((node) => [node.id, node])
+    );
+
+    const demoNodes = Object.entries(db.masteryByNode)
+      .filter(([nodeId]) => nodeId.startsWith("demo_node_"))
+      .map(([nodeId, mastery]) => {
+        const meta = demoNodeMeta.get(nodeId);
+        return {
+          id: nodeId,
+          label: meta?.label ?? nodeId,
+          mastery,
+          risk: meta?.risk ?? 0.5,
+          domain: meta?.domain ?? "general",
+        } satisfies GraphNode;
+      });
+
+    const demoEdges = db.plans
+      .filter((plan) => plan.planId.startsWith("demo_graph_edge::"))
+      .map((plan) => ({
+        source: plan.focusNodeId ?? "",
+        target: plan.focusNodeLabel ?? "",
+        weight: plan.focusNodeRisk ?? 0.5,
+      }))
+      .filter((edge) => edge.source && edge.target);
+
+    const fallbackEdges = DEMO_GRAPH_BOOTSTRAP.edges.map((edge) => ({
+      source: edge.source,
+      target: edge.target,
+      weight: edge.weight,
+    }));
+
+    return {
+      nodes: domain ? demoNodes.filter((node) => node.domain === domain) : demoNodes,
+      edges: demoEdges.length > 0 ? demoEdges : fallbackEdges,
+    };
+  }
+
+  const documents = await prisma.document.findMany({
+    where: { authorId: userId },
+    take: MAX_NODES_PER_USER,
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  const nodes: GraphNode[] = documents.map((doc) => ({
+    id: doc.id,
+    label: doc.title,
+    mastery: 0.5,
+    risk: 0.5,
+    domain: 'general',
+  }));
+
+  const edges: GraphEdge[] = [];
 
   return {
-    nodes,
-    edges
+    nodes: domain ? nodes.filter((node) => node.domain === domain) : nodes,
+    edges,
   };
 }
 
-export async function getGraphNodeDetail(nodeId: string) {
-  const graph = await getGraphView({});
-  const node = graph.nodes.find((item) => item.id === nodeId);
-  if (!node) return null;
+export async function getGraphNodeDetail(nodeId: string, userId: string) {
+  const doc = await prisma.document.findFirst({
+    where: { id: nodeId, authorId: userId },
+  });
+
+  if (!doc) {
+    return null;
+  }
 
   return {
-    node,
+    node: {
+      id: doc.id,
+      label: doc.title,
+      mastery: 0.5,
+      risk: 0.5,
+      domain: 'general',
+    },
     evidences: [
       {
-        sourceId: `vault:${nodeId}`,
-        chunkRef: "summary",
-        quote: `节点「${node.label}」来自本地知识库沉淀。`
-      }
-    ]
+        sourceId: `db:${doc.id}`,
+        chunkRef: 'summary',
+        quote: `节点「${doc.title}」来自用户的知识库。`,
+      },
+    ],
   };
 }

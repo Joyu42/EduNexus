@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useCallback, useEffect, Suspense } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
-  Filter,
   Clock,
   CheckCircle2,
   Circle,
@@ -28,6 +28,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoginPrompt } from "@/components/ui/login-prompt";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -44,6 +45,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Timestamp } from "@/components/ui/timestamp";
 import { cn } from "@/lib/utils";
 import { GrowthMapVisualization } from "@/components/path/growth-map-visualization";
@@ -62,8 +71,11 @@ import {
   type PathStatus,
 } from "@/lib/client/path-storage";
 import { goalStorage } from "@/lib/goals/goal-storage";
+import { syncDemoClientData } from "@/lib/client/demo-client-sync";
+import { getPathPageState } from "@/lib/client/path-goal-view-state";
 
 function PathPageContent() {
+  const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   // 状态管理
@@ -80,15 +92,32 @@ function PathPageContent() {
   const [taskCreateOpen, setTaskCreateOpen] = useState(false);
   const [taskEditOpen, setTaskEditOpen] = useState(false);
   const [milestoneOpen, setMilestoneOpen] = useState(false);
+  const [pendingDeleteAction, setPendingDeleteAction] = useState<
+    | {
+        type: "path";
+        pathId: string;
+        pathTitle: string;
+      }
+    | {
+        type: "task";
+        pathId: string;
+        taskId: string;
+        taskTitle: string;
+      }
+    | null
+  >(null);
 
   // 加载数据 - 每次页面可见时都重新加载
   useEffect(() => {
+    if (status !== "authenticated") {
+      return;
+    }
+
     loadPaths();
 
     // 监听页面可见性变化
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[PathPage] 页面重新可见，重新加载数据');
         loadPaths();
       }
     };
@@ -98,44 +127,13 @@ function PathPageContent() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (!selectedPath) {
-      return;
-    }
-
-    void fetch('/api/path/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pathId: selectedPath.id,
-        title: selectedPath.title,
-        description: selectedPath.description,
-        status: selectedPath.status,
-        progress: selectedPath.progress,
-        tags: selectedPath.tags,
-        tasks: selectedPath.tasks.map((task) => ({
-          taskId: task.id,
-          title: task.title,
-          description: task.description,
-          estimatedTime: task.estimatedTime,
-          status: task.status,
-          progress: task.progress,
-          dependencies: task.dependencies,
-        })),
-      }),
-    }).catch((error) => {
-      console.warn('[PathPage] 服务端路径同步失败:', error);
-    });
-  }, [selectedPath]);
+  }, [status, session?.user?.isDemo, searchParams]);
 
   const loadPaths = async () => {
     try {
       setLoading(true);
-      console.log('[PathPage] 加载路径...');
-      const loadedPaths = await pathStorage.getAllPaths();
-      console.log('[PathPage] 加载成功:', loadedPaths.length, '个路径');
+      let loadedPaths = await pathStorage.getAllPaths();
+
       const pathCreatedByEditor = searchParams.get("selected");
       let editorSelectionApplied = false;
       if (pathCreatedByEditor) {
@@ -148,26 +146,22 @@ function PathPageContent() {
         }
       }
 
-      // 如果没有路径，创建示例数据
-      if (loadedPaths.length === 0) {
-        console.log('[PathPage] 没有路径，创建示例数据...');
-        await initializeSamplePaths();
-        // 重新加载
-        const newPaths = await pathStorage.getAllPaths();
-        setPaths(newPaths);
-        if (newPaths.length > 0) {
-          setSelectedPath(newPaths[0]);
-          if (newPaths[0].tasks.length > 0) {
-            setSelectedTask(newPaths[0].tasks[0]);
-          }
-        }
-      } else {
-        setPaths(loadedPaths);
-        if (!editorSelectionApplied && loadedPaths.length > 0 && !selectedPath) {
-          setSelectedPath(loadedPaths[0]);
-          if (loadedPaths[0].tasks.length > 0) {
-            setSelectedTask(loadedPaths[0].tasks[0]);
-          }
+      const state = getPathPageState({
+        isLoading: false,
+        pathCount: loadedPaths.length,
+        isDemoUser: session?.user?.isDemo === true,
+      });
+
+      if (session?.user?.isDemo === true && (state.kind === "bootstrap_demo" || state.kind === "content")) {
+        await syncDemoClientData(session?.user?.id ?? "demo-user");
+        loadedPaths = await pathStorage.getAllPaths();
+      }
+
+      setPaths(loadedPaths);
+      if (!editorSelectionApplied && loadedPaths.length > 0 && !selectedPath) {
+        setSelectedPath(loadedPaths[0]);
+        if (loadedPaths[0].tasks.length > 0) {
+          setSelectedTask(loadedPaths[0].tasks[0]);
         }
       }
     } catch (error) {
@@ -175,109 +169,6 @@ function PathPageContent() {
       toast.error(`加载学习路径失败: ${error}`);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // 初始化示例路径
-  const initializeSamplePaths = async () => {
-    try {
-      // 示例路径 1: 前端开发入门
-      const path1 = await pathStorage.createPath({
-        title: "前端开发入门",
-        description: "从零开始学习前端开发，掌握 HTML、CSS 和 JavaScript 基础知识",
-        status: "in_progress",
-        progress: 30,
-        tags: ["前端", "Web开发", "入门"],
-        tasks: [
-          {
-            id: `task_${Date.now()}_1`,
-            title: "学习 HTML 基础",
-            description: "掌握 HTML 标签、语义化、表单等基础知识",
-            estimatedTime: "8小时",
-            progress: 100,
-            status: "completed" as const,
-            dependencies: [],
-            resources: [],
-            notes: "已完成 HTML 基础学习",
-            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-            completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-          },
-          {
-            id: `task_${Date.now()}_2`,
-            title: "学习 CSS 样式",
-            description: "学习 CSS 选择器、布局、动画等",
-            estimatedTime: "12小时",
-            progress: 60,
-            status: "in_progress" as const,
-            dependencies: [],
-            resources: [],
-            notes: "正在学习 Flexbox 和 Grid 布局",
-            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-            startedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-          },
-          {
-            id: `task_${Date.now()}_3`,
-            title: "JavaScript 基础",
-            description: "学习 JavaScript 语法、DOM 操作、事件处理",
-            estimatedTime: "20小时",
-            progress: 0,
-            status: "not_started" as const,
-            dependencies: [],
-            resources: [],
-            notes: "",
-            createdAt: new Date(),
-          },
-        ],
-        milestones: [
-          {
-            id: `milestone_${Date.now()}_1`,
-            title: "完成基础三件套",
-            taskIds: [`task_${Date.now()}_1`, `task_${Date.now()}_2`, `task_${Date.now()}_3`],
-          },
-        ],
-      });
-
-      // 示例路径 2: React 进阶
-      const path2 = await pathStorage.createPath({
-        title: "React 框架进阶",
-        description: "深入学习 React 框架，掌握组件化开发和状态管理",
-        status: "not_started",
-        progress: 0,
-        tags: ["React", "前端框架", "进阶"],
-        tasks: [
-          {
-            id: `task_${Date.now()}_4`,
-            title: "React 基础概念",
-            description: "学习组件、Props、State 等核心概念",
-            estimatedTime: "10小时",
-            progress: 0,
-            status: "not_started" as const,
-            dependencies: [],
-            resources: [],
-            notes: "",
-            createdAt: new Date(),
-          },
-          {
-            id: `task_${Date.now()}_5`,
-            title: "Hooks 深入理解",
-            description: "掌握 useState、useEffect、useContext 等 Hooks",
-            estimatedTime: "15小时",
-            progress: 0,
-            status: "not_started" as const,
-            dependencies: [],
-            resources: [],
-            notes: "",
-            createdAt: new Date(),
-          },
-        ],
-        milestones: [],
-      });
-
-      console.log('[PathPage] 示例数据创建成功');
-      toast.success("已为你创建示例学习路径");
-    } catch (error) {
-      console.error('[PathPage] 创建示例数据失败:', error);
-      toast.error("创建示例数据失败");
     }
   };
 
@@ -289,7 +180,6 @@ function PathPageContent() {
     goalId?: string;
   }) => {
     try {
-      console.log('[PathPage] 创建路径:', data);
       const newPath = await pathStorage.createPath({
         title: data.title,
         description: data.description,
@@ -300,8 +190,6 @@ function PathPageContent() {
         tasks: [],
         milestones: [],
       });
-
-      console.log('[PathPage] 路径创建成功:', newPath.id);
 
       // 如果关联了目标，更新目标的 linkedPathIds
       if (data.goalId) {
@@ -317,15 +205,14 @@ function PathPageContent() {
 
       // 选中新创建的路径
       setSelectedPath(newPath);
+      setSelectedTask(newPath.tasks[0] || null);
       setPathCreateOpen(false);
       toast.success("成功创建学习路径");
 
       // 验证保存
       setTimeout(async () => {
         const saved = await pathStorage.getPath(newPath.id);
-        if (saved) {
-          console.log('[PathPage] 验证成功，路径已保存');
-        } else {
+        if (!saved) {
           console.error('[PathPage] 验证失败，路径未保存');
           toast.error("路径保存验证失败，请刷新页面");
         }
@@ -357,25 +244,74 @@ function PathPageContent() {
   }, [selectedPath, paths]);
 
   // 删除路径
-  const handleDeletePath = useCallback(async () => {
+  const handleDeletePath = useCallback(() => {
     if (!selectedPath) return;
 
-    if (!confirm(`确定要删除"${selectedPath.title}"吗？此操作无法撤销。`)) {
+    setPendingDeleteAction({
+      type: "path",
+      pathId: selectedPath.id,
+      pathTitle: selectedPath.title,
+    });
+    toast("请在弹窗中确认删除路径");
+  }, [selectedPath]);
+
+  const handleDeleteTask = useCallback(() => {
+    if (!selectedPath || !selectedTask) return;
+
+    setPendingDeleteAction({
+      type: "task",
+      pathId: selectedPath.id,
+      taskId: selectedTask.id,
+      taskTitle: selectedTask.title,
+    });
+    toast("请在弹窗中确认删除任务");
+  }, [selectedPath, selectedTask]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!pendingDeleteAction) {
       return;
     }
 
+    const deleteAction = pendingDeleteAction;
+    setPendingDeleteAction(null);
+
     try {
-      await pathStorage.deletePath(selectedPath.id);
-      const newPaths = paths.filter(p => p.id !== selectedPath.id);
-      setPaths(newPaths);
-      setSelectedPath(newPaths[0] || null);
-      setSelectedTask(null);
-      toast.success("成功删除路径");
+      if (deleteAction.type === "path") {
+        await pathStorage.deletePath(deleteAction.pathId);
+        const newPaths = paths.filter((path) => path.id !== deleteAction.pathId);
+        const nextSelectedPath = selectedPath?.id === deleteAction.pathId ? (newPaths[0] || null) : selectedPath;
+        setPaths(newPaths);
+        setSelectedPath(nextSelectedPath);
+        setSelectedTask(nextSelectedPath?.tasks[0] || null);
+        toast.success("成功删除路径");
+        return;
+      }
+
+      const currentPath = paths.find((path) => path.id === deleteAction.pathId);
+      if (!currentPath) {
+        toast.error("未找到要删除任务所属的路径");
+        return;
+      }
+
+      const updatedTasks = currentPath.tasks.filter((task) => task.id !== deleteAction.taskId);
+      const updatedPath = await pathStorage.updatePath(deleteAction.pathId, {
+        tasks: updatedTasks,
+      });
+
+      const updatedPaths = paths.map((path) => (path.id === updatedPath.id ? updatedPath : path));
+      setPaths(updatedPaths);
+
+      if (selectedPath?.id === updatedPath.id) {
+        setSelectedPath(updatedPath);
+        setSelectedTask(updatedPath.tasks.find((task) => task.id === selectedTask?.id) || updatedPath.tasks[0] || null);
+      }
+
+      toast.success("成功删除任务");
     } catch (error) {
-      console.error("Failed to delete path:", error);
-      toast.error("删除路径失败");
+      console.error("Failed to delete item:", error);
+      toast.error(deleteAction.type === "path" ? "删除路径失败" : "删除任务失败");
     }
-  }, [selectedPath, paths]);
+  }, [paths, pendingDeleteAction, selectedPath, selectedTask]);
 
   // 复制路径
   const handleDuplicatePath = useCallback(async () => {
@@ -442,7 +378,7 @@ function PathPageContent() {
     try {
       const newTask: Task = {
         ...data,
-        id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `task_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
         status: "not_started",
         progress: 0,
         createdAt: new Date(),
@@ -502,30 +438,6 @@ function PathPageContent() {
     } catch (error) {
       console.error("Failed to update task:", error);
       toast.error("更新任务失败");
-    }
-  }, [selectedPath, selectedTask, paths]);
-
-  // 删除任务
-  const handleDeleteTask = useCallback(async () => {
-    if (!selectedPath || !selectedTask) return;
-
-    if (!confirm(`确定要删除任务"${selectedTask.title}"吗？`)) {
-      return;
-    }
-
-    try {
-      const updatedTasks = selectedPath.tasks.filter(t => t.id !== selectedTask.id);
-      const updated = await pathStorage.updatePath(selectedPath.id, {
-        tasks: updatedTasks,
-      });
-
-      setPaths(paths.map(p => p.id === updated.id ? updated : p));
-      setSelectedPath(updated);
-      setSelectedTask(updated.tasks[0] || null);
-      toast.success("成功删除任务");
-    } catch (error) {
-      console.error("Failed to delete task:", error);
-      toast.error("删除任务失败");
     }
   }, [selectedPath, selectedTask, paths]);
 
@@ -661,6 +573,10 @@ function PathPageContent() {
     if (searchQuery && !path.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  if (status === 'loading' || status === 'unauthenticated') {
+    return <LoginPrompt title="成长地图" />;
+  }
 
   if (loading) {
     return (
@@ -811,6 +727,13 @@ function PathPageContent() {
                 className="bg-gradient-to-r from-orange-500 to-amber-500"
               >
                 创建第一个路径
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => router.push('/path/new-editor')}
+              >
+                AI 生成路径
               </Button>
             </div>
           )}
@@ -1216,6 +1139,34 @@ function PathPageContent() {
         tasks={selectedPath?.tasks || []}
         onUpdate={handleUpdateMilestones}
       />
+
+      <Dialog
+        open={pendingDeleteAction !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingDeleteAction(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{pendingDeleteAction?.type === "path" ? "删除路径" : "删除任务"}</DialogTitle>
+            <DialogDescription>
+              {pendingDeleteAction?.type === "path"
+                ? `确定要删除「${pendingDeleteAction.pathTitle}」吗？此操作无法撤销。`
+                : `确定要删除任务「${pendingDeleteAction?.taskTitle ?? "当前任务"}」吗？此操作无法撤销。`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingDeleteAction(null)}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={() => void handleConfirmDelete()}>
+              删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
