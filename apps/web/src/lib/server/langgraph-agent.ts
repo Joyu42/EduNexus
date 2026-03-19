@@ -1,11 +1,10 @@
 import { END, START, StateGraph } from "@langchain/langgraph";
-import { searchDocuments } from "./document-service";
+import { searchVault } from "./kb-lite";
 import { buildSocraticGuidance } from "./socratic";
 import { getModelscopeClient } from "./modelscope";
 
 type AgentRunInput = {
   sessionId?: string;
-  userId: string;
   userInput: string;
   currentLevel?: number;
 };
@@ -40,7 +39,6 @@ type ModelGuidance = {
 
 type GraphState = {
   sessionId: string;
-  userId: string;
   userInput: string;
   currentLevel: number;
   intent: string;
@@ -55,7 +53,6 @@ type GraphState = {
 type AgentGraph = {
   invoke(input: {
     sessionId: string;
-    userId: string;
     userInput: string;
     currentLevel: number;
   }): Promise<GraphState>;
@@ -63,10 +60,6 @@ type AgentGraph = {
 
 const GRAPH_CHANNELS = {
   sessionId: {
-    value: (_left: string, right: string) => right,
-    default: () => ""
-  },
-  userId: {
     value: (_left: string, right: string) => right,
     default: () => ""
   },
@@ -264,8 +257,8 @@ function createAgentGraph() {
       trace: [`route_intent -> ${detectIntent(state.userInput)}`]
     }))
     .addNode("retrieve_context", async (state: GraphState) => {
-      const result = await searchDocuments(state.userInput, state.userId);
-      const top = result.slice(0, 3);
+      const result = await searchVault(state.userInput);
+      const top = result.candidates.slice(0, 3);
       const refs = top.map((item) => item.docId);
       const contextSummary = top
         .map((item, index) => `${index + 1}. ${item.docId}: ${item.snippet}`)
@@ -325,7 +318,6 @@ export async function runLangGraphAgent(input: AgentRunInput): Promise<AgentRunO
   const graph = getCompiledGraph();
   const result = (await graph.invoke({
     sessionId: input.sessionId ?? "",
-    userId: input.userId,
     userInput: input.userInput,
     currentLevel: input.currentLevel ?? 1
   })) as GraphState;
@@ -345,7 +337,6 @@ export async function* streamLangGraphAgent(
 ): AsyncGenerator<AgentStreamEvent, AgentRunOutput, void> {
   const state: GraphState = {
     sessionId: input.sessionId ?? "",
-    userId: input.userId,
     userInput: input.userInput,
     currentLevel: input.currentLevel ?? 1,
     intent: "knowledge_practice",
@@ -362,8 +353,8 @@ export async function* streamLangGraphAgent(
   state.trace.push(routeTrace);
   yield { type: "trace", value: routeTrace };
 
-  const searchResult = await searchDocuments(state.userInput, state.userId);
-  const top = searchResult.slice(0, 3);
+  const searchResult = await searchVault(state.userInput);
+  const top = searchResult.candidates.slice(0, 3);
   state.contextRefs = top.map((item) => item.docId);
   state.contextSummary = top
     .map((item, index) => `${index + 1}. ${item.docId}: ${item.snippet}`)

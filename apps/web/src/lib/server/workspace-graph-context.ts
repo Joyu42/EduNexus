@@ -32,11 +32,10 @@ function createTaskNodeCandidates(taskId: string) {
 }
 
 export async function buildWorkspaceGraphContext(input: {
-  userId?: string;
   taskId?: string;
   taskTitle?: string;
 }): Promise<WorkspaceGraphContext> {
-  const graph = input.userId ? await getGraphView(input.userId) : { nodes: [], edges: [] };
+  const graph = await getGraphView({});
   const db = await loadDb();
 
   const normalizedTaskId =
@@ -85,10 +84,7 @@ export async function buildWorkspaceGraphContext(input: {
   }
 
   if (!taskNode && normalizedTaskId) {
-    const scopedSyncedPaths = input.userId
-      ? db.syncedPaths.filter((path) => path.userId === input.userId)
-      : db.syncedPaths;
-    const syncedPathTask = scopedSyncedPaths
+    const syncedPathTask = db.syncedPaths
       .flatMap((path) => path.tasks)
       .find((task) => task.taskId === normalizedTaskId);
 

@@ -2,7 +2,6 @@
  * 文档版本历史管理
  */
 
-import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
 import { KBDocument } from "./kb-storage";
 
 export type DocumentVersion = {
@@ -21,17 +20,10 @@ const DB_NAME = "EduNexusKB";
 const DB_VERSION = 2; // 增加版本号
 const STORE_VERSIONS = "versions";
 
-// 获取用户特定的数据库名
-function getDBName(): string {
-  const userId = getClientUserIdentity();
-  return userId ? `EduNexusVersions_${userId}` : 'EduNexusVersions_anonymous';
-}
-
 /**
  * 初始化版本历史数据库
  */
 function openVersionDatabase(): Promise<IDBDatabase> {
-  const DB_NAME = getDBName();
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 

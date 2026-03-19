@@ -4,7 +4,6 @@
  */
 
 import Dexie, { Table } from 'dexie';
-import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
 
 export interface AgentToolStep {
   type: 'tool_call' | 'tool_result';
@@ -35,8 +34,8 @@ export interface ChatSession {
 class ChatHistoryDB extends Dexie {
   sessions!: Table<ChatSession, string>;
 
-  constructor(name: string) {
-    super(name);
+  constructor() {
+    super('EduNexusChatHistory');
 
     this.version(1).stores({
       sessions: 'id, createdAt, updatedAt',
@@ -44,30 +43,7 @@ class ChatHistoryDB extends Dexie {
   }
 }
 
-export function resolveChatDatabaseName(userId: string | null): string | null {
-  if (!userId) {
-    return null;
-  }
-  return `EduNexusChatHistory_${userId}`;
-}
-
-const chatHistoryDbs = new Map<string, ChatHistoryDB>();
-
-function getChatHistoryDb(): ChatHistoryDB | null {
-  const dbName = resolveChatDatabaseName(getClientUserIdentity());
-  if (!dbName) {
-    return null;
-  }
-
-  const existing = chatHistoryDbs.get(dbName);
-  if (existing) {
-    return existing;
-  }
-
-  const db = new ChatHistoryDB(dbName);
-  chatHistoryDbs.set(dbName, db);
-  return db;
-}
+const db = new ChatHistoryDB();
 
 /**
  * 创建新的对话会话
@@ -76,11 +52,6 @@ export async function createChatSession(
   title: string = '新对话',
   socraticMode: boolean = true
 ): Promise<ChatSession> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    throw new Error('Missing client user identity for workspace chat history');
-  }
-
   const session: ChatSession = {
     id: `session-${Date.now()}`,
     title,
@@ -98,10 +69,6 @@ export async function createChatSession(
  * 获取所有对话会话
  */
 export async function getAllChatSessions(): Promise<ChatSession[]> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    return [];
-  }
   return await db.sessions.orderBy('updatedAt').reverse().toArray();
 }
 
@@ -109,10 +76,6 @@ export async function getAllChatSessions(): Promise<ChatSession[]> {
  * 获取单个对话会话
  */
 export async function getChatSession(id: string): Promise<ChatSession | undefined> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    return undefined;
-  }
   return await db.sessions.get(id);
 }
 
@@ -123,10 +86,6 @@ export async function updateChatSession(
   id: string,
   updates: Partial<ChatSession>
 ): Promise<void> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    throw new Error('Missing client user identity for workspace chat history');
-  }
   await db.sessions.update(id, {
     ...updates,
     updatedAt: new Date(),
@@ -140,10 +99,6 @@ export async function addMessageToSession(
   sessionId: string,
   message: ChatMessage
 ): Promise<void> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    throw new Error('Missing client user identity for workspace chat history');
-  }
   const session = await db.sessions.get(sessionId);
   if (!session) {
     throw new Error('Session not found');
@@ -160,10 +115,6 @@ export async function addMessageToSession(
  * 删除对话会话
  */
 export async function deleteChatSession(id: string): Promise<void> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    return;
-  }
   await db.sessions.delete(id);
 }
 
@@ -171,19 +122,7 @@ export async function deleteChatSession(id: string): Promise<void> {
  * 清空所有对话历史
  */
 export async function clearAllChatHistory(): Promise<void> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    return;
-  }
   await db.sessions.clear();
-}
-
-export async function upsertChatSession(session: ChatSession): Promise<void> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    throw new Error('Missing client user identity for workspace chat history');
-  }
-  await db.sessions.put(session);
 }
 
 /**
@@ -228,10 +167,6 @@ export function exportChatSessionAsMarkdown(session: ChatSession): string {
  * 获取最近的对话会话
  */
 export async function getRecentChatSessions(limit: number = 10): Promise<ChatSession[]> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    return [];
-  }
   return await db.sessions
     .orderBy('updatedAt')
     .reverse()
@@ -243,10 +178,6 @@ export async function getRecentChatSessions(limit: number = 10): Promise<ChatSes
  * 搜索对话会话
  */
 export async function searchChatSessions(query: string): Promise<ChatSession[]> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    return [];
-  }
   const allSessions = await db.sessions.toArray();
   const lowerQuery = query.toLowerCase();
 
@@ -289,14 +220,6 @@ export async function getChatStatistics(): Promise<{
   totalMessages: number;
   averageMessagesPerSession: number;
 }> {
-  const db = getChatHistoryDb();
-  if (!db) {
-    return {
-      totalSessions: 0,
-      totalMessages: 0,
-      averageMessagesPerSession: 0,
-    };
-  }
   const sessions = await db.sessions.toArray();
   const totalSessions = sessions.length;
   const totalMessages = sessions.reduce((sum: number, s: ChatSession) => sum + s.messages.length, 0);

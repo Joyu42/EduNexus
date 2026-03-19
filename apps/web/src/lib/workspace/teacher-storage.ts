@@ -251,13 +251,18 @@ export const PRESET_TEACHERS: Omit<AITeacher, 'createdAt' | 'updatedAt'>[] = [
  * 初始化预设老师
  */
 export async function initializePresetTeachers(): Promise<void> {
+  const existingTeachers = await db.teachers.toArray();
+
+  // 只添加不存在的预设老师
   for (const preset of PRESET_TEACHERS) {
-    const existing = await db.teachers.get(preset.id);
-    await db.teachers.put({
-      ...preset,
-      createdAt: existing?.createdAt ?? new Date(),
-      updatedAt: new Date(),
-    });
+    const exists = existingTeachers.some(t => t.id === preset.id);
+    if (!exists) {
+      await db.teachers.add({
+        ...preset,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
   }
 }
 
@@ -299,13 +304,13 @@ export async function createCustomTeacher(
 ): Promise<AITeacher> {
   const newTeacher: AITeacher = {
     ...teacher,
-    id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `custom-${Date.now()}`,
     isCustom: true,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
-  await db.teachers.put(newTeacher);
+  await db.teachers.add(newTeacher);
   return newTeacher;
 }
 
@@ -350,13 +355,13 @@ export async function importTeacher(json: string): Promise<AITeacher> {
   // 确保是自定义老师
   const teacher: AITeacher = {
     ...data,
-    id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `custom-${Date.now()}`,
     isCustom: true,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
-  await db.teachers.put(teacher);
+  await db.teachers.add(teacher);
   return teacher;
 }
 

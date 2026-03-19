@@ -1,7 +1,6 @@
 import { loadDb, saveDb, type SyncedPathRecord, type SyncedPathTaskRecord } from "./store";
 
 export type UpsertSyncedPathInput = {
-  userId: string;
   pathId: string;
   title: string;
   description?: string;
@@ -36,7 +35,6 @@ export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
   const now = new Date().toISOString();
 
   const normalized: SyncedPathRecord = {
-    userId: input.userId,
     pathId: input.pathId,
     title: input.title,
     description: input.description ?? "",
@@ -47,9 +45,7 @@ export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
     updatedAt: now,
   };
 
-  const existingIndex = db.syncedPaths.findIndex(
-    (item) => item.pathId === input.pathId && item.userId === input.userId
-  );
+  const existingIndex = db.syncedPaths.findIndex((item) => item.pathId === input.pathId);
   if (existingIndex >= 0) {
     db.syncedPaths[existingIndex] = normalized;
   } else {
@@ -60,10 +56,8 @@ export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
   return normalized;
 }
 
-export async function deleteSyncedPath(pathId: string, userId: string) {
+export async function deleteSyncedPath(pathId: string) {
   const db = await loadDb();
-  db.syncedPaths = db.syncedPaths.filter(
-    (item) => !(item.pathId === pathId && item.userId === userId)
-  );
+  db.syncedPaths = db.syncedPaths.filter((item) => item.pathId !== pathId);
   await saveDb(db);
 }

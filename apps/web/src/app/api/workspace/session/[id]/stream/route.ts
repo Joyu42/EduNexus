@@ -1,6 +1,5 @@
 import { fail } from "@/lib/server/response";
 import { getSession, mockSseStream } from "@/lib/server/session-service";
-import { getCurrentUserId } from "@/lib/server/auth-utils";
 
 export const runtime = "nodejs";
 
@@ -10,11 +9,7 @@ export async function GET(
 ) {
   try {
     const { id: sessionId } = await context.params;
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return fail({ code: 'UNAUTHORIZED', message: '请先登录' }, 401);
-    }
-    const session = await getSession(sessionId, userId);
+    const session = await getSession(sessionId);
     if (!session) {
       return fail(
         {

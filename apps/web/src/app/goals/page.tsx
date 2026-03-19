@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { Goal, goalStorage, Habit, habitStorage } from '@/lib/goals/goal-storage';
 import { pathStorage } from '@/lib/client/path-storage';
 import { GoalWizard } from '@/components/goals/goal-wizard';
@@ -10,8 +8,6 @@ import { GoalCard } from '@/components/goals/goal-card';
 import { HabitCalendar } from '@/components/goals/habit-calendar';
 import { HabitTracker } from '@/components/goals/habit-tracker';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { LoginPrompt } from '@/components/ui/login-prompt';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -19,12 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Target, Calendar, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { syncDemoClientData } from '@/lib/client/demo-client-sync';
-import { getGoalsPageState } from '@/lib/client/path-goal-view-state';
 
 export default function GoalsPage() {
-  const router = useRouter();
-  const { data: session, status } = useSession();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [showWizard, setShowWizard] = useState(false);
@@ -33,29 +25,15 @@ export default function GoalsPage() {
   const [linkedPathsData, setLinkedPathsData] = useState<Record<string, { count: number; progress: number }>>({});
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      loadData();
-    }
-  }, [status]);
+    loadData();
+  }, []);
 
   const loadData = async () => {
-    let goals = goalStorage.getGoals();
-
-    const state = getGoalsPageState({
-      isLoading: false,
-      goalCount: goals.length,
-      isDemoUser: session?.user?.isDemo === true,
-    });
-
-    if (session?.user?.isDemo === true && (state.kind === 'bootstrap_demo' || state.kind === 'content')) {
-      await syncDemoClientData(session?.user?.id ?? 'demo-user');
-      goals = goalStorage.getGoals();
-    }
-
-    setGoals(goals);
+    setGoals(goalStorage.getGoals());
     setHabits(habitStorage.getHabits());
 
     // 加载关联路径数据
+    const goals = goalStorage.getGoals();
     const pathsData: Record<string, { count: number; progress: number }> = {};
 
     for (const goal of goals) {
@@ -134,21 +112,6 @@ export default function GoalsPage() {
     ? Math.round(goals.reduce((sum, g) => sum + g.progress, 0) / goals.length)
     : 0;
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-          <p className="text-muted-foreground mt-4">加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'unauthenticated') {
-    return <LoginPrompt title="目标管理" />;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30">
       <div className="page-container">
@@ -222,14 +185,6 @@ export default function GoalsPage() {
               <p className="text-muted-foreground mb-4">
                 还没有目标，点击上方按钮创建你的第一个目标
               </p>
-              <div className="flex items-center justify-center gap-3">
-                <Button onClick={() => setShowWizard(true)}>
-                  <Plus className="w-4 h-4 mr-2" />创建目标
-                </Button>
-                <Button variant="outline" onClick={() => setShowWizard(true)}>
-                  <Sparkles className="w-4 h-4 mr-2" />生成建议目标
-                </Button>
-              </div>
             </div>
           )}
 

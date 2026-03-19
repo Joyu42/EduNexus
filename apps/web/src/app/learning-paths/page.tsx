@@ -2,62 +2,33 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import { Plus, Wand2, BookOpen, Target, Edit, Trash2, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { LoginPrompt } from '@/components/ui/login-prompt';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { pathStorage, type LearningPath } from '@/lib/client/path-storage';
 import { goalStorage, type Goal } from '@/lib/goals/goal-storage';
-import { fetchDemoPathBootstrap, buildDemoStarterContent } from '@/lib/client/demo-bootstrap';
-import { getLearningPathsPageState } from '@/lib/client/path-goal-view-state';
 
 export default function LearningPathsPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
   const [paths, setPaths] = useState<LearningPath[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { 
-    if (status === 'authenticated') {
-      loadData(); 
-    }
-  }, [status]);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      let [loadedPaths, loadedGoals] = await Promise.all([
+      const [loadedPaths, loadedGoals] = await Promise.all([
         pathStorage.getAllPaths(),
         Promise.resolve(goalStorage.getGoals())
       ]);
-
-      const state = getLearningPathsPageState({
-        isLoading: false,
-        pathCount: loadedPaths.length,
-        isDemoUser: session?.user?.isDemo === true,
-      });
-
-      if (state.kind === 'bootstrap_demo') {
-        const bootstrap = await fetchDemoPathBootstrap();
-        if (bootstrap) {
-          const starter = buildDemoStarterContent(bootstrap);
-          goalStorage.saveGoal(starter.goal);
-          await pathStorage.createPath(starter.path);
-          [loadedPaths, loadedGoals] = await Promise.all([
-            pathStorage.getAllPaths(),
-            Promise.resolve(goalStorage.getGoals()),
-          ]);
-        }
-      }
-
       setPaths(loadedPaths);
       setGoals(loadedGoals);
     } catch (error) {
@@ -85,32 +56,6 @@ export default function LearningPathsPage() {
   );
 
   const getGoalTitle = (goalId?: string) => goalId ? goals.find(g => g.id === goalId)?.title : null;
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-pink-50/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-          <p className="text-muted-foreground mt-4">加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'unauthenticated') {
-    return <LoginPrompt title="学习路径" />;
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-pink-50/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-          <p className="text-muted-foreground mt-4">加载中...</p>
-        </div>
-      </div>
-    );
-  }
 
   const stats = {
     total: paths.length,

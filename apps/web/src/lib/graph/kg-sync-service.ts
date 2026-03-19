@@ -2,27 +2,20 @@
  * 知识图谱同步服务 - 处理笔记与知识图谱的双向同步
  */
 
-import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
 import type { GraphNode, GraphEdge, NodeType } from './types';
 import type { KBDocument } from '../client/kb-storage';
 import { extractTags, extractKeywords, extractWikiLinks } from '../kb/content-extractor';
 
 // IndexedDB 配置
+const DB_NAME = 'EduNexusKG';
 const DB_VERSION = 1;
 const STORE_NODES = 'nodes';
 const STORE_EDGES = 'edges';
-
-// 获取用户特定的数据库名
-function getDBName(): string {
-  const userId = getClientUserIdentity();
-  return userId ? `EduNexusKG_${userId}` : 'EduNexusKG_anonymous';
-}
 
 /**
  * 初始化知识图谱数据库
  */
 function openKGDatabase(): Promise<IDBDatabase> {
-  const DB_NAME = getDBName();
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 

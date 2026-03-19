@@ -9,14 +9,12 @@ import {
   BookOpen,
   Briefcase,
   Settings,
-  Languages,
 } from "lucide-react";
 import { useSafeArea } from "@/lib/hooks/use-safe-area";
 
 const navItems = [
   { name: "总览", href: "/", icon: Home },
   { name: "星图", href: "/graph", icon: Network },
-  { name: "单词", href: "/words", icon: Languages },
   { name: "宝库", href: "/kb", icon: BookOpen },
   { name: "工作区", href: "/workspace", icon: Briefcase },
   { name: "设置", href: "/settings", icon: Settings },

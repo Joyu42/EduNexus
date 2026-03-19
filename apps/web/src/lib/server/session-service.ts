@@ -1,58 +1,13 @@
 import { createTraceId } from "./trace";
 import { loadDb, saveDb } from "./store";
 
-const DEFAULT_SESSION_TITLE = "未命名学习会话";
-const SESSION_TITLE_LIMIT = 30;
-const MAX_SESSIONS_PER_USER = 10;
-
-function sortSessionsByUpdatedAt<T extends { updatedAt: string }>(sessions: T[]) {
-  return sessions.sort((a, b) => Number(new Date(b.updatedAt)) - Number(new Date(a.updatedAt)));
-}
-
-function resolveSessionTitle(input: { title?: string; firstMessage?: string }) {
-  const explicitTitle = input.title?.trim();
-  if (explicitTitle) {
-    return explicitTitle;
-  }
-
-  const generatedTitle = input.firstMessage?.trim().slice(0, SESSION_TITLE_LIMIT);
-  if (generatedTitle) {
-    return generatedTitle;
-  }
-
-  return DEFAULT_SESSION_TITLE;
-}
-
-function enforceSessionCap<T extends { id: string; userId: string; updatedAt: string }>(
-  sessions: T[],
-  userId: string
-) {
-  const rankedUserSessions = sortSessionsByUpdatedAt(sessions.filter((session) => session.userId === userId));
-  const removableIds = new Set(rankedUserSessions.slice(MAX_SESSIONS_PER_USER).map((session) => session.id));
-  if (removableIds.size === 0) {
-    return sessions;
-  }
-
-  return sessions.filter((session) => {
-    if (session.userId !== userId) {
-      return true;
-    }
-    if (!removableIds.has(session.id)) {
-      return true;
-    }
-    removableIds.delete(session.id);
-    return false;
-  });
-}
-
-export async function createSession(input: { title?: string; firstMessage?: string }, userId: string) {
-  if (!userId) throw new Error('userId is required');
+export async function createSession(input: { title?: string }) {
   const db = await loadDb();
   const now = new Date().toISOString();
   const session = {
     id: `ws_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
-    title: resolveSessionTitle(input),
-    userId: userId,
+    title: input.title ?? "未命名学习会话",
+    userId: "demo_user",
     createdAt: now,
     updatedAt: now,
     lastLevel: 1,
@@ -64,8 +19,7 @@ export async function createSession(input: { title?: string; firstMessage?: stri
       }
     ]
   };
-  db.sessions = enforceSessionCap([session, ...db.sessions], userId);
-  sortSessionsByUpdatedAt(db.sessions);
+  db.sessions.unshift(session);
   await saveDb(db);
   return session;
 }
@@ -82,23 +36,16 @@ export async function updateSessionLevel(sessionId: string, level: number) {
   return target;
 }
 
-export async function getSession(sessionId: string, userId: string) {
-  if (!userId) throw new Error('userId is required');
+export async function getSession(sessionId: string) {
   const db = await loadDb();
-  const session = db.sessions.find((item) => item.id === sessionId) ?? null;
-  if (!session) return null;
-  if (session.userId !== userId) return null;
-  return session;
+  return db.sessions.find((item) => item.id === sessionId) ?? null;
 }
 
-export async function listSessions(query: string | undefined, userId: string) {
-  if (!userId) throw new Error('userId is required');
+export async function listSessions(query?: string) {
   const db = await loadDb();
   const normalized = query?.trim().toLowerCase();
-  const sessions = sortSessionsByUpdatedAt(
-    db.sessions
+  const sessions = db.sessions
     .filter((session) => {
-      if (session.userId !== userId) return false;
       if (!normalized) return true;
       return (
         session.title.toLowerCase().includes(normalized) ||
@@ -107,7 +54,7 @@ export async function listSessions(query: string | undefined, userId: string) {
       );
     })
     .slice()
-  );
+    .sort((a, b) => Number(new Date(b.updatedAt)) - Number(new Date(a.updatedAt)));
 
   return sessions.map((session) => ({
       id: session.id,
@@ -124,16 +71,11 @@ export async function appendSessionMessage(
   input: {
     role: "user" | "assistant" | "system";
     content: string;
-  },
-  userId: string
+  }
 ) {
-  if (!userId) throw new Error('userId is required');
   const db = await loadDb();
   const target = db.sessions.find((item) => item.id === sessionId);
   if (!target) {
-    return null;
-  }
-  if (target.userId !== userId) {
     return null;
   }
 
@@ -147,9 +89,8 @@ export async function appendSessionMessage(
   return target;
 }
 
-export async function getSessionDetail(sessionId: string, userId: string) {
-  if (!userId) throw new Error('userId is required');
-  const session = await getSession(sessionId, userId);
+export async function getSessionDetail(sessionId: string) {
+  const session = await getSession(sessionId);
   if (!session) {
     return null;
   }
@@ -164,14 +105,10 @@ export async function getSessionDetail(sessionId: string, userId: string) {
   };
 }
 
-export async function renameSession(sessionId: string, title: string, userId: string) {
-  if (!userId) throw new Error('userId is required');
+export async function renameSession(sessionId: string, title: string) {
   const db = await loadDb();
   const target = db.sessions.find((item) => item.id === sessionId);
   if (!target) {
-    return null;
-  }
-  if (target.userId !== userId) {
     return null;
   }
   target.title = title;
@@ -180,16 +117,8 @@ export async function renameSession(sessionId: string, title: string, userId: st
   return target;
 }
 
-export async function deleteSession(sessionId: string, userId: string) {
-  if (!userId) throw new Error('userId is required');
+export async function deleteSession(sessionId: string) {
   const db = await loadDb();
-  const target = db.sessions.find((item) => item.id === sessionId);
-  if (!target) {
-    return false;
-  }
-  if (target.userId !== userId) {
-    return false;
-  }
   const index = db.sessions.findIndex((item) => item.id === sessionId);
   if (index < 0) {
     return false;

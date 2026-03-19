@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -16,11 +15,6 @@ interface MarkdownRendererProps {
 }
 
 export function MarkdownRenderer({ content, className = "" }: MarkdownRendererProps) {
-  const linkClassName =
-    "text-orange-600 hover:text-orange-700 underline decoration-orange-300 hover:decoration-orange-500 transition-colors";
-
-  const isExternalHref = (href: string) => /^(https?:)?\/\//i.test(href) || href.startsWith("mailto:") || href.startsWith("tel:");
-
   return (
     <div className={`markdown-content ${className}`}>
       <ReactMarkdown
@@ -112,31 +106,16 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
             <td className="px-4 py-3 text-sm text-gray-700">{children}</td>
           ),
           // 链接样式
-          a: ({ href, children }) => {
-            const safeHref = typeof href === "string" ? href.trim() : "";
-            if (!safeHref) {
-              return <span>{children}</span>;
-            }
-
-            if (safeHref.startsWith("/")) {
-              return (
-                <Link href={safeHref} className={linkClassName}>
-                  {children}
-                </Link>
-              );
-            }
-
-            return (
-              <a
-                href={safeHref}
-                target={isExternalHref(safeHref) ? "_blank" : undefined}
-                rel={isExternalHref(safeHref) ? "noopener noreferrer" : undefined}
-                className={linkClassName}
-              >
-                {children}
-              </a>
-            );
-          },
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-600 hover:text-orange-700 underline decoration-orange-300 hover:decoration-orange-500 transition-colors"
+            >
+              {children}
+            </a>
+          ),
           // 分隔线样式
           hr: () => <hr className="my-6 border-t-2 border-gray-200" />,
           // 强调样式

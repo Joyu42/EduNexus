@@ -2,10 +2,9 @@ import { fail, ok } from "@/lib/server/response";
 import { updateSessionSchema } from "@/lib/server/schema";
 import {
   deleteSession,
-  getSession,
+  getSessionDetail,
   renameSession
 } from "@/lib/server/session-service";
-import { getCurrentUserId } from "@/lib/server/auth-utils";
 
 export const runtime = "nodejs";
 
@@ -15,12 +14,8 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return fail({ code: 'UNAUTHORIZED', message: '请先登录' }, 401);
-    }
-    const session = await getSession(id, userId);
-    if (!session) {
+    const detail = await getSessionDetail(id);
+    if (!detail) {
       return fail(
         {
           code: "SESSION_NOT_FOUND",
@@ -29,15 +24,7 @@ export async function GET(
         404
       );
     }
-    return ok({
-      id: session.id,
-      title: session.title,
-      userId: session.userId,
-      createdAt: session.createdAt,
-      updatedAt: session.updatedAt,
-      lastLevel: session.lastLevel,
-      messages: session.messages
-    });
+    return ok(detail);
   } catch (error) {
     return fail(
       {
@@ -66,11 +53,7 @@ export async function PATCH(
       });
     }
 
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return fail({ code: 'UNAUTHORIZED', message: '请先登录' }, 401);
-    }
-    const renamed = await renameSession(id, parsed.data.title, userId);
+    const renamed = await renameSession(id, parsed.data.title);
     if (!renamed) {
       return fail(
         {
@@ -104,11 +87,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return fail({ code: 'UNAUTHORIZED', message: '请先登录' }, 401);
-    }
-    const removed = await deleteSession(id, userId);
+    const removed = await deleteSession(id);
     if (!removed) {
       return fail(
         {

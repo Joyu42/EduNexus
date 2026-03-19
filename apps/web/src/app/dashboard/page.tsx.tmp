@@ -1,0 +1,3080 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Settings,
+  Filter,
+  Search,
+  BarChart3,
+  Activity,
+  Link2,
+  Eye,
+  EyeOff,
+  ChevronUp,
+  ChevronDown,
+  RotateCcw,
+  Send,
+  Maximize2,
+  Minimize2,
+  X
+} from "lucide-react";
+import { requestJson } from "@/lib/client/api";
+import { GalaxyHero } from "@/components/galaxy-ui";
+import { PageHeader } from "@/components/page-header";
+import { PageQuickNav } from "@/components/page-quick-nav";
+import { RatioRing, TrendSparkCard } from "@/components/dashboard-mini-charts";
+import {
+  GRAPH_ACTIVITY_STORAGE_KEY,
+  normalizeGraphActivityPayload,
+  pushGraphActivityEventToStorage,
+  resolveGraphActivityRiskScore,
+  writeGraphActivityFocusIdToStorage,
+  type GraphActivityEvent
+} from "@/lib/client/graph-activity";
+import { writeGraphFocusNodeToStorage } from "@/lib/client/graph-focus-bridge";
+import {
+  type PathFocusPayload,
+  writePathFocusBatchToStorage,
+  writePathFocusToStorage,
+  writeWorkspaceFocusBatchToStorage,
+  writeWorkspaceFocusToStorage
+} from "@/lib/client/path-focus-bridge";
+import {
+  resolveNodeRisk,
+  type GraphViewEdge,
+  type GraphViewNode
+} from "@/lib/client/graph-view-model";
+import {
+  isCrossDomainBridge,
+  sortBridgeRiskRows,
+  type BridgeRelationMode,
+  type BridgeSortMode
+} from "@/lib/client/bridge-insight";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+type PeriodKey = "7d" | "14d" | "30d";
+type CompareMode = "previous" | "periodStart" | "customDate" | "crossPeriod";
+type InsightRiskLevel = "low" | "medium" | "high";
+type AlertPolicyMode = "strict" | "balanced" | "relaxed";
+type AlertConfigPreset = "intervene" | "balanced" | "quiet" | "custom";
+type ActivitySourceFilter = "all" | "path_feedback" | "workspace";
+type ActivitySortMode = "latest" | "risk_desc" | "risk_asc";
+type ActivityRiskTone = "low" | "medium" | "high";
+type DashboardViewMode = "decision" | "bridge" | "events";
+
+type GraphViewPayload = {
+  nodes: GraphViewNode[];
+  edges: GraphViewEdge[];
+};
+
+type DashboardBridgeRiskRow = {
+  id: string;
+  sourceId: string;
+  sourceLabel: string;
+  targetId: string;
+  targetLabel: string;
+  sourceDomain: string;
+  targetDomain: string;
+  risk: number;
+  weight: number;
+  primaryNodeId: string;
+  primaryNodeLabel: string;
+};
+
+type AlertItem = {
+  id: string;
+  alertKey: string;
+  title: string;
+  level: InsightRiskLevel;
+  summary: string;
+  action: string;
+};
+
+type AlertHandledRecord = {
+  alertKey: string;
+  title: string;
+  level: InsightRiskLevel;
+  summary: string;
+  action: string;
+  period: PeriodKey;
+  handledAt: string;
+};
+
+type AlertDimensionRow = {
+  key: string;
+  label: string;
+  high: number;
+  medium: number;
+  total: number;
+};
+
+type DashboardRiskConfig = {
+  dependencyHighThreshold: number;
+  independentHighThreshold: number;
+  gainHighThreshold: number;
+  maxVisibleAlerts: number;
+  historyLimit: number;
+  dimensionLimit: number;
+};
+
+type MetricSeries = {
+  id: string;
+  title: string;
+  value: string;
+  delta: string;
+  points: number[];
+};
+
+type PeriodMetrics = {
+  trends: MetricSeries[];
+  rings: Array<{ label: string; value: number; hint: string }>;
+};
+
+const PERIOD_OPTIONS: Array<{ key: PeriodKey; label: string }> = [
+  { key: "7d", label: "7 天" },
+  { key: "14d", label: "14 天" },
+  { key: "30d", label: "30 天" }
+];
+
+const DASHBOARD_QUICK_NAV_ITEMS = [
+  { href: "#dashboard_view_switcher", label: "视图切换", hint: "决策/关系链/事件" },
+  { href: "#dashboard_trend_center", label: "趋势中心", hint: "指标与预警" },
+  { href: "#dashboard_bridge_risk", label: "关系链风险榜", hint: "批量干预" },
+  { href: "#dashboard_events", label: "闭环事件", hint: "来源与风险筛选" },
+  { href: "#dashboard_ratio_rings", label: "比例环图", hint: "关键比例概览" },
+  { href: "#dashboard_ops_actions", label: "运营动作建议", hint: "下一步动作" }
+] as const;
+const DASHBOARD_COMPACT_MODE_STORAGE_KEY = "edunexus_dashboard_compact_mode";
+
+const PERIOD_METRICS: Record<PeriodKey, PeriodMetrics> = {
+  "7d": {
+    trends: [
+      {
+        id: "gain",
+        title: "学习增益趋势",
+        value: "+18.7%",
+        delta: "+2.4% vs 上周",
+        points: [52, 55, 57, 60, 61, 66, 69]
+      },
+      {
+        id: "independent",
+        title: "独立完成率",
+        value: "61%",
+        delta: "+4.1% vs 上周",
+        points: [48, 50, 52, 55, 58, 60, 61]
+      },
+      {
+        id: "dependency",
+        title: "高层提示依赖率",
+        value: "34%",
+        delta: "-5.6% vs 上周",
+        points: [49, 47, 45, 42, 39, 36, 34]
+      }
+    ],
+    rings: [
+      { label: "独立完成率", value: 61, hint: "持续上升，说明学习自驱增强" },
+      { label: "Citation 覆盖", value: 82, hint: "知识回答可溯源性较好" },
+      { label: "最终答案依赖", value: 39, hint: "仍可继续压降至 30% 以下" }
+    ]
+  },
+  "14d": {
+    trends: [
+      {
+        id: "gain",
+        title: "学习增益趋势",
+        value: "+14.2%",
+        delta: "+1.6% vs 前周期",
+        points: [46, 47, 49, 50, 52, 54, 55, 56, 58, 60, 61, 63, 64, 65]
+      },
+      {
+        id: "independent",
+        title: "独立完成率",
+        value: "58%",
+        delta: "+2.8% vs 前周期",
+        points: [42, 43, 44, 46, 47, 48, 49, 51, 52, 54, 55, 56, 57, 58]
+      },
+      {
+        id: "dependency",
+        title: "高层提示依赖率",
+        value: "37%",
+        delta: "-3.1% vs 前周期",
+        points: [51, 50, 50, 49, 48, 46, 45, 44, 43, 42, 41, 40, 39, 37]
+      }
+    ],
+    rings: [
+      { label: "独立完成率", value: 58, hint: "近两周稳定改善，但仍可继续提升" },
+      { label: "Citation 覆盖", value: 79, hint: "建议强化低频知识点引用补全" },
+      { label: "最终答案依赖", value: 42, hint: "下降中，门控策略继续有效" }
+    ]
+  },
+  "30d": {
+    trends: [
+      {
+        id: "gain",
+        title: "学习增益趋势",
+        value: "+11.9%",
+        delta: "+0.9% vs 上月",
+        points: [40, 41, 42, 44, 45, 46, 47, 47, 48, 49, 51, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 62, 63, 64, 65, 66, 66, 67, 68, 69]
+      },
+      {
+        id: "independent",
+        title: "独立完成率",
+        value: "55%",
+        delta: "+1.3% vs 上月",
+        points: [35, 36, 37, 38, 39, 40, 41, 41, 42, 43, 44, 44, 45, 46, 47, 47, 48, 49, 50, 50, 51, 52, 52, 53, 53, 54, 54, 55, 55, 55]
+      },
+      {
+        id: "dependency",
+        title: "高层提示依赖率",
+        value: "40%",
+        delta: "-1.8% vs 上月",
+        points: [56, 55, 54, 54, 53, 53, 52, 52, 51, 51, 50, 50, 49, 48, 48, 47, 47, 46, 45, 45, 44, 44, 43, 43, 42, 42, 41, 41, 40, 40]
+      }
+    ],
+    rings: [
+      { label: "独立完成率", value: 55, hint: "月度趋势平稳，需提升难题独立率" },
+      { label: "Citation 覆盖", value: 76, hint: "建议增加跨章节引用与对比来源" },
+      { label: "最终答案依赖", value: 44, hint: "月度口径仍偏高，需继续压降" }
+    ]
+  }
+};
+
+const DEFAULT_DASHBOARD_RISK_CONFIG: DashboardRiskConfig = {
+  dependencyHighThreshold: 45,
+  independentHighThreshold: 50,
+  gainHighThreshold: 55,
+  maxVisibleAlerts: 4,
+  historyLimit: 6,
+  dimensionLimit: 4
+};
+
+const DASHBOARD_RISK_PRESETS: Record<
+  Exclude<AlertConfigPreset, "custom">,
+  DashboardRiskConfig
+> = {
+  intervene: {
+    dependencyHighThreshold: 42,
+    independentHighThreshold: 53,
+    gainHighThreshold: 58,
+    maxVisibleAlerts: 6,
+    historyLimit: 10,
+    dimensionLimit: 4
+  },
+  balanced: DEFAULT_DASHBOARD_RISK_CONFIG,
+  quiet: {
+    dependencyHighThreshold: 48,
+    independentHighThreshold: 47,
+    gainHighThreshold: 52,
+    maxVisibleAlerts: 3,
+    historyLimit: 4,
+    dimensionLimit: 3
+  }
+};
+
+function buildDateLabels(total: number) {
+  if (total <= 0) {
+    return [];
+  }
+  return Array.from({ length: total }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (total - index - 1));
+    return date.toLocaleDateString("zh-CN", {
+      month: "2-digit",
+      day: "2-digit"
+    });
+  });
+}
+
+function getPeriodLabel(period: PeriodKey) {
+  return PERIOD_OPTIONS.find((item) => item.key === period)?.label ?? period;
+}
+
+function resolveCrossPeriodKey(period: PeriodKey): PeriodKey {
+  if (period === "30d") {
+    return "14d";
+  }
+  return "30d";
+}
+
+function alignIndexToLength(index: number, fromLength: number, toLength: number) {
+  if (toLength <= 0) {
+    return 0;
+  }
+  if (fromLength <= 1) {
+    return 0;
+  }
+  const ratio = index / (fromLength - 1);
+  return Math.max(0, Math.min(toLength - 1, Math.round(ratio * (toLength - 1))));
+}
+
+function formatDeltaValue(value: number | null) {
+  if (value === null) {
+    return "--";
+  }
+  return `${value > 0 ? "+" : value < 0 ? "" : ""}${value}`;
+}
+
+function resolveInsightRisk(
+  metricId: string,
+  current: number,
+  deltaFromPrevious: number | null,
+  deltaFromCross: number | null,
+  riskConfig: DashboardRiskConfig
+) {
+  if (metricId === "dependency") {
+    if (
+      current >= riskConfig.dependencyHighThreshold ||
+      (deltaFromPrevious !== null && deltaFromPrevious > 2)
+    ) {
+      return {
+        level: "high" as InsightRiskLevel,
+        message: "提示依赖偏高，建议收紧高层提示门槛。"
+      };
+    }
+    if (current >= 38 || (deltaFromPrevious !== null && deltaFromPrevious > 0)) {
+      return {
+        level: "medium" as InsightRiskLevel,
+        message: "依赖率有上行信号，需观察下一周期。"
+      };
+    }
+    return {
+      level: "low" as InsightRiskLevel,
+      message: "依赖率处于可控区间。"
+    };
+  }
+
+  if (metricId === "independent") {
+    if (
+      current < riskConfig.independentHighThreshold ||
+      (deltaFromPrevious !== null && deltaFromPrevious < -2)
+    ) {
+      return {
+        level: "high" as InsightRiskLevel,
+        message: "独立完成率偏低，建议强化中间步骤训练。"
+      };
+    }
+    if (current < 56 || (deltaFromPrevious !== null && deltaFromPrevious < 0)) {
+      return {
+        level: "medium" as InsightRiskLevel,
+        message: "独立完成率有回落，建议加大分层练习。"
+      };
+    }
+    return {
+      level: "low" as InsightRiskLevel,
+      message: "独立完成率表现稳定。"
+    };
+  }
+
+  if (
+    current < riskConfig.gainHighThreshold ||
+    (deltaFromPrevious !== null && deltaFromPrevious < -2)
+  ) {
+    return {
+      level: "high" as InsightRiskLevel,
+      message: "学习增益下降明显，建议检查任务难度配比。"
+    };
+  }
+  if (
+    (deltaFromPrevious !== null && deltaFromPrevious < 0) ||
+    (deltaFromCross !== null && deltaFromCross < 0)
+  ) {
+    return {
+      level: "medium" as InsightRiskLevel,
+      message: "学习增益有走弱迹象，可提前干预。"
+    };
+  }
+  return {
+    level: "low" as InsightRiskLevel,
+    message: "学习增益趋势健康。"
+  };
+}
+
+function riskLevelRank(level: InsightRiskLevel) {
+  if (level === "high") return 3;
+  if (level === "medium") return 2;
+  return 1;
+}
+
+function formatRiskLevelLabel(level: InsightRiskLevel) {
+  if (level === "high") return "高风险";
+  if (level === "medium") return "中风险";
+  return "低风险";
+}
+
+function normalizeAlertPolicyMode(value: string): AlertPolicyMode {
+  if (value === "strict" || value === "relaxed") {
+    return value;
+  }
+  return "balanced";
+}
+
+function formatAlertPolicyLabel(mode: AlertPolicyMode) {
+  if (mode === "strict") return "严格策略";
+  if (mode === "relaxed") return "宽松策略";
+  return "均衡策略";
+}
+
+function formatAlertConfigPresetLabel(preset: AlertConfigPreset) {
+  if (preset === "intervene") return "主动干预";
+  if (preset === "quiet") return "降噪观察";
+  if (preset === "custom") return "自定义";
+  return "默认均衡";
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalizeDashboardRiskConfig(
+  value?: Partial<DashboardRiskConfig>
+): DashboardRiskConfig {
+  const merged = {
+    ...DEFAULT_DASHBOARD_RISK_CONFIG,
+    ...(value ?? {})
+  };
+  return {
+    dependencyHighThreshold: clamp(
+      Number(merged.dependencyHighThreshold) || DEFAULT_DASHBOARD_RISK_CONFIG.dependencyHighThreshold,
+      35,
+      55
+    ),
+    independentHighThreshold: clamp(
+      Number(merged.independentHighThreshold) || DEFAULT_DASHBOARD_RISK_CONFIG.independentHighThreshold,
+      42,
+      60
+    ),
+    gainHighThreshold: clamp(
+      Number(merged.gainHighThreshold) || DEFAULT_DASHBOARD_RISK_CONFIG.gainHighThreshold,
+      45,
+      62
+    ),
+    maxVisibleAlerts: clamp(
+      Number(merged.maxVisibleAlerts) || DEFAULT_DASHBOARD_RISK_CONFIG.maxVisibleAlerts,
+      2,
+      8
+    ),
+    historyLimit: clamp(
+      Number(merged.historyLimit) || DEFAULT_DASHBOARD_RISK_CONFIG.historyLimit,
+      3,
+      12
+    ),
+    dimensionLimit: clamp(
+      Number(merged.dimensionLimit) || DEFAULT_DASHBOARD_RISK_CONFIG.dimensionLimit,
+      2,
+      6
+    )
+  };
+}
+
+function normalizeAlertConfigPreset(value: string): AlertConfigPreset {
+  if (value === "intervene" || value === "quiet" || value === "custom") {
+    return value;
+  }
+  return "balanced";
+}
+
+function applyAlertPolicyLevel(level: InsightRiskLevel, mode: AlertPolicyMode): InsightRiskLevel {
+  if (mode === "strict") {
+    if (level === "high") return "high";
+    if (level === "medium") return "high";
+    return "medium";
+  }
+  if (mode === "relaxed") {
+    if (level === "high") return "medium";
+    if (level === "medium") return "low";
+    return "low";
+  }
+  return level;
+}
+
+function formatDateTime(value: string) {
+  try {
+    return new Date(value).toLocaleString("zh-CN", { hour12: false });
+  } catch {
+    return value;
+  }
+}
+
+function buildFocusPayloadFromActivity(event: GraphActivityEvent): PathFocusPayload {
+  const risk = resolveGraphActivityRiskScore(event);
+  return {
+    nodeId: event.nodeId,
+    nodeLabel: event.nodeLabel,
+    domain: "general",
+    mastery: Number((1 - risk).toFixed(2)),
+    risk,
+    relatedNodes: [],
+    at: event.at,
+    focusSource: "dashboard"
+  };
+}
+
+function buildBridgeTaskTemplate(primaryLabel: string, partnerLabel: string) {
+  return `桥接任务模板：围绕「${primaryLabel}」与「${partnerLabel}」先做条件映射，再完成“同构题 + 反例题 + 迁移题”三段训练。`;
+}
+
+function resolveActivityRiskTone(risk: number): ActivityRiskTone {
+  if (risk >= 0.65) {
+    return "high";
+  }
+  if (risk >= 0.45) {
+    return "medium";
+  }
+  return "low";
+}
+
+function buildDashboardBridgeRiskRows(
+  payload: GraphViewPayload,
+  limit: number
+): DashboardBridgeRiskRow[] {
+  const nodeMap = new Map(payload.nodes.map((item) => [item.id, item]));
+  return payload.edges
+    .map((edge) => {
+      const source = nodeMap.get(edge.source);
+      const target = nodeMap.get(edge.target);
+      if (!source || !target) {
+        return null;
+      }
+      const sourceRisk = resolveNodeRisk(source);
+      const targetRisk = resolveNodeRisk(target);
+      const risk = Number((((sourceRisk + targetRisk) / 2)).toFixed(2));
+      const weight = Number(edge.weight ?? 1);
+      const primaryNode = sourceRisk >= targetRisk ? source : target;
+      return {
+        id: `${edge.source}_${edge.target}`,
+        sourceId: source.id,
+        sourceLabel: source.label,
+        targetId: target.id,
+        targetLabel: target.label,
+        sourceDomain: source.domain ?? "general",
+        targetDomain: target.domain ?? "general",
+        risk,
+        weight,
+        primaryNodeId: primaryNode.id,
+        primaryNodeLabel: primaryNode.label
+      };
+    })
+    .filter((item): item is DashboardBridgeRiskRow => item !== null)
+    .sort((a, b) => b.risk - a.risk || b.weight - a.weight)
+    .slice(0, Math.max(1, limit));
+}
+
+function buildBridgeFocusFromRow(row: DashboardBridgeRiskRow): {
+  partnerLabel: string;
+  focusPayload: PathFocusPayload;
+} {
+  const partnerLabel =
+    row.primaryNodeId === row.sourceId ? row.targetLabel : row.sourceLabel;
+  return {
+    partnerLabel,
+    focusPayload: {
+      nodeId: row.primaryNodeId,
+      nodeLabel: row.primaryNodeLabel,
+      domain: row.primaryNodeId === row.sourceId ? row.sourceDomain : row.targetDomain,
+      mastery: Number((1 - row.risk).toFixed(2)),
+      risk: row.risk,
+      relatedNodes: [partnerLabel],
+      at: new Date().toISOString(),
+      focusSource: "graph_bridge",
+      bridgePartnerLabel: partnerLabel,
+      bridgeTaskTemplate: buildBridgeTaskTemplate(row.primaryNodeLabel, partnerLabel)
+    }
+  };
+}
+
+function buildBridgeFocusBatchFromRows(rows: DashboardBridgeRiskRow[]) {
+  const seen = new Set<string>();
+  const batch: PathFocusPayload[] = [];
+  for (const row of rows) {
+    const bridgeFocus = buildBridgeFocusFromRow(row).focusPayload;
+    const key = `${bridgeFocus.nodeId}__${bridgeFocus.bridgePartnerLabel ?? ""}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    batch.push(bridgeFocus);
+  }
+  return batch.slice(0, 12);
+}
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const [dashboardViewMode, setDashboardViewMode] =
+    useState<DashboardViewMode>("decision");
+  const [period, setPeriod] = useState<PeriodKey>("7d");
+  const [linkedHoverIndex, setLinkedHoverIndex] = useState<number | null>(null);
+  const [lockedHoverIndex, setLockedHoverIndex] = useState<number | null>(null);
+  const [compareMode, setCompareMode] = useState<CompareMode>("periodStart");
+  const [customBaselineIndex, setCustomBaselineIndex] = useState(0);
+  const [compareDateAIndex, setCompareDateAIndex] = useState(0);
+  const [compareDateBIndex, setCompareDateBIndex] = useState(0);
+  const [dismissedAlertKeys, setDismissedAlertKeys] = useState<string[]>([]);
+  const [isDismissedAlertReady, setIsDismissedAlertReady] = useState(false);
+  const [handledAlertHistory, setHandledAlertHistory] = useState<AlertHandledRecord[]>([]);
+  const [isHandledAlertHistoryReady, setIsHandledAlertHistoryReady] = useState(false);
+  const [alertPolicyMode, setAlertPolicyMode] = useState<AlertPolicyMode>("balanced");
+  const [isAlertPolicyReady, setIsAlertPolicyReady] = useState(false);
+  const [riskConfig, setRiskConfig] = useState<DashboardRiskConfig>(
+    DEFAULT_DASHBOARD_RISK_CONFIG
+  );
+  const [riskConfigPreset, setRiskConfigPreset] = useState<AlertConfigPreset>("balanced");
+  const [isRiskConfigReady, setIsRiskConfigReady] = useState(false);
+  const [dashboardCompactMode, setDashboardCompactMode] = useState(false);
+  const [isDashboardCompactReady, setIsDashboardCompactReady] = useState(false);
+  const [graphActivityEvents, setGraphActivityEvents] = useState<GraphActivityEvent[]>([]);
+  const [activitySourceFilter, setActivitySourceFilter] =
+    useState<ActivitySourceFilter>("all");
+  const [activityNodeFilter, setActivityNodeFilter] = useState("all");
+  const [activitySortMode, setActivitySortMode] = useState<ActivitySortMode>("latest");
+  const [selectedActivityId, setSelectedActivityId] = useState("");
+  const [graphBridgeRiskRows, setGraphBridgeRiskRows] = useState<
+    DashboardBridgeRiskRow[]
+  >([]);
+  const [bridgeDomainFilter, setBridgeDomainFilter] = useState("all");
+  const [bridgeSortMode, setBridgeSortMode] = useState<BridgeSortMode>("risk_desc");
+  const [bridgeRelationMode, setBridgeRelationMode] =
+    useState<BridgeRelationMode>("all");
+  const [bridgeKeyword, setBridgeKeyword] = useState("");
+  const [bridgeRiskOnly, setBridgeRiskOnly] = useState(false);
+  const [selectedBridgeIds, setSelectedBridgeIds] = useState<string[]>([]);
+  const [selectedBridgeOrderIds, setSelectedBridgeOrderIds] = useState<string[]>([]);
+  const [bridgeBatchHint, setBridgeBatchHint] = useState("");
+  const [isBridgeBatchPreviewOpen, setIsBridgeBatchPreviewOpen] = useState(false);
+  const [activityKeyword, setActivityKeyword] = useState("");
+  const [activityRiskOnly, setActivityRiskOnly] = useState(false);
+
+  const refreshBridgeRiskRows = useCallback(async () => {
+    try {
+      const graphPayload = await requestJson<GraphViewPayload>("/api/graph/view");
+      setGraphBridgeRiskRows(buildDashboardBridgeRiskRows(graphPayload, 5));
+    } catch {
+      setGraphBridgeRiskRows([]);
+    }
+  }, []);
+
+  const currentMetrics = PERIOD_METRICS[period];
+  const crossPeriodKey = useMemo(() => resolveCrossPeriodKey(period), [period]);
+  const crossMetrics = PERIOD_METRICS[crossPeriodKey];
+  const dateLabels = useMemo(
+    () => buildDateLabels(currentMetrics.trends[0]?.points.length ?? 0),
+    [currentMetrics]
+  );
+  const crossDateLabels = useMemo(
+    () => buildDateLabels(crossMetrics.trends[0]?.points.length ?? 0),
+    [crossMetrics]
+  );
+  const safeCustomBaselineIndex = useMemo(() => {
+    if (dateLabels.length === 0) {
+      return 0;
+    }
+    return Math.max(0, Math.min(customBaselineIndex, dateLabels.length - 1));
+  }, [customBaselineIndex, dateLabels]);
+
+  const trendLabelMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const metric of currentMetrics.trends) {
+      map.set(metric.id, dateLabels);
+    }
+    return map;
+  }, [currentMetrics, dateLabels]);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("edunexus_dashboard_dismissed_alerts");
+      if (!raw) {
+        setDismissedAlertKeys([]);
+        return;
+      }
+      const parsed = JSON.parse(raw) as string[];
+      if (!Array.isArray(parsed)) {
+        setDismissedAlertKeys([]);
+        return;
+      }
+      setDismissedAlertKeys(
+        parsed.filter((item): item is string => typeof item === "string").slice(0, 24)
+      );
+    } catch {
+      setDismissedAlertKeys([]);
+    }
+    setIsDismissedAlertReady(true);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("edunexus_dashboard_alert_history");
+      if (!raw) {
+        setHandledAlertHistory([]);
+        return;
+      }
+      const parsed = JSON.parse(raw) as AlertHandledRecord[];
+      if (!Array.isArray(parsed)) {
+        setHandledAlertHistory([]);
+        return;
+      }
+      setHandledAlertHistory(
+        parsed
+          .filter(
+            (item) =>
+              item &&
+              typeof item.alertKey === "string" &&
+              typeof item.title === "string" &&
+              typeof item.level === "string" &&
+              typeof item.summary === "string" &&
+              typeof item.action === "string" &&
+              typeof item.period === "string" &&
+              typeof item.handledAt === "string"
+          )
+          .slice(0, 30)
+      );
+    } catch {
+      setHandledAlertHistory([]);
+    }
+    setIsHandledAlertHistoryReady(true);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("edunexus_dashboard_alert_policy");
+      if (!raw) {
+        setAlertPolicyMode("balanced");
+      } else {
+        setAlertPolicyMode(normalizeAlertPolicyMode(raw));
+      }
+    } catch {
+      setAlertPolicyMode("balanced");
+    }
+    setIsAlertPolicyReady(true);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const rawConfig = window.localStorage.getItem("edunexus_dashboard_risk_config");
+      if (!rawConfig) {
+        setRiskConfig(DEFAULT_DASHBOARD_RISK_CONFIG);
+      } else {
+        const parsed = JSON.parse(rawConfig) as Partial<DashboardRiskConfig>;
+        setRiskConfig(normalizeDashboardRiskConfig(parsed));
+      }
+      const rawPreset = window.localStorage.getItem("edunexus_dashboard_risk_preset");
+      if (!rawPreset) {
+        setRiskConfigPreset("balanced");
+      } else {
+        setRiskConfigPreset(normalizeAlertConfigPreset(rawPreset));
+      }
+    } catch {
+      setRiskConfig(DEFAULT_DASHBOARD_RISK_CONFIG);
+      setRiskConfigPreset("balanced");
+    }
+    setIsRiskConfigReady(true);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(DASHBOARD_COMPACT_MODE_STORAGE_KEY);
+      setDashboardCompactMode(raw === "1");
+    } catch {
+      setDashboardCompactMode(false);
+    }
+    setIsDashboardCompactReady(true);
+  }, []);
+
+  useEffect(() => {
+    const loadGraphActivityEvents = () => {
+      try {
+        const raw = window.localStorage.getItem(GRAPH_ACTIVITY_STORAGE_KEY);
+        if (!raw) {
+          setGraphActivityEvents([]);
+          return;
+        }
+        const parsed = JSON.parse(raw) as unknown;
+        setGraphActivityEvents(normalizeGraphActivityPayload(parsed, 16));
+      } catch {
+        setGraphActivityEvents([]);
+      }
+    };
+    loadGraphActivityEvents();
+    window.addEventListener("focus", loadGraphActivityEvents);
+    return () => window.removeEventListener("focus", loadGraphActivityEvents);
+  }, []);
+
+  useEffect(() => {
+    void refreshBridgeRiskRows();
+    window.addEventListener("focus", refreshBridgeRiskRows);
+    return () => window.removeEventListener("focus", refreshBridgeRiskRows);
+  }, [refreshBridgeRiskRows]);
+
+  useEffect(() => {
+    const handleConfigUpdated = () => {
+      try {
+        const rawPolicy = window.localStorage.getItem("edunexus_dashboard_alert_policy");
+        setAlertPolicyMode(normalizeAlertPolicyMode(rawPolicy ?? "balanced"));
+      } catch {
+        setAlertPolicyMode("balanced");
+      }
+      try {
+        const rawConfig = window.localStorage.getItem("edunexus_dashboard_risk_config");
+        const rawPreset = window.localStorage.getItem("edunexus_dashboard_risk_preset");
+        const nextConfig = rawConfig
+          ? normalizeDashboardRiskConfig(JSON.parse(rawConfig) as Partial<DashboardRiskConfig>)
+          : DEFAULT_DASHBOARD_RISK_CONFIG;
+        setRiskConfig(nextConfig);
+        setRiskConfigPreset(normalizeAlertConfigPreset(rawPreset ?? "balanced"));
+      } catch {
+        setRiskConfig(DEFAULT_DASHBOARD_RISK_CONFIG);
+        setRiskConfigPreset("balanced");
+      }
+    };
+    window.addEventListener("edunexus-config-updated", handleConfigUpdated);
+    return () => {
+      window.removeEventListener("edunexus-config-updated", handleConfigUpdated);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isDismissedAlertReady) {
+      return;
+    }
+    window.localStorage.setItem(
+      "edunexus_dashboard_dismissed_alerts",
+      JSON.stringify(dismissedAlertKeys.slice(0, 24))
+    );
+  }, [dismissedAlertKeys, isDismissedAlertReady]);
+
+  useEffect(() => {
+    if (!isHandledAlertHistoryReady) {
+      return;
+    }
+    window.localStorage.setItem(
+      "edunexus_dashboard_alert_history",
+      JSON.stringify(handledAlertHistory.slice(0, 30))
+    );
+  }, [handledAlertHistory, isHandledAlertHistoryReady]);
+
+  useEffect(() => {
+    if (!isAlertPolicyReady) {
+      return;
+    }
+    window.localStorage.setItem("edunexus_dashboard_alert_policy", alertPolicyMode);
+  }, [alertPolicyMode, isAlertPolicyReady]);
+
+  useEffect(() => {
+    if (!isRiskConfigReady) {
+      return;
+    }
+    window.localStorage.setItem(
+      "edunexus_dashboard_risk_config",
+      JSON.stringify(riskConfig)
+    );
+    window.localStorage.setItem("edunexus_dashboard_risk_preset", riskConfigPreset);
+  }, [isRiskConfigReady, riskConfig, riskConfigPreset]);
+
+  useEffect(() => {
+    if (!isDashboardCompactReady) {
+      return;
+    }
+    window.localStorage.setItem(
+      DASHBOARD_COMPACT_MODE_STORAGE_KEY,
+      dashboardCompactMode ? "1" : "0"
+    );
+  }, [dashboardCompactMode, isDashboardCompactReady]);
+
+  useEffect(() => {
+    setLinkedHoverIndex(null);
+    setLockedHoverIndex(null);
+    setCustomBaselineIndex(0);
+    const lastIndex = Math.max(0, dateLabels.length - 1);
+    setCompareDateAIndex(lastIndex);
+    setCompareDateBIndex(Math.max(0, lastIndex - 3));
+  }, [period, dateLabels.length]);
+
+  const safeCompareDateAIndex = useMemo(() => {
+    if (dateLabels.length === 0) {
+      return 0;
+    }
+    return Math.max(0, Math.min(compareDateAIndex, dateLabels.length - 1));
+  }, [compareDateAIndex, dateLabels]);
+
+  const safeCompareDateBIndex = useMemo(() => {
+    if (dateLabels.length === 0) {
+      return 0;
+    }
+    return Math.max(0, Math.min(compareDateBIndex, dateLabels.length - 1));
+  }, [compareDateBIndex, dateLabels]);
+
+  const graphActivityNodeOptions = useMemo(() => {
+    const scopedEvents = graphActivityEvents.filter((item) => {
+      if (activitySourceFilter === "all") {
+        return true;
+      }
+      return item.source === activitySourceFilter;
+    });
+    return Array.from(new Set(scopedEvents.map((item) => item.nodeLabel)))
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+  }, [activitySourceFilter, graphActivityEvents]);
+
+  const filteredGraphActivityEvents = useMemo(() => {
+    const keyword = activityKeyword.trim().toLowerCase();
+    const filtered = graphActivityEvents.filter((event) => {
+      if (activitySourceFilter !== "all" && event.source !== activitySourceFilter) {
+        return false;
+      }
+      if (activityNodeFilter !== "all" && event.nodeLabel !== activityNodeFilter) {
+        return false;
+      }
+      if (activityRiskOnly && resolveGraphActivityRiskScore(event) < 0.65) {
+        return false;
+      }
+      if (!keyword) {
+        return true;
+      }
+      const normalizedAt = formatDateTime(event.at).toLowerCase();
+      return (
+        event.nodeLabel.toLowerCase().includes(keyword) ||
+        event.title.toLowerCase().includes(keyword) ||
+        event.detail.toLowerCase().includes(keyword) ||
+        normalizedAt.includes(keyword)
+      );
+    });
+    if (activitySortMode === "latest") {
+      return filtered;
+    }
+    return [...filtered].sort((a, b) => {
+      const scoreA = resolveGraphActivityRiskScore(a);
+      const scoreB = resolveGraphActivityRiskScore(b);
+      return activitySortMode === "risk_desc" ? scoreB - scoreA : scoreA - scoreB;
+    });
+  }, [
+    activityKeyword,
+    activityNodeFilter,
+    activityRiskOnly,
+    activitySortMode,
+    activitySourceFilter,
+    graphActivityEvents
+  ]);
+
+  const graphActivitySummary = useMemo(() => {
+    const pathFeedbackCount = graphActivityEvents.filter(
+      (item) => item.source === "path_feedback"
+    ).length;
+    const workspaceCount = graphActivityEvents.filter(
+      (item) => item.source === "workspace"
+    ).length;
+    const latest = graphActivityEvents[0] ?? null;
+    return {
+      total: graphActivityEvents.length,
+      pathFeedbackCount,
+      workspaceCount,
+      latest,
+      displayedCount: filteredGraphActivityEvents.length
+    };
+  }, [filteredGraphActivityEvents.length, graphActivityEvents]);
+
+  const bridgeDomainOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          graphBridgeRiskRows.flatMap((item) => [item.sourceDomain, item.targetDomain])
+        )
+      )
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)),
+    [graphBridgeRiskRows]
+  );
+
+  const filteredBridgeRiskRows = useMemo(() => {
+    const keyword = bridgeKeyword.trim().toLowerCase();
+    const filtered = graphBridgeRiskRows.filter((row) => {
+      if (
+        bridgeDomainFilter !== "all" &&
+        row.sourceDomain !== bridgeDomainFilter &&
+        row.targetDomain !== bridgeDomainFilter
+      ) {
+        return false;
+      }
+      if (bridgeRiskOnly && row.risk < 0.65) {
+        return false;
+      }
+      if (!keyword) {
+        return true;
+      }
+      return (
+        row.sourceLabel.toLowerCase().includes(keyword) ||
+        row.targetLabel.toLowerCase().includes(keyword) ||
+        row.sourceDomain.toLowerCase().includes(keyword) ||
+        row.targetDomain.toLowerCase().includes(keyword)
+      );
+    });
+    return sortBridgeRiskRows(filtered, bridgeSortMode, bridgeRelationMode);
+  }, [
+    bridgeDomainFilter,
+    bridgeKeyword,
+    bridgeRelationMode,
+    bridgeRiskOnly,
+    bridgeSortMode,
+    graphBridgeRiskRows
+  ]);
+
+  const selectedBridgeRowMap = useMemo(
+    () => new Map(filteredBridgeRiskRows.map((row) => [row.id, row])),
+    [filteredBridgeRiskRows]
+  );
+  const selectedBridgeRows = useMemo(() => {
+    if (selectedBridgeIds.length === 0) {
+      return [];
+    }
+    const selectedSet = new Set(selectedBridgeIds);
+    const orderedIds =
+      selectedBridgeOrderIds.length > 0
+        ? selectedBridgeOrderIds
+        : filteredBridgeRiskRows.map((row) => row.id);
+    const rows: DashboardBridgeRiskRow[] = [];
+    for (const rowId of orderedIds) {
+      if (!selectedSet.has(rowId)) {
+        continue;
+      }
+      const row = selectedBridgeRowMap.get(rowId);
+      if (row) {
+        rows.push(row);
+      }
+    }
+    return rows;
+  }, [filteredBridgeRiskRows, selectedBridgeIds, selectedBridgeOrderIds, selectedBridgeRowMap]);
+  const selectedBridgeFocusBatch = useMemo(
+    () => buildBridgeFocusBatchFromRows(selectedBridgeRows),
+    [selectedBridgeRows]
+  );
+  const firstSelectedBridgeFocus = selectedBridgeFocusBatch[0] ?? null;
+  const selectedBridgePreviewStats = useMemo(() => {
+    if (selectedBridgeRows.length === 0 || selectedBridgeFocusBatch.length === 0) {
+      return null;
+    }
+    const averageRisk =
+      selectedBridgeFocusBatch.reduce((sum, item) => sum + item.risk, 0) /
+      selectedBridgeFocusBatch.length;
+    const crossDomainCount = selectedBridgeRows.filter((row) =>
+      isCrossDomainBridge(row)
+    ).length;
+    return {
+      averageRisk: Number(averageRisk.toFixed(2)),
+      crossDomainCount,
+      sameDomainCount: Math.max(0, selectedBridgeRows.length - crossDomainCount)
+    };
+  }, [selectedBridgeFocusBatch, selectedBridgeRows]);
+
+  const dashboardViewMainSectionId = useMemo(() => {
+    if (dashboardViewMode === "bridge") {
+      return "dashboard_bridge_risk";
+    }
+    if (dashboardViewMode === "events") {
+      return "dashboard_events";
+    }
+    return "dashboard_trend_center";
+  }, [dashboardViewMode]);
+
+  const bridgeHighRiskCount = useMemo(
+    () => filteredBridgeRiskRows.filter((row) => row.risk >= 0.65).length,
+    [filteredBridgeRiskRows]
+  );
+
+  const activityHighRiskCount = useMemo(
+    () =>
+      filteredGraphActivityEvents.filter((event) => resolveGraphActivityRiskScore(event) >= 0.65)
+        .length,
+    [filteredGraphActivityEvents]
+  );
+
+  useEffect(() => {
+    if (activityNodeFilter === "all") {
+      return;
+    }
+    if (!graphActivityNodeOptions.includes(activityNodeFilter)) {
+      setActivityNodeFilter("all");
+    }
+  }, [activityNodeFilter, graphActivityNodeOptions]);
+
+  useEffect(() => {
+    if (bridgeDomainFilter === "all") {
+      return;
+    }
+    if (!bridgeDomainOptions.includes(bridgeDomainFilter)) {
+      setBridgeDomainFilter("all");
+    }
+  }, [bridgeDomainFilter, bridgeDomainOptions]);
+
+  useEffect(() => {
+    if (selectedBridgeIds.length === 0) {
+      return;
+    }
+    const validIds = new Set(filteredBridgeRiskRows.map((row) => row.id));
+    setSelectedBridgeIds((prev) => prev.filter((id) => validIds.has(id)));
+  }, [filteredBridgeRiskRows, selectedBridgeIds.length]);
+
+  useEffect(() => {
+    if (selectedBridgeIds.length === 0) {
+      setSelectedBridgeOrderIds((prev) => (prev.length > 0 ? [] : prev));
+      return;
+    }
+    const selectedSet = new Set(selectedBridgeIds);
+    const visibleSelectedIds = filteredBridgeRiskRows
+      .map((row) => row.id)
+      .filter((id) => selectedSet.has(id));
+    setSelectedBridgeOrderIds((prev) => {
+      const kept = prev.filter((id) => visibleSelectedIds.includes(id));
+      const missing = visibleSelectedIds.filter((id) => !kept.includes(id));
+      const next = [...kept, ...missing];
+      if (next.length === prev.length && next.every((id, index) => id === prev[index])) {
+        return prev;
+      }
+      return next;
+    });
+  }, [filteredBridgeRiskRows, selectedBridgeIds]);
+
+  useEffect(() => {
+    if (selectedBridgeRows.length === 0 && isBridgeBatchPreviewOpen) {
+      setIsBridgeBatchPreviewOpen(false);
+    }
+  }, [isBridgeBatchPreviewOpen, selectedBridgeRows.length]);
+
+  useEffect(() => {
+    if (!isBridgeBatchPreviewOpen) {
+      return;
+    }
+    const handleEscClose = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsBridgeBatchPreviewOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleEscClose);
+    return () => {
+      window.removeEventListener("keydown", handleEscClose);
+    };
+  }, [isBridgeBatchPreviewOpen]);
+
+  useEffect(() => {
+    if (!selectedActivityId) {
+      return;
+    }
+    const exists = filteredGraphActivityEvents.some(
+      (item) => item.id === selectedActivityId
+    );
+    if (!exists) {
+      setSelectedActivityId("");
+    }
+  }, [filteredGraphActivityEvents, selectedActivityId]);
+
+  function jumpToGraphFromActivity(event: GraphActivityEvent) {
+    writeGraphFocusNodeToStorage(event.nodeId, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    writeGraphActivityFocusIdToStorage(event.id, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    setSelectedActivityId(event.id);
+    router.push("/graph");
+  }
+
+  function jumpToPathFromActivity(event: GraphActivityEvent) {
+    const focusPayload = buildFocusPayloadFromActivity(event);
+    writePathFocusToStorage(focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    const params = new URLSearchParams({
+      from: "dashboard",
+      focusNode: event.nodeId,
+      focusLabel: event.nodeLabel
+    });
+    setSelectedActivityId(event.id);
+    router.push(`/path?${params.toString()}`);
+  }
+
+  function jumpToWorkspaceFromActivity(event: GraphActivityEvent) {
+    const focusPayload = buildFocusPayloadFromActivity(event);
+    writeWorkspaceFocusToStorage(focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    setSelectedActivityId(event.id);
+    router.push("/workspace");
+  }
+
+  function jumpToGraphFromBridge(row: DashboardBridgeRiskRow) {
+    writeGraphFocusNodeToStorage(row.primaryNodeId, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    router.push("/graph");
+  }
+
+  function jumpToPathFromBridge(row: DashboardBridgeRiskRow) {
+    const bridgeFocus = buildBridgeFocusFromRow(row);
+    writePathFocusToStorage(bridgeFocus.focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    const params = new URLSearchParams({
+      from: "graph_bridge",
+      focusNode: row.primaryNodeId,
+      focusLabel: row.primaryNodeLabel,
+      bridgePartner: bridgeFocus.partnerLabel
+    });
+    router.push(`/path?${params.toString()}`);
+  }
+
+  function jumpToWorkspaceFromBridge(row: DashboardBridgeRiskRow) {
+    const bridgeFocus = buildBridgeFocusFromRow(row);
+    writeWorkspaceFocusToStorage(bridgeFocus.focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    router.push("/workspace");
+  }
+
+  function toggleBridgeSelection(rowId: string) {
+    setSelectedBridgeIds((prev) => {
+      if (prev.includes(rowId)) {
+        return prev.filter((item) => item !== rowId);
+      }
+      return [...prev, rowId];
+    });
+  }
+
+  function selectAllVisibleBridges() {
+    const ids = filteredBridgeRiskRows.map((row) => row.id);
+    setSelectedBridgeIds(ids);
+    setSelectedBridgeOrderIds(ids);
+    setBridgeBatchHint(`已选择当前筛选下 ${filteredBridgeRiskRows.length} 条关系链。`);
+  }
+
+  function clearBridgeSelection() {
+    setSelectedBridgeIds([]);
+    setSelectedBridgeOrderIds([]);
+    setIsBridgeBatchPreviewOpen(false);
+    setBridgeBatchHint("已清空关系链批量选择。");
+  }
+
+  function moveSelectedBridgeOrder(rowId: string, direction: "up" | "down") {
+    setSelectedBridgeOrderIds((prev) => {
+      const index = prev.indexOf(rowId);
+      if (index < 0) {
+        return prev;
+      }
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= prev.length) {
+        return prev;
+      }
+      const next = [...prev];
+      const temp = next[index]!;
+      next[index] = next[targetIndex]!;
+      next[targetIndex] = temp;
+      return next;
+    });
+  }
+
+  function resetSelectedBridgeOrder() {
+    const ids = filteredBridgeRiskRows
+      .map((row) => row.id)
+      .filter((id) => selectedBridgeIds.includes(id));
+    setSelectedBridgeOrderIds(ids);
+    setBridgeBatchHint("已恢复当前筛选顺序作为批量推送顺序。");
+  }
+
+  function openBridgeBatchPreview() {
+    if (selectedBridgeRows.length === 0) {
+      return;
+    }
+    setIsBridgeBatchPreviewOpen(true);
+  }
+
+  function closeBridgeBatchPreview() {
+    setIsBridgeBatchPreviewOpen(false);
+  }
+
+  function appendBatchBridgeActivities(
+    rows: DashboardBridgeRiskRow[],
+    action: "推送路径" | "推送工作区"
+  ) {
+    for (const row of rows) {
+      const bridgeFocus = buildBridgeFocusFromRow(row);
+      pushGraphActivityEventToStorage(
+        {
+          source: "workspace",
+          nodeId: row.primaryNodeId,
+          nodeLabel: row.primaryNodeLabel,
+          title: `关系链批量${action}`,
+          detail: `${row.primaryNodeLabel} ↔ ${bridgeFocus.partnerLabel} 已批量${action}`,
+          riskScore: row.risk
+        },
+        {
+          readItem: (key) => window.localStorage.getItem(key),
+          writeItem: (key, value) => window.localStorage.setItem(key, value)
+        },
+        20
+      );
+    }
+  }
+
+  function pushBridgeRowsToPath(rows: DashboardBridgeRiskRow[]) {
+    if (rows.length === 0) {
+      return;
+    }
+    const batchFocuses = buildBridgeFocusBatchFromRows(rows);
+    writePathFocusBatchToStorage(batchFocuses, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    const first = rows[0]!;
+    const bridgeFocus = buildBridgeFocusFromRow(first);
+    writePathFocusToStorage(bridgeFocus.focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    appendBatchBridgeActivities(rows, "推送路径");
+    setIsBridgeBatchPreviewOpen(false);
+    setBridgeBatchHint(`已批量推送 ${batchFocuses.length} 条关系链到路径。`);
+    const params = new URLSearchParams({
+      from: "graph_bridge",
+      focusNode: first.primaryNodeId,
+      focusLabel: first.primaryNodeLabel,
+      bridgePartner: bridgeFocus.partnerLabel,
+      batchCount: String(batchFocuses.length)
+    });
+    router.push(`/path?${params.toString()}`);
+  }
+
+  function pushSelectedBridgesToPath() {
+    pushBridgeRowsToPath(selectedBridgeRows);
+  }
+
+  function pushBridgeRowsToWorkspace(rows: DashboardBridgeRiskRow[]) {
+    if (rows.length === 0) {
+      return;
+    }
+    const batchFocuses = buildBridgeFocusBatchFromRows(rows);
+    writeWorkspaceFocusBatchToStorage(batchFocuses, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    const first = rows[0]!;
+    const bridgeFocus = buildBridgeFocusFromRow(first);
+    writeWorkspaceFocusToStorage(bridgeFocus.focusPayload, (key, value) =>
+      window.localStorage.setItem(key, value)
+    );
+    appendBatchBridgeActivities(rows, "推送工作区");
+    setIsBridgeBatchPreviewOpen(false);
+    setBridgeBatchHint(`已批量推送 ${batchFocuses.length} 条关系链到工作区。`);
+    const params = new URLSearchParams({
+      batchCount: String(batchFocuses.length)
+    });
+    router.push(`/workspace?${params.toString()}`);
+  }
+
+  function pushSelectedBridgesToWorkspace() {
+    pushBridgeRowsToWorkspace(selectedBridgeRows);
+  }
+
+  const activeHoverIndex =
+    lockedHoverIndex !== null ? lockedHoverIndex : linkedHoverIndex;
+
+  function handleLinkedHoverChange(next: number | null) {
+    if (lockedHoverIndex !== null) {
+      return;
+    }
+    setLinkedHoverIndex(next);
+  }
+
+  const hoverSummary = useMemo(() => {
+    if (activeHoverIndex === null) {
+      return null;
+    }
+    const previousIndex = activeHoverIndex > 0 ? activeHoverIndex - 1 : null;
+    const periodStartIndex = 0;
+
+    const compareMeta =
+      compareMode === "previous"
+        ? {
+            label:
+              previousIndex !== null
+                ? (dateLabels[previousIndex] ?? "上一日期")
+                : "上一日期",
+            mode: compareMode as CompareMode
+          }
+        : compareMode === "periodStart"
+          ? {
+              label: dateLabels[periodStartIndex] ?? "周期起点",
+              mode: compareMode as CompareMode
+            }
+          : compareMode === "customDate"
+            ? {
+                label: dateLabels[safeCustomBaselineIndex] ?? "自定义日期",
+                mode: compareMode as CompareMode
+              }
+            : {
+                label: `${getPeriodLabel(crossPeriodKey)}同位`,
+                mode: compareMode as CompareMode
+              };
+
+    const crossMetricMap = new Map(crossMetrics.trends.map((item) => [item.id, item]));
+
+    return {
+      label: dateLabels[activeHoverIndex] ?? "未知日期",
+      previousLabel:
+        previousIndex !== null ? (dateLabels[previousIndex] ?? "上一日期") : "上一日期",
+      compareLabel: compareMeta.label,
+      compareMode: compareMeta.mode,
+      values: currentMetrics.trends.map((metric) => ({
+        id: metric.id,
+        title: metric.title,
+        activeValue: metric.points[activeHoverIndex] ?? 0,
+        deltaFromPrevious:
+          previousIndex !== null && metric.points[previousIndex] !== undefined
+            ? (metric.points[activeHoverIndex] ?? 0) - (metric.points[previousIndex] ?? 0)
+            : null,
+        deltaFromCompare:
+          compareMode === "previous"
+            ? previousIndex !== null && metric.points[previousIndex] !== undefined
+              ? (metric.points[activeHoverIndex] ?? 0) - (metric.points[previousIndex] ?? 0)
+              : null
+            : compareMode === "periodStart"
+              ? metric.points[periodStartIndex] !== undefined
+                ? (metric.points[activeHoverIndex] ?? 0) -
+                  (metric.points[periodStartIndex] ?? 0)
+                : null
+              : compareMode === "customDate"
+                ? metric.points[safeCustomBaselineIndex] !== undefined
+                  ? (metric.points[activeHoverIndex] ?? 0) -
+                    (metric.points[safeCustomBaselineIndex] ?? 0)
+                  : null
+                : (() => {
+                    const crossMetric = crossMetricMap.get(metric.id);
+                    if (!crossMetric || crossMetric.points.length === 0) {
+                      return null;
+                    }
+                    const crossIndex = alignIndexToLength(
+                      activeHoverIndex,
+                      metric.points.length,
+                      crossMetric.points.length
+                    );
+                    return (
+                      (metric.points[activeHoverIndex] ?? 0) -
+                      (crossMetric.points[crossIndex] ?? 0)
+                    );
+                  })(),
+        compareLabel:
+          compareMode === "crossPeriod"
+            ? (() => {
+                const crossMetric = crossMetricMap.get(metric.id);
+                if (!crossMetric || crossMetric.points.length === 0) {
+                  return compareMeta.label;
+                }
+                const crossIndex = alignIndexToLength(
+                  activeHoverIndex,
+                  metric.points.length,
+                  crossMetric.points.length
+                );
+                return `${compareMeta.label}（${
+                  crossDateLabels[crossIndex] ?? `点 ${crossIndex + 1}`
+                }）`;
+              })()
+            : compareMeta.label,
+        compareValue:
+          compareMode === "previous"
+            ? previousIndex !== null && metric.points[previousIndex] !== undefined
+              ? metric.points[previousIndex]
+              : null
+            : compareMode === "periodStart"
+              ? metric.points[periodStartIndex] ?? null
+              : compareMode === "customDate"
+                ? metric.points[safeCustomBaselineIndex] ?? null
+                : (() => {
+                    const crossMetric = crossMetricMap.get(metric.id);
+                    if (!crossMetric || crossMetric.points.length === 0) {
+                      return null;
+                    }
+                    const crossIndex = alignIndexToLength(
+                      activeHoverIndex,
+                      metric.points.length,
+                      crossMetric.points.length
+                    );
+                    return crossMetric.points[crossIndex] ?? null;
+                  })(),
+        currentLabel: getPeriodLabel(period)
+      }))
+    };
+  }, [
+    activeHoverIndex,
+    compareMode,
+    crossDateLabels,
+    crossMetrics,
+    crossPeriodKey,
+    currentMetrics,
+    dateLabels,
+    period,
+    safeCustomBaselineIndex
+  ]);
+
+  const compareModeLabel =
+    compareMode === "previous"
+      ? "上一日期"
+      : compareMode === "periodStart"
+        ? "周期起点"
+        : compareMode === "customDate"
+          ? "自定义日期"
+          : `${getPeriodLabel(crossPeriodKey)}同位`;
+
+  const pairCompareSummary = useMemo(() => {
+    if (dateLabels.length === 0) {
+      return null;
+    }
+    const labelA = dateLabels[safeCompareDateAIndex] ?? "日期 A";
+    const labelB = dateLabels[safeCompareDateBIndex] ?? "日期 B";
+    return {
+      labelA,
+      labelB,
+      values: currentMetrics.trends.map((metric) => {
+        const valueA = metric.points[safeCompareDateAIndex] ?? 0;
+        const valueB = metric.points[safeCompareDateBIndex] ?? 0;
+        return {
+          id: metric.id,
+          title: metric.title,
+          valueA,
+          valueB,
+          delta: valueA - valueB
+        };
+      })
+    };
+  }, [currentMetrics, dateLabels, safeCompareDateAIndex, safeCompareDateBIndex]);
+
+  const trendInsightCards = useMemo(() => {
+    const focusIndex =
+      activeHoverIndex !== null
+        ? activeHoverIndex
+        : Math.max(0, (currentMetrics.trends[0]?.points.length ?? 1) - 1);
+    const focusLabel = dateLabels[focusIndex] ?? "当前点位";
+    const crossMetricMap = new Map(crossMetrics.trends.map((item) => [item.id, item]));
+
+    return currentMetrics.trends.map((metric) => {
+      const currentValue = metric.points[focusIndex] ?? 0;
+      const previousValue = focusIndex > 0 ? (metric.points[focusIndex - 1] ?? 0) : null;
+      const deltaFromPrevious =
+        previousValue !== null ? currentValue - previousValue : null;
+      const crossMetric = crossMetricMap.get(metric.id);
+      const crossValue =
+        crossMetric && crossMetric.points.length > 0
+          ? crossMetric.points[
+              alignIndexToLength(focusIndex, metric.points.length, crossMetric.points.length)
+            ] ?? null
+          : null;
+      const deltaFromCross =
+        crossValue !== null ? currentValue - crossValue : null;
+      const risk = resolveInsightRisk(
+        metric.id,
+        currentValue,
+        deltaFromPrevious,
+        deltaFromCross,
+        riskConfig
+      );
+
+      return {
+        id: metric.id,
+        title: metric.title,
+        focusLabel,
+        currentValue,
+        previousLabel: focusIndex > 0 ? (dateLabels[focusIndex - 1] ?? "上一日期") : "上一日期",
+        deltaFromPrevious,
+        crossLabel: `${getPeriodLabel(crossPeriodKey)}同位`,
+        deltaFromCross,
+        riskLevel: risk.level,
+        riskMessage: risk.message
+      };
+    });
+  }, [activeHoverIndex, crossMetrics, crossPeriodKey, currentMetrics, dateLabels, riskConfig]);
+
+  const alertSummary = useMemo(() => {
+    const baseActions: Record<string, string> = {
+      gain: "建议：下一个教学日优先推送“中档难度+自检步骤”任务包。",
+      independent: "建议：追加“先写条件再推导”的结构化模板训练。",
+      dependency: "建议：对 Level 3/4 提示启用延迟门控并要求先提交思路草稿。"
+    };
+
+    const items: AlertItem[] = trendInsightCards
+      .filter((item) => item.riskLevel !== "low")
+      .map((item) => ({
+        id: item.id,
+        alertKey: `${period}_${item.id}_${applyAlertPolicyLevel(item.riskLevel, alertPolicyMode)}`,
+        title: item.title,
+        level: applyAlertPolicyLevel(item.riskLevel, alertPolicyMode),
+        summary: item.riskMessage,
+        action: baseActions[item.id] ?? "建议：人工复核该指标并调整任务编排。"
+      }))
+      .sort((a, b) => riskLevelRank(b.level) - riskLevelRank(a.level));
+
+    const visibleItems = items.filter((item) => !dismissedAlertKeys.includes(item.alertKey));
+    const highCount = visibleItems.filter((item) => item.level === "high").length;
+    const mediumCount = visibleItems.filter((item) => item.level === "medium").length;
+    const triggerLevel: InsightRiskLevel =
+      highCount > 0 ? "high" : mediumCount > 0 ? "medium" : "low";
+
+    return {
+      items: visibleItems.slice(0, riskConfig.maxVisibleAlerts),
+      highCount,
+      mediumCount,
+      triggerLevel,
+      dismissedCount: items.length - visibleItems.length
+    };
+  }, [alertPolicyMode, dismissedAlertKeys, period, riskConfig.maxVisibleAlerts, trendInsightCards]);
+
+  const alertDimensionOverview = useMemo(() => {
+    const classMap: Record<string, string[]> = {
+      gain: ["高一 2 班", "高二 1 班"],
+      independent: ["高一 2 班", "高一 5 班"],
+      dependency: ["高一 2 班", "高三 3 班"]
+    };
+    const chapterMap: Record<string, string[]> = {
+      gain: ["函数综合", "数列迁移"],
+      independent: ["函数单调性", "立体几何"],
+      dependency: ["函数单调性", "概率统计"]
+    };
+
+    function buildRows(mapConfig: Record<string, string[]>) {
+      const bucket = new Map<string, AlertDimensionRow>();
+      for (const item of alertSummary.items) {
+        const targets = mapConfig[item.id] ?? ["待分配"];
+        for (const label of targets) {
+          const row =
+            bucket.get(label) ??
+            { key: label, label, high: 0, medium: 0, total: 0 };
+          if (item.level === "high") {
+            row.high += 1;
+          } else if (item.level === "medium") {
+            row.medium += 1;
+          }
+          row.total += 1;
+          bucket.set(label, row);
+        }
+      }
+      return Array.from(bucket.values())
+        .sort((a, b) => b.high - a.high || b.total - a.total || a.label.localeCompare(b.label))
+        .slice(0, riskConfig.dimensionLimit);
+    }
+
+    return {
+      classes: buildRows(classMap),
+      chapters: buildRows(chapterMap)
+    };
+  }, [alertSummary.items, riskConfig.dimensionLimit]);
+
+  function handleDismissAlert(item: AlertItem) {
+    setDismissedAlertKeys((prev) =>
+      Array.from(new Set([item.alertKey, ...prev])).slice(0, 24)
+    );
+    setHandledAlertHistory((prev) => {
+      const record: AlertHandledRecord = {
+        alertKey: item.alertKey,
+        title: item.title,
+        level: item.level,
+        summary: item.summary,
+        action: item.action,
+        period,
+        handledAt: new Date().toISOString()
+      };
+      return [record, ...prev.filter((entry) => entry.alertKey !== item.alertKey)].slice(0, 30);
+    });
+  }
+
+  function applyRiskConfigPreset(preset: Exclude<AlertConfigPreset, "custom">) {
+    setRiskConfigPreset(preset);
+    setRiskConfig(DASHBOARD_RISK_PRESETS[preset]);
+  }
+
+  function scrollToDashboardSection(sectionId: string) {
+    const section = document.getElementById(sectionId);
+    section?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function resetBridgeFilters() {
+    setBridgeDomainFilter("all");
+    setBridgeSortMode("risk_desc");
+    setBridgeRelationMode("all");
+    setBridgeKeyword("");
+    setBridgeRiskOnly(false);
+  }
+
+  function resetActivityFilters() {
+    setActivitySourceFilter("all");
+    setActivityNodeFilter("all");
+    setActivitySortMode("latest");
+    setActivityKeyword("");
+    setActivityRiskOnly(false);
+    setSelectedActivityId("");
+  }
+
+  return (
+    <section className="ecosystem-page">
+      <PageHeader
+        title="生态看板"
+        description="统一观察学习效果、提示依赖与风险干预，支持从指标直接联动图谱、路径和工作区。"
+        tags={["趋势分析", "风险分级", "事件闭环", "跨页联动"]}
+      />
+      <div className="panel-grid">
+        <PageQuickNav title="看板快速导航" items={[...DASHBOARD_QUICK_NAV_ITEMS]} />
+      </div>
+
+      <div
+        className="panel-grid dashboard-layout"
+        data-view={dashboardViewMode}
+        data-compact={dashboardCompactMode ? "true" : "false"}
+      >
+        <div className="dashboard-compact-hero">
+          <GalaxyHero
+            badge="生态指标 · 实时快照"
+            title="用指标追踪“学会了多少”，而不只是“做了多少题”"
+            description="看板围绕学习增益、独立完成率、提示依赖率和来源引用覆盖率构建，帮助运营与教学团队快速识别收益和风险点。"
+            quote="“指标不是汇报材料，而是下一轮教学决策的导航盘。”"
+            chips={["学习增益", "独立完成率", "提示依赖率", "来源引用覆盖"]}
+            metrics={[
+              {
+                label: "数据口径",
+                value: period === "7d" ? "7 日滚动" : period === "14d" ? "14 日滚动" : "30 日滚动",
+                hint: "统一口径对比"
+              },
+              { label: "风险追踪", value: "班级 / 节点", hint: "可定位可干预" },
+              { label: "联动深度", value: "图谱 / 路径 / 工作区", hint: "闭环追踪" }
+            ]}
+          />
+        </div>
+
+        <Card id="dashboard_view_switcher" className="w-full anchor-target">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              看板视图
+            </CardTitle>
+            <CardDescription>按工作目标切换页面密度</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Tabs value={dashboardViewMode} onValueChange={(v) => setDashboardViewMode(v as DashboardViewMode)}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="decision" className="flex flex-col gap-1">
+                  <span>关键决策</span>
+                  <Badge variant="destructive" className="text-xs">高风险 {alertSummary.highCount} 项</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="bridge" className="flex flex-col gap-1">
+                  <span>关系链干预</span>
+                  <Badge variant="secondary" className="text-xs">{filteredBridgeRiskRows.length} 条关系链</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="events" className="flex flex-col gap-1">
+                  <span>闭环事件</span>
+                  <Badge variant="secondary" className="text-xs">{graphActivitySummary.displayedCount} 条事件</Badge>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={dashboardCompactMode}
+                  onCheckedChange={setDashboardCompactMode}
+                  id="compact-mode"
+                />
+                <Label htmlFor="compact-mode" className="cursor-pointer">
+                  <div className="font-medium flex items-center gap-2">
+                    {dashboardCompactMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                    {dashboardCompactMode ? "紧凑模式已开启" : "紧凑模式已关闭"}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {dashboardCompactMode
+                      ? "已隐藏次要卡片，聚焦趋势、关系链与闭环事件。"
+                      : "开启后将隐藏风险提示、系统状态、比例环图与运营动作建议。"}
+                  </p>
+                </Label>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => scrollToDashboardSection(dashboardViewMainSectionId)}
+              >
+                <Activity className="h-4 w-4 mr-2" />
+                聚焦当前视图
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => scrollToDashboardSection("dashboard_trend_center")}
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                趋势中心
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => scrollToDashboardSection("dashboard_bridge_risk")}
+              >
+                <Link2 className="h-4 w-4 mr-2" />
+                关系链风险榜
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => scrollToDashboardSection("dashboard_events")}
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                闭环事件
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              >
+                <ChevronUp className="h-4 w-4 mr-2" />
+                回到顶部
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              学习增益
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{currentMetrics.trends[0]?.value ?? "-"}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              近 {period === "7d" ? 7 : period === "14d" ? 14 : 30} 日单位学习时长掌握度提升。
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" />
+              独立完成率
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{currentMetrics.rings[0]?.value ?? "-"}%</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              无需最终答案解锁即可完成任务的比例。
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              提示依赖率
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{currentMetrics.trends[2]?.value ?? "-"}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              用户对高层提示（Level 3/4）的依赖度。
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Citation 覆盖
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{currentMetrics.rings[1]?.value ?? "-"}%</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              知识类回答附来源引用的覆盖比例。
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card id="dashboard_trend_center" className="w-full anchor-target">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              趋势分析（可切换周期）
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              {PERIOD_OPTIONS.map((item) => (
+                <Button
+                  key={item.key}
+                  variant={period === item.key ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPeriod(item.key)}
+                >
+                  {item.label}
+                </Button>
+              ))}
+            </div>
+
+          <div className="trend-grid trend-grid-top">
+            {currentMetrics.trends.map((metric) => (
+              <TrendSparkCard
+                key={metric.id}
+                id={`${period}_${metric.id}`}
+                title={metric.title}
+                value={metric.value}
+                delta={metric.delta}
+                points={metric.points}
+                labels={trendLabelMap.get(metric.id) ?? []}
+                activeIndex={activeHoverIndex}
+                onActiveIndexChange={handleLinkedHoverChange}
+                locked={lockedHoverIndex !== null}
+              />
+            ))}
+          </div>
+
+          <div className="trend-readout space-y-4 rounded-lg border p-4">
+            {hoverSummary ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <strong className="text-lg">联动时间点：{hoverSummary.label}</strong>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={lockedHoverIndex !== null ? "default" : "outline"}
+                      size="sm"
+                      onClick={() =>
+                        setLockedHoverIndex((prev) =>
+                          prev === null ? activeHoverIndex : null
+                        )
+                      }
+                    >
+                      {lockedHoverIndex === null ? "锁定该日期" : "解除锁定"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setLockedHoverIndex(null);
+                        setLinkedHoverIndex(null);
+                      }}
+                    >
+                      <RotateCcw className="h-4 w-4 mr-2" />
+                      清空联动
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 flex-wrap">
+                  <Label className="text-sm font-medium">对比基准</Label>
+                  <Select value={compareMode} onValueChange={(v) => setCompareMode(v as CompareMode)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="previous">上一日期</SelectItem>
+                      <SelectItem value="periodStart">周期起点</SelectItem>
+                      <SelectItem value="customDate">自定义日期</SelectItem>
+                      <SelectItem value="crossPeriod">{getPeriodLabel(crossPeriodKey)}同位</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {compareMode === "customDate" ? (
+                    <Select value={String(safeCustomBaselineIndex)} onValueChange={(v) => setCustomBaselineIndex(Number(v))}>
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dateLabels.map((label, index) => (
+                          <SelectItem key={`${label}_${index}`} value={String(index)}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : null}
+                  <span className="text-sm text-muted-foreground">
+                    当前基准：{compareModeLabel}
+                  </span>
+                </div>
+
+                <div className="trend-readout-row">
+                  {hoverSummary.values.map((item) => (
+                    <span key={`${period}_${item.id}`}>
+                      {item.title}：{item.activeValue}
+                      <em className="trend-readout-delta">
+                        {item.currentLabel} vs {item.compareLabel}：{item.compareValue ?? "--"}（Δ
+                        {formatDeltaValue(item.deltaFromCompare)}）
+                        {hoverSummary.compareMode !== "previous"
+                          ? ` · Δ${hoverSummary.previousLabel} ${formatDeltaValue(item.deltaFromPrevious)}`
+                          : ""}
+                      </em>
+                    </span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">把鼠标移动到任一趋势图上，可联动查看同一日期的所有指标。</p>
+            )}
+          </div>
+
+          {pairCompareSummary ? (
+            <div className="space-y-4 rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <strong className="text-lg">双日期对比（A/B）</strong>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm">日期 A</Label>
+                    <Select value={String(safeCompareDateAIndex)} onValueChange={(v) => setCompareDateAIndex(Number(v))}>
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dateLabels.map((label, index) => (
+                          <SelectItem key={`pair_a_${label}_${index}`} value={String(index)}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-sm">日期 B</Label>
+                    <Select value={String(safeCompareDateBIndex)} onValueChange={(v) => setCompareDateBIndex(Number(v))}>
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {dateLabels.map((label, index) => (
+                          <SelectItem key={`pair_b_${label}_${index}`} value={String(index)}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setCompareDateAIndex(safeCompareDateBIndex);
+                      setCompareDateBIndex(safeCompareDateAIndex);
+                    }}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    A/B 互换
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-2">
+                {pairCompareSummary.values.map((item) => (
+                  <div key={`${period}_pair_${item.id}`} className="text-sm">
+                    <span className="font-medium">{item.title}：</span>
+                    <span>A {pairCompareSummary.labelA} = {item.valueA} · B {pairCompareSummary.labelB} = {item.valueB}</span>
+                    <Badge variant="outline" className="ml-2">Δ(A-B) {formatDeltaValue(item.delta)}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {trendInsightCards.map((item) => {
+              const riskVariant = item.riskLevel === "high" ? "destructive" : item.riskLevel === "medium" ? "default" : "secondary";
+              return (
+                <Card key={`${period}_insight_${item.id}`} className={item.riskLevel === "high" ? "border-destructive" : item.riskLevel === "medium" ? "border-yellow-500" : ""}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                      <Badge variant={riskVariant}>{item.currentValue}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <p className="text-sm text-muted-foreground">{item.focusLabel}</p>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>环比（{item.previousLabel}）：{formatDeltaValue(item.deltaFromPrevious)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <TrendingDown className="h-3 w-3" />
+                        <span>同位（{item.crossLabel}）：{formatDeltaValue(item.deltaFromCross)}</span>
+                      </div>
+                    </div>
+                    <p className="text-sm italic text-muted-foreground">{item.riskMessage}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <Alert variant={alertSummary.triggerLevel === "high" ? "destructive" : "default"} className="mt-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">自动预警面板</div>
+                <div className="text-lg font-bold">当前触发等级：{formatRiskLevelLabel(alertSummary.triggerLevel)}</div>
+                <p className="text-sm font-normal mt-1">
+                  高风险 {alertSummary.highCount} 项 · 中风险 {alertSummary.mediumCount} 项 · 已处理 {alertSummary.dismissedCount} 项
+                </p>
+              </div>
+              <Badge variant={alertSummary.triggerLevel === "high" ? "destructive" : alertSummary.triggerLevel === "medium" ? "default" : "secondary"} className="text-sm">
+                {alertSummary.triggerLevel === "high" ? "立即干预" : alertSummary.triggerLevel === "medium" ? "关注观察" : "运行稳定"}
+              </Badge>
+            </AlertTitle>
+            <AlertDescription className="space-y-4 mt-4">
+              <div className="flex gap-2">
+                {(
+                  [
+                    { key: "strict", label: "严格策略" },
+                    { key: "balanced", label: "均衡策略" },
+                    { key: "relaxed", label: "宽松策略" }
+                  ] as Array<{ key: AlertPolicyMode; label: string }>
+                ).map((item) => (
+                  <Button
+                    key={`policy_${item.key}`}
+                    variant={alertPolicyMode === item.key ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAlertPolicyMode(item.key)}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    预警参数面板
+                  </CardTitle>
+                  <CardDescription>模板：{formatAlertConfigPresetLabel(riskConfigPreset)}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2">
+                    {(
+                      [
+                        { key: "intervene", label: "主动干预" },
+                        { key: "balanced", label: "默认均衡" },
+                        { key: "quiet", label: "降噪观察" }
+                      ] as Array<{
+                        key: Exclude<AlertConfigPreset, "custom">;
+                        label: string;
+                      }>
+                    ).map((item) => (
+                      <Button
+                        key={`risk_preset_${item.key}`}
+                        variant={riskConfigPreset === item.key ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => applyRiskConfigPreset(item.key)}
+                      >
+                        {item.label}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-sm">依赖高风险阈值：{riskConfig.dependencyHighThreshold}</Label>
+                      <Slider
+                        min={35}
+                        max={55}
+                        step={1}
+                        value={[riskConfig.dependencyHighThreshold]}
+                        onValueChange={([value]) => {
+                          setRiskConfigPreset("custom");
+                          setRiskConfig((prev) =>
+                            normalizeDashboardRiskConfig({
+                              ...prev,
+                              dependencyHighThreshold: value
+                            })
+                          );
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">独立率高风险阈值：{riskConfig.independentHighThreshold}</Label>
+                      <Slider
+                        min={42}
+                        max={60}
+                        step={1}
+                        value={[riskConfig.independentHighThreshold]}
+                        onValueChange={([value]) => {
+                          setRiskConfigPreset("custom");
+                          setRiskConfig((prev) =>
+                            normalizeDashboardRiskConfig({
+                              ...prev,
+                              independentHighThreshold: value
+                            })
+                          );
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">增益高风险阈值：{riskConfig.gainHighThreshold}</Label>
+                      <Slider
+                        min={45}
+                        max={62}
+                        step={1}
+                        value={[riskConfig.gainHighThreshold]}
+                        onValueChange={([value]) => {
+                          setRiskConfigPreset("custom");
+                          setRiskConfig((prev) =>
+                            normalizeDashboardRiskConfig({
+                              ...prev,
+                              gainHighThreshold: value
+                            })
+                          );
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">告警展示上限：{riskConfig.maxVisibleAlerts}</Label>
+                      <Slider
+                        min={2}
+                        max={8}
+                        step={1}
+                        value={[riskConfig.maxVisibleAlerts]}
+                        onValueChange={([value]) => {
+                          setRiskConfigPreset("custom");
+                          setRiskConfig((prev) =>
+                            normalizeDashboardRiskConfig({
+                              ...prev,
+                              maxVisibleAlerts: value
+                            })
+                          );
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">时间线条数：{riskConfig.historyLimit}</Label>
+                      <Slider
+                        min={3}
+                        max={12}
+                        step={1}
+                        value={[riskConfig.historyLimit]}
+                        onValueChange={([value]) => {
+                          setRiskConfigPreset("custom");
+                          setRiskConfig((prev) =>
+                            normalizeDashboardRiskConfig({
+                              ...prev,
+                              historyLimit: value
+                            })
+                          );
+                        }}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {alertSummary.dismissedCount > 0 ? (
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDismissedAlertKeys([])}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    恢复全部告警
+                  </Button>
+                  {handledAlertHistory.length > 0 ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setHandledAlertHistory([])}
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      清空处置时间线
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {alertSummary.items.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">当前无中高风险告警，建议保持现有教学策略。</p>
+              ) : (
+                <div className="space-y-3 mt-4">
+                  {alertSummary.items.map((item) => (
+                    <Alert key={`alert_${item.id}`} variant={item.level === "high" ? "destructive" : "default"}>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle className="flex items-center justify-between">
+                        <span>{item.title}</span>
+                        <Badge variant={item.level === "high" ? "destructive" : "default"}>
+                          {formatRiskLevelLabel(item.level)}
+                        </Badge>
+                      </AlertTitle>
+                      <AlertDescription className="space-y-2">
+                        <p>{item.summary}</p>
+                        <div className="flex items-center justify-between">
+                          <strong className="text-sm">{item.action}</strong>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDismissAlert(item)}
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            标记已处理
+                          </Button>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  ))}
+                </div>
+              )}
+
+            {alertSummary.items.length > 0 ? (
+              <div className="mt-4 space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">班级聚合</CardTitle>
+                      <CardDescription>按当前预警归因</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {alertDimensionOverview.classes.map((row) => (
+                        <div key={`class_${row.key}`} className="flex items-center justify-between text-sm">
+                          <span>{row.label}</span>
+                          <div className="flex gap-2">
+                            <Badge variant="destructive" className="text-xs">高 {row.high}</Badge>
+                            <Badge variant="secondary" className="text-xs">中 {row.medium}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm">章节聚合</CardTitle>
+                      <CardDescription>按知识域归因</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {alertDimensionOverview.chapters.map((row) => (
+                        <div key={`chapter_${row.key}`} className="flex items-center justify-between text-sm">
+                          <span>{row.label}</span>
+                          <div className="flex gap-2">
+                            <Badge variant="destructive" className="text-xs">高 {row.high}</Badge>
+                            <Badge variant="secondary" className="text-xs">中 {row.medium}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  当前策略：{formatAlertPolicyLabel(alertPolicyMode)}（仅影响预警分级展示，不改变原始趋势值）
+                </p>
+              </div>
+            ) : null}
+
+            {handledAlertHistory.length > 0 ? (
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    处置时间线（最近 {Math.min(riskConfig.historyLimit, handledAlertHistory.length)} 条）
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {handledAlertHistory.slice(0, riskConfig.historyLimit).map((item) => (
+                    <div
+                      key={`handled_${item.alertKey}_${item.handledAt}`}
+                      className="rounded-lg border p-3 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{item.title}</span>
+                        <div className="flex gap-2">
+                          <Badge variant={item.level === "high" ? "destructive" : "default"} className="text-xs">
+                            {formatRiskLevelLabel(item.level)}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">{getPeriodLabel(item.period)}</Badge>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{item.summary}</p>
+                      <strong className="text-sm block">{item.action}</strong>
+                      <time className="text-xs text-muted-foreground">{formatDateTime(item.handledAt)}</time>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ) : null}
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+        </Card>
+
+        <Card className="dashboard-section dashboard-section-decision dashboard-compact-hide">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              风险提示
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>高风险班级：高一 2 班</AlertTitle>
+              <AlertDescription>
+                连续 3 天提示依赖率超过 50%，建议切换更细粒度任务。
+              </AlertDescription>
+            </Alert>
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>知识孤岛：函数单调性</AlertTitle>
+              <AlertDescription>
+                图谱中该节点反链过低，建议增加跨章节关联训练。
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+
+        <Card id="dashboard_bridge_risk" className="dashboard-section dashboard-section-bridge anchor-target">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Link2 className="h-5 w-5" />
+              关系链风险榜
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-3 items-end">
+              <div className="flex-1 min-w-[150px]">
+                <Label className="text-sm mb-2 block">域筛选</Label>
+                <Select value={bridgeDomainFilter} onValueChange={setBridgeDomainFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全部域</SelectItem>
+                    {bridgeDomainOptions.map((domain) => (
+                      <SelectItem key={`bridge_domain_${domain}`} value={domain}>
+                        {domain}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <Label className="text-sm mb-2 block">排序</Label>
+                <Select value={bridgeSortMode} onValueChange={(v) => setBridgeSortMode(v as BridgeSortMode)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="risk_desc">风险降序</SelectItem>
+                    <SelectItem value="risk_asc">风险升序</SelectItem>
+                    <SelectItem value="weight_desc">权重降序</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <Label className="text-sm mb-2 block">关系偏好</Label>
+                <Select value={bridgeRelationMode} onValueChange={(v) => setBridgeRelationMode(v as BridgeRelationMode)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全部关系</SelectItem>
+                    <SelectItem value="cross_priority">跨域优先</SelectItem>
+                    <SelectItem value="same_priority">同域优先</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-sm mb-2 block">关键词</Label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    value={bridgeKeyword}
+                    placeholder="节点/域关键词"
+                    onChange={(event) => setBridgeKeyword(event.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="bridge-risk-only"
+                  checked={bridgeRiskOnly}
+                  onCheckedChange={(checked) => setBridgeRiskOnly(checked as boolean)}
+                />
+                <Label htmlFor="bridge-risk-only" className="text-sm cursor-pointer">
+                  仅高风险链
+                </Label>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                命中 {filteredBridgeRiskRows.length} 条 · 高风险 {bridgeHighRiskCount} 条
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetBridgeFilters}
+                  disabled={
+                    bridgeDomainFilter === "all" &&
+                    bridgeSortMode === "risk_desc" &&
+                    bridgeRelationMode === "all" &&
+                    bridgeKeyword.trim().length === 0 &&
+                    !bridgeRiskOnly
+                  }
+                >
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  清空筛选
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void refreshBridgeRiskRows()}
+                >
+                  <Activity className="h-4 w-4 mr-2" />
+                  刷新关系榜
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-2 p-3 rounded-lg border bg-muted/50">
+              <span className="text-sm font-medium">已选择 {selectedBridgeRows.length} 条</span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAllVisibleBridges}
+                  disabled={filteredBridgeRiskRows.length === 0}
+                >
+                  全选当前
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearBridgeSelection}
+                  disabled={selectedBridgeRows.length === 0}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  清空
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={openBridgeBatchPreview}
+                  disabled={selectedBridgeRows.length === 0}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  批量预览
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={pushSelectedBridgesToPath}
+                  disabled={selectedBridgeRows.length === 0}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  批量推送路径
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={pushSelectedBridgesToWorkspace}
+                  disabled={selectedBridgeRows.length === 0}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  批量推送工作区
+                </Button>
+              </div>
+            </div>
+            {bridgeBatchHint ? (
+              <Alert>
+                <AlertDescription>{bridgeBatchHint}</AlertDescription>
+              </Alert>
+            ) : null}
+            {isBridgeBatchPreviewOpen && selectedBridgeFocusBatch.length > 0 ? (
+              <div
+                className="dashboard-bridge-preview-mask"
+                role="presentation"
+                onClick={closeBridgeBatchPreview}
+              >
+                <div
+                  className="dashboard-bridge-preview-modal"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="关系链批量预览"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <header>
+                    <strong>批量推送预览（{selectedBridgeFocusBatch.length} 条）</strong>
+                    <div className="dashboard-bridge-preview-head-actions">
+                      <button type="button" onClick={resetSelectedBridgeOrder}>
+                        恢复筛选顺序
+                      </button>
+                      <button type="button" onClick={closeBridgeBatchPreview}>
+                        关闭
+                      </button>
+                    </div>
+                  </header>
+                  {firstSelectedBridgeFocus ? (
+                    <div className="dashboard-bridge-preview-first">
+                      <span>首条焦点</span>
+                      <strong>
+                        {firstSelectedBridgeFocus.nodeLabel}
+                        {firstSelectedBridgeFocus.bridgePartnerLabel
+                          ? ` ↔ ${firstSelectedBridgeFocus.bridgePartnerLabel}`
+                          : ""}
+                      </strong>
+                      <em>
+                        风险 {Math.round(firstSelectedBridgeFocus.risk * 100)}% · 掌握度{" "}
+                        {Math.round(firstSelectedBridgeFocus.mastery * 100)}%
+                      </em>
+                      {selectedBridgePreviewStats ? (
+                        <div className="dashboard-bridge-preview-stats">
+                          <span>
+                            平均风险 {Math.round(selectedBridgePreviewStats.averageRisk * 100)}%
+                          </span>
+                          <span>跨域 {selectedBridgePreviewStats.crossDomainCount}</span>
+                          <span>同域 {selectedBridgePreviewStats.sameDomainCount}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <div className="dashboard-bridge-preview-list">
+                    {selectedBridgeRows.map((row, index) => {
+                      const item = buildBridgeFocusFromRow(row).focusPayload;
+                      return (
+                      <div
+                        key={`dashboard_preview_${row.id}_${index}`}
+                        className="dashboard-bridge-preview-item"
+                      >
+                        <span>{index + 1}</span>
+                        <strong>
+                          {item.nodeLabel}
+                          {item.bridgePartnerLabel ? ` ↔ ${item.bridgePartnerLabel}` : ""}
+                        </strong>
+                        <em>风险 {Math.round(item.risk * 100)}%</em>
+                        <div className="dashboard-bridge-preview-item-tools">
+                          <button
+                            type="button"
+                            onClick={() => moveSelectedBridgeOrder(row.id, "up")}
+                            disabled={index === 0}
+                          >
+                            上移
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveSelectedBridgeOrder(row.id, "down")}
+                            disabled={index === selectedBridgeRows.length - 1}
+                          >
+                            下移
+                          </button>
+                        </div>
+                      </div>
+                      );
+                    })}
+                  </div>
+                  <div className="dashboard-bridge-preview-actions">
+                    <button type="button" onClick={() => pushBridgeRowsToPath(selectedBridgeRows)}>
+                      确认推送路径
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => pushBridgeRowsToWorkspace(selectedBridgeRows)}
+                    >
+                      确认推送工作区
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+            <div className=”space-y-3”>
+              {filteredBridgeRiskRows.length > 0 ? (
+                filteredBridgeRiskRows.map((row) => {
+                  const riskTone = resolveActivityRiskTone(row.risk);
+                  const borderColor = riskTone === “high” ? “border-destructive” : riskTone === “medium” ? “border-yellow-500” : “”;
+                  return (
+                    <Card key={row.id} className={borderColor}>
+                      <CardContent className=”pt-6”>
+                        <div className=”space-y-3”>
+                          <div className=”flex items-start justify-between gap-4”>
+                            <div className=”flex items-center gap-2”>
+                              <Checkbox
+                                id={`bridge-${row.id}`}
+                                checked={selectedBridgeIds.includes(row.id)}
+                                onCheckedChange={() => toggleBridgeSelection(row.id)}
+                              />
+                              <Label htmlFor={`bridge-${row.id}`} className=”text-sm cursor-pointer”>
+                                加入批量
+                              </Label>
+                            </div>
+                            <Badge variant={isCrossDomainBridge(row) ? “default” : “secondary”}>
+                              {isCrossDomainBridge(row) ? “跨域关系链” : “同域关系链”}
+                            </Badge>
+                          </div>
+                          <div>
+                            <h4 className=”font-semibold text-base flex items-center gap-2”>
+                              <Link2 className=”h-4 w-4” />
+                              {row.sourceLabel} ↔ {row.targetLabel}
+                            </h4>
+                            <p className=”text-sm text-muted-foreground mt-1”>
+                              域：{row.sourceDomain}
+                              {row.sourceDomain === row.targetDomain
+                                ? “”
+                                : ` → ${row.targetDomain}`}
+                            </p>
+                          </div>
+                          <div className=”flex gap-2”>
+                            <Badge variant={riskTone === “high” ? “destructive” : riskTone === “medium” ? “default” : “secondary”}>
+                              风险 {Math.round(row.risk * 100)}%
+                            </Badge>
+                            <Badge variant=”outline”>
+                              权重 {row.weight.toFixed(2)}
+                            </Badge>
+                          </div>
+                          <div className=”flex gap-2”>
+                            <Button
+                              variant=”outline”
+                              size=”sm”
+                              onClick={() => jumpToGraphFromBridge(row)}
+                            >
+                              <Activity className=”h-4 w-4 mr-2” />
+                              联动图谱
+                            </Button>
+                            <Button
+                              variant=”outline”
+                              size=”sm”
+                              onClick={() => jumpToPathFromBridge(row)}
+                            >
+                              <Send className=”h-4 w-4 mr-2” />
+                              推送路径
+                            </Button>
+                            <Button
+                              variant=”outline”
+                              size=”sm”
+                              onClick={() => jumpToWorkspaceFromBridge(row)}
+                            >
+                              <Send className=”h-4 w-4 mr-2” />
+                              推送工作区
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              ) : (
+                <div className=”text-center py-8 text-muted-foreground”>
+                  <p className=”font-medium”>当前筛选下暂无关系链风险数据</p>
+                  <p className=”text-sm mt-1”>可切换域筛选/排序，或点击刷新关系榜重新计算。</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="dashboard-section dashboard-section-decision dashboard-compact-hide">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              系统状态
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                ModelScope API：正常
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                本地 Vault 索引：可用
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                路径引擎：规则版
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                图谱更新：实时写入 + 闭环事件回流
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card id="dashboard_events" className="dashboard-section dashboard-section-events anchor-target">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              生态闭环事件
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertTitle>最近事件总数：{graphActivitySummary.total}</AlertTitle>
+              <AlertDescription className="space-y-1">
+                <p>路径反馈 {graphActivitySummary.pathFeedbackCount} · 工作区推进 {graphActivitySummary.workspaceCount}</p>
+                <p>当前筛选后：{graphActivitySummary.displayedCount} 条</p>
+              </AlertDescription>
+            </Alert>
+
+            <div className="flex flex-wrap gap-3 items-end">
+              <div className="flex-1 min-w-[150px]">
+                <Label className="text-sm mb-2 block">来源</Label>
+                <Select value={activitySourceFilter} onValueChange={(v) => setActivitySourceFilter(v as ActivitySourceFilter)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全部</SelectItem>
+                    <SelectItem value="path_feedback">路径反馈</SelectItem>
+                    <SelectItem value="workspace">工作区推进</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <Label className="text-sm mb-2 block">节点</Label>
+                <Select value={activityNodeFilter} onValueChange={setActivityNodeFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全部节点</SelectItem>
+                    {graphActivityNodeOptions.map((nodeLabel) => (
+                      <SelectItem key={`node_filter_${nodeLabel}`} value={nodeLabel}>
+                        {nodeLabel}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <Label className="text-sm mb-2 block">排序</Label>
+                <Select value={activitySortMode} onValueChange={(v) => setActivitySortMode(v as ActivitySortMode)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">按时间</SelectItem>
+                    <SelectItem value="risk_desc">按风险降序</SelectItem>
+                    <SelectItem value="risk_asc">按风险升序</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-sm mb-2 block">关键词</Label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    value={activityKeyword}
+                    placeholder="节点/描述关键词"
+                    onChange={(event) => setActivityKeyword(event.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="activity-risk-only"
+                  checked={activityRiskOnly}
+                  onCheckedChange={(checked) => setActivityRiskOnly(checked as boolean)}
+                />
+                <Label htmlFor="activity-risk-only" className="text-sm cursor-pointer">
+                  仅高风险事件
+                </Label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                命中 {filteredGraphActivityEvents.length} 条 · 高风险 {activityHighRiskCount} 条
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetActivityFilters}
+                disabled={
+                  activitySourceFilter === "all" &&
+                  activityNodeFilter === "all" &&
+                  activitySortMode === "latest" &&
+                  activityKeyword.trim().length === 0 &&
+                  !activityRiskOnly
+                }
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                清空筛选
+              </Button>
+            </div>
+
+            {filteredGraphActivityEvents.length > 0 ? (
+              <Card className={selectedActivityId === filteredGraphActivityEvents[0]?.id ? "border-primary" : ""}>
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h4 className="font-semibold">
+                          最新事件：
+                          {filteredGraphActivityEvents[0]?.source === "path_feedback"
+                            ? "路径回写"
+                            : "工作区推进"}
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          节点：{filteredGraphActivityEvents[0]?.nodeLabel} · {formatDateTime(filteredGraphActivityEvents[0]?.at ?? "")}
+                        </p>
+                      </div>
+                      <Badge variant={resolveActivityRiskTone(resolveGraphActivityRiskScore(filteredGraphActivityEvents[0]!)) === "high" ? "destructive" : "default"}>
+                        风险 {Math.round(resolveGraphActivityRiskScore(filteredGraphActivityEvents[0]!) * 100)}%
+                      </Badge>
+                    </div>
+                    <p className="text-sm">{filteredGraphActivityEvents[0]?.detail}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => jumpToGraphFromActivity(filteredGraphActivityEvents[0]!)}
+                      >
+                        <Activity className="h-4 w-4 mr-2" />
+                        联动图谱时间轴
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => jumpToPathFromActivity(filteredGraphActivityEvents[0]!)}
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        跳转路径页
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => jumpToWorkspaceFromActivity(filteredGraphActivityEvents[0]!)}
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        跳转工作区
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="font-medium">当前筛选下暂无事件</p>
+                <p className="text-sm mt-1">可切换来源/节点筛选，或先在路径页与工作区触发闭环行为。</p>
+              </div>
+            )}
+
+            {filteredGraphActivityEvents.length > 1 ? (
+              <div className="space-y-3">
+                {filteredGraphActivityEvents.slice(1, 6).map((item) => {
+                  const riskScore = resolveGraphActivityRiskScore(item);
+                  const riskTone = resolveActivityRiskTone(riskScore);
+                  const isActive = selectedActivityId === item.id;
+                  return (
+                    <Card key={item.id} className={isActive ? "border-primary" : ""}>
+                      <CardContent className="pt-6">
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-4">
+                            <h4 className="font-medium text-sm">
+                              {item.source === "path_feedback" ? "路径回写" : "工作区推进"} · {item.nodeLabel}
+                            </h4>
+                            <Badge variant={riskTone === "high" ? "destructive" : riskTone === "medium" ? "default" : "secondary"} className="text-xs">
+                              风险 {Math.round(riskScore * 100)}%
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{item.detail}</p>
+                          <p className="text-xs text-muted-foreground">{formatDateTime(item.at)}</p>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => jumpToGraphFromActivity(item)}
+                            >
+                              <Activity className="h-3 w-3 mr-1" />
+                              联动图谱
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => jumpToPathFromActivity(item)}
+                            >
+                              <Send className="h-3 w-3 mr-1" />
+                              路径
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => jumpToWorkspaceFromActivity(item)}
+                            >
+                              <Send className="h-3 w-3 mr-1" />
+                              工作区
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card
+          id=”dashboard_ratio_rings”
+          className=”dashboard-section dashboard-section-decision dashboard-compact-hide anchor-target”
+        >
+          <CardHeader>
+            <CardTitle className=”flex items-center gap-2”>
+              <BarChart3 className=”h-5 w-5” />
+              关键比例环图
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className=”grid gap-4 md:grid-cols-3”>
+              {currentMetrics.rings.map((item) => (
+                <RatioRing
+                  key={`${period}_${item.label}`}
+                  label={item.label}
+                  value={item.value}
+                  hint={item.hint}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card
+          id=”dashboard_ops_actions”
+          className=”w-full dashboard-section dashboard-section-decision dashboard-compact-hide anchor-target”
+        >
+          <CardHeader>
+            <CardTitle className=”flex items-center gap-2”>
+              <Settings className=”h-5 w-5” />
+              运营动作建议
+            </CardTitle>
+          </CardHeader>
+          <CardContent className=”space-y-4”>
+            <Alert>
+              <AlertTriangle className=”h-4 w-4” />
+              <AlertTitle>针对高依赖人群启用”低层提示优先”策略</AlertTitle>
+              <AlertDescription>
+                先收紧 Level 3/4 触发门槛，要求提交中间思路与自检结果后再开放更高层提示。
+              </AlertDescription>
+              <Badge variant=”secondary” className=”mt-2”>策略建议</Badge>
+            </Alert>
+            <Alert>
+              <AlertTriangle className=”h-4 w-4” />
+              <AlertTitle>对知识孤岛节点建立跨章节任务桥接</AlertTitle>
+              <AlertDescription>
+                把”函数单调性”与”数列递推”做路径联动，提升关系密度并增强迁移能力。
+              </AlertDescription>
+              <Badge variant=”secondary” className=”mt-2”>图谱建议</Badge>
+            </Alert>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  );
+}
