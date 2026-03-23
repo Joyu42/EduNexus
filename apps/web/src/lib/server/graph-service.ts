@@ -220,6 +220,7 @@ export async function getGraphView(
 
   const userPaths = db.syncedPaths.filter((path) => path.userId === userId);
   const pathMembershipMap = buildPathMembershipMap(userPaths);
+  const needsReviewSet = new Set(db.needsReviewNodes ?? []);
 
   const nodes: WorkspaceGraphNode[] = documents.map((doc) => {
     const mastery = db.masteryByNode[doc.id] ?? 0;
@@ -238,7 +239,7 @@ export async function getGraphView(
       risk: 0.5,
       domain: domainValue,
       masteryStage: deriveMasteryStage(mastery),
-      needsReview: false,
+      needsReview: needsReviewSet.has(doc.id),
       pathMemberships,
       category,
       kbDocumentId: doc.id,

@@ -228,6 +228,7 @@ type DbSchema = {
   plans: PlanRecord[];
   syncedPaths: SyncedPathRecord[];
   masteryByNode: Record<string, number>;
+  needsReviewNodes: string[];
   publicPosts: PublicPostRecord[];
   publicTopics: PublicTopicRecord[];
   publicGroups: PublicGroupRecord[];
@@ -253,6 +254,7 @@ const DEFAULT_DB: DbSchema = {
   plans: [],
   syncedPaths: [],
   masteryByNode: {},
+  needsReviewNodes: [],
   publicPosts: [],
   publicTopics: [],
   publicGroups: [],
@@ -909,6 +911,7 @@ export async function loadDb(): Promise<DbSchema> {
       plans,
       syncedPaths,
       masteryByNode: normalizeMasteryByNode(parsed.masteryByNode),
+      needsReviewNodes: normalizeStringArray(parsed.needsReviewNodes),
       publicPosts: postsSource
         .map((post) => normalizePublicPostRecord(post))
         .filter((post): post is PublicPostRecord => post !== null),

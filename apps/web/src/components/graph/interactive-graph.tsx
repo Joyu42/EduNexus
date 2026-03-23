@@ -15,13 +15,58 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ),
 });
 
-// 节点状态颜色
-const STATUS_COLORS = {
-  unlearned: "#94a3b8", // 灰色
-  learning: "#fbbf24", // 黄色
-  mastered: "#10b981", // 绿色
-  review: "#f97316", // 橙色
+const MASTERY_COLORS = {
+  seen: "#6b7280",
+  understood: "#3b82f6",
+  applied: "#f59e0b",
+  mastered: "#10b981",
+} as const;
+
+const CATEGORY_HUES: Record<string, string> = {
+  general: "",
+  math: "#8b5cf6",
+  science: "#06b6d4",
+  language: "#f97316",
+  history: "#84cc16",
 };
+
+const MASTERY_SIZE_MAP = {
+  seen: 0.6,
+  understood: 0.8,
+  applied: 1.0,
+  mastered: 1.3,
+} as const;
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const normalized = hex.replace("#", "").trim();
+  if (normalized.length !== 6) {
+    return null;
+  }
+
+  const r = Number.parseInt(normalized.slice(0, 2), 16);
+  const g = Number.parseInt(normalized.slice(2, 4), 16);
+  const b = Number.parseInt(normalized.slice(4, 6), 16);
+  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) {
+    return null;
+  }
+
+  return [r, g, b];
+}
+
+function mixCategoryWithMastery(categoryHex: string, masteryHex: string): string {
+  const categoryRgb = hexToRgb(categoryHex);
+  const masteryRgb = hexToRgb(masteryHex);
+  if (!categoryRgb || !masteryRgb) {
+    return masteryHex;
+  }
+
+  const mixRatio = 0.35;
+  const r = Math.round(categoryRgb[0] * mixRatio + masteryRgb[0] * (1 - mixRatio));
+  const g = Math.round(categoryRgb[1] * mixRatio + masteryRgb[1] * (1 - mixRatio));
+  const b = Math.round(categoryRgb[2] * mixRatio + masteryRgb[2] * (1 - mixRatio));
+
+  return `rgb(${r}, ${g}, ${b})`;
+}
 
 // 主题配置
 const THEMES = {
@@ -123,14 +168,19 @@ export function InteractiveGraph({
       const label = graphNode.name;
       const fontSize = 11 / globalScale;
 
+      const masteryStage = graphNode.masteryStage ?? "seen";
+      const masteryColor = MASTERY_COLORS[masteryStage];
+      const categoryHue = CATEGORY_HUES[graphNode.category ?? "general"];
+      const nodeColor = categoryHue
+        ? mixCategoryWithMastery(categoryHue, masteryColor)
+        : masteryColor;
+
       // Obsidian 风格 - 节点大小更小更精致
       const baseSize = 5;
       const importanceSize = graphNode.importance * 6;
       const connectionSize = Math.min(graphNode.connections * 0.5, 3);
-      const nodeSize = baseSize + importanceSize + connectionSize;
-
-      // 节点颜色基于状态
-      const nodeColor = STATUS_COLORS[graphNode.status];
+      const masteryMultiplier = MASTERY_SIZE_MAP[masteryStage] ?? 0.8;
+      const nodeSize = (baseSize + importanceSize + connectionSize) * masteryMultiplier;
 
       // 绘制外层光晕 - 更柔和
       const gradient = ctx.createRadialGradient(
@@ -154,6 +204,19 @@ export function InteractiveGraph({
       ctx.arc(graphNode.x || 0, graphNode.y || 0, nodeSize, 0, 2 * Math.PI);
       ctx.fillStyle = nodeColor;
       ctx.fill();
+
+      if (graphNode.needsReview) {
+        const time = Date.now() / 1000;
+        const pulsePhase = (Math.sin(time * 2) + 1) / 2;
+        const pulseRadius = nodeSize * (1.5 + pulsePhase * 0.8);
+        const pulseAlpha = 0.3 + pulsePhase * 0.3;
+
+        ctx.beginPath();
+        ctx.arc(graphNode.x || 0, graphNode.y || 0, pulseRadius, 0, 2 * Math.PI);
+        ctx.strokeStyle = `rgba(249, 115, 22, ${pulseAlpha})`;
+        ctx.lineWidth = 2 / globalScale;
+        ctx.stroke();
+      }
 
       // 绘制细边框
       ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";

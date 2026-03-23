@@ -251,6 +251,54 @@ function GraphPageContent() {
     toast("分享功能开发中，敬请期待", "info");
   };
 
+  const refreshGraphData = useCallback(async (nodeId?: string) => {
+    const data = await loadPrivateGraphView();
+    setGraphData(data);
+    if (!nodeId) {
+      return;
+    }
+
+    const nextSelectedNode = data.nodes.find((node) => node.id === nodeId) ?? null;
+    setSelectedNode(nextSelectedNode);
+  }, []);
+
+  const handleMasteryAction = useCallback(
+    async (nodeId: string, action: "seen" | "understood" | "applied" | "mastered") => {
+      const response = await fetch("/api/graph/mastery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nodeId, action }),
+      });
+
+      if (!response.ok) {
+        throw new Error("MASTERY_UPDATE_FAILED");
+      }
+
+      await refreshGraphData(nodeId);
+    },
+    [refreshGraphData]
+  );
+
+  const handleNeedsReviewAction = useCallback(
+    async (nodeId: string, needsReview: boolean) => {
+      const response = await fetch("/api/graph/mastery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nodeId,
+          action: needsReview ? "clearNeedsReview" : "setNeedsReview",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("REVIEW_UPDATE_FAILED");
+      }
+
+      await refreshGraphData(nodeId);
+    },
+    [refreshGraphData]
+  );
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -575,7 +623,17 @@ function GraphPageContent() {
                         key={stage}
                         variant={isActive ? "default" : "outline"}
                         size="sm"
-                        onClick={() => toast("学习进度写入将在后续实现", "info")}
+                        onClick={async () => {
+                          if (!selectedNode) {
+                            return;
+                          }
+                          try {
+                            await handleMasteryAction(selectedNode.id, stage);
+                            toast(`已标记为${stageLabels[stage]}`, "success");
+                          } catch {
+                            toast("更新失败", "error");
+                          }
+                        }}
                         className={cn("w-full", isActive && "ring-2 ring-primary ring-offset-1")}
                       >
                         {stageLabels[stage]}
@@ -583,6 +641,28 @@ function GraphPageContent() {
                     );
                   })}
                 </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    if (!selectedNode) {
+                      return;
+                    }
+                    try {
+                      await handleNeedsReviewAction(selectedNode.id, Boolean(selectedNode.needsReview));
+                      toast(selectedNode.needsReview ? "已取消复习" : "已加入复习", "success");
+                    } catch {
+                      toast("更新失败", "error");
+                    }
+                  }}
+                  className={cn(
+                    "mt-2 w-full",
+                    selectedNode.needsReview &&
+                      "border-orange-500 bg-orange-500/20 text-orange-500 hover:bg-orange-500/25"
+                  )}
+                >
+                  🔄 复习
+                </Button>
               </div>
 
               {/* Section 3: Path Actions */}

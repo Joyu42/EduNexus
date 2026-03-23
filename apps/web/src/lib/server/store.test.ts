@@ -60,6 +60,7 @@ describe("server store", () => {
       "groupSharedResources",
       "groupTasks",
       "masteryByNode",
+      "needsReviewNodes",
       "plans",
       "publicGroups",
       "publicPosts",
