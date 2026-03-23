@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { LoginPrompt } from "@/components/ui/login-prompt";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -33,8 +34,10 @@ import type {
   WordsTodaySummary,
 } from "@/lib/words/types";
 import { getCompletedCountFromSummary, syncWordsProgressToGoal } from "@/lib/words/integration";
+import { filterBooksByMajor, isMajor, nextSelectedBookIdAfterVisibilityChange, PROFESSIONAL_BOOK_IDS, type WordsMajor } from "@/lib/words/major-gating";
 
 const SELECTED_BOOK_STORAGE_KEY = "edunexus_words_selected_book";
+const SELECTED_MAJOR_STORAGE_KEY = "edunexus_words_selected_major";
 
 function pickFallbackBookId(availableBooks: WordBook[]): string {
   if (availableBooks.length === 0) return "";
@@ -69,6 +72,8 @@ export default function WordsDashboardPage() {
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
 
   const [deletingBookId, setDeletingBookId] = useState<string | null>(null);
+
+  const [selectedMajor, setSelectedMajor] = useState<WordsMajor | "">("");
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -169,6 +174,57 @@ export default function WordsDashboardPage() {
     }
   }, [books, selectedBookId]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = localStorage.getItem(SELECTED_MAJOR_STORAGE_KEY);
+      if (stored && isMajor(stored)) {
+        setSelectedMajor(stored);
+      } else {
+        setSelectedMajor("");
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (selectedMajor) {
+        localStorage.setItem(SELECTED_MAJOR_STORAGE_KEY, selectedMajor);
+      } else {
+        localStorage.removeItem(SELECTED_MAJOR_STORAGE_KEY);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [selectedMajor]);
+
+  const visibleBooks = useMemo(
+    () => filterBooksByMajor(books, selectedMajor),
+    [books, selectedMajor]
+  );
+
+  useEffect(() => {
+    const next = nextSelectedBookIdAfterVisibilityChange({
+      visibleBooks,
+      selectedBookId,
+      storedSelectedBookId: (() => {
+        if (typeof window === "undefined") return undefined;
+        try { return localStorage.getItem(SELECTED_BOOK_STORAGE_KEY) ?? undefined; }
+        catch { return undefined; }
+      })(),
+    });
+    if (next && next !== selectedBookId) {
+      setSelectedBookId(next);
+      if (typeof window !== "undefined") {
+        try { localStorage.setItem(SELECTED_BOOK_STORAGE_KEY, next); }
+        catch { /* ignore */ }
+      }
+    }
+  }, [books, selectedMajor, selectedBookId, visibleBooks]);
+
   const handleSelectBook = (bookId: string) => {
     setSelectedBookId(bookId);
     if (typeof window !== "undefined") {
@@ -182,6 +238,10 @@ export default function WordsDashboardPage() {
         // ignore storage errors
       }
     }
+  };
+
+  const handleMajorChange = (major: WordsMajor) => {
+    setSelectedMajor(major);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -253,7 +313,7 @@ export default function WordsDashboardPage() {
       await deleteCustomBook(deletingBookId);
       toast.success("词库已删除");
       if (selectedBookId === deletingBookId) {
-        const remainingBooks = books.filter((b) => b.id !== deletingBookId);
+        const remainingBooks = visibleBooks.filter((b) => b.id !== deletingBookId);
         handleSelectBook(pickFallbackBookId(remainingBooks));
       }
       setDeletingBookId(null);
@@ -334,7 +394,7 @@ export default function WordsDashboardPage() {
             <Button
               className="bg-cyan-600 hover:bg-cyan-700"
               onClick={() =>
-                router.push(`/words/learn/${selectedBookId || books[0]?.id || "cet4"}`)
+                router.push(`/words/learn/${selectedBookId || visibleBooks[0]?.id || "cet4"}`)
               }
             >
               学习新词
@@ -413,13 +473,40 @@ export default function WordsDashboardPage() {
           </div>
         </section>
 
+        <section className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-slate-700">选择你的专业</p>
+              <p className="text-xs text-slate-500">
+                {selectedMajor === ""
+                  ? "选择专业以解锁对应的专业词书"
+                  : `当前专业：${{ computer: "计算机", electrical: "电气", economics: "经济", medical: "医学" }[selectedMajor]}`}
+              </p>
+            </div>
+            <Select
+              value={selectedMajor}
+              onValueChange={(v) => handleMajorChange(v as WordsMajor)}
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="选择专业" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="computer">计算机</SelectItem>
+                <SelectItem value="electrical">电气</SelectItem>
+                <SelectItem value="economics">经济</SelectItem>
+                <SelectItem value="medical">医学</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </section>
+
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">词库选择</h2>
             <p className="text-xs text-slate-500">选择后将用于“快速开始学习”</p>
           </div>
           <BookSelector
-            books={books}
+            books={visibleBooks}
             selectedBookId={selectedBookId}
             progressByBook={progressByBook}
             dueByBook={dueByBook}
