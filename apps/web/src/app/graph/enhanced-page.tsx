@@ -38,6 +38,7 @@ import { RecommendationEngine } from "@/lib/graph/recommendation-engine";
 import { ProgressTracker } from "@/lib/graph/progress-tracker";
 import { cn } from "@/lib/utils";
 import { getGraphViewState, loadPrivateGraphView } from "./view-state";
+import { toast } from "@/lib/toast";
 import type {
   GraphNode,
   GraphEdge,
@@ -226,12 +227,12 @@ export default function EnhancedGraphPage() {
 
   // 导出图谱
   const handleExport = () => {
-    alert("导出功能：将图谱导出为 PNG/SVG 格式");
+    toast("导出功能开发中，敬请期待", "info");
   };
 
   // 分享图谱
   const handleShare = () => {
-    alert("分享功能：生成分享链接");
+    toast("分享功能开发中，敬请期待", "info");
   };
 
   if (status === 'loading') {
