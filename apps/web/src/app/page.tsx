@@ -20,6 +20,7 @@ import {
   Zap,
   TrendingUp
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 const coreEntries = [
   {
@@ -86,6 +87,9 @@ const itemVariants = {
 };
 
 export default function HomePage() {
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   return (
     <motion.section
       className="page-container space-y-12"
@@ -100,19 +104,38 @@ export default function HomePage() {
           tags={["纯 Web", "LangGraph", "ModelScope", "本地优先知识库"]}
           actions={
             <>
-              <Link href="/workspace">
-                <Button size="lg" className="btn-primary group">
-                  <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" />
-                  开始学习
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-              <Link href="/graph">
-                <Button size="lg" variant="outline" className="group">
-                  <Network className="mr-2 h-4 w-4" />
-                  查看知识星图
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/workspace">
+                    <Button size="lg" className="btn-primary group">
+                      <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" />
+                      开始学习
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                  <Link href="/graph">
+                    <Button size="lg" variant="outline" className="group">
+                      <Network className="mr-2 h-4 w-4" />
+                      查看知识星图
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button size="lg" className="btn-primary group">
+                      <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" />
+                      登录账号
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button size="lg" variant="outline" className="group">
+                      <Network className="mr-2 h-4 w-4" />
+                      创建账户
+                    </Button>
+                  </Link>
+                </>
+              )}
             </>
           }
         />

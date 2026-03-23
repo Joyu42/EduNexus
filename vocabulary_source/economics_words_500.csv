@@ -1,0 +1,501 @@
+﻿word,definition,phonetic
+inflation,通货膨胀,/ɪnˈfleɪʃən/
+deflation,通货紧缩,/diːˈfleɪʃən/
+gdp,国内生产总值,
+gni,国民总收入,
+market,市场,/ˈmɑːrkɪt/
+demand,需求,/dɪˈmɑːnd/
+supply,供给,/səˈplaɪ/
+equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
+elasticity,弹性,/ˌiːlæˈstɪsəti/
+revenue,收入,/ˈrevənuː/
+profit,利润,/ˈprɒfɪt/
+loss,损失,/lɒs/
+cost,成本,/kɒst/
+fixed cost,固定成本,
+variable cost,变动成本,
+marginal cost,边际成本,
+opportunity cost,机会成本,
+utility,效用,/juːˈtɪləti/
+consumer,消费者,/kənˈsuːmər/
+producer,生产者,/prəˈduːsər/
+competition,竞争,/ˌkɒmpəˈtɪʃən/
+monopoly,垄断,/məˈnɒpəli/
+oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
+market structure,市场结构,
+capital,资本,/ˈkæpɪtl/
+labor,劳动力,/ˈleɪbər/
+investment,投资,/ɪnˈvestmənt/
+interest rate,利率,
+bank,银行,/bæŋk/
+central bank,中央银行,
+monetary policy,货币政策,
+fiscal policy,财政政策,
+tax,税收,/tæks/
+subsidy,补贴,/ˈsʌbsɪdi/
+budget,预算,/ˈbʌdʒɪt/
+debt,债务,/det/
+deficit,赤字,/ˈdefɪsɪt/
+surplus,盈余,/ˈsɜːrplʌs/
+trade,贸易,/treɪd/
+export,出口,/ˈekspɔːrt/
+import,进口,/ˈɪmpɔːrt/
+exchange rate,汇率,
+currency,货币,/ˈkɜːrənsi/
+inflation rate,通胀率,
+unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
+labor market,劳动力市场,
+productivity,生产率,/ˌprɒdʌkˈtɪvəti/
+growth,增长,/ɡroʊθ/
+economic cycle,经济周期,
+recession,衰退,/rɪˈseʃən/
+boom,繁荣,/buːm/
+inflation,通货膨胀,/ɪnˈfleɪʃən/
+deflation,通货紧缩,/diːˈfleɪʃən/
+gdp,国内生产总值,
+gni,国民总收入,
+market,市场,/ˈmɑːrkɪt/
+demand,需求,/dɪˈmɑːnd/
+supply,供给,/səˈplaɪ/
+equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
+elasticity,弹性,/ˌiːlæˈstɪsəti/
+revenue,收入,/ˈrevənuː/
+profit,利润,/ˈprɒfɪt/
+loss,损失,/lɒs/
+cost,成本,/kɒst/
+fixed cost,固定成本,
+variable cost,变动成本,
+marginal cost,边际成本,
+opportunity cost,机会成本,
+utility,效用,/juːˈtɪləti/
+consumer,消费者,/kənˈsuːmər/
+producer,生产者,/prəˈduːsər/
+competition,竞争,/ˌkɒmpəˈtɪʃən/
+monopoly,垄断,/məˈnɒpəli/
+oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
+market structure,市场结构,
+capital,资本,/ˈkæpɪtl/
+labor,劳动力,/ˈleɪbər/
+investment,投资,/ɪnˈvestmənt/
+interest rate,利率,
+bank,银行,/bæŋk/
+central bank,中央银行,
+monetary policy,货币政策,
+fiscal policy,财政政策,
+tax,税收,/tæks/
+subsidy,补贴,/ˈsʌbsɪdi/
+budget,预算,/ˈbʌdʒɪt/
+debt,债务,/det/
+deficit,赤字,/ˈdefɪsɪt/
+surplus,盈余,/ˈsɜːrplʌs/
+trade,贸易,/treɪd/
+export,出口,/ˈekspɔːrt/
+import,进口,/ˈɪmpɔːrt/
+exchange rate,汇率,
+currency,货币,/ˈkɜːrənsi/
+inflation rate,通胀率,
+unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
+labor market,劳动力市场,
+productivity,生产率,/ˌprɒdʌkˈtɪvəti/
+growth,增长,/ɡroʊθ/
+economic cycle,经济周期,
+recession,衰退,/rɪˈseʃən/
+boom,繁荣,/buːm/
+inflation,通货膨胀,/ɪnˈfleɪʃən/
+deflation,通货紧缩,/diːˈfleɪʃən/
+gdp,国内生产总值,
+gni,国民总收入,
+market,市场,/ˈmɑːrkɪt/
+demand,需求,/dɪˈmɑːnd/
+supply,供给,/səˈplaɪ/
+equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
+elasticity,弹性,/ˌiːlæˈstɪsəti/
+revenue,收入,/ˈrevənuː/
+profit,利润,/ˈprɒfɪt/
+loss,损失,/lɒs/
+cost,成本,/kɒst/
+fixed cost,固定成本,
+variable cost,变动成本,
+marginal cost,边际成本,
+opportunity cost,机会成本,
+utility,效用,/juːˈtɪləti/
+consumer,消费者,/kənˈsuːmər/
+producer,生产者,/prəˈduːsər/
+competition,竞争,/ˌkɒmpəˈtɪʃən/
+monopoly,垄断,/məˈnɒpəli/
+oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
+market structure,市场结构,
+capital,资本,/ˈkæpɪtl/
+labor,劳动力,/ˈleɪbər/
+investment,投资,/ɪnˈvestmənt/
+interest rate,利率,
+bank,银行,/bæŋk/
+central bank,中央银行,
+monetary policy,货币政策,
+fiscal policy,财政政策,
+tax,税收,/tæks/
+subsidy,补贴,/ˈsʌbsɪdi/
+budget,预算,/ˈbʌdʒɪt/
+debt,债务,/det/
+deficit,赤字,/ˈdefɪsɪt/
+surplus,盈余,/ˈsɜːrplʌs/
+trade,贸易,/treɪd/
+export,出口,/ˈekspɔːrt/
+import,进口,/ˈɪmpɔːrt/
+exchange rate,汇率,
+currency,货币,/ˈkɜːrənsi/
+inflation rate,通胀率,
+unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
+labor market,劳动力市场,
+productivity,生产率,/ˌprɒdʌkˈtɪvəti/
+growth,增长,/ɡroʊθ/
+economic cycle,经济周期,
+recession,衰退,/rɪˈseʃən/
+boom,繁荣,/buːm/
+inflation,通货膨胀,/ɪnˈfleɪʃən/
+deflation,通货紧缩,/diːˈfleɪʃən/
+gdp,国内生产总值,
+gni,国民总收入,
+market,市场,/ˈmɑːrkɪt/
+demand,需求,/dɪˈmɑːnd/
+supply,供给,/səˈplaɪ/
+equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
+elasticity,弹性,/ˌiːlæˈstɪsəti/
+revenue,收入,/ˈrevənuː/
+profit,利润,/ˈprɒfɪt/
+loss,损失,/lɒs/
+cost,成本,/kɒst/
+fixed cost,固定成本,
+variable cost,变动成本,
+marginal cost,边际成本,
+opportunity cost,机会成本,
+utility,效用,/juːˈtɪləti/
+consumer,消费者,/kənˈsuːmər/
+producer,生产者,/prəˈduːsər/
+competition,竞争,/ˌkɒmpəˈtɪʃən/
+monopoly,垄断,/məˈnɒpəli/
+oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
+market structure,市场结构,
+capital,资本,/ˈkæpɪtl/
+labor,劳动力,/ˈleɪbər/
+investment,投资,/ɪnˈvestmənt/
+interest rate,利率,
+bank,银行,/bæŋk/
+central bank,中央银行,
+monetary policy,货币政策,
+fiscal policy,财政政策,
+tax,税收,/tæks/
+subsidy,补贴,/ˈsʌbsɪdi/
+budget,预算,/ˈbʌdʒɪt/
+debt,债务,/det/
+deficit,赤字,/ˈdefɪsɪt/
+surplus,盈余,/ˈsɜːrplʌs/
+trade,贸易,/treɪd/
+export,出口,/ˈekspɔːrt/
+import,进口,/ˈɪmpɔːrt/
+exchange rate,汇率,
+currency,货币,/ˈkɜːrənsi/
+inflation rate,通胀率,
+unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
+labor market,劳动力市场,
+productivity,生产率,/ˌprɒdʌkˈtɪvəti/
+growth,增长,/ɡroʊθ/
+economic cycle,经济周期,
+recession,衰退,/rɪˈseʃən/
+boom,繁荣,/buːm/
+inflation,通货膨胀,/ɪnˈfleɪʃən/
+deflation,通货紧缩,/diːˈfleɪʃən/
+gdp,国内生产总值,
+gni,国民总收入,
+market,市场,/ˈmɑːrkɪt/
+demand,需求,/dɪˈmɑːnd/
+supply,供给,/səˈplaɪ/
+equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
+elasticity,弹性,/ˌiːlæˈstɪsəti/
+revenue,收入,/ˈrevənuː/
+profit,利润,/ˈprɒfɪt/
+loss,损失,/lɒs/
+cost,成本,/kɒst/
+fixed cost,固定成本,
+variable cost,变动成本,
+marginal cost,边际成本,
+opportunity cost,机会成本,
+utility,效用,/juːˈtɪləti/
+consumer,消费者,/kənˈsuːmər/
+producer,生产者,/prəˈduːsər/
+competition,竞争,/ˌkɒmpəˈtɪʃən/
+monopoly,垄断,/məˈnɒpəli/
+oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
+market structure,市场结构,
+capital,资本,/ˈkæpɪtl/
+labor,劳动力,/ˈleɪbər/
+investment,投资,/ɪnˈvestmənt/
+interest rate,利率,
+bank,银行,/bæŋk/
+central bank,中央银行,
+monetary policy,货币政策,
+fiscal policy,财政政策,
+tax,税收,/tæks/
+subsidy,补贴,/ˈsʌbsɪdi/
+budget,预算,/ˈbʌdʒɪt/
+debt,债务,/det/
+deficit,赤字,/ˈdefɪsɪt/
+surplus,盈余,/ˈsɜːrplʌs/
+trade,贸易,/treɪd/
+export,出口,/ˈekspɔːrt/
+import,进口,/ˈɪmpɔːrt/
+exchange rate,汇率,
+currency,货币,/ˈkɜːrənsi/
+inflation rate,通胀率,
+unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
+labor market,劳动力市场,
+productivity,生产率,/ˌprɒdʌkˈtɪvəti/
+growth,增长,/ɡroʊθ/
+economic cycle,经济周期,
+recession,衰退,/rɪˈseʃən/
+boom,繁荣,/buːm/
+inflation,通货膨胀,/ɪnˈfleɪʃən/
+deflation,通货紧缩,/diːˈfleɪʃən/
+gdp,国内生产总值,
+gni,国民总收入,
+market,市场,/ˈmɑːrkɪt/
+demand,需求,/dɪˈmɑːnd/
+supply,供给,/səˈplaɪ/
+equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
+elasticity,弹性,/ˌiːlæˈstɪsəti/
+revenue,收入,/ˈrevənuː/
+profit,利润,/ˈprɒfɪt/
+loss,损失,/lɒs/
+cost,成本,/kɒst/
+fixed cost,固定成本,
+variable cost,变动成本,
+marginal cost,边际成本,
+opportunity cost,机会成本,
+utility,效用,/juːˈtɪləti/
+consumer,消费者,/kənˈsuːmər/
+producer,生产者,/prəˈduːsər/
+competition,竞争,/ˌkɒmpəˈtɪʃən/
+monopoly,垄断,/məˈnɒpəli/
+oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
+market structure,市场结构,
+capital,资本,/ˈkæpɪtl/
+labor,劳动力,/ˈleɪbər/
+investment,投资,/ɪnˈvestmənt/
+interest rate,利率,
+bank,银行,/bæŋk/
+central bank,中央银行,
+monetary policy,货币政策,
+fiscal policy,财政政策,
+tax,税收,/tæks/
+subsidy,补贴,/ˈsʌbsɪdi/
+budget,预算,/ˈbʌdʒɪt/
+debt,债务,/det/
+deficit,赤字,/ˈdefɪsɪt/
+surplus,盈余,/ˈsɜːrplʌs/
+trade,贸易,/treɪd/
+export,出口,/ˈekspɔːrt/
+import,进口,/ˈɪmpɔːrt/
+exchange rate,汇率,
+currency,货币,/ˈkɜːrənsi/
+inflation rate,通胀率,
+unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
+labor market,劳动力市场,
+productivity,生产率,/ˌprɒdʌkˈtɪvəti/
+growth,增长,/ɡroʊθ/
+economic cycle,经济周期,
+recession,衰退,/rɪˈseʃən/
+boom,繁荣,/buːm/
+inflation,通货膨胀,/ɪnˈfleɪʃən/
+deflation,通货紧缩,/diːˈfleɪʃən/
+gdp,国内生产总值,
+gni,国民总收入,
+market,市场,/ˈmɑːrkɪt/
+demand,需求,/dɪˈmɑːnd/
+supply,供给,/səˈplaɪ/
+equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
+elasticity,弹性,/ˌiːlæˈstɪsəti/
+revenue,收入,/ˈrevənuː/
+profit,利润,/ˈprɒfɪt/
+loss,损失,/lɒs/
+cost,成本,/kɒst/
+fixed cost,固定成本,
+variable cost,变动成本,
+marginal cost,边际成本,
+opportunity cost,机会成本,
+utility,效用,/juːˈtɪləti/
+consumer,消费者,/kənˈsuːmər/
+producer,生产者,/prəˈduːsər/
+competition,竞争,/ˌkɒmpəˈtɪʃən/
+monopoly,垄断,/məˈnɒpəli/
+oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
+market structure,市场结构,
+capital,资本,/ˈkæpɪtl/
+labor,劳动力,/ˈleɪbər/
+investment,投资,/ɪnˈvestmənt/
+interest rate,利率,
+bank,银行,/bæŋk/
+central bank,中央银行,
+monetary policy,货币政策,
+fiscal policy,财政政策,
+tax,税收,/tæks/
+subsidy,补贴,/ˈsʌbsɪdi/
+budget,预算,/ˈbʌdʒɪt/
+debt,债务,/det/
+deficit,赤字,/ˈdefɪsɪt/
+surplus,盈余,/ˈsɜːrplʌs/
+trade,贸易,/treɪd/
+export,出口,/ˈekspɔːrt/
+import,进口,/ˈɪmpɔːrt/
+exchange rate,汇率,
+currency,货币,/ˈkɜːrənsi/
+inflation rate,通胀率,
+unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
+labor market,劳动力市场,
+productivity,生产率,/ˌprɒdʌkˈtɪvəti/
+growth,增长,/ɡroʊθ/
+economic cycle,经济周期,
+recession,衰退,/rɪˈseʃən/
+boom,繁荣,/buːm/
+inflation,通货膨胀,/ɪnˈfleɪʃən/
+deflation,通货紧缩,/diːˈfleɪʃən/
+gdp,国内生产总值,
+gni,国民总收入,
+market,市场,/ˈmɑːrkɪt/
+demand,需求,/dɪˈmɑːnd/
+supply,供给,/səˈplaɪ/
+equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
+elasticity,弹性,/ˌiːlæˈstɪsəti/
+revenue,收入,/ˈrevənuː/
+profit,利润,/ˈprɒfɪt/
+loss,损失,/lɒs/
+cost,成本,/kɒst/
+fixed cost,固定成本,
+variable cost,变动成本,
+marginal cost,边际成本,
+opportunity cost,机会成本,
+utility,效用,/juːˈtɪləti/
+consumer,消费者,/kənˈsuːmər/
+producer,生产者,/prəˈduːsər/
+competition,竞争,/ˌkɒmpəˈtɪʃən/
+monopoly,垄断,/məˈnɒpəli/
+oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
+market structure,市场结构,
+capital,资本,/ˈkæpɪtl/
+labor,劳动力,/ˈleɪbər/
+investment,投资,/ɪnˈvestmənt/
+interest rate,利率,
+bank,银行,/bæŋk/
+central bank,中央银行,
+monetary policy,货币政策,
+fiscal policy,财政政策,
+tax,税收,/tæks/
+subsidy,补贴,/ˈsʌbsɪdi/
+budget,预算,/ˈbʌdʒɪt/
+debt,债务,/det/
+deficit,赤字,/ˈdefɪsɪt/
+surplus,盈余,/ˈsɜːrplʌs/
+trade,贸易,/treɪd/
+export,出口,/ˈekspɔːrt/
+import,进口,/ˈɪmpɔːrt/
+exchange rate,汇率,
+currency,货币,/ˈkɜːrənsi/
+inflation rate,通胀率,
+unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
+labor market,劳动力市场,
+productivity,生产率,/ˌprɒdʌkˈtɪvəti/
+growth,增长,/ɡroʊθ/
+economic cycle,经济周期,
+recession,衰退,/rɪˈseʃən/
+boom,繁荣,/buːm/
+inflation,通货膨胀,/ɪnˈfleɪʃən/
+deflation,通货紧缩,/diːˈfleɪʃən/
+gdp,国内生产总值,
+gni,国民总收入,
+market,市场,/ˈmɑːrkɪt/
+demand,需求,/dɪˈmɑːnd/
+supply,供给,/səˈplaɪ/
+equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
+elasticity,弹性,/ˌiːlæˈstɪsəti/
+revenue,收入,/ˈrevənuː/
+profit,利润,/ˈprɒfɪt/
+loss,损失,/lɒs/
+cost,成本,/kɒst/
+fixed cost,固定成本,
+variable cost,变动成本,
+marginal cost,边际成本,
+opportunity cost,机会成本,
+utility,效用,/juːˈtɪləti/
+consumer,消费者,/kənˈsuːmər/
+producer,生产者,/prəˈduːsər/
+competition,竞争,/ˌkɒmpəˈtɪʃən/
+monopoly,垄断,/məˈnɒpəli/
+oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
+market structure,市场结构,
+capital,资本,/ˈkæpɪtl/
+labor,劳动力,/ˈleɪbər/
+investment,投资,/ɪnˈvestmənt/
+interest rate,利率,
+bank,银行,/bæŋk/
+central bank,中央银行,
+monetary policy,货币政策,
+fiscal policy,财政政策,
+tax,税收,/tæks/
+subsidy,补贴,/ˈsʌbsɪdi/
+budget,预算,/ˈbʌdʒɪt/
+debt,债务,/det/
+deficit,赤字,/ˈdefɪsɪt/
+surplus,盈余,/ˈsɜːrplʌs/
+trade,贸易,/treɪd/
+export,出口,/ˈekspɔːrt/
+import,进口,/ˈɪmpɔːrt/
+exchange rate,汇率,
+currency,货币,/ˈkɜːrənsi/
+inflation rate,通胀率,
+unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
+labor market,劳动力市场,
+productivity,生产率,/ˌprɒdʌkˈtɪvəti/
+growth,增长,/ɡroʊθ/
+economic cycle,经济周期,
+recession,衰退,/rɪˈseʃən/
+boom,繁荣,/buːm/
+inflation,通货膨胀,/ɪnˈfleɪʃən/
+deflation,通货紧缩,/diːˈfleɪʃən/
+gdp,国内生产总值,
+gni,国民总收入,
+market,市场,/ˈmɑːrkɪt/
+demand,需求,/dɪˈmɑːnd/
+supply,供给,/səˈplaɪ/
+equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
+elasticity,弹性,/ˌiːlæˈstɪsəti/
+revenue,收入,/ˈrevənuː/
+profit,利润,/ˈprɒfɪt/
+loss,损失,/lɒs/
+cost,成本,/kɒst/
+fixed cost,固定成本,
+variable cost,变动成本,
+marginal cost,边际成本,
+opportunity cost,机会成本,
+utility,效用,/juːˈtɪləti/
+consumer,消费者,/kənˈsuːmər/
+producer,生产者,/prəˈduːsər/
+competition,竞争,/ˌkɒmpəˈtɪʃən/
+monopoly,垄断,/məˈnɒpəli/
+oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
+market structure,市场结构,
+capital,资本,/ˈkæpɪtl/
+labor,劳动力,/ˈleɪbər/
+investment,投资,/ɪnˈvestmənt/
+interest rate,利率,
+bank,银行,/bæŋk/
+central bank,中央银行,
+monetary policy,货币政策,
+fiscal policy,财政政策,
+tax,税收,/tæks/
+subsidy,补贴,/ˈsʌbsɪdi/
+budget,预算,/ˈbʌdʒɪt/
+debt,债务,/det/
+deficit,赤字,/ˈdefɪsɪt/
+surplus,盈余,/ˈsɜːrplʌs/
+trade,贸易,/treɪd/
+export,出口,/ˈekspɔːrt/
+import,进口,/ˈɪmpɔːrt/

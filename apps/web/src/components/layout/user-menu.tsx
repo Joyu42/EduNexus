@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { LogOut, User as UserIcon, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +16,14 @@ import {
 export function UserMenu() {
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    const callbackUrl = `${window.location.origin}/login`;
+    await signOut({ callbackUrl, redirect: false });
+    router.replace('/login');
+    router.refresh();
+  };
 
   if (status === 'loading') {
     return (
@@ -76,7 +85,7 @@ export function UserMenu() {
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => signOut({ callbackUrl: '/login' })}
+          onClick={() => void handleSignOut()}
           className="text-red-600 cursor-pointer"
         >
           <LogOut className="h-4 w-4 mr-2" />

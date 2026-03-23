@@ -11,6 +11,9 @@ import { searchDocuments, getDocument } from "@/lib/server/document-service";
 import { getGraphView } from "@/lib/server/graph-service";
 import { DEMO_PATH_SEEDS } from "@/lib/server/demo-content";
 import { loadDb, saveDb } from "@/lib/server/store";
+import { getWordsProgressSummary, listWords, listWordsLearningRecords, listWordsLearningRecordsByWord, saveWordsLearningRecord } from "@/lib/server/words-service";
+import { updateWordStatus } from "@/lib/words/scheduler";
+import type { WordAnswerGrade } from "@/lib/words/types";
 
 function requireUserId(userId?: string) {
   const normalized = typeof userId === "string" ? userId.trim() : "";
@@ -633,6 +636,373 @@ function createQueryLearningProgressTool(userId?: string, isDemoUser?: boolean) 
   });
 }
 
+function createQueryWordsProgressTool(userId?: string) {
+  return new DynamicStructuredTool({
+    name: "query_words_progress",
+    description:
+      "查询当前登录用户的英语单词学习进度，包括连续学习天数、今日待复习、今日学习/复习情况和词库进度。",
+    schema: z.object({
+      date: z.string().optional().describe("可选日期，格式 YYYY-MM-DD，不传则使用今天"),
+      rangeDays: z.number().optional().describe("最近统计区间天数，默认 7 天，最大 30 天"),
+    }),
+    func: async ({ date, rangeDays }) => {
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const normalizedDate = typeof date === "string" && date.trim() ? date.trim() : undefined;
+        const normalizedRangeDays =
+          typeof rangeDays === "number" && Number.isFinite(rangeDays)
+            ? Math.max(1, Math.min(30, Math.floor(rangeDays)))
+            : undefined;
+        const summary = await getWordsProgressSummary(
+          effectiveUserId,
+          normalizedDate,
+          normalizedRangeDays
+        );
+        const topBooks = summary.bookProgress.slice(0, 3);
+
+        return JSON.stringify(
+          {
+            date: summary.date,
+            streakDays: summary.streakDays,
+            dueToday: summary.dueToday,
+            hasDueReview: summary.hasDueReview,
+            learnedToday: summary.learnedToday,
+            reviewedToday: summary.reviewedToday,
+            relearnedToday: summary.relearnedToday,
+            accuracyToday: summary.accuracyToday,
+            learnedWords: summary.learnedWords,
+            masteredWords: summary.masteredWords,
+            totalWords: summary.totalWords,
+            suggestedBookId: summary.suggestedBookId,
+            recentProgress: summary.recentProgress,
+            report: {
+              rangeDays: summary.recentProgress.rangeDays,
+              startDate: summary.recentProgress.startDate,
+              endDate: summary.recentProgress.endDate,
+              learnedWordsInRange: summary.recentProgress.learnedWordsInRange,
+              reviewedCountInRange: summary.recentProgress.reviewedCountInRange,
+              relearnedCountInRange: summary.recentProgress.relearnedCountInRange,
+              averageDailyLearnedWords: summary.recentProgress.averageDailyLearnedWords,
+              activeDays: summary.recentProgress.activeDays,
+              learnedWords: summary.learnedWords,
+              masteredWords: summary.masteredWords,
+              dueToday: summary.dueToday,
+              streakDays: summary.streakDays,
+            },
+            topBooks,
+          },
+          null,
+          2
+        );
+      } catch (error) {
+        return JSON.stringify({
+          error: "查询英语单词进度失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
+
+function createFetchWordsPracticeSetTool(userId?: string) {
+  return new DynamicStructuredTool({
+    name: "fetch_words_practice_set",
+    description:
+      "获取单词练习词集（只读），根据 date/limit/focus/bookId 参数从词库拉取练习词，返回结构化 JSON。",
+    schema: z.object({
+      date: z.string().optional().describe("YYYY-MM-DD，不传则用今天"),
+      limit: z.number().optional().describe("默认10，最小1，最大20"),
+      focus: z.enum(["mixed", "due_only", "new_only"]).optional().describe("默认mixed"),
+      bookId: z.string().optional().describe("可选，若传则只从该 book 选词"),
+    }),
+    func: async ({ date, limit, focus, bookId }) => {
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const normalizedDate = typeof date === "string" && date.trim() ? date.trim() : undefined;
+        const effectiveDate = normalizedDate || new Date().toISOString().slice(0, 10);
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (effectiveDate && !dateRegex.test(effectiveDate)) {
+          return JSON.stringify({
+            error: "BAD_DATE",
+            message: "date 必须为 YYYY-MM-DD",
+          });
+        }
+        const effectiveLimit = typeof limit === "number" && Number.isFinite(limit)
+          ? Math.max(1, Math.min(20, Math.floor(limit)))
+          : 10;
+        const effectiveFocus = focus === "due_only" || focus === "new_only" ? focus : "mixed";
+
+        let effectiveBookId = bookId;
+        if (!effectiveBookId) {
+          const summary = await getWordsProgressSummary(effectiveUserId, effectiveDate);
+          effectiveBookId = summary.suggestedBookId || "cet4";
+        }
+
+        const records = await listWordsLearningRecords(effectiveUserId);
+        const bookRecords = records.filter((r) => r.bookId === effectiveBookId);
+        const recordByWord = new Map(bookRecords.map((r) => [r.wordId, r]));
+        const dueIds = bookRecords.filter((r) => r.nextReviewDate <= effectiveDate).map((r) => r.wordId);
+
+        const words = await listWords(effectiveUserId, effectiveBookId);
+        const wordById = new Map(words.map((w) => [w.id, w]));
+        const newIds = words.filter((w) => !recordByWord.has(w.id)).map((w) => w.id);
+
+        let selectedIds: string[];
+        if (effectiveFocus === "due_only") {
+          selectedIds = dueIds;
+        } else if (effectiveFocus === "new_only") {
+          selectedIds = newIds;
+        } else {
+          selectedIds = [...dueIds, ...newIds];
+        }
+        selectedIds = selectedIds.slice(0, effectiveLimit);
+
+        const warnings: string[] = [];
+        const items = selectedIds.map((id) => {
+          const word = wordById.get(id);
+          if (!word) {
+            warnings.push(`MISSING_WORD:${id}`);
+            return null;
+          }
+          const record = recordByWord.get(id) || null;
+          return {
+            word,
+            record,
+            flags: {
+              due: dueIds.includes(id),
+              isNew: newIds.includes(id),
+            },
+          };
+        }).filter(Boolean);
+
+        return JSON.stringify({
+          date: effectiveDate,
+          limit: effectiveLimit,
+          focus: effectiveFocus,
+          bookId: bookId || null,
+          effectiveBookId,
+          counts: {
+            selected: items.length,
+            due: items.filter((i) => i!.flags.due).length,
+            new: items.filter((i) => i!.flags.isNew).length,
+          },
+          items,
+          warnings,
+        });
+      } catch (error) {
+        return JSON.stringify({
+          error: "获取练习词集失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
+
+function createSubmitWordGradeTool(userId?: string) {
+  return new DynamicStructuredTool({
+    name: "submit_word_grade",
+    description:
+      "提交用户对单词的自评评分（SM-2 写回），gated by confirm=true。用于在学习或复习流程中记录用户对单词的掌握程度。",
+    schema: z.object({
+      bookId: z.string().describe("词库 ID"),
+      wordId: z.string().describe("单词 ID"),
+      grade: z.enum(["again", "hard", "good", "easy"]).describe("用户自评等级"),
+      date: z.string().optional().describe("YYYY-MM-DD，不传则用今天"),
+      confirm: z.boolean().optional().describe("必须为 true 才写回学习记录，默认 false"),
+    }),
+    func: async ({ bookId, wordId, grade, date, confirm }) => {
+      if (confirm !== true) {
+        return JSON.stringify({
+          success: false,
+          error: "WRITE_CONFIRMATION_REQUIRED",
+          message: "需要 confirm=true 才会写入学习记录",
+        });
+      }
+
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const normalizedDate = typeof date === "string" && date.trim() ? date.trim() : undefined;
+        const effectiveDate = normalizedDate || new Date().toISOString().slice(0, 10);
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (effectiveDate && !dateRegex.test(effectiveDate)) {
+          return JSON.stringify({
+            success: false,
+            error: "BAD_DATE",
+            message: "date 必须为 YYYY-MM-DD",
+          });
+        }
+
+        const words = await listWords(effectiveUserId, bookId);
+        if (!words.find((w) => w.id === wordId)) {
+          return JSON.stringify({
+            success: false,
+            error: "WORD_NOT_FOUND",
+            message: "单词不存在或不属于该词库",
+          });
+        }
+
+        const storage = {
+          async getLearningRecords(wId: string) {
+            return listWordsLearningRecordsByWord(effectiveUserId, wId);
+          },
+          async saveLearningRecord(record: import("@/lib/words/types").LearningRecord) {
+            savedRecord = record;
+            await saveWordsLearningRecord(effectiveUserId, record);
+          },
+        };
+        let savedRecord: import("@/lib/words/types").LearningRecord | undefined;
+        await updateWordStatus(storage, bookId, wordId, grade as WordAnswerGrade, effectiveDate);
+        if (!savedRecord) {
+          throw new Error("RECORD_NOT_SAVED");
+        }
+
+        return JSON.stringify({
+          success: true,
+          record: savedRecord,
+          nextReviewDate: savedRecord.nextReviewDate,
+          status: savedRecord.status,
+        });
+      } catch (error) {
+        return JSON.stringify({
+          success: false,
+          error: "提交单词评分失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
+
+function resolveWordsIntent(intent: string, userMessage?: string) {
+  if (intent !== "auto") {
+    return intent;
+  }
+  const text = (userMessage || "").toLowerCase();
+  if (!text) {
+    return "dashboard" as const;
+  }
+  if (text.includes("复习") || text.includes("review")) {
+    return "review" as const;
+  }
+  if (
+    text.includes("学习") ||
+    text.includes("背单词") ||
+    text.includes("学单词") ||
+    text.includes("单词") ||
+    text.includes("学 ") ||
+    text.includes("learn")
+  ) {
+    return "learn" as const;
+  }
+  return "dashboard" as const;
+}
+
+function detectPreferredBookId(userMessage?: string): "cet4" | "cet6" | null {
+  const text = (userMessage || "").toLowerCase();
+  if (!text) {
+    return null;
+  }
+
+  if (text.includes("cet-6") || text.includes("cet6") || text.includes("六级")) {
+    return "cet6";
+  }
+
+  if (text.includes("cet-4") || text.includes("cet4") || text.includes("四级")) {
+    return "cet4";
+  }
+
+  return null;
+}
+
+function createRecommendWordsActionTool(userId?: string) {
+  return new DynamicStructuredTool({
+    name: "recommend_words_action",
+    description:
+      "根据用户意图推荐英语单词学习页面路由，返回可直接跳转的 route。用于“我想学单词/复习单词/查看进度”等请求。",
+    schema: z.object({
+      intent: z.enum(["learn", "review", "dashboard", "auto"]).describe("意图类型"),
+      userMessage: z.string().optional().describe("用户原始输入，intent=auto 时用于推断"),
+    }),
+    func: async ({ intent, userMessage }) => {
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const resolvedIntent = resolveWordsIntent(intent, userMessage);
+        const summary = await getWordsProgressSummary(effectiveUserId);
+
+        if (resolvedIntent === "review") {
+          const route = summary.hasDueReview ? "/words/review" : "/words";
+          return JSON.stringify(
+            {
+              action: "navigate",
+              route,
+              intent: resolvedIntent,
+              reason: summary.hasDueReview
+                ? `今天有 ${summary.dueToday} 个待复习单词，优先进入复习。`
+                : "今天没有到期复习项，先前往单词首页查看任务。",
+              fallbackRoute: "/words",
+            },
+            null,
+            2
+          );
+        }
+
+        if (resolvedIntent === "learn") {
+          const preferredBookId = detectPreferredBookId(userMessage);
+          if (preferredBookId) {
+            return JSON.stringify(
+              {
+                action: "navigate",
+                route: `/words/learn/${preferredBookId}`,
+                intent: resolvedIntent,
+                reason: preferredBookId === "cet6"
+                  ? "已识别到六级学习需求，直接进入 CET-6 词库。"
+                  : "已识别到四级学习需求，直接进入 CET-4 词库。",
+                fallbackRoute: "/words",
+              },
+              null,
+              2
+            );
+          }
+
+          return JSON.stringify(
+            {
+              action: "navigate",
+              route: "/words",
+              intent: resolvedIntent,
+              reason: "进入单词仪表盘后，请在 CET-4 和 CET-6 中选择想学习的词库。",
+              fallbackRoute: "/words",
+              choices: [
+                { label: "直接开始 CET-4", route: "/words/learn/cet4" },
+                { label: "直接开始 CET-6", route: "/words/learn/cet6" },
+              ],
+            },
+            null,
+            2
+          );
+        }
+
+        return JSON.stringify(
+          {
+            action: "navigate",
+            route: "/words",
+            intent: resolvedIntent,
+            reason: "进入单词仪表盘查看进度、词库和今日任务。",
+            fallbackRoute: "/words",
+          },
+          null,
+          2
+        );
+      } catch (error) {
+        return JSON.stringify({
+          error: "推荐英语单词学习动作失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
+
 /**
  * 获取所有工具
  */
@@ -641,6 +1011,10 @@ export function getAllTools(input?: { userId?: string; isDemo?: boolean }) {
     createSearchKnowledgeBaseTool(input?.userId),
     createQueryKnowledgeGraphTool(input?.userId),
     createQueryLearningProgressTool(input?.userId, input?.isDemo),
+    createQueryWordsProgressTool(input?.userId),
+    createFetchWordsPracticeSetTool(input?.userId),
+    createSubmitWordGradeTool(input?.userId),
+    createRecommendWordsActionTool(input?.userId),
     generateExerciseTool,
     recommendLearningPathTool,
     explainConceptTool,

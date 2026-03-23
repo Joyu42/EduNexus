@@ -11,14 +11,18 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  password  String
-  name      String?
-  isDemo    Boolean    @default(false)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  documents Document[]
+  id                   String                @id @default(cuid())
+  email                String                @unique
+  password             String
+  name                 String?
+  isDemo               Boolean               @default(false)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  documents            Document[]
+  wordsLearningRecords WordsLearningRecord[]
+  wordsPlanSetting     WordsPlanSetting?
+  wordsReviewSchedules WordsReviewSchedule[]
+  customWordBooks      CustomWordBook[]
 }
 
 model Document {
@@ -31,4 +35,126 @@ model Document {
   authorId  String
 
   @@index([authorId])
+}
+
+model WordsLearningRecord {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wordId         String
+  bookId         String
+  learnDate      String
+  status         String
+  nextReviewDate String
+  interval       Int
+  easeFactor     Float
+  reviewCount    Int
+  successCount   Int
+  failureCount   Int
+  lastReviewedAt String
+  retentionScore Int
+  lastStudyType  String?
+  lastGrade      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, wordId])
+  @@index([userId, nextReviewDate])
+  @@index([userId, bookId])
+}
+
+model WordsPlanSetting {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyNewLimit     Int      @default(20)
+  reviewFirst       Boolean  @default(true)
+  defaultRevealMode String   @default("hidden")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model WordsReviewSchedule {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        String
+  wordIds     Json
+  newCount    Int
+  reviewCount Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model CustomWordBook {
+  id               String            @id @default(cuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  description      String?           @db.Text
+  category         String            @default("custom")
+  sourceType       String            @default("upload")
+  originalFilename String?
+  format           String
+  wordCount        Int               @default(0)
+  metadata         Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  entries          CustomWordEntry[]
+
+  @@index([userId, createdAt])
+}
+
+model CustomWordEntry {
+  id         String         @id @default(cuid())
+  bookId     String
+  book       CustomWordBook @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  sortOrder  Int            @default(0)
+  word       String
+  phonetic   String?
+  definition String         @db.Text
+  example    String?
+  exampleZh  String?
+  difficulty String?
+  metadata   Json?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([bookId, sortOrder])
+}
+
+model BuiltinWordBook {
+  id          String   @id // raw book id: medical, computer, economics, electrical
+  name        String
+  description String?
+  category    String   @default("general")
+  sourceType  String   @default("builtin")
+  wordCount   Int      @default(0)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  entries     BuiltinWordEntry[]
+
+  @@index([category])
+}
+
+model BuiltinWordEntry {
+  id         String          @id // format: ${bookId}_${sha1_12chars}
+  bookId     String
+  book       BuiltinWordBook @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  word       String
+  phonetic   String?
+  definition String
+  example    String?
+  exampleZh  String?
+  difficulty String?
+  sortOrder  Int
+  metadata   Json?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([bookId, sortOrder])
 }

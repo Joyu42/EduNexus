@@ -1,0 +1,2504 @@
+{
+  "words": [
+    {
+      "word": "inflation",
+      "definition": "通货膨胀",
+      "phonetic": "/ɪnˈfleɪʃən/"
+    },
+    {
+      "word": "deflation",
+      "definition": "通货紧缩",
+      "phonetic": "/diːˈfleɪʃən/"
+    },
+    {
+      "word": "gdp",
+      "definition": "国内生产总值",
+      "phonetic": ""
+    },
+    {
+      "word": "gni",
+      "definition": "国民总收入",
+      "phonetic": ""
+    },
+    {
+      "word": "market",
+      "definition": "市场",
+      "phonetic": "/ˈmɑːrkɪt/"
+    },
+    {
+      "word": "demand",
+      "definition": "需求",
+      "phonetic": "/dɪˈmɑːnd/"
+    },
+    {
+      "word": "supply",
+      "definition": "供给",
+      "phonetic": "/səˈplaɪ/"
+    },
+    {
+      "word": "equilibrium",
+      "definition": "均衡",
+      "phonetic": "/ˌiːkwɪˈlɪbriəm/"
+    },
+    {
+      "word": "elasticity",
+      "definition": "弹性",
+      "phonetic": "/ˌiːlæˈstɪsəti/"
+    },
+    {
+      "word": "revenue",
+      "definition": "收入",
+      "phonetic": "/ˈrevənuː/"
+    },
+    {
+      "word": "profit",
+      "definition": "利润",
+      "phonetic": "/ˈprɒfɪt/"
+    },
+    {
+      "word": "loss",
+      "definition": "损失",
+      "phonetic": "/lɒs/"
+    },
+    {
+      "word": "cost",
+      "definition": "成本",
+      "phonetic": "/kɒst/"
+    },
+    {
+      "word": "fixed cost",
+      "definition": "固定成本",
+      "phonetic": ""
+    },
+    {
+      "word": "variable cost",
+      "definition": "变动成本",
+      "phonetic": ""
+    },
+    {
+      "word": "marginal cost",
+      "definition": "边际成本",
+      "phonetic": ""
+    },
+    {
+      "word": "opportunity cost",
+      "definition": "机会成本",
+      "phonetic": ""
+    },
+    {
+      "word": "utility",
+      "definition": "效用",
+      "phonetic": "/juːˈtɪləti/"
+    },
+    {
+      "word": "consumer",
+      "definition": "消费者",
+      "phonetic": "/kənˈsuːmər/"
+    },
+    {
+      "word": "producer",
+      "definition": "生产者",
+      "phonetic": "/prəˈduːsər/"
+    },
+    {
+      "word": "competition",
+      "definition": "竞争",
+      "phonetic": "/ˌkɒmpəˈtɪʃən/"
+    },
+    {
+      "word": "monopoly",
+      "definition": "垄断",
+      "phonetic": "/məˈnɒpəli/"
+    },
+    {
+      "word": "oligopoly",
+      "definition": "寡头垄断",
+      "phonetic": "/ˌɒlɪˈɡɒpəli/"
+    },
+    {
+      "word": "market structure",
+      "definition": "市场结构",
+      "phonetic": ""
+    },
+    {
+      "word": "capital",
+      "definition": "资本",
+      "phonetic": "/ˈkæpɪtl/"
+    },
+    {
+      "word": "labor",
+      "definition": "劳动力",
+      "phonetic": "/ˈleɪbər/"
+    },
+    {
+      "word": "investment",
+      "definition": "投资",
+      "phonetic": "/ɪnˈvestmənt/"
+    },
+    {
+      "word": "interest rate",
+      "definition": "利率",
+      "phonetic": ""
+    },
+    {
+      "word": "bank",
+      "definition": "银行",
+      "phonetic": "/bæŋk/"
+    },
+    {
+      "word": "central bank",
+      "definition": "中央银行",
+      "phonetic": ""
+    },
+    {
+      "word": "monetary policy",
+      "definition": "货币政策",
+      "phonetic": ""
+    },
+    {
+      "word": "fiscal policy",
+      "definition": "财政政策",
+      "phonetic": ""
+    },
+    {
+      "word": "tax",
+      "definition": "税收",
+      "phonetic": "/tæks/"
+    },
+    {
+      "word": "subsidy",
+      "definition": "补贴",
+      "phonetic": "/ˈsʌbsɪdi/"
+    },
+    {
+      "word": "budget",
+      "definition": "预算",
+      "phonetic": "/ˈbʌdʒɪt/"
+    },
+    {
+      "word": "debt",
+      "definition": "债务",
+      "phonetic": "/det/"
+    },
+    {
+      "word": "deficit",
+      "definition": "赤字",
+      "phonetic": "/ˈdefɪsɪt/"
+    },
+    {
+      "word": "surplus",
+      "definition": "盈余",
+      "phonetic": "/ˈsɜːrplʌs/"
+    },
+    {
+      "word": "trade",
+      "definition": "贸易",
+      "phonetic": "/treɪd/"
+    },
+    {
+      "word": "export",
+      "definition": "出口",
+      "phonetic": "/ˈekspɔːrt/"
+    },
+    {
+      "word": "import",
+      "definition": "进口",
+      "phonetic": "/ˈɪmpɔːrt/"
+    },
+    {
+      "word": "exchange rate",
+      "definition": "汇率",
+      "phonetic": ""
+    },
+    {
+      "word": "currency",
+      "definition": "货币",
+      "phonetic": "/ˈkɜːrənsi/"
+    },
+    {
+      "word": "inflation rate",
+      "definition": "通胀率",
+      "phonetic": ""
+    },
+    {
+      "word": "unemployment",
+      "definition": "失业",
+      "phonetic": "/ˌʌnɪmˈplɔɪmənt/"
+    },
+    {
+      "word": "labor market",
+      "definition": "劳动力市场",
+      "phonetic": ""
+    },
+    {
+      "word": "productivity",
+      "definition": "生产率",
+      "phonetic": "/ˌprɒdʌkˈtɪvəti/"
+    },
+    {
+      "word": "growth",
+      "definition": "增长",
+      "phonetic": "/ɡroʊθ/"
+    },
+    {
+      "word": "economic cycle",
+      "definition": "经济周期",
+      "phonetic": ""
+    },
+    {
+      "word": "recession",
+      "definition": "衰退",
+      "phonetic": "/rɪˈseʃən/"
+    },
+    {
+      "word": "boom",
+      "definition": "繁荣",
+      "phonetic": "/buːm/"
+    },
+    {
+      "word": "inflation",
+      "definition": "通货膨胀",
+      "phonetic": "/ɪnˈfleɪʃən/"
+    },
+    {
+      "word": "deflation",
+      "definition": "通货紧缩",
+      "phonetic": "/diːˈfleɪʃən/"
+    },
+    {
+      "word": "gdp",
+      "definition": "国内生产总值",
+      "phonetic": ""
+    },
+    {
+      "word": "gni",
+      "definition": "国民总收入",
+      "phonetic": ""
+    },
+    {
+      "word": "market",
+      "definition": "市场",
+      "phonetic": "/ˈmɑːrkɪt/"
+    },
+    {
+      "word": "demand",
+      "definition": "需求",
+      "phonetic": "/dɪˈmɑːnd/"
+    },
+    {
+      "word": "supply",
+      "definition": "供给",
+      "phonetic": "/səˈplaɪ/"
+    },
+    {
+      "word": "equilibrium",
+      "definition": "均衡",
+      "phonetic": "/ˌiːkwɪˈlɪbriəm/"
+    },
+    {
+      "word": "elasticity",
+      "definition": "弹性",
+      "phonetic": "/ˌiːlæˈstɪsəti/"
+    },
+    {
+      "word": "revenue",
+      "definition": "收入",
+      "phonetic": "/ˈrevənuː/"
+    },
+    {
+      "word": "profit",
+      "definition": "利润",
+      "phonetic": "/ˈprɒfɪt/"
+    },
+    {
+      "word": "loss",
+      "definition": "损失",
+      "phonetic": "/lɒs/"
+    },
+    {
+      "word": "cost",
+      "definition": "成本",
+      "phonetic": "/kɒst/"
+    },
+    {
+      "word": "fixed cost",
+      "definition": "固定成本",
+      "phonetic": ""
+    },
+    {
+      "word": "variable cost",
+      "definition": "变动成本",
+      "phonetic": ""
+    },
+    {
+      "word": "marginal cost",
+      "definition": "边际成本",
+      "phonetic": ""
+    },
+    {
+      "word": "opportunity cost",
+      "definition": "机会成本",
+      "phonetic": ""
+    },
+    {
+      "word": "utility",
+      "definition": "效用",
+      "phonetic": "/juːˈtɪləti/"
+    },
+    {
+      "word": "consumer",
+      "definition": "消费者",
+      "phonetic": "/kənˈsuːmər/"
+    },
+    {
+      "word": "producer",
+      "definition": "生产者",
+      "phonetic": "/prəˈduːsər/"
+    },
+    {
+      "word": "competition",
+      "definition": "竞争",
+      "phonetic": "/ˌkɒmpəˈtɪʃən/"
+    },
+    {
+      "word": "monopoly",
+      "definition": "垄断",
+      "phonetic": "/məˈnɒpəli/"
+    },
+    {
+      "word": "oligopoly",
+      "definition": "寡头垄断",
+      "phonetic": "/ˌɒlɪˈɡɒpəli/"
+    },
+    {
+      "word": "market structure",
+      "definition": "市场结构",
+      "phonetic": ""
+    },
+    {
+      "word": "capital",
+      "definition": "资本",
+      "phonetic": "/ˈkæpɪtl/"
+    },
+    {
+      "word": "labor",
+      "definition": "劳动力",
+      "phonetic": "/ˈleɪbər/"
+    },
+    {
+      "word": "investment",
+      "definition": "投资",
+      "phonetic": "/ɪnˈvestmənt/"
+    },
+    {
+      "word": "interest rate",
+      "definition": "利率",
+      "phonetic": ""
+    },
+    {
+      "word": "bank",
+      "definition": "银行",
+      "phonetic": "/bæŋk/"
+    },
+    {
+      "word": "central bank",
+      "definition": "中央银行",
+      "phonetic": ""
+    },
+    {
+      "word": "monetary policy",
+      "definition": "货币政策",
+      "phonetic": ""
+    },
+    {
+      "word": "fiscal policy",
+      "definition": "财政政策",
+      "phonetic": ""
+    },
+    {
+      "word": "tax",
+      "definition": "税收",
+      "phonetic": "/tæks/"
+    },
+    {
+      "word": "subsidy",
+      "definition": "补贴",
+      "phonetic": "/ˈsʌbsɪdi/"
+    },
+    {
+      "word": "budget",
+      "definition": "预算",
+      "phonetic": "/ˈbʌdʒɪt/"
+    },
+    {
+      "word": "debt",
+      "definition": "债务",
+      "phonetic": "/det/"
+    },
+    {
+      "word": "deficit",
+      "definition": "赤字",
+      "phonetic": "/ˈdefɪsɪt/"
+    },
+    {
+      "word": "surplus",
+      "definition": "盈余",
+      "phonetic": "/ˈsɜːrplʌs/"
+    },
+    {
+      "word": "trade",
+      "definition": "贸易",
+      "phonetic": "/treɪd/"
+    },
+    {
+      "word": "export",
+      "definition": "出口",
+      "phonetic": "/ˈekspɔːrt/"
+    },
+    {
+      "word": "import",
+      "definition": "进口",
+      "phonetic": "/ˈɪmpɔːrt/"
+    },
+    {
+      "word": "exchange rate",
+      "definition": "汇率",
+      "phonetic": ""
+    },
+    {
+      "word": "currency",
+      "definition": "货币",
+      "phonetic": "/ˈkɜːrənsi/"
+    },
+    {
+      "word": "inflation rate",
+      "definition": "通胀率",
+      "phonetic": ""
+    },
+    {
+      "word": "unemployment",
+      "definition": "失业",
+      "phonetic": "/ˌʌnɪmˈplɔɪmənt/"
+    },
+    {
+      "word": "labor market",
+      "definition": "劳动力市场",
+      "phonetic": ""
+    },
+    {
+      "word": "productivity",
+      "definition": "生产率",
+      "phonetic": "/ˌprɒdʌkˈtɪvəti/"
+    },
+    {
+      "word": "growth",
+      "definition": "增长",
+      "phonetic": "/ɡroʊθ/"
+    },
+    {
+      "word": "economic cycle",
+      "definition": "经济周期",
+      "phonetic": ""
+    },
+    {
+      "word": "recession",
+      "definition": "衰退",
+      "phonetic": "/rɪˈseʃən/"
+    },
+    {
+      "word": "boom",
+      "definition": "繁荣",
+      "phonetic": "/buːm/"
+    },
+    {
+      "word": "inflation",
+      "definition": "通货膨胀",
+      "phonetic": "/ɪnˈfleɪʃən/"
+    },
+    {
+      "word": "deflation",
+      "definition": "通货紧缩",
+      "phonetic": "/diːˈfleɪʃən/"
+    },
+    {
+      "word": "gdp",
+      "definition": "国内生产总值",
+      "phonetic": ""
+    },
+    {
+      "word": "gni",
+      "definition": "国民总收入",
+      "phonetic": ""
+    },
+    {
+      "word": "market",
+      "definition": "市场",
+      "phonetic": "/ˈmɑːrkɪt/"
+    },
+    {
+      "word": "demand",
+      "definition": "需求",
+      "phonetic": "/dɪˈmɑːnd/"
+    },
+    {
+      "word": "supply",
+      "definition": "供给",
+      "phonetic": "/səˈplaɪ/"
+    },
+    {
+      "word": "equilibrium",
+      "definition": "均衡",
+      "phonetic": "/ˌiːkwɪˈlɪbriəm/"
+    },
+    {
+      "word": "elasticity",
+      "definition": "弹性",
+      "phonetic": "/ˌiːlæˈstɪsəti/"
+    },
+    {
+      "word": "revenue",
+      "definition": "收入",
+      "phonetic": "/ˈrevənuː/"
+    },
+    {
+      "word": "profit",
+      "definition": "利润",
+      "phonetic": "/ˈprɒfɪt/"
+    },
+    {
+      "word": "loss",
+      "definition": "损失",
+      "phonetic": "/lɒs/"
+    },
+    {
+      "word": "cost",
+      "definition": "成本",
+      "phonetic": "/kɒst/"
+    },
+    {
+      "word": "fixed cost",
+      "definition": "固定成本",
+      "phonetic": ""
+    },
+    {
+      "word": "variable cost",
+      "definition": "变动成本",
+      "phonetic": ""
+    },
+    {
+      "word": "marginal cost",
+      "definition": "边际成本",
+      "phonetic": ""
+    },
+    {
+      "word": "opportunity cost",
+      "definition": "机会成本",
+      "phonetic": ""
+    },
+    {
+      "word": "utility",
+      "definition": "效用",
+      "phonetic": "/juːˈtɪləti/"
+    },
+    {
+      "word": "consumer",
+      "definition": "消费者",
+      "phonetic": "/kənˈsuːmər/"
+    },
+    {
+      "word": "producer",
+      "definition": "生产者",
+      "phonetic": "/prəˈduːsər/"
+    },
+    {
+      "word": "competition",
+      "definition": "竞争",
+      "phonetic": "/ˌkɒmpəˈtɪʃən/"
+    },
+    {
+      "word": "monopoly",
+      "definition": "垄断",
+      "phonetic": "/məˈnɒpəli/"
+    },
+    {
+      "word": "oligopoly",
+      "definition": "寡头垄断",
+      "phonetic": "/ˌɒlɪˈɡɒpəli/"
+    },
+    {
+      "word": "market structure",
+      "definition": "市场结构",
+      "phonetic": ""
+    },
+    {
+      "word": "capital",
+      "definition": "资本",
+      "phonetic": "/ˈkæpɪtl/"
+    },
+    {
+      "word": "labor",
+      "definition": "劳动力",
+      "phonetic": "/ˈleɪbər/"
+    },
+    {
+      "word": "investment",
+      "definition": "投资",
+      "phonetic": "/ɪnˈvestmənt/"
+    },
+    {
+      "word": "interest rate",
+      "definition": "利率",
+      "phonetic": ""
+    },
+    {
+      "word": "bank",
+      "definition": "银行",
+      "phonetic": "/bæŋk/"
+    },
+    {
+      "word": "central bank",
+      "definition": "中央银行",
+      "phonetic": ""
+    },
+    {
+      "word": "monetary policy",
+      "definition": "货币政策",
+      "phonetic": ""
+    },
+    {
+      "word": "fiscal policy",
+      "definition": "财政政策",
+      "phonetic": ""
+    },
+    {
+      "word": "tax",
+      "definition": "税收",
+      "phonetic": "/tæks/"
+    },
+    {
+      "word": "subsidy",
+      "definition": "补贴",
+      "phonetic": "/ˈsʌbsɪdi/"
+    },
+    {
+      "word": "budget",
+      "definition": "预算",
+      "phonetic": "/ˈbʌdʒɪt/"
+    },
+    {
+      "word": "debt",
+      "definition": "债务",
+      "phonetic": "/det/"
+    },
+    {
+      "word": "deficit",
+      "definition": "赤字",
+      "phonetic": "/ˈdefɪsɪt/"
+    },
+    {
+      "word": "surplus",
+      "definition": "盈余",
+      "phonetic": "/ˈsɜːrplʌs/"
+    },
+    {
+      "word": "trade",
+      "definition": "贸易",
+      "phonetic": "/treɪd/"
+    },
+    {
+      "word": "export",
+      "definition": "出口",
+      "phonetic": "/ˈekspɔːrt/"
+    },
+    {
+      "word": "import",
+      "definition": "进口",
+      "phonetic": "/ˈɪmpɔːrt/"
+    },
+    {
+      "word": "exchange rate",
+      "definition": "汇率",
+      "phonetic": ""
+    },
+    {
+      "word": "currency",
+      "definition": "货币",
+      "phonetic": "/ˈkɜːrənsi/"
+    },
+    {
+      "word": "inflation rate",
+      "definition": "通胀率",
+      "phonetic": ""
+    },
+    {
+      "word": "unemployment",
+      "definition": "失业",
+      "phonetic": "/ˌʌnɪmˈplɔɪmənt/"
+    },
+    {
+      "word": "labor market",
+      "definition": "劳动力市场",
+      "phonetic": ""
+    },
+    {
+      "word": "productivity",
+      "definition": "生产率",
+      "phonetic": "/ˌprɒdʌkˈtɪvəti/"
+    },
+    {
+      "word": "growth",
+      "definition": "增长",
+      "phonetic": "/ɡroʊθ/"
+    },
+    {
+      "word": "economic cycle",
+      "definition": "经济周期",
+      "phonetic": ""
+    },
+    {
+      "word": "recession",
+      "definition": "衰退",
+      "phonetic": "/rɪˈseʃən/"
+    },
+    {
+      "word": "boom",
+      "definition": "繁荣",
+      "phonetic": "/buːm/"
+    },
+    {
+      "word": "inflation",
+      "definition": "通货膨胀",
+      "phonetic": "/ɪnˈfleɪʃən/"
+    },
+    {
+      "word": "deflation",
+      "definition": "通货紧缩",
+      "phonetic": "/diːˈfleɪʃən/"
+    },
+    {
+      "word": "gdp",
+      "definition": "国内生产总值",
+      "phonetic": ""
+    },
+    {
+      "word": "gni",
+      "definition": "国民总收入",
+      "phonetic": ""
+    },
+    {
+      "word": "market",
+      "definition": "市场",
+      "phonetic": "/ˈmɑːrkɪt/"
+    },
+    {
+      "word": "demand",
+      "definition": "需求",
+      "phonetic": "/dɪˈmɑːnd/"
+    },
+    {
+      "word": "supply",
+      "definition": "供给",
+      "phonetic": "/səˈplaɪ/"
+    },
+    {
+      "word": "equilibrium",
+      "definition": "均衡",
+      "phonetic": "/ˌiːkwɪˈlɪbriəm/"
+    },
+    {
+      "word": "elasticity",
+      "definition": "弹性",
+      "phonetic": "/ˌiːlæˈstɪsəti/"
+    },
+    {
+      "word": "revenue",
+      "definition": "收入",
+      "phonetic": "/ˈrevənuː/"
+    },
+    {
+      "word": "profit",
+      "definition": "利润",
+      "phonetic": "/ˈprɒfɪt/"
+    },
+    {
+      "word": "loss",
+      "definition": "损失",
+      "phonetic": "/lɒs/"
+    },
+    {
+      "word": "cost",
+      "definition": "成本",
+      "phonetic": "/kɒst/"
+    },
+    {
+      "word": "fixed cost",
+      "definition": "固定成本",
+      "phonetic": ""
+    },
+    {
+      "word": "variable cost",
+      "definition": "变动成本",
+      "phonetic": ""
+    },
+    {
+      "word": "marginal cost",
+      "definition": "边际成本",
+      "phonetic": ""
+    },
+    {
+      "word": "opportunity cost",
+      "definition": "机会成本",
+      "phonetic": ""
+    },
+    {
+      "word": "utility",
+      "definition": "效用",
+      "phonetic": "/juːˈtɪləti/"
+    },
+    {
+      "word": "consumer",
+      "definition": "消费者",
+      "phonetic": "/kənˈsuːmər/"
+    },
+    {
+      "word": "producer",
+      "definition": "生产者",
+      "phonetic": "/prəˈduːsər/"
+    },
+    {
+      "word": "competition",
+      "definition": "竞争",
+      "phonetic": "/ˌkɒmpəˈtɪʃən/"
+    },
+    {
+      "word": "monopoly",
+      "definition": "垄断",
+      "phonetic": "/məˈnɒpəli/"
+    },
+    {
+      "word": "oligopoly",
+      "definition": "寡头垄断",
+      "phonetic": "/ˌɒlɪˈɡɒpəli/"
+    },
+    {
+      "word": "market structure",
+      "definition": "市场结构",
+      "phonetic": ""
+    },
+    {
+      "word": "capital",
+      "definition": "资本",
+      "phonetic": "/ˈkæpɪtl/"
+    },
+    {
+      "word": "labor",
+      "definition": "劳动力",
+      "phonetic": "/ˈleɪbər/"
+    },
+    {
+      "word": "investment",
+      "definition": "投资",
+      "phonetic": "/ɪnˈvestmənt/"
+    },
+    {
+      "word": "interest rate",
+      "definition": "利率",
+      "phonetic": ""
+    },
+    {
+      "word": "bank",
+      "definition": "银行",
+      "phonetic": "/bæŋk/"
+    },
+    {
+      "word": "central bank",
+      "definition": "中央银行",
+      "phonetic": ""
+    },
+    {
+      "word": "monetary policy",
+      "definition": "货币政策",
+      "phonetic": ""
+    },
+    {
+      "word": "fiscal policy",
+      "definition": "财政政策",
+      "phonetic": ""
+    },
+    {
+      "word": "tax",
+      "definition": "税收",
+      "phonetic": "/tæks/"
+    },
+    {
+      "word": "subsidy",
+      "definition": "补贴",
+      "phonetic": "/ˈsʌbsɪdi/"
+    },
+    {
+      "word": "budget",
+      "definition": "预算",
+      "phonetic": "/ˈbʌdʒɪt/"
+    },
+    {
+      "word": "debt",
+      "definition": "债务",
+      "phonetic": "/det/"
+    },
+    {
+      "word": "deficit",
+      "definition": "赤字",
+      "phonetic": "/ˈdefɪsɪt/"
+    },
+    {
+      "word": "surplus",
+      "definition": "盈余",
+      "phonetic": "/ˈsɜːrplʌs/"
+    },
+    {
+      "word": "trade",
+      "definition": "贸易",
+      "phonetic": "/treɪd/"
+    },
+    {
+      "word": "export",
+      "definition": "出口",
+      "phonetic": "/ˈekspɔːrt/"
+    },
+    {
+      "word": "import",
+      "definition": "进口",
+      "phonetic": "/ˈɪmpɔːrt/"
+    },
+    {
+      "word": "exchange rate",
+      "definition": "汇率",
+      "phonetic": ""
+    },
+    {
+      "word": "currency",
+      "definition": "货币",
+      "phonetic": "/ˈkɜːrənsi/"
+    },
+    {
+      "word": "inflation rate",
+      "definition": "通胀率",
+      "phonetic": ""
+    },
+    {
+      "word": "unemployment",
+      "definition": "失业",
+      "phonetic": "/ˌʌnɪmˈplɔɪmənt/"
+    },
+    {
+      "word": "labor market",
+      "definition": "劳动力市场",
+      "phonetic": ""
+    },
+    {
+      "word": "productivity",
+      "definition": "生产率",
+      "phonetic": "/ˌprɒdʌkˈtɪvəti/"
+    },
+    {
+      "word": "growth",
+      "definition": "增长",
+      "phonetic": "/ɡroʊθ/"
+    },
+    {
+      "word": "economic cycle",
+      "definition": "经济周期",
+      "phonetic": ""
+    },
+    {
+      "word": "recession",
+      "definition": "衰退",
+      "phonetic": "/rɪˈseʃən/"
+    },
+    {
+      "word": "boom",
+      "definition": "繁荣",
+      "phonetic": "/buːm/"
+    },
+    {
+      "word": "inflation",
+      "definition": "通货膨胀",
+      "phonetic": "/ɪnˈfleɪʃən/"
+    },
+    {
+      "word": "deflation",
+      "definition": "通货紧缩",
+      "phonetic": "/diːˈfleɪʃən/"
+    },
+    {
+      "word": "gdp",
+      "definition": "国内生产总值",
+      "phonetic": ""
+    },
+    {
+      "word": "gni",
+      "definition": "国民总收入",
+      "phonetic": ""
+    },
+    {
+      "word": "market",
+      "definition": "市场",
+      "phonetic": "/ˈmɑːrkɪt/"
+    },
+    {
+      "word": "demand",
+      "definition": "需求",
+      "phonetic": "/dɪˈmɑːnd/"
+    },
+    {
+      "word": "supply",
+      "definition": "供给",
+      "phonetic": "/səˈplaɪ/"
+    },
+    {
+      "word": "equilibrium",
+      "definition": "均衡",
+      "phonetic": "/ˌiːkwɪˈlɪbriəm/"
+    },
+    {
+      "word": "elasticity",
+      "definition": "弹性",
+      "phonetic": "/ˌiːlæˈstɪsəti/"
+    },
+    {
+      "word": "revenue",
+      "definition": "收入",
+      "phonetic": "/ˈrevənuː/"
+    },
+    {
+      "word": "profit",
+      "definition": "利润",
+      "phonetic": "/ˈprɒfɪt/"
+    },
+    {
+      "word": "loss",
+      "definition": "损失",
+      "phonetic": "/lɒs/"
+    },
+    {
+      "word": "cost",
+      "definition": "成本",
+      "phonetic": "/kɒst/"
+    },
+    {
+      "word": "fixed cost",
+      "definition": "固定成本",
+      "phonetic": ""
+    },
+    {
+      "word": "variable cost",
+      "definition": "变动成本",
+      "phonetic": ""
+    },
+    {
+      "word": "marginal cost",
+      "definition": "边际成本",
+      "phonetic": ""
+    },
+    {
+      "word": "opportunity cost",
+      "definition": "机会成本",
+      "phonetic": ""
+    },
+    {
+      "word": "utility",
+      "definition": "效用",
+      "phonetic": "/juːˈtɪləti/"
+    },
+    {
+      "word": "consumer",
+      "definition": "消费者",
+      "phonetic": "/kənˈsuːmər/"
+    },
+    {
+      "word": "producer",
+      "definition": "生产者",
+      "phonetic": "/prəˈduːsər/"
+    },
+    {
+      "word": "competition",
+      "definition": "竞争",
+      "phonetic": "/ˌkɒmpəˈtɪʃən/"
+    },
+    {
+      "word": "monopoly",
+      "definition": "垄断",
+      "phonetic": "/məˈnɒpəli/"
+    },
+    {
+      "word": "oligopoly",
+      "definition": "寡头垄断",
+      "phonetic": "/ˌɒlɪˈɡɒpəli/"
+    },
+    {
+      "word": "market structure",
+      "definition": "市场结构",
+      "phonetic": ""
+    },
+    {
+      "word": "capital",
+      "definition": "资本",
+      "phonetic": "/ˈkæpɪtl/"
+    },
+    {
+      "word": "labor",
+      "definition": "劳动力",
+      "phonetic": "/ˈleɪbər/"
+    },
+    {
+      "word": "investment",
+      "definition": "投资",
+      "phonetic": "/ɪnˈvestmənt/"
+    },
+    {
+      "word": "interest rate",
+      "definition": "利率",
+      "phonetic": ""
+    },
+    {
+      "word": "bank",
+      "definition": "银行",
+      "phonetic": "/bæŋk/"
+    },
+    {
+      "word": "central bank",
+      "definition": "中央银行",
+      "phonetic": ""
+    },
+    {
+      "word": "monetary policy",
+      "definition": "货币政策",
+      "phonetic": ""
+    },
+    {
+      "word": "fiscal policy",
+      "definition": "财政政策",
+      "phonetic": ""
+    },
+    {
+      "word": "tax",
+      "definition": "税收",
+      "phonetic": "/tæks/"
+    },
+    {
+      "word": "subsidy",
+      "definition": "补贴",
+      "phonetic": "/ˈsʌbsɪdi/"
+    },
+    {
+      "word": "budget",
+      "definition": "预算",
+      "phonetic": "/ˈbʌdʒɪt/"
+    },
+    {
+      "word": "debt",
+      "definition": "债务",
+      "phonetic": "/det/"
+    },
+    {
+      "word": "deficit",
+      "definition": "赤字",
+      "phonetic": "/ˈdefɪsɪt/"
+    },
+    {
+      "word": "surplus",
+      "definition": "盈余",
+      "phonetic": "/ˈsɜːrplʌs/"
+    },
+    {
+      "word": "trade",
+      "definition": "贸易",
+      "phonetic": "/treɪd/"
+    },
+    {
+      "word": "export",
+      "definition": "出口",
+      "phonetic": "/ˈekspɔːrt/"
+    },
+    {
+      "word": "import",
+      "definition": "进口",
+      "phonetic": "/ˈɪmpɔːrt/"
+    },
+    {
+      "word": "exchange rate",
+      "definition": "汇率",
+      "phonetic": ""
+    },
+    {
+      "word": "currency",
+      "definition": "货币",
+      "phonetic": "/ˈkɜːrənsi/"
+    },
+    {
+      "word": "inflation rate",
+      "definition": "通胀率",
+      "phonetic": ""
+    },
+    {
+      "word": "unemployment",
+      "definition": "失业",
+      "phonetic": "/ˌʌnɪmˈplɔɪmənt/"
+    },
+    {
+      "word": "labor market",
+      "definition": "劳动力市场",
+      "phonetic": ""
+    },
+    {
+      "word": "productivity",
+      "definition": "生产率",
+      "phonetic": "/ˌprɒdʌkˈtɪvəti/"
+    },
+    {
+      "word": "growth",
+      "definition": "增长",
+      "phonetic": "/ɡroʊθ/"
+    },
+    {
+      "word": "economic cycle",
+      "definition": "经济周期",
+      "phonetic": ""
+    },
+    {
+      "word": "recession",
+      "definition": "衰退",
+      "phonetic": "/rɪˈseʃən/"
+    },
+    {
+      "word": "boom",
+      "definition": "繁荣",
+      "phonetic": "/buːm/"
+    },
+    {
+      "word": "inflation",
+      "definition": "通货膨胀",
+      "phonetic": "/ɪnˈfleɪʃən/"
+    },
+    {
+      "word": "deflation",
+      "definition": "通货紧缩",
+      "phonetic": "/diːˈfleɪʃən/"
+    },
+    {
+      "word": "gdp",
+      "definition": "国内生产总值",
+      "phonetic": ""
+    },
+    {
+      "word": "gni",
+      "definition": "国民总收入",
+      "phonetic": ""
+    },
+    {
+      "word": "market",
+      "definition": "市场",
+      "phonetic": "/ˈmɑːrkɪt/"
+    },
+    {
+      "word": "demand",
+      "definition": "需求",
+      "phonetic": "/dɪˈmɑːnd/"
+    },
+    {
+      "word": "supply",
+      "definition": "供给",
+      "phonetic": "/səˈplaɪ/"
+    },
+    {
+      "word": "equilibrium",
+      "definition": "均衡",
+      "phonetic": "/ˌiːkwɪˈlɪbriəm/"
+    },
+    {
+      "word": "elasticity",
+      "definition": "弹性",
+      "phonetic": "/ˌiːlæˈstɪsəti/"
+    },
+    {
+      "word": "revenue",
+      "definition": "收入",
+      "phonetic": "/ˈrevənuː/"
+    },
+    {
+      "word": "profit",
+      "definition": "利润",
+      "phonetic": "/ˈprɒfɪt/"
+    },
+    {
+      "word": "loss",
+      "definition": "损失",
+      "phonetic": "/lɒs/"
+    },
+    {
+      "word": "cost",
+      "definition": "成本",
+      "phonetic": "/kɒst/"
+    },
+    {
+      "word": "fixed cost",
+      "definition": "固定成本",
+      "phonetic": ""
+    },
+    {
+      "word": "variable cost",
+      "definition": "变动成本",
+      "phonetic": ""
+    },
+    {
+      "word": "marginal cost",
+      "definition": "边际成本",
+      "phonetic": ""
+    },
+    {
+      "word": "opportunity cost",
+      "definition": "机会成本",
+      "phonetic": ""
+    },
+    {
+      "word": "utility",
+      "definition": "效用",
+      "phonetic": "/juːˈtɪləti/"
+    },
+    {
+      "word": "consumer",
+      "definition": "消费者",
+      "phonetic": "/kənˈsuːmər/"
+    },
+    {
+      "word": "producer",
+      "definition": "生产者",
+      "phonetic": "/prəˈduːsər/"
+    },
+    {
+      "word": "competition",
+      "definition": "竞争",
+      "phonetic": "/ˌkɒmpəˈtɪʃən/"
+    },
+    {
+      "word": "monopoly",
+      "definition": "垄断",
+      "phonetic": "/məˈnɒpəli/"
+    },
+    {
+      "word": "oligopoly",
+      "definition": "寡头垄断",
+      "phonetic": "/ˌɒlɪˈɡɒpəli/"
+    },
+    {
+      "word": "market structure",
+      "definition": "市场结构",
+      "phonetic": ""
+    },
+    {
+      "word": "capital",
+      "definition": "资本",
+      "phonetic": "/ˈkæpɪtl/"
+    },
+    {
+      "word": "labor",
+      "definition": "劳动力",
+      "phonetic": "/ˈleɪbər/"
+    },
+    {
+      "word": "investment",
+      "definition": "投资",
+      "phonetic": "/ɪnˈvestmənt/"
+    },
+    {
+      "word": "interest rate",
+      "definition": "利率",
+      "phonetic": ""
+    },
+    {
+      "word": "bank",
+      "definition": "银行",
+      "phonetic": "/bæŋk/"
+    },
+    {
+      "word": "central bank",
+      "definition": "中央银行",
+      "phonetic": ""
+    },
+    {
+      "word": "monetary policy",
+      "definition": "货币政策",
+      "phonetic": ""
+    },
+    {
+      "word": "fiscal policy",
+      "definition": "财政政策",
+      "phonetic": ""
+    },
+    {
+      "word": "tax",
+      "definition": "税收",
+      "phonetic": "/tæks/"
+    },
+    {
+      "word": "subsidy",
+      "definition": "补贴",
+      "phonetic": "/ˈsʌbsɪdi/"
+    },
+    {
+      "word": "budget",
+      "definition": "预算",
+      "phonetic": "/ˈbʌdʒɪt/"
+    },
+    {
+      "word": "debt",
+      "definition": "债务",
+      "phonetic": "/det/"
+    },
+    {
+      "word": "deficit",
+      "definition": "赤字",
+      "phonetic": "/ˈdefɪsɪt/"
+    },
+    {
+      "word": "surplus",
+      "definition": "盈余",
+      "phonetic": "/ˈsɜːrplʌs/"
+    },
+    {
+      "word": "trade",
+      "definition": "贸易",
+      "phonetic": "/treɪd/"
+    },
+    {
+      "word": "export",
+      "definition": "出口",
+      "phonetic": "/ˈekspɔːrt/"
+    },
+    {
+      "word": "import",
+      "definition": "进口",
+      "phonetic": "/ˈɪmpɔːrt/"
+    },
+    {
+      "word": "exchange rate",
+      "definition": "汇率",
+      "phonetic": ""
+    },
+    {
+      "word": "currency",
+      "definition": "货币",
+      "phonetic": "/ˈkɜːrənsi/"
+    },
+    {
+      "word": "inflation rate",
+      "definition": "通胀率",
+      "phonetic": ""
+    },
+    {
+      "word": "unemployment",
+      "definition": "失业",
+      "phonetic": "/ˌʌnɪmˈplɔɪmənt/"
+    },
+    {
+      "word": "labor market",
+      "definition": "劳动力市场",
+      "phonetic": ""
+    },
+    {
+      "word": "productivity",
+      "definition": "生产率",
+      "phonetic": "/ˌprɒdʌkˈtɪvəti/"
+    },
+    {
+      "word": "growth",
+      "definition": "增长",
+      "phonetic": "/ɡroʊθ/"
+    },
+    {
+      "word": "economic cycle",
+      "definition": "经济周期",
+      "phonetic": ""
+    },
+    {
+      "word": "recession",
+      "definition": "衰退",
+      "phonetic": "/rɪˈseʃən/"
+    },
+    {
+      "word": "boom",
+      "definition": "繁荣",
+      "phonetic": "/buːm/"
+    },
+    {
+      "word": "inflation",
+      "definition": "通货膨胀",
+      "phonetic": "/ɪnˈfleɪʃən/"
+    },
+    {
+      "word": "deflation",
+      "definition": "通货紧缩",
+      "phonetic": "/diːˈfleɪʃən/"
+    },
+    {
+      "word": "gdp",
+      "definition": "国内生产总值",
+      "phonetic": ""
+    },
+    {
+      "word": "gni",
+      "definition": "国民总收入",
+      "phonetic": ""
+    },
+    {
+      "word": "market",
+      "definition": "市场",
+      "phonetic": "/ˈmɑːrkɪt/"
+    },
+    {
+      "word": "demand",
+      "definition": "需求",
+      "phonetic": "/dɪˈmɑːnd/"
+    },
+    {
+      "word": "supply",
+      "definition": "供给",
+      "phonetic": "/səˈplaɪ/"
+    },
+    {
+      "word": "equilibrium",
+      "definition": "均衡",
+      "phonetic": "/ˌiːkwɪˈlɪbriəm/"
+    },
+    {
+      "word": "elasticity",
+      "definition": "弹性",
+      "phonetic": "/ˌiːlæˈstɪsəti/"
+    },
+    {
+      "word": "revenue",
+      "definition": "收入",
+      "phonetic": "/ˈrevənuː/"
+    },
+    {
+      "word": "profit",
+      "definition": "利润",
+      "phonetic": "/ˈprɒfɪt/"
+    },
+    {
+      "word": "loss",
+      "definition": "损失",
+      "phonetic": "/lɒs/"
+    },
+    {
+      "word": "cost",
+      "definition": "成本",
+      "phonetic": "/kɒst/"
+    },
+    {
+      "word": "fixed cost",
+      "definition": "固定成本",
+      "phonetic": ""
+    },
+    {
+      "word": "variable cost",
+      "definition": "变动成本",
+      "phonetic": ""
+    },
+    {
+      "word": "marginal cost",
+      "definition": "边际成本",
+      "phonetic": ""
+    },
+    {
+      "word": "opportunity cost",
+      "definition": "机会成本",
+      "phonetic": ""
+    },
+    {
+      "word": "utility",
+      "definition": "效用",
+      "phonetic": "/juːˈtɪləti/"
+    },
+    {
+      "word": "consumer",
+      "definition": "消费者",
+      "phonetic": "/kənˈsuːmər/"
+    },
+    {
+      "word": "producer",
+      "definition": "生产者",
+      "phonetic": "/prəˈduːsər/"
+    },
+    {
+      "word": "competition",
+      "definition": "竞争",
+      "phonetic": "/ˌkɒmpəˈtɪʃən/"
+    },
+    {
+      "word": "monopoly",
+      "definition": "垄断",
+      "phonetic": "/məˈnɒpəli/"
+    },
+    {
+      "word": "oligopoly",
+      "definition": "寡头垄断",
+      "phonetic": "/ˌɒlɪˈɡɒpəli/"
+    },
+    {
+      "word": "market structure",
+      "definition": "市场结构",
+      "phonetic": ""
+    },
+    {
+      "word": "capital",
+      "definition": "资本",
+      "phonetic": "/ˈkæpɪtl/"
+    },
+    {
+      "word": "labor",
+      "definition": "劳动力",
+      "phonetic": "/ˈleɪbər/"
+    },
+    {
+      "word": "investment",
+      "definition": "投资",
+      "phonetic": "/ɪnˈvestmənt/"
+    },
+    {
+      "word": "interest rate",
+      "definition": "利率",
+      "phonetic": ""
+    },
+    {
+      "word": "bank",
+      "definition": "银行",
+      "phonetic": "/bæŋk/"
+    },
+    {
+      "word": "central bank",
+      "definition": "中央银行",
+      "phonetic": ""
+    },
+    {
+      "word": "monetary policy",
+      "definition": "货币政策",
+      "phonetic": ""
+    },
+    {
+      "word": "fiscal policy",
+      "definition": "财政政策",
+      "phonetic": ""
+    },
+    {
+      "word": "tax",
+      "definition": "税收",
+      "phonetic": "/tæks/"
+    },
+    {
+      "word": "subsidy",
+      "definition": "补贴",
+      "phonetic": "/ˈsʌbsɪdi/"
+    },
+    {
+      "word": "budget",
+      "definition": "预算",
+      "phonetic": "/ˈbʌdʒɪt/"
+    },
+    {
+      "word": "debt",
+      "definition": "债务",
+      "phonetic": "/det/"
+    },
+    {
+      "word": "deficit",
+      "definition": "赤字",
+      "phonetic": "/ˈdefɪsɪt/"
+    },
+    {
+      "word": "surplus",
+      "definition": "盈余",
+      "phonetic": "/ˈsɜːrplʌs/"
+    },
+    {
+      "word": "trade",
+      "definition": "贸易",
+      "phonetic": "/treɪd/"
+    },
+    {
+      "word": "export",
+      "definition": "出口",
+      "phonetic": "/ˈekspɔːrt/"
+    },
+    {
+      "word": "import",
+      "definition": "进口",
+      "phonetic": "/ˈɪmpɔːrt/"
+    },
+    {
+      "word": "exchange rate",
+      "definition": "汇率",
+      "phonetic": ""
+    },
+    {
+      "word": "currency",
+      "definition": "货币",
+      "phonetic": "/ˈkɜːrənsi/"
+    },
+    {
+      "word": "inflation rate",
+      "definition": "通胀率",
+      "phonetic": ""
+    },
+    {
+      "word": "unemployment",
+      "definition": "失业",
+      "phonetic": "/ˌʌnɪmˈplɔɪmənt/"
+    },
+    {
+      "word": "labor market",
+      "definition": "劳动力市场",
+      "phonetic": ""
+    },
+    {
+      "word": "productivity",
+      "definition": "生产率",
+      "phonetic": "/ˌprɒdʌkˈtɪvəti/"
+    },
+    {
+      "word": "growth",
+      "definition": "增长",
+      "phonetic": "/ɡroʊθ/"
+    },
+    {
+      "word": "economic cycle",
+      "definition": "经济周期",
+      "phonetic": ""
+    },
+    {
+      "word": "recession",
+      "definition": "衰退",
+      "phonetic": "/rɪˈseʃən/"
+    },
+    {
+      "word": "boom",
+      "definition": "繁荣",
+      "phonetic": "/buːm/"
+    },
+    {
+      "word": "inflation",
+      "definition": "通货膨胀",
+      "phonetic": "/ɪnˈfleɪʃən/"
+    },
+    {
+      "word": "deflation",
+      "definition": "通货紧缩",
+      "phonetic": "/diːˈfleɪʃən/"
+    },
+    {
+      "word": "gdp",
+      "definition": "国内生产总值",
+      "phonetic": ""
+    },
+    {
+      "word": "gni",
+      "definition": "国民总收入",
+      "phonetic": ""
+    },
+    {
+      "word": "market",
+      "definition": "市场",
+      "phonetic": "/ˈmɑːrkɪt/"
+    },
+    {
+      "word": "demand",
+      "definition": "需求",
+      "phonetic": "/dɪˈmɑːnd/"
+    },
+    {
+      "word": "supply",
+      "definition": "供给",
+      "phonetic": "/səˈplaɪ/"
+    },
+    {
+      "word": "equilibrium",
+      "definition": "均衡",
+      "phonetic": "/ˌiːkwɪˈlɪbriəm/"
+    },
+    {
+      "word": "elasticity",
+      "definition": "弹性",
+      "phonetic": "/ˌiːlæˈstɪsəti/"
+    },
+    {
+      "word": "revenue",
+      "definition": "收入",
+      "phonetic": "/ˈrevənuː/"
+    },
+    {
+      "word": "profit",
+      "definition": "利润",
+      "phonetic": "/ˈprɒfɪt/"
+    },
+    {
+      "word": "loss",
+      "definition": "损失",
+      "phonetic": "/lɒs/"
+    },
+    {
+      "word": "cost",
+      "definition": "成本",
+      "phonetic": "/kɒst/"
+    },
+    {
+      "word": "fixed cost",
+      "definition": "固定成本",
+      "phonetic": ""
+    },
+    {
+      "word": "variable cost",
+      "definition": "变动成本",
+      "phonetic": ""
+    },
+    {
+      "word": "marginal cost",
+      "definition": "边际成本",
+      "phonetic": ""
+    },
+    {
+      "word": "opportunity cost",
+      "definition": "机会成本",
+      "phonetic": ""
+    },
+    {
+      "word": "utility",
+      "definition": "效用",
+      "phonetic": "/juːˈtɪləti/"
+    },
+    {
+      "word": "consumer",
+      "definition": "消费者",
+      "phonetic": "/kənˈsuːmər/"
+    },
+    {
+      "word": "producer",
+      "definition": "生产者",
+      "phonetic": "/prəˈduːsər/"
+    },
+    {
+      "word": "competition",
+      "definition": "竞争",
+      "phonetic": "/ˌkɒmpəˈtɪʃən/"
+    },
+    {
+      "word": "monopoly",
+      "definition": "垄断",
+      "phonetic": "/məˈnɒpəli/"
+    },
+    {
+      "word": "oligopoly",
+      "definition": "寡头垄断",
+      "phonetic": "/ˌɒlɪˈɡɒpəli/"
+    },
+    {
+      "word": "market structure",
+      "definition": "市场结构",
+      "phonetic": ""
+    },
+    {
+      "word": "capital",
+      "definition": "资本",
+      "phonetic": "/ˈkæpɪtl/"
+    },
+    {
+      "word": "labor",
+      "definition": "劳动力",
+      "phonetic": "/ˈleɪbər/"
+    },
+    {
+      "word": "investment",
+      "definition": "投资",
+      "phonetic": "/ɪnˈvestmənt/"
+    },
+    {
+      "word": "interest rate",
+      "definition": "利率",
+      "phonetic": ""
+    },
+    {
+      "word": "bank",
+      "definition": "银行",
+      "phonetic": "/bæŋk/"
+    },
+    {
+      "word": "central bank",
+      "definition": "中央银行",
+      "phonetic": ""
+    },
+    {
+      "word": "monetary policy",
+      "definition": "货币政策",
+      "phonetic": ""
+    },
+    {
+      "word": "fiscal policy",
+      "definition": "财政政策",
+      "phonetic": ""
+    },
+    {
+      "word": "tax",
+      "definition": "税收",
+      "phonetic": "/tæks/"
+    },
+    {
+      "word": "subsidy",
+      "definition": "补贴",
+      "phonetic": "/ˈsʌbsɪdi/"
+    },
+    {
+      "word": "budget",
+      "definition": "预算",
+      "phonetic": "/ˈbʌdʒɪt/"
+    },
+    {
+      "word": "debt",
+      "definition": "债务",
+      "phonetic": "/det/"
+    },
+    {
+      "word": "deficit",
+      "definition": "赤字",
+      "phonetic": "/ˈdefɪsɪt/"
+    },
+    {
+      "word": "surplus",
+      "definition": "盈余",
+      "phonetic": "/ˈsɜːrplʌs/"
+    },
+    {
+      "word": "trade",
+      "definition": "贸易",
+      "phonetic": "/treɪd/"
+    },
+    {
+      "word": "export",
+      "definition": "出口",
+      "phonetic": "/ˈekspɔːrt/"
+    },
+    {
+      "word": "import",
+      "definition": "进口",
+      "phonetic": "/ˈɪmpɔːrt/"
+    },
+    {
+      "word": "exchange rate",
+      "definition": "汇率",
+      "phonetic": ""
+    },
+    {
+      "word": "currency",
+      "definition": "货币",
+      "phonetic": "/ˈkɜːrənsi/"
+    },
+    {
+      "word": "inflation rate",
+      "definition": "通胀率",
+      "phonetic": ""
+    },
+    {
+      "word": "unemployment",
+      "definition": "失业",
+      "phonetic": "/ˌʌnɪmˈplɔɪmənt/"
+    },
+    {
+      "word": "labor market",
+      "definition": "劳动力市场",
+      "phonetic": ""
+    },
+    {
+      "word": "productivity",
+      "definition": "生产率",
+      "phonetic": "/ˌprɒdʌkˈtɪvəti/"
+    },
+    {
+      "word": "growth",
+      "definition": "增长",
+      "phonetic": "/ɡroʊθ/"
+    },
+    {
+      "word": "economic cycle",
+      "definition": "经济周期",
+      "phonetic": ""
+    },
+    {
+      "word": "recession",
+      "definition": "衰退",
+      "phonetic": "/rɪˈseʃən/"
+    },
+    {
+      "word": "boom",
+      "definition": "繁荣",
+      "phonetic": "/buːm/"
+    },
+    {
+      "word": "inflation",
+      "definition": "通货膨胀",
+      "phonetic": "/ɪnˈfleɪʃən/"
+    },
+    {
+      "word": "deflation",
+      "definition": "通货紧缩",
+      "phonetic": "/diːˈfleɪʃən/"
+    },
+    {
+      "word": "gdp",
+      "definition": "国内生产总值",
+      "phonetic": ""
+    },
+    {
+      "word": "gni",
+      "definition": "国民总收入",
+      "phonetic": ""
+    },
+    {
+      "word": "market",
+      "definition": "市场",
+      "phonetic": "/ˈmɑːrkɪt/"
+    },
+    {
+      "word": "demand",
+      "definition": "需求",
+      "phonetic": "/dɪˈmɑːnd/"
+    },
+    {
+      "word": "supply",
+      "definition": "供给",
+      "phonetic": "/səˈplaɪ/"
+    },
+    {
+      "word": "equilibrium",
+      "definition": "均衡",
+      "phonetic": "/ˌiːkwɪˈlɪbriəm/"
+    },
+    {
+      "word": "elasticity",
+      "definition": "弹性",
+      "phonetic": "/ˌiːlæˈstɪsəti/"
+    },
+    {
+      "word": "revenue",
+      "definition": "收入",
+      "phonetic": "/ˈrevənuː/"
+    },
+    {
+      "word": "profit",
+      "definition": "利润",
+      "phonetic": "/ˈprɒfɪt/"
+    },
+    {
+      "word": "loss",
+      "definition": "损失",
+      "phonetic": "/lɒs/"
+    },
+    {
+      "word": "cost",
+      "definition": "成本",
+      "phonetic": "/kɒst/"
+    },
+    {
+      "word": "fixed cost",
+      "definition": "固定成本",
+      "phonetic": ""
+    },
+    {
+      "word": "variable cost",
+      "definition": "变动成本",
+      "phonetic": ""
+    },
+    {
+      "word": "marginal cost",
+      "definition": "边际成本",
+      "phonetic": ""
+    },
+    {
+      "word": "opportunity cost",
+      "definition": "机会成本",
+      "phonetic": ""
+    },
+    {
+      "word": "utility",
+      "definition": "效用",
+      "phonetic": "/juːˈtɪləti/"
+    },
+    {
+      "word": "consumer",
+      "definition": "消费者",
+      "phonetic": "/kənˈsuːmər/"
+    },
+    {
+      "word": "producer",
+      "definition": "生产者",
+      "phonetic": "/prəˈduːsər/"
+    },
+    {
+      "word": "competition",
+      "definition": "竞争",
+      "phonetic": "/ˌkɒmpəˈtɪʃən/"
+    },
+    {
+      "word": "monopoly",
+      "definition": "垄断",
+      "phonetic": "/məˈnɒpəli/"
+    },
+    {
+      "word": "oligopoly",
+      "definition": "寡头垄断",
+      "phonetic": "/ˌɒlɪˈɡɒpəli/"
+    },
+    {
+      "word": "market structure",
+      "definition": "市场结构",
+      "phonetic": ""
+    },
+    {
+      "word": "capital",
+      "definition": "资本",
+      "phonetic": "/ˈkæpɪtl/"
+    },
+    {
+      "word": "labor",
+      "definition": "劳动力",
+      "phonetic": "/ˈleɪbər/"
+    },
+    {
+      "word": "investment",
+      "definition": "投资",
+      "phonetic": "/ɪnˈvestmənt/"
+    },
+    {
+      "word": "interest rate",
+      "definition": "利率",
+      "phonetic": ""
+    },
+    {
+      "word": "bank",
+      "definition": "银行",
+      "phonetic": "/bæŋk/"
+    },
+    {
+      "word": "central bank",
+      "definition": "中央银行",
+      "phonetic": ""
+    },
+    {
+      "word": "monetary policy",
+      "definition": "货币政策",
+      "phonetic": ""
+    },
+    {
+      "word": "fiscal policy",
+      "definition": "财政政策",
+      "phonetic": ""
+    },
+    {
+      "word": "tax",
+      "definition": "税收",
+      "phonetic": "/tæks/"
+    },
+    {
+      "word": "subsidy",
+      "definition": "补贴",
+      "phonetic": "/ˈsʌbsɪdi/"
+    },
+    {
+      "word": "budget",
+      "definition": "预算",
+      "phonetic": "/ˈbʌdʒɪt/"
+    },
+    {
+      "word": "debt",
+      "definition": "债务",
+      "phonetic": "/det/"
+    },
+    {
+      "word": "deficit",
+      "definition": "赤字",
+      "phonetic": "/ˈdefɪsɪt/"
+    },
+    {
+      "word": "surplus",
+      "definition": "盈余",
+      "phonetic": "/ˈsɜːrplʌs/"
+    },
+    {
+      "word": "trade",
+      "definition": "贸易",
+      "phonetic": "/treɪd/"
+    },
+    {
+      "word": "export",
+      "definition": "出口",
+      "phonetic": "/ˈekspɔːrt/"
+    },
+    {
+      "word": "import",
+      "definition": "进口",
+      "phonetic": "/ˈɪmpɔːrt/"
+    },
+    {
+      "word": "exchange rate",
+      "definition": "汇率",
+      "phonetic": ""
+    },
+    {
+      "word": "currency",
+      "definition": "货币",
+      "phonetic": "/ˈkɜːrənsi/"
+    },
+    {
+      "word": "inflation rate",
+      "definition": "通胀率",
+      "phonetic": ""
+    },
+    {
+      "word": "unemployment",
+      "definition": "失业",
+      "phonetic": "/ˌʌnɪmˈplɔɪmənt/"
+    },
+    {
+      "word": "labor market",
+      "definition": "劳动力市场",
+      "phonetic": ""
+    },
+    {
+      "word": "productivity",
+      "definition": "生产率",
+      "phonetic": "/ˌprɒdʌkˈtɪvəti/"
+    },
+    {
+      "word": "growth",
+      "definition": "增长",
+      "phonetic": "/ɡroʊθ/"
+    },
+    {
+      "word": "economic cycle",
+      "definition": "经济周期",
+      "phonetic": ""
+    },
+    {
+      "word": "recession",
+      "definition": "衰退",
+      "phonetic": "/rɪˈseʃən/"
+    },
+    {
+      "word": "boom",
+      "definition": "繁荣",
+      "phonetic": "/buːm/"
+    },
+    {
+      "word": "inflation",
+      "definition": "通货膨胀",
+      "phonetic": "/ɪnˈfleɪʃən/"
+    },
+    {
+      "word": "deflation",
+      "definition": "通货紧缩",
+      "phonetic": "/diːˈfleɪʃən/"
+    },
+    {
+      "word": "gdp",
+      "definition": "国内生产总值",
+      "phonetic": ""
+    },
+    {
+      "word": "gni",
+      "definition": "国民总收入",
+      "phonetic": ""
+    },
+    {
+      "word": "market",
+      "definition": "市场",
+      "phonetic": "/ˈmɑːrkɪt/"
+    },
+    {
+      "word": "demand",
+      "definition": "需求",
+      "phonetic": "/dɪˈmɑːnd/"
+    },
+    {
+      "word": "supply",
+      "definition": "供给",
+      "phonetic": "/səˈplaɪ/"
+    },
+    {
+      "word": "equilibrium",
+      "definition": "均衡",
+      "phonetic": "/ˌiːkwɪˈlɪbriəm/"
+    },
+    {
+      "word": "elasticity",
+      "definition": "弹性",
+      "phonetic": "/ˌiːlæˈstɪsəti/"
+    },
+    {
+      "word": "revenue",
+      "definition": "收入",
+      "phonetic": "/ˈrevənuː/"
+    },
+    {
+      "word": "profit",
+      "definition": "利润",
+      "phonetic": "/ˈprɒfɪt/"
+    },
+    {
+      "word": "loss",
+      "definition": "损失",
+      "phonetic": "/lɒs/"
+    },
+    {
+      "word": "cost",
+      "definition": "成本",
+      "phonetic": "/kɒst/"
+    },
+    {
+      "word": "fixed cost",
+      "definition": "固定成本",
+      "phonetic": ""
+    },
+    {
+      "word": "variable cost",
+      "definition": "变动成本",
+      "phonetic": ""
+    },
+    {
+      "word": "marginal cost",
+      "definition": "边际成本",
+      "phonetic": ""
+    },
+    {
+      "word": "opportunity cost",
+      "definition": "机会成本",
+      "phonetic": ""
+    },
+    {
+      "word": "utility",
+      "definition": "效用",
+      "phonetic": "/juːˈtɪləti/"
+    },
+    {
+      "word": "consumer",
+      "definition": "消费者",
+      "phonetic": "/kənˈsuːmər/"
+    },
+    {
+      "word": "producer",
+      "definition": "生产者",
+      "phonetic": "/prəˈduːsər/"
+    },
+    {
+      "word": "competition",
+      "definition": "竞争",
+      "phonetic": "/ˌkɒmpəˈtɪʃən/"
+    },
+    {
+      "word": "monopoly",
+      "definition": "垄断",
+      "phonetic": "/məˈnɒpəli/"
+    },
+    {
+      "word": "oligopoly",
+      "definition": "寡头垄断",
+      "phonetic": "/ˌɒlɪˈɡɒpəli/"
+    },
+    {
+      "word": "market structure",
+      "definition": "市场结构",
+      "phonetic": ""
+    },
+    {
+      "word": "capital",
+      "definition": "资本",
+      "phonetic": "/ˈkæpɪtl/"
+    },
+    {
+      "word": "labor",
+      "definition": "劳动力",
+      "phonetic": "/ˈleɪbər/"
+    },
+    {
+      "word": "investment",
+      "definition": "投资",
+      "phonetic": "/ɪnˈvestmənt/"
+    },
+    {
+      "word": "interest rate",
+      "definition": "利率",
+      "phonetic": ""
+    },
+    {
+      "word": "bank",
+      "definition": "银行",
+      "phonetic": "/bæŋk/"
+    },
+    {
+      "word": "central bank",
+      "definition": "中央银行",
+      "phonetic": ""
+    },
+    {
+      "word": "monetary policy",
+      "definition": "货币政策",
+      "phonetic": ""
+    },
+    {
+      "word": "fiscal policy",
+      "definition": "财政政策",
+      "phonetic": ""
+    },
+    {
+      "word": "tax",
+      "definition": "税收",
+      "phonetic": "/tæks/"
+    },
+    {
+      "word": "subsidy",
+      "definition": "补贴",
+      "phonetic": "/ˈsʌbsɪdi/"
+    },
+    {
+      "word": "budget",
+      "definition": "预算",
+      "phonetic": "/ˈbʌdʒɪt/"
+    },
+    {
+      "word": "debt",
+      "definition": "债务",
+      "phonetic": "/det/"
+    },
+    {
+      "word": "deficit",
+      "definition": "赤字",
+      "phonetic": "/ˈdefɪsɪt/"
+    },
+    {
+      "word": "surplus",
+      "definition": "盈余",
+      "phonetic": "/ˈsɜːrplʌs/"
+    },
+    {
+      "word": "trade",
+      "definition": "贸易",
+      "phonetic": "/treɪd/"
+    },
+    {
+      "word": "export",
+      "definition": "出口",
+      "phonetic": "/ˈekspɔːrt/"
+    },
+    {
+      "word": "import",
+      "definition": "进口",
+      "phonetic": "/ˈɪmpɔːrt/"
+    }
+  ]
+}

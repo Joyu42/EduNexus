@@ -4,6 +4,15 @@ import Credentials from "next-auth/providers/credentials";
 import { getUserByEmail, getUserById, verifyPassword } from "./lib/server/user-service";
 import { isAuthorizedRouteRequest } from "./lib/server/auth-route-protection";
 
+const devSecretFallback = "dev-edunexus-secret";
+const resolvedSecret = process.env.AUTH_SECRET || (process.env.NODE_ENV !== "production" ? devSecretFallback : undefined);
+
+if (!resolvedSecret) {
+  throw new Error("AUTH_SECRET is required when NODE_ENV=production");
+}
+
+const trustHost = process.env.AUTH_TRUST_HOST === "true" || process.env.NODE_ENV !== "production";
+
 export const authConfig = {
   providers: [
     Credentials({
@@ -82,6 +91,8 @@ export const authConfig = {
     signIn: '/login',
   },
   session: { strategy: 'jwt' },
+  secret: resolvedSecret,
+  trustHost,
 } satisfies NextAuthConfig;
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserByEmail, createUser } from '@/lib/server/user-service';
+import { createDocument } from '@/lib/server/document-service';
 
 const registerSchema = z.object({
   email: z.string().trim().email('请输入有效的邮箱地址'),
@@ -18,6 +19,32 @@ type ApiErrorCode =
   | 'EMAIL_ALREADY_EXISTS'
   | 'USERNAME_ALREADY_EXISTS'
   | 'INTERNAL_SERVER_ERROR';
+
+const DEFAULT_WELCOME_DOCUMENT = {
+  title: '开始构建你的知识宝库',
+  content: `# 欢迎使用 EduNexus
+
+这是为你自动生成的第一篇学习文档，建议完成以下步骤，让知识星图和知识宝库立刻拥有内容：
+
+- 使用 ## 二级标题拆分主题，比如「学习计划」「问题记录」
+- 在段落中使用 [学科] 标签，方便之后筛选和检索
+- 尝试在页面右上角的「知识星图」查看文档节点是否已经生成
+
+你可以直接修改或删除本笔记，它只是一个模板。祝学习顺利！
+`,
+} as const;
+
+async function seedDefaultKnowledgeBase(userId: string) {
+  try {
+    await createDocument({
+      title: DEFAULT_WELCOME_DOCUMENT.title,
+      content: DEFAULT_WELCOME_DOCUMENT.content,
+      authorId: userId,
+    });
+  } catch (error) {
+    console.warn('Failed to seed default knowledge document', error);
+  }
+}
 
 function errorResponse(
   status: number,
@@ -65,6 +92,7 @@ export async function POST(request: Request) {
 
     try {
       const user = await createUser({ email, name, password, isDemo: false });
+      void seedDefaultKnowledgeBase(user.id);
 
       return NextResponse.json({
         id: user.id,

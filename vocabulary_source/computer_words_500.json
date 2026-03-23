@@ -1,0 +1,2504 @@
+{
+  "words": [
+    {
+      "word": "algorithm",
+      "definition": "算法",
+      "phonetic": "/ˈælɡərɪðəm/"
+    },
+    {
+      "word": "data",
+      "definition": "数据",
+      "phonetic": "/ˈdeɪtə/"
+    },
+    {
+      "word": "database",
+      "definition": "数据库",
+      "phonetic": "/ˈdeɪtəbeɪs/"
+    },
+    {
+      "word": "network",
+      "definition": "网络",
+      "phonetic": "/ˈnetwɜːrk/"
+    },
+    {
+      "word": "protocol",
+      "definition": "协议",
+      "phonetic": "/ˈproʊtəkɒl/"
+    },
+    {
+      "word": "encryption",
+      "definition": "加密",
+      "phonetic": "/ɪnˈkrɪpʃən/"
+    },
+    {
+      "word": "decryption",
+      "definition": "解密",
+      "phonetic": "/diːˈkrɪpʃən/"
+    },
+    {
+      "word": "software",
+      "definition": "软件",
+      "phonetic": "/ˈsɔːftwer/"
+    },
+    {
+      "word": "hardware",
+      "definition": "硬件",
+      "phonetic": "/ˈhɑːrdwer/"
+    },
+    {
+      "word": "program",
+      "definition": "程序",
+      "phonetic": "/ˈproʊɡræm/"
+    },
+    {
+      "word": "compiler",
+      "definition": "编译器",
+      "phonetic": "/kəmˈpaɪlər/"
+    },
+    {
+      "word": "interpreter",
+      "definition": "解释器",
+      "phonetic": "/ɪnˈtɜːrprɪtər/"
+    },
+    {
+      "word": "function",
+      "definition": "函数",
+      "phonetic": "/ˈfʌŋkʃən/"
+    },
+    {
+      "word": "variable",
+      "definition": "变量",
+      "phonetic": "/ˈveriəbl/"
+    },
+    {
+      "word": "loop",
+      "definition": "循环",
+      "phonetic": "/luːp/"
+    },
+    {
+      "word": "array",
+      "definition": "数组",
+      "phonetic": "/əˈreɪ/"
+    },
+    {
+      "word": "pointer",
+      "definition": "指针",
+      "phonetic": "/ˈpɔɪntər/"
+    },
+    {
+      "word": "object",
+      "definition": "对象",
+      "phonetic": "/ˈɒbdʒekt/"
+    },
+    {
+      "word": "class",
+      "definition": "类",
+      "phonetic": "/klæs/"
+    },
+    {
+      "word": "inheritance",
+      "definition": "继承",
+      "phonetic": "/ɪnˈherɪtəns/"
+    },
+    {
+      "word": "encapsulation",
+      "definition": "封装",
+      "phonetic": "/ɪnˌkæpsjuˈleɪʃən/"
+    },
+    {
+      "word": "polymorphism",
+      "definition": "多态",
+      "phonetic": "/ˌpɒlɪˈmɔːrfɪzəm/"
+    },
+    {
+      "word": "thread",
+      "definition": "线程",
+      "phonetic": "/θred/"
+    },
+    {
+      "word": "process",
+      "definition": "进程",
+      "phonetic": "/ˈprɒses/"
+    },
+    {
+      "word": "memory",
+      "definition": "内存",
+      "phonetic": "/ˈmeməri/"
+    },
+    {
+      "word": "cache",
+      "definition": "缓存",
+      "phonetic": "/kæʃ/"
+    },
+    {
+      "word": "cpu",
+      "definition": "中央处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "gpu",
+      "definition": "图形处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "latency",
+      "definition": "延迟",
+      "phonetic": "/ˈleɪtənsi/"
+    },
+    {
+      "word": "server",
+      "definition": "服务器",
+      "phonetic": "/ˈsɜːrvər/"
+    },
+    {
+      "word": "client",
+      "definition": "客户端",
+      "phonetic": "/ˈklaɪənt/"
+    },
+    {
+      "word": "api",
+      "definition": "应用程序接口",
+      "phonetic": ""
+    },
+    {
+      "word": "http",
+      "definition": "超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "https",
+      "definition": "安全超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "frontend",
+      "definition": "前端",
+      "phonetic": ""
+    },
+    {
+      "word": "backend",
+      "definition": "后端",
+      "phonetic": ""
+    },
+    {
+      "word": "fullstack",
+      "definition": "全栈",
+      "phonetic": ""
+    },
+    {
+      "word": "framework",
+      "definition": "框架",
+      "phonetic": "/ˈfreɪmwɜːrk/"
+    },
+    {
+      "word": "library",
+      "definition": "库",
+      "phonetic": "/ˈlaɪbreri/"
+    },
+    {
+      "word": "debug",
+      "definition": "调试",
+      "phonetic": ""
+    },
+    {
+      "word": "deploy",
+      "definition": "部署",
+      "phonetic": ""
+    },
+    {
+      "word": "container",
+      "definition": "容器",
+      "phonetic": "/kənˈteɪnər/"
+    },
+    {
+      "word": "docker",
+      "definition": "容器技术",
+      "phonetic": ""
+    },
+    {
+      "word": "kubernetes",
+      "definition": "容器编排",
+      "phonetic": ""
+    },
+    {
+      "word": "cloud",
+      "definition": "云计算",
+      "phonetic": "/klaʊd/"
+    },
+    {
+      "word": "virtualization",
+      "definition": "虚拟化",
+      "phonetic": "/ˌvɜːrtʃuəlaɪˈzeɪʃən/"
+    },
+    {
+      "word": "machine learning",
+      "definition": "机器学习",
+      "phonetic": ""
+    },
+    {
+      "word": "deep learning",
+      "definition": "深度学习",
+      "phonetic": ""
+    },
+    {
+      "word": "neural network",
+      "definition": "神经网络",
+      "phonetic": ""
+    },
+    {
+      "word": "algorithm",
+      "definition": "算法",
+      "phonetic": "/ˈælɡərɪðəm/"
+    },
+    {
+      "word": "data",
+      "definition": "数据",
+      "phonetic": "/ˈdeɪtə/"
+    },
+    {
+      "word": "database",
+      "definition": "数据库",
+      "phonetic": "/ˈdeɪtəbeɪs/"
+    },
+    {
+      "word": "network",
+      "definition": "网络",
+      "phonetic": "/ˈnetwɜːrk/"
+    },
+    {
+      "word": "protocol",
+      "definition": "协议",
+      "phonetic": "/ˈproʊtəkɒl/"
+    },
+    {
+      "word": "encryption",
+      "definition": "加密",
+      "phonetic": "/ɪnˈkrɪpʃən/"
+    },
+    {
+      "word": "decryption",
+      "definition": "解密",
+      "phonetic": "/diːˈkrɪpʃən/"
+    },
+    {
+      "word": "software",
+      "definition": "软件",
+      "phonetic": "/ˈsɔːftwer/"
+    },
+    {
+      "word": "hardware",
+      "definition": "硬件",
+      "phonetic": "/ˈhɑːrdwer/"
+    },
+    {
+      "word": "program",
+      "definition": "程序",
+      "phonetic": "/ˈproʊɡræm/"
+    },
+    {
+      "word": "compiler",
+      "definition": "编译器",
+      "phonetic": "/kəmˈpaɪlər/"
+    },
+    {
+      "word": "interpreter",
+      "definition": "解释器",
+      "phonetic": "/ɪnˈtɜːrprɪtər/"
+    },
+    {
+      "word": "function",
+      "definition": "函数",
+      "phonetic": "/ˈfʌŋkʃən/"
+    },
+    {
+      "word": "variable",
+      "definition": "变量",
+      "phonetic": "/ˈveriəbl/"
+    },
+    {
+      "word": "loop",
+      "definition": "循环",
+      "phonetic": "/luːp/"
+    },
+    {
+      "word": "array",
+      "definition": "数组",
+      "phonetic": "/əˈreɪ/"
+    },
+    {
+      "word": "pointer",
+      "definition": "指针",
+      "phonetic": "/ˈpɔɪntər/"
+    },
+    {
+      "word": "object",
+      "definition": "对象",
+      "phonetic": "/ˈɒbdʒekt/"
+    },
+    {
+      "word": "class",
+      "definition": "类",
+      "phonetic": "/klæs/"
+    },
+    {
+      "word": "inheritance",
+      "definition": "继承",
+      "phonetic": "/ɪnˈherɪtəns/"
+    },
+    {
+      "word": "encapsulation",
+      "definition": "封装",
+      "phonetic": "/ɪnˌkæpsjuˈleɪʃən/"
+    },
+    {
+      "word": "polymorphism",
+      "definition": "多态",
+      "phonetic": "/ˌpɒlɪˈmɔːrfɪzəm/"
+    },
+    {
+      "word": "thread",
+      "definition": "线程",
+      "phonetic": "/θred/"
+    },
+    {
+      "word": "process",
+      "definition": "进程",
+      "phonetic": "/ˈprɒses/"
+    },
+    {
+      "word": "memory",
+      "definition": "内存",
+      "phonetic": "/ˈmeməri/"
+    },
+    {
+      "word": "cache",
+      "definition": "缓存",
+      "phonetic": "/kæʃ/"
+    },
+    {
+      "word": "cpu",
+      "definition": "中央处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "gpu",
+      "definition": "图形处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "latency",
+      "definition": "延迟",
+      "phonetic": "/ˈleɪtənsi/"
+    },
+    {
+      "word": "server",
+      "definition": "服务器",
+      "phonetic": "/ˈsɜːrvər/"
+    },
+    {
+      "word": "client",
+      "definition": "客户端",
+      "phonetic": "/ˈklaɪənt/"
+    },
+    {
+      "word": "api",
+      "definition": "应用程序接口",
+      "phonetic": ""
+    },
+    {
+      "word": "http",
+      "definition": "超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "https",
+      "definition": "安全超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "frontend",
+      "definition": "前端",
+      "phonetic": ""
+    },
+    {
+      "word": "backend",
+      "definition": "后端",
+      "phonetic": ""
+    },
+    {
+      "word": "fullstack",
+      "definition": "全栈",
+      "phonetic": ""
+    },
+    {
+      "word": "framework",
+      "definition": "框架",
+      "phonetic": "/ˈfreɪmwɜːrk/"
+    },
+    {
+      "word": "library",
+      "definition": "库",
+      "phonetic": "/ˈlaɪbreri/"
+    },
+    {
+      "word": "debug",
+      "definition": "调试",
+      "phonetic": ""
+    },
+    {
+      "word": "deploy",
+      "definition": "部署",
+      "phonetic": ""
+    },
+    {
+      "word": "container",
+      "definition": "容器",
+      "phonetic": "/kənˈteɪnər/"
+    },
+    {
+      "word": "docker",
+      "definition": "容器技术",
+      "phonetic": ""
+    },
+    {
+      "word": "kubernetes",
+      "definition": "容器编排",
+      "phonetic": ""
+    },
+    {
+      "word": "cloud",
+      "definition": "云计算",
+      "phonetic": "/klaʊd/"
+    },
+    {
+      "word": "virtualization",
+      "definition": "虚拟化",
+      "phonetic": "/ˌvɜːrtʃuəlaɪˈzeɪʃən/"
+    },
+    {
+      "word": "machine learning",
+      "definition": "机器学习",
+      "phonetic": ""
+    },
+    {
+      "word": "deep learning",
+      "definition": "深度学习",
+      "phonetic": ""
+    },
+    {
+      "word": "neural network",
+      "definition": "神经网络",
+      "phonetic": ""
+    },
+    {
+      "word": "algorithm",
+      "definition": "算法",
+      "phonetic": "/ˈælɡərɪðəm/"
+    },
+    {
+      "word": "data",
+      "definition": "数据",
+      "phonetic": "/ˈdeɪtə/"
+    },
+    {
+      "word": "database",
+      "definition": "数据库",
+      "phonetic": "/ˈdeɪtəbeɪs/"
+    },
+    {
+      "word": "network",
+      "definition": "网络",
+      "phonetic": "/ˈnetwɜːrk/"
+    },
+    {
+      "word": "protocol",
+      "definition": "协议",
+      "phonetic": "/ˈproʊtəkɒl/"
+    },
+    {
+      "word": "encryption",
+      "definition": "加密",
+      "phonetic": "/ɪnˈkrɪpʃən/"
+    },
+    {
+      "word": "decryption",
+      "definition": "解密",
+      "phonetic": "/diːˈkrɪpʃən/"
+    },
+    {
+      "word": "software",
+      "definition": "软件",
+      "phonetic": "/ˈsɔːftwer/"
+    },
+    {
+      "word": "hardware",
+      "definition": "硬件",
+      "phonetic": "/ˈhɑːrdwer/"
+    },
+    {
+      "word": "program",
+      "definition": "程序",
+      "phonetic": "/ˈproʊɡræm/"
+    },
+    {
+      "word": "compiler",
+      "definition": "编译器",
+      "phonetic": "/kəmˈpaɪlər/"
+    },
+    {
+      "word": "interpreter",
+      "definition": "解释器",
+      "phonetic": "/ɪnˈtɜːrprɪtər/"
+    },
+    {
+      "word": "function",
+      "definition": "函数",
+      "phonetic": "/ˈfʌŋkʃən/"
+    },
+    {
+      "word": "variable",
+      "definition": "变量",
+      "phonetic": "/ˈveriəbl/"
+    },
+    {
+      "word": "loop",
+      "definition": "循环",
+      "phonetic": "/luːp/"
+    },
+    {
+      "word": "array",
+      "definition": "数组",
+      "phonetic": "/əˈreɪ/"
+    },
+    {
+      "word": "pointer",
+      "definition": "指针",
+      "phonetic": "/ˈpɔɪntər/"
+    },
+    {
+      "word": "object",
+      "definition": "对象",
+      "phonetic": "/ˈɒbdʒekt/"
+    },
+    {
+      "word": "class",
+      "definition": "类",
+      "phonetic": "/klæs/"
+    },
+    {
+      "word": "inheritance",
+      "definition": "继承",
+      "phonetic": "/ɪnˈherɪtəns/"
+    },
+    {
+      "word": "encapsulation",
+      "definition": "封装",
+      "phonetic": "/ɪnˌkæpsjuˈleɪʃən/"
+    },
+    {
+      "word": "polymorphism",
+      "definition": "多态",
+      "phonetic": "/ˌpɒlɪˈmɔːrfɪzəm/"
+    },
+    {
+      "word": "thread",
+      "definition": "线程",
+      "phonetic": "/θred/"
+    },
+    {
+      "word": "process",
+      "definition": "进程",
+      "phonetic": "/ˈprɒses/"
+    },
+    {
+      "word": "memory",
+      "definition": "内存",
+      "phonetic": "/ˈmeməri/"
+    },
+    {
+      "word": "cache",
+      "definition": "缓存",
+      "phonetic": "/kæʃ/"
+    },
+    {
+      "word": "cpu",
+      "definition": "中央处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "gpu",
+      "definition": "图形处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "latency",
+      "definition": "延迟",
+      "phonetic": "/ˈleɪtənsi/"
+    },
+    {
+      "word": "server",
+      "definition": "服务器",
+      "phonetic": "/ˈsɜːrvər/"
+    },
+    {
+      "word": "client",
+      "definition": "客户端",
+      "phonetic": "/ˈklaɪənt/"
+    },
+    {
+      "word": "api",
+      "definition": "应用程序接口",
+      "phonetic": ""
+    },
+    {
+      "word": "http",
+      "definition": "超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "https",
+      "definition": "安全超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "frontend",
+      "definition": "前端",
+      "phonetic": ""
+    },
+    {
+      "word": "backend",
+      "definition": "后端",
+      "phonetic": ""
+    },
+    {
+      "word": "fullstack",
+      "definition": "全栈",
+      "phonetic": ""
+    },
+    {
+      "word": "framework",
+      "definition": "框架",
+      "phonetic": "/ˈfreɪmwɜːrk/"
+    },
+    {
+      "word": "library",
+      "definition": "库",
+      "phonetic": "/ˈlaɪbreri/"
+    },
+    {
+      "word": "debug",
+      "definition": "调试",
+      "phonetic": ""
+    },
+    {
+      "word": "deploy",
+      "definition": "部署",
+      "phonetic": ""
+    },
+    {
+      "word": "container",
+      "definition": "容器",
+      "phonetic": "/kənˈteɪnər/"
+    },
+    {
+      "word": "docker",
+      "definition": "容器技术",
+      "phonetic": ""
+    },
+    {
+      "word": "kubernetes",
+      "definition": "容器编排",
+      "phonetic": ""
+    },
+    {
+      "word": "cloud",
+      "definition": "云计算",
+      "phonetic": "/klaʊd/"
+    },
+    {
+      "word": "virtualization",
+      "definition": "虚拟化",
+      "phonetic": "/ˌvɜːrtʃuəlaɪˈzeɪʃən/"
+    },
+    {
+      "word": "machine learning",
+      "definition": "机器学习",
+      "phonetic": ""
+    },
+    {
+      "word": "deep learning",
+      "definition": "深度学习",
+      "phonetic": ""
+    },
+    {
+      "word": "neural network",
+      "definition": "神经网络",
+      "phonetic": ""
+    },
+    {
+      "word": "algorithm",
+      "definition": "算法",
+      "phonetic": "/ˈælɡərɪðəm/"
+    },
+    {
+      "word": "data",
+      "definition": "数据",
+      "phonetic": "/ˈdeɪtə/"
+    },
+    {
+      "word": "database",
+      "definition": "数据库",
+      "phonetic": "/ˈdeɪtəbeɪs/"
+    },
+    {
+      "word": "network",
+      "definition": "网络",
+      "phonetic": "/ˈnetwɜːrk/"
+    },
+    {
+      "word": "protocol",
+      "definition": "协议",
+      "phonetic": "/ˈproʊtəkɒl/"
+    },
+    {
+      "word": "encryption",
+      "definition": "加密",
+      "phonetic": "/ɪnˈkrɪpʃən/"
+    },
+    {
+      "word": "decryption",
+      "definition": "解密",
+      "phonetic": "/diːˈkrɪpʃən/"
+    },
+    {
+      "word": "software",
+      "definition": "软件",
+      "phonetic": "/ˈsɔːftwer/"
+    },
+    {
+      "word": "hardware",
+      "definition": "硬件",
+      "phonetic": "/ˈhɑːrdwer/"
+    },
+    {
+      "word": "program",
+      "definition": "程序",
+      "phonetic": "/ˈproʊɡræm/"
+    },
+    {
+      "word": "compiler",
+      "definition": "编译器",
+      "phonetic": "/kəmˈpaɪlər/"
+    },
+    {
+      "word": "interpreter",
+      "definition": "解释器",
+      "phonetic": "/ɪnˈtɜːrprɪtər/"
+    },
+    {
+      "word": "function",
+      "definition": "函数",
+      "phonetic": "/ˈfʌŋkʃən/"
+    },
+    {
+      "word": "variable",
+      "definition": "变量",
+      "phonetic": "/ˈveriəbl/"
+    },
+    {
+      "word": "loop",
+      "definition": "循环",
+      "phonetic": "/luːp/"
+    },
+    {
+      "word": "array",
+      "definition": "数组",
+      "phonetic": "/əˈreɪ/"
+    },
+    {
+      "word": "pointer",
+      "definition": "指针",
+      "phonetic": "/ˈpɔɪntər/"
+    },
+    {
+      "word": "object",
+      "definition": "对象",
+      "phonetic": "/ˈɒbdʒekt/"
+    },
+    {
+      "word": "class",
+      "definition": "类",
+      "phonetic": "/klæs/"
+    },
+    {
+      "word": "inheritance",
+      "definition": "继承",
+      "phonetic": "/ɪnˈherɪtəns/"
+    },
+    {
+      "word": "encapsulation",
+      "definition": "封装",
+      "phonetic": "/ɪnˌkæpsjuˈleɪʃən/"
+    },
+    {
+      "word": "polymorphism",
+      "definition": "多态",
+      "phonetic": "/ˌpɒlɪˈmɔːrfɪzəm/"
+    },
+    {
+      "word": "thread",
+      "definition": "线程",
+      "phonetic": "/θred/"
+    },
+    {
+      "word": "process",
+      "definition": "进程",
+      "phonetic": "/ˈprɒses/"
+    },
+    {
+      "word": "memory",
+      "definition": "内存",
+      "phonetic": "/ˈmeməri/"
+    },
+    {
+      "word": "cache",
+      "definition": "缓存",
+      "phonetic": "/kæʃ/"
+    },
+    {
+      "word": "cpu",
+      "definition": "中央处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "gpu",
+      "definition": "图形处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "latency",
+      "definition": "延迟",
+      "phonetic": "/ˈleɪtənsi/"
+    },
+    {
+      "word": "server",
+      "definition": "服务器",
+      "phonetic": "/ˈsɜːrvər/"
+    },
+    {
+      "word": "client",
+      "definition": "客户端",
+      "phonetic": "/ˈklaɪənt/"
+    },
+    {
+      "word": "api",
+      "definition": "应用程序接口",
+      "phonetic": ""
+    },
+    {
+      "word": "http",
+      "definition": "超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "https",
+      "definition": "安全超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "frontend",
+      "definition": "前端",
+      "phonetic": ""
+    },
+    {
+      "word": "backend",
+      "definition": "后端",
+      "phonetic": ""
+    },
+    {
+      "word": "fullstack",
+      "definition": "全栈",
+      "phonetic": ""
+    },
+    {
+      "word": "framework",
+      "definition": "框架",
+      "phonetic": "/ˈfreɪmwɜːrk/"
+    },
+    {
+      "word": "library",
+      "definition": "库",
+      "phonetic": "/ˈlaɪbreri/"
+    },
+    {
+      "word": "debug",
+      "definition": "调试",
+      "phonetic": ""
+    },
+    {
+      "word": "deploy",
+      "definition": "部署",
+      "phonetic": ""
+    },
+    {
+      "word": "container",
+      "definition": "容器",
+      "phonetic": "/kənˈteɪnər/"
+    },
+    {
+      "word": "docker",
+      "definition": "容器技术",
+      "phonetic": ""
+    },
+    {
+      "word": "kubernetes",
+      "definition": "容器编排",
+      "phonetic": ""
+    },
+    {
+      "word": "cloud",
+      "definition": "云计算",
+      "phonetic": "/klaʊd/"
+    },
+    {
+      "word": "virtualization",
+      "definition": "虚拟化",
+      "phonetic": "/ˌvɜːrtʃuəlaɪˈzeɪʃən/"
+    },
+    {
+      "word": "machine learning",
+      "definition": "机器学习",
+      "phonetic": ""
+    },
+    {
+      "word": "deep learning",
+      "definition": "深度学习",
+      "phonetic": ""
+    },
+    {
+      "word": "neural network",
+      "definition": "神经网络",
+      "phonetic": ""
+    },
+    {
+      "word": "algorithm",
+      "definition": "算法",
+      "phonetic": "/ˈælɡərɪðəm/"
+    },
+    {
+      "word": "data",
+      "definition": "数据",
+      "phonetic": "/ˈdeɪtə/"
+    },
+    {
+      "word": "database",
+      "definition": "数据库",
+      "phonetic": "/ˈdeɪtəbeɪs/"
+    },
+    {
+      "word": "network",
+      "definition": "网络",
+      "phonetic": "/ˈnetwɜːrk/"
+    },
+    {
+      "word": "protocol",
+      "definition": "协议",
+      "phonetic": "/ˈproʊtəkɒl/"
+    },
+    {
+      "word": "encryption",
+      "definition": "加密",
+      "phonetic": "/ɪnˈkrɪpʃən/"
+    },
+    {
+      "word": "decryption",
+      "definition": "解密",
+      "phonetic": "/diːˈkrɪpʃən/"
+    },
+    {
+      "word": "software",
+      "definition": "软件",
+      "phonetic": "/ˈsɔːftwer/"
+    },
+    {
+      "word": "hardware",
+      "definition": "硬件",
+      "phonetic": "/ˈhɑːrdwer/"
+    },
+    {
+      "word": "program",
+      "definition": "程序",
+      "phonetic": "/ˈproʊɡræm/"
+    },
+    {
+      "word": "compiler",
+      "definition": "编译器",
+      "phonetic": "/kəmˈpaɪlər/"
+    },
+    {
+      "word": "interpreter",
+      "definition": "解释器",
+      "phonetic": "/ɪnˈtɜːrprɪtər/"
+    },
+    {
+      "word": "function",
+      "definition": "函数",
+      "phonetic": "/ˈfʌŋkʃən/"
+    },
+    {
+      "word": "variable",
+      "definition": "变量",
+      "phonetic": "/ˈveriəbl/"
+    },
+    {
+      "word": "loop",
+      "definition": "循环",
+      "phonetic": "/luːp/"
+    },
+    {
+      "word": "array",
+      "definition": "数组",
+      "phonetic": "/əˈreɪ/"
+    },
+    {
+      "word": "pointer",
+      "definition": "指针",
+      "phonetic": "/ˈpɔɪntər/"
+    },
+    {
+      "word": "object",
+      "definition": "对象",
+      "phonetic": "/ˈɒbdʒekt/"
+    },
+    {
+      "word": "class",
+      "definition": "类",
+      "phonetic": "/klæs/"
+    },
+    {
+      "word": "inheritance",
+      "definition": "继承",
+      "phonetic": "/ɪnˈherɪtəns/"
+    },
+    {
+      "word": "encapsulation",
+      "definition": "封装",
+      "phonetic": "/ɪnˌkæpsjuˈleɪʃən/"
+    },
+    {
+      "word": "polymorphism",
+      "definition": "多态",
+      "phonetic": "/ˌpɒlɪˈmɔːrfɪzəm/"
+    },
+    {
+      "word": "thread",
+      "definition": "线程",
+      "phonetic": "/θred/"
+    },
+    {
+      "word": "process",
+      "definition": "进程",
+      "phonetic": "/ˈprɒses/"
+    },
+    {
+      "word": "memory",
+      "definition": "内存",
+      "phonetic": "/ˈmeməri/"
+    },
+    {
+      "word": "cache",
+      "definition": "缓存",
+      "phonetic": "/kæʃ/"
+    },
+    {
+      "word": "cpu",
+      "definition": "中央处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "gpu",
+      "definition": "图形处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "latency",
+      "definition": "延迟",
+      "phonetic": "/ˈleɪtənsi/"
+    },
+    {
+      "word": "server",
+      "definition": "服务器",
+      "phonetic": "/ˈsɜːrvər/"
+    },
+    {
+      "word": "client",
+      "definition": "客户端",
+      "phonetic": "/ˈklaɪənt/"
+    },
+    {
+      "word": "api",
+      "definition": "应用程序接口",
+      "phonetic": ""
+    },
+    {
+      "word": "http",
+      "definition": "超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "https",
+      "definition": "安全超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "frontend",
+      "definition": "前端",
+      "phonetic": ""
+    },
+    {
+      "word": "backend",
+      "definition": "后端",
+      "phonetic": ""
+    },
+    {
+      "word": "fullstack",
+      "definition": "全栈",
+      "phonetic": ""
+    },
+    {
+      "word": "framework",
+      "definition": "框架",
+      "phonetic": "/ˈfreɪmwɜːrk/"
+    },
+    {
+      "word": "library",
+      "definition": "库",
+      "phonetic": "/ˈlaɪbreri/"
+    },
+    {
+      "word": "debug",
+      "definition": "调试",
+      "phonetic": ""
+    },
+    {
+      "word": "deploy",
+      "definition": "部署",
+      "phonetic": ""
+    },
+    {
+      "word": "container",
+      "definition": "容器",
+      "phonetic": "/kənˈteɪnər/"
+    },
+    {
+      "word": "docker",
+      "definition": "容器技术",
+      "phonetic": ""
+    },
+    {
+      "word": "kubernetes",
+      "definition": "容器编排",
+      "phonetic": ""
+    },
+    {
+      "word": "cloud",
+      "definition": "云计算",
+      "phonetic": "/klaʊd/"
+    },
+    {
+      "word": "virtualization",
+      "definition": "虚拟化",
+      "phonetic": "/ˌvɜːrtʃuəlaɪˈzeɪʃən/"
+    },
+    {
+      "word": "machine learning",
+      "definition": "机器学习",
+      "phonetic": ""
+    },
+    {
+      "word": "deep learning",
+      "definition": "深度学习",
+      "phonetic": ""
+    },
+    {
+      "word": "neural network",
+      "definition": "神经网络",
+      "phonetic": ""
+    },
+    {
+      "word": "algorithm",
+      "definition": "算法",
+      "phonetic": "/ˈælɡərɪðəm/"
+    },
+    {
+      "word": "data",
+      "definition": "数据",
+      "phonetic": "/ˈdeɪtə/"
+    },
+    {
+      "word": "database",
+      "definition": "数据库",
+      "phonetic": "/ˈdeɪtəbeɪs/"
+    },
+    {
+      "word": "network",
+      "definition": "网络",
+      "phonetic": "/ˈnetwɜːrk/"
+    },
+    {
+      "word": "protocol",
+      "definition": "协议",
+      "phonetic": "/ˈproʊtəkɒl/"
+    },
+    {
+      "word": "encryption",
+      "definition": "加密",
+      "phonetic": "/ɪnˈkrɪpʃən/"
+    },
+    {
+      "word": "decryption",
+      "definition": "解密",
+      "phonetic": "/diːˈkrɪpʃən/"
+    },
+    {
+      "word": "software",
+      "definition": "软件",
+      "phonetic": "/ˈsɔːftwer/"
+    },
+    {
+      "word": "hardware",
+      "definition": "硬件",
+      "phonetic": "/ˈhɑːrdwer/"
+    },
+    {
+      "word": "program",
+      "definition": "程序",
+      "phonetic": "/ˈproʊɡræm/"
+    },
+    {
+      "word": "compiler",
+      "definition": "编译器",
+      "phonetic": "/kəmˈpaɪlər/"
+    },
+    {
+      "word": "interpreter",
+      "definition": "解释器",
+      "phonetic": "/ɪnˈtɜːrprɪtər/"
+    },
+    {
+      "word": "function",
+      "definition": "函数",
+      "phonetic": "/ˈfʌŋkʃən/"
+    },
+    {
+      "word": "variable",
+      "definition": "变量",
+      "phonetic": "/ˈveriəbl/"
+    },
+    {
+      "word": "loop",
+      "definition": "循环",
+      "phonetic": "/luːp/"
+    },
+    {
+      "word": "array",
+      "definition": "数组",
+      "phonetic": "/əˈreɪ/"
+    },
+    {
+      "word": "pointer",
+      "definition": "指针",
+      "phonetic": "/ˈpɔɪntər/"
+    },
+    {
+      "word": "object",
+      "definition": "对象",
+      "phonetic": "/ˈɒbdʒekt/"
+    },
+    {
+      "word": "class",
+      "definition": "类",
+      "phonetic": "/klæs/"
+    },
+    {
+      "word": "inheritance",
+      "definition": "继承",
+      "phonetic": "/ɪnˈherɪtəns/"
+    },
+    {
+      "word": "encapsulation",
+      "definition": "封装",
+      "phonetic": "/ɪnˌkæpsjuˈleɪʃən/"
+    },
+    {
+      "word": "polymorphism",
+      "definition": "多态",
+      "phonetic": "/ˌpɒlɪˈmɔːrfɪzəm/"
+    },
+    {
+      "word": "thread",
+      "definition": "线程",
+      "phonetic": "/θred/"
+    },
+    {
+      "word": "process",
+      "definition": "进程",
+      "phonetic": "/ˈprɒses/"
+    },
+    {
+      "word": "memory",
+      "definition": "内存",
+      "phonetic": "/ˈmeməri/"
+    },
+    {
+      "word": "cache",
+      "definition": "缓存",
+      "phonetic": "/kæʃ/"
+    },
+    {
+      "word": "cpu",
+      "definition": "中央处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "gpu",
+      "definition": "图形处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "latency",
+      "definition": "延迟",
+      "phonetic": "/ˈleɪtənsi/"
+    },
+    {
+      "word": "server",
+      "definition": "服务器",
+      "phonetic": "/ˈsɜːrvər/"
+    },
+    {
+      "word": "client",
+      "definition": "客户端",
+      "phonetic": "/ˈklaɪənt/"
+    },
+    {
+      "word": "api",
+      "definition": "应用程序接口",
+      "phonetic": ""
+    },
+    {
+      "word": "http",
+      "definition": "超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "https",
+      "definition": "安全超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "frontend",
+      "definition": "前端",
+      "phonetic": ""
+    },
+    {
+      "word": "backend",
+      "definition": "后端",
+      "phonetic": ""
+    },
+    {
+      "word": "fullstack",
+      "definition": "全栈",
+      "phonetic": ""
+    },
+    {
+      "word": "framework",
+      "definition": "框架",
+      "phonetic": "/ˈfreɪmwɜːrk/"
+    },
+    {
+      "word": "library",
+      "definition": "库",
+      "phonetic": "/ˈlaɪbreri/"
+    },
+    {
+      "word": "debug",
+      "definition": "调试",
+      "phonetic": ""
+    },
+    {
+      "word": "deploy",
+      "definition": "部署",
+      "phonetic": ""
+    },
+    {
+      "word": "container",
+      "definition": "容器",
+      "phonetic": "/kənˈteɪnər/"
+    },
+    {
+      "word": "docker",
+      "definition": "容器技术",
+      "phonetic": ""
+    },
+    {
+      "word": "kubernetes",
+      "definition": "容器编排",
+      "phonetic": ""
+    },
+    {
+      "word": "cloud",
+      "definition": "云计算",
+      "phonetic": "/klaʊd/"
+    },
+    {
+      "word": "virtualization",
+      "definition": "虚拟化",
+      "phonetic": "/ˌvɜːrtʃuəlaɪˈzeɪʃən/"
+    },
+    {
+      "word": "machine learning",
+      "definition": "机器学习",
+      "phonetic": ""
+    },
+    {
+      "word": "deep learning",
+      "definition": "深度学习",
+      "phonetic": ""
+    },
+    {
+      "word": "neural network",
+      "definition": "神经网络",
+      "phonetic": ""
+    },
+    {
+      "word": "algorithm",
+      "definition": "算法",
+      "phonetic": "/ˈælɡərɪðəm/"
+    },
+    {
+      "word": "data",
+      "definition": "数据",
+      "phonetic": "/ˈdeɪtə/"
+    },
+    {
+      "word": "database",
+      "definition": "数据库",
+      "phonetic": "/ˈdeɪtəbeɪs/"
+    },
+    {
+      "word": "network",
+      "definition": "网络",
+      "phonetic": "/ˈnetwɜːrk/"
+    },
+    {
+      "word": "protocol",
+      "definition": "协议",
+      "phonetic": "/ˈproʊtəkɒl/"
+    },
+    {
+      "word": "encryption",
+      "definition": "加密",
+      "phonetic": "/ɪnˈkrɪpʃən/"
+    },
+    {
+      "word": "decryption",
+      "definition": "解密",
+      "phonetic": "/diːˈkrɪpʃən/"
+    },
+    {
+      "word": "software",
+      "definition": "软件",
+      "phonetic": "/ˈsɔːftwer/"
+    },
+    {
+      "word": "hardware",
+      "definition": "硬件",
+      "phonetic": "/ˈhɑːrdwer/"
+    },
+    {
+      "word": "program",
+      "definition": "程序",
+      "phonetic": "/ˈproʊɡræm/"
+    },
+    {
+      "word": "compiler",
+      "definition": "编译器",
+      "phonetic": "/kəmˈpaɪlər/"
+    },
+    {
+      "word": "interpreter",
+      "definition": "解释器",
+      "phonetic": "/ɪnˈtɜːrprɪtər/"
+    },
+    {
+      "word": "function",
+      "definition": "函数",
+      "phonetic": "/ˈfʌŋkʃən/"
+    },
+    {
+      "word": "variable",
+      "definition": "变量",
+      "phonetic": "/ˈveriəbl/"
+    },
+    {
+      "word": "loop",
+      "definition": "循环",
+      "phonetic": "/luːp/"
+    },
+    {
+      "word": "array",
+      "definition": "数组",
+      "phonetic": "/əˈreɪ/"
+    },
+    {
+      "word": "pointer",
+      "definition": "指针",
+      "phonetic": "/ˈpɔɪntər/"
+    },
+    {
+      "word": "object",
+      "definition": "对象",
+      "phonetic": "/ˈɒbdʒekt/"
+    },
+    {
+      "word": "class",
+      "definition": "类",
+      "phonetic": "/klæs/"
+    },
+    {
+      "word": "inheritance",
+      "definition": "继承",
+      "phonetic": "/ɪnˈherɪtəns/"
+    },
+    {
+      "word": "encapsulation",
+      "definition": "封装",
+      "phonetic": "/ɪnˌkæpsjuˈleɪʃən/"
+    },
+    {
+      "word": "polymorphism",
+      "definition": "多态",
+      "phonetic": "/ˌpɒlɪˈmɔːrfɪzəm/"
+    },
+    {
+      "word": "thread",
+      "definition": "线程",
+      "phonetic": "/θred/"
+    },
+    {
+      "word": "process",
+      "definition": "进程",
+      "phonetic": "/ˈprɒses/"
+    },
+    {
+      "word": "memory",
+      "definition": "内存",
+      "phonetic": "/ˈmeməri/"
+    },
+    {
+      "word": "cache",
+      "definition": "缓存",
+      "phonetic": "/kæʃ/"
+    },
+    {
+      "word": "cpu",
+      "definition": "中央处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "gpu",
+      "definition": "图形处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "latency",
+      "definition": "延迟",
+      "phonetic": "/ˈleɪtənsi/"
+    },
+    {
+      "word": "server",
+      "definition": "服务器",
+      "phonetic": "/ˈsɜːrvər/"
+    },
+    {
+      "word": "client",
+      "definition": "客户端",
+      "phonetic": "/ˈklaɪənt/"
+    },
+    {
+      "word": "api",
+      "definition": "应用程序接口",
+      "phonetic": ""
+    },
+    {
+      "word": "http",
+      "definition": "超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "https",
+      "definition": "安全超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "frontend",
+      "definition": "前端",
+      "phonetic": ""
+    },
+    {
+      "word": "backend",
+      "definition": "后端",
+      "phonetic": ""
+    },
+    {
+      "word": "fullstack",
+      "definition": "全栈",
+      "phonetic": ""
+    },
+    {
+      "word": "framework",
+      "definition": "框架",
+      "phonetic": "/ˈfreɪmwɜːrk/"
+    },
+    {
+      "word": "library",
+      "definition": "库",
+      "phonetic": "/ˈlaɪbreri/"
+    },
+    {
+      "word": "debug",
+      "definition": "调试",
+      "phonetic": ""
+    },
+    {
+      "word": "deploy",
+      "definition": "部署",
+      "phonetic": ""
+    },
+    {
+      "word": "container",
+      "definition": "容器",
+      "phonetic": "/kənˈteɪnər/"
+    },
+    {
+      "word": "docker",
+      "definition": "容器技术",
+      "phonetic": ""
+    },
+    {
+      "word": "kubernetes",
+      "definition": "容器编排",
+      "phonetic": ""
+    },
+    {
+      "word": "cloud",
+      "definition": "云计算",
+      "phonetic": "/klaʊd/"
+    },
+    {
+      "word": "virtualization",
+      "definition": "虚拟化",
+      "phonetic": "/ˌvɜːrtʃuəlaɪˈzeɪʃən/"
+    },
+    {
+      "word": "machine learning",
+      "definition": "机器学习",
+      "phonetic": ""
+    },
+    {
+      "word": "deep learning",
+      "definition": "深度学习",
+      "phonetic": ""
+    },
+    {
+      "word": "neural network",
+      "definition": "神经网络",
+      "phonetic": ""
+    },
+    {
+      "word": "algorithm",
+      "definition": "算法",
+      "phonetic": "/ˈælɡərɪðəm/"
+    },
+    {
+      "word": "data",
+      "definition": "数据",
+      "phonetic": "/ˈdeɪtə/"
+    },
+    {
+      "word": "database",
+      "definition": "数据库",
+      "phonetic": "/ˈdeɪtəbeɪs/"
+    },
+    {
+      "word": "network",
+      "definition": "网络",
+      "phonetic": "/ˈnetwɜːrk/"
+    },
+    {
+      "word": "protocol",
+      "definition": "协议",
+      "phonetic": "/ˈproʊtəkɒl/"
+    },
+    {
+      "word": "encryption",
+      "definition": "加密",
+      "phonetic": "/ɪnˈkrɪpʃən/"
+    },
+    {
+      "word": "decryption",
+      "definition": "解密",
+      "phonetic": "/diːˈkrɪpʃən/"
+    },
+    {
+      "word": "software",
+      "definition": "软件",
+      "phonetic": "/ˈsɔːftwer/"
+    },
+    {
+      "word": "hardware",
+      "definition": "硬件",
+      "phonetic": "/ˈhɑːrdwer/"
+    },
+    {
+      "word": "program",
+      "definition": "程序",
+      "phonetic": "/ˈproʊɡræm/"
+    },
+    {
+      "word": "compiler",
+      "definition": "编译器",
+      "phonetic": "/kəmˈpaɪlər/"
+    },
+    {
+      "word": "interpreter",
+      "definition": "解释器",
+      "phonetic": "/ɪnˈtɜːrprɪtər/"
+    },
+    {
+      "word": "function",
+      "definition": "函数",
+      "phonetic": "/ˈfʌŋkʃən/"
+    },
+    {
+      "word": "variable",
+      "definition": "变量",
+      "phonetic": "/ˈveriəbl/"
+    },
+    {
+      "word": "loop",
+      "definition": "循环",
+      "phonetic": "/luːp/"
+    },
+    {
+      "word": "array",
+      "definition": "数组",
+      "phonetic": "/əˈreɪ/"
+    },
+    {
+      "word": "pointer",
+      "definition": "指针",
+      "phonetic": "/ˈpɔɪntər/"
+    },
+    {
+      "word": "object",
+      "definition": "对象",
+      "phonetic": "/ˈɒbdʒekt/"
+    },
+    {
+      "word": "class",
+      "definition": "类",
+      "phonetic": "/klæs/"
+    },
+    {
+      "word": "inheritance",
+      "definition": "继承",
+      "phonetic": "/ɪnˈherɪtəns/"
+    },
+    {
+      "word": "encapsulation",
+      "definition": "封装",
+      "phonetic": "/ɪnˌkæpsjuˈleɪʃən/"
+    },
+    {
+      "word": "polymorphism",
+      "definition": "多态",
+      "phonetic": "/ˌpɒlɪˈmɔːrfɪzəm/"
+    },
+    {
+      "word": "thread",
+      "definition": "线程",
+      "phonetic": "/θred/"
+    },
+    {
+      "word": "process",
+      "definition": "进程",
+      "phonetic": "/ˈprɒses/"
+    },
+    {
+      "word": "memory",
+      "definition": "内存",
+      "phonetic": "/ˈmeməri/"
+    },
+    {
+      "word": "cache",
+      "definition": "缓存",
+      "phonetic": "/kæʃ/"
+    },
+    {
+      "word": "cpu",
+      "definition": "中央处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "gpu",
+      "definition": "图形处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "latency",
+      "definition": "延迟",
+      "phonetic": "/ˈleɪtənsi/"
+    },
+    {
+      "word": "server",
+      "definition": "服务器",
+      "phonetic": "/ˈsɜːrvər/"
+    },
+    {
+      "word": "client",
+      "definition": "客户端",
+      "phonetic": "/ˈklaɪənt/"
+    },
+    {
+      "word": "api",
+      "definition": "应用程序接口",
+      "phonetic": ""
+    },
+    {
+      "word": "http",
+      "definition": "超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "https",
+      "definition": "安全超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "frontend",
+      "definition": "前端",
+      "phonetic": ""
+    },
+    {
+      "word": "backend",
+      "definition": "后端",
+      "phonetic": ""
+    },
+    {
+      "word": "fullstack",
+      "definition": "全栈",
+      "phonetic": ""
+    },
+    {
+      "word": "framework",
+      "definition": "框架",
+      "phonetic": "/ˈfreɪmwɜːrk/"
+    },
+    {
+      "word": "library",
+      "definition": "库",
+      "phonetic": "/ˈlaɪbreri/"
+    },
+    {
+      "word": "debug",
+      "definition": "调试",
+      "phonetic": ""
+    },
+    {
+      "word": "deploy",
+      "definition": "部署",
+      "phonetic": ""
+    },
+    {
+      "word": "container",
+      "definition": "容器",
+      "phonetic": "/kənˈteɪnər/"
+    },
+    {
+      "word": "docker",
+      "definition": "容器技术",
+      "phonetic": ""
+    },
+    {
+      "word": "kubernetes",
+      "definition": "容器编排",
+      "phonetic": ""
+    },
+    {
+      "word": "cloud",
+      "definition": "云计算",
+      "phonetic": "/klaʊd/"
+    },
+    {
+      "word": "virtualization",
+      "definition": "虚拟化",
+      "phonetic": "/ˌvɜːrtʃuəlaɪˈzeɪʃən/"
+    },
+    {
+      "word": "machine learning",
+      "definition": "机器学习",
+      "phonetic": ""
+    },
+    {
+      "word": "deep learning",
+      "definition": "深度学习",
+      "phonetic": ""
+    },
+    {
+      "word": "neural network",
+      "definition": "神经网络",
+      "phonetic": ""
+    },
+    {
+      "word": "algorithm",
+      "definition": "算法",
+      "phonetic": "/ˈælɡərɪðəm/"
+    },
+    {
+      "word": "data",
+      "definition": "数据",
+      "phonetic": "/ˈdeɪtə/"
+    },
+    {
+      "word": "database",
+      "definition": "数据库",
+      "phonetic": "/ˈdeɪtəbeɪs/"
+    },
+    {
+      "word": "network",
+      "definition": "网络",
+      "phonetic": "/ˈnetwɜːrk/"
+    },
+    {
+      "word": "protocol",
+      "definition": "协议",
+      "phonetic": "/ˈproʊtəkɒl/"
+    },
+    {
+      "word": "encryption",
+      "definition": "加密",
+      "phonetic": "/ɪnˈkrɪpʃən/"
+    },
+    {
+      "word": "decryption",
+      "definition": "解密",
+      "phonetic": "/diːˈkrɪpʃən/"
+    },
+    {
+      "word": "software",
+      "definition": "软件",
+      "phonetic": "/ˈsɔːftwer/"
+    },
+    {
+      "word": "hardware",
+      "definition": "硬件",
+      "phonetic": "/ˈhɑːrdwer/"
+    },
+    {
+      "word": "program",
+      "definition": "程序",
+      "phonetic": "/ˈproʊɡræm/"
+    },
+    {
+      "word": "compiler",
+      "definition": "编译器",
+      "phonetic": "/kəmˈpaɪlər/"
+    },
+    {
+      "word": "interpreter",
+      "definition": "解释器",
+      "phonetic": "/ɪnˈtɜːrprɪtər/"
+    },
+    {
+      "word": "function",
+      "definition": "函数",
+      "phonetic": "/ˈfʌŋkʃən/"
+    },
+    {
+      "word": "variable",
+      "definition": "变量",
+      "phonetic": "/ˈveriəbl/"
+    },
+    {
+      "word": "loop",
+      "definition": "循环",
+      "phonetic": "/luːp/"
+    },
+    {
+      "word": "array",
+      "definition": "数组",
+      "phonetic": "/əˈreɪ/"
+    },
+    {
+      "word": "pointer",
+      "definition": "指针",
+      "phonetic": "/ˈpɔɪntər/"
+    },
+    {
+      "word": "object",
+      "definition": "对象",
+      "phonetic": "/ˈɒbdʒekt/"
+    },
+    {
+      "word": "class",
+      "definition": "类",
+      "phonetic": "/klæs/"
+    },
+    {
+      "word": "inheritance",
+      "definition": "继承",
+      "phonetic": "/ɪnˈherɪtəns/"
+    },
+    {
+      "word": "encapsulation",
+      "definition": "封装",
+      "phonetic": "/ɪnˌkæpsjuˈleɪʃən/"
+    },
+    {
+      "word": "polymorphism",
+      "definition": "多态",
+      "phonetic": "/ˌpɒlɪˈmɔːrfɪzəm/"
+    },
+    {
+      "word": "thread",
+      "definition": "线程",
+      "phonetic": "/θred/"
+    },
+    {
+      "word": "process",
+      "definition": "进程",
+      "phonetic": "/ˈprɒses/"
+    },
+    {
+      "word": "memory",
+      "definition": "内存",
+      "phonetic": "/ˈmeməri/"
+    },
+    {
+      "word": "cache",
+      "definition": "缓存",
+      "phonetic": "/kæʃ/"
+    },
+    {
+      "word": "cpu",
+      "definition": "中央处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "gpu",
+      "definition": "图形处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "latency",
+      "definition": "延迟",
+      "phonetic": "/ˈleɪtənsi/"
+    },
+    {
+      "word": "server",
+      "definition": "服务器",
+      "phonetic": "/ˈsɜːrvər/"
+    },
+    {
+      "word": "client",
+      "definition": "客户端",
+      "phonetic": "/ˈklaɪənt/"
+    },
+    {
+      "word": "api",
+      "definition": "应用程序接口",
+      "phonetic": ""
+    },
+    {
+      "word": "http",
+      "definition": "超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "https",
+      "definition": "安全超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "frontend",
+      "definition": "前端",
+      "phonetic": ""
+    },
+    {
+      "word": "backend",
+      "definition": "后端",
+      "phonetic": ""
+    },
+    {
+      "word": "fullstack",
+      "definition": "全栈",
+      "phonetic": ""
+    },
+    {
+      "word": "framework",
+      "definition": "框架",
+      "phonetic": "/ˈfreɪmwɜːrk/"
+    },
+    {
+      "word": "library",
+      "definition": "库",
+      "phonetic": "/ˈlaɪbreri/"
+    },
+    {
+      "word": "debug",
+      "definition": "调试",
+      "phonetic": ""
+    },
+    {
+      "word": "deploy",
+      "definition": "部署",
+      "phonetic": ""
+    },
+    {
+      "word": "container",
+      "definition": "容器",
+      "phonetic": "/kənˈteɪnər/"
+    },
+    {
+      "word": "docker",
+      "definition": "容器技术",
+      "phonetic": ""
+    },
+    {
+      "word": "kubernetes",
+      "definition": "容器编排",
+      "phonetic": ""
+    },
+    {
+      "word": "cloud",
+      "definition": "云计算",
+      "phonetic": "/klaʊd/"
+    },
+    {
+      "word": "virtualization",
+      "definition": "虚拟化",
+      "phonetic": "/ˌvɜːrtʃuəlaɪˈzeɪʃən/"
+    },
+    {
+      "word": "machine learning",
+      "definition": "机器学习",
+      "phonetic": ""
+    },
+    {
+      "word": "deep learning",
+      "definition": "深度学习",
+      "phonetic": ""
+    },
+    {
+      "word": "neural network",
+      "definition": "神经网络",
+      "phonetic": ""
+    },
+    {
+      "word": "algorithm",
+      "definition": "算法",
+      "phonetic": "/ˈælɡərɪðəm/"
+    },
+    {
+      "word": "data",
+      "definition": "数据",
+      "phonetic": "/ˈdeɪtə/"
+    },
+    {
+      "word": "database",
+      "definition": "数据库",
+      "phonetic": "/ˈdeɪtəbeɪs/"
+    },
+    {
+      "word": "network",
+      "definition": "网络",
+      "phonetic": "/ˈnetwɜːrk/"
+    },
+    {
+      "word": "protocol",
+      "definition": "协议",
+      "phonetic": "/ˈproʊtəkɒl/"
+    },
+    {
+      "word": "encryption",
+      "definition": "加密",
+      "phonetic": "/ɪnˈkrɪpʃən/"
+    },
+    {
+      "word": "decryption",
+      "definition": "解密",
+      "phonetic": "/diːˈkrɪpʃən/"
+    },
+    {
+      "word": "software",
+      "definition": "软件",
+      "phonetic": "/ˈsɔːftwer/"
+    },
+    {
+      "word": "hardware",
+      "definition": "硬件",
+      "phonetic": "/ˈhɑːrdwer/"
+    },
+    {
+      "word": "program",
+      "definition": "程序",
+      "phonetic": "/ˈproʊɡræm/"
+    },
+    {
+      "word": "compiler",
+      "definition": "编译器",
+      "phonetic": "/kəmˈpaɪlər/"
+    },
+    {
+      "word": "interpreter",
+      "definition": "解释器",
+      "phonetic": "/ɪnˈtɜːrprɪtər/"
+    },
+    {
+      "word": "function",
+      "definition": "函数",
+      "phonetic": "/ˈfʌŋkʃən/"
+    },
+    {
+      "word": "variable",
+      "definition": "变量",
+      "phonetic": "/ˈveriəbl/"
+    },
+    {
+      "word": "loop",
+      "definition": "循环",
+      "phonetic": "/luːp/"
+    },
+    {
+      "word": "array",
+      "definition": "数组",
+      "phonetic": "/əˈreɪ/"
+    },
+    {
+      "word": "pointer",
+      "definition": "指针",
+      "phonetic": "/ˈpɔɪntər/"
+    },
+    {
+      "word": "object",
+      "definition": "对象",
+      "phonetic": "/ˈɒbdʒekt/"
+    },
+    {
+      "word": "class",
+      "definition": "类",
+      "phonetic": "/klæs/"
+    },
+    {
+      "word": "inheritance",
+      "definition": "继承",
+      "phonetic": "/ɪnˈherɪtəns/"
+    },
+    {
+      "word": "encapsulation",
+      "definition": "封装",
+      "phonetic": "/ɪnˌkæpsjuˈleɪʃən/"
+    },
+    {
+      "word": "polymorphism",
+      "definition": "多态",
+      "phonetic": "/ˌpɒlɪˈmɔːrfɪzəm/"
+    },
+    {
+      "word": "thread",
+      "definition": "线程",
+      "phonetic": "/θred/"
+    },
+    {
+      "word": "process",
+      "definition": "进程",
+      "phonetic": "/ˈprɒses/"
+    },
+    {
+      "word": "memory",
+      "definition": "内存",
+      "phonetic": "/ˈmeməri/"
+    },
+    {
+      "word": "cache",
+      "definition": "缓存",
+      "phonetic": "/kæʃ/"
+    },
+    {
+      "word": "cpu",
+      "definition": "中央处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "gpu",
+      "definition": "图形处理器",
+      "phonetic": ""
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "latency",
+      "definition": "延迟",
+      "phonetic": "/ˈleɪtənsi/"
+    },
+    {
+      "word": "server",
+      "definition": "服务器",
+      "phonetic": "/ˈsɜːrvər/"
+    },
+    {
+      "word": "client",
+      "definition": "客户端",
+      "phonetic": "/ˈklaɪənt/"
+    },
+    {
+      "word": "api",
+      "definition": "应用程序接口",
+      "phonetic": ""
+    },
+    {
+      "word": "http",
+      "definition": "超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "https",
+      "definition": "安全超文本传输协议",
+      "phonetic": ""
+    },
+    {
+      "word": "frontend",
+      "definition": "前端",
+      "phonetic": ""
+    },
+    {
+      "word": "backend",
+      "definition": "后端",
+      "phonetic": ""
+    },
+    {
+      "word": "fullstack",
+      "definition": "全栈",
+      "phonetic": ""
+    },
+    {
+      "word": "framework",
+      "definition": "框架",
+      "phonetic": "/ˈfreɪmwɜːrk/"
+    },
+    {
+      "word": "library",
+      "definition": "库",
+      "phonetic": "/ˈlaɪbreri/"
+    },
+    {
+      "word": "debug",
+      "definition": "调试",
+      "phonetic": ""
+    },
+    {
+      "word": "deploy",
+      "definition": "部署",
+      "phonetic": ""
+    },
+    {
+      "word": "container",
+      "definition": "容器",
+      "phonetic": "/kənˈteɪnər/"
+    },
+    {
+      "word": "docker",
+      "definition": "容器技术",
+      "phonetic": ""
+    },
+    {
+      "word": "kubernetes",
+      "definition": "容器编排",
+      "phonetic": ""
+    },
+    {
+      "word": "cloud",
+      "definition": "云计算",
+      "phonetic": "/klaʊd/"
+    },
+    {
+      "word": "virtualization",
+      "definition": "虚拟化",
+      "phonetic": "/ˌvɜːrtʃuəlaɪˈzeɪʃən/"
+    },
+    {
+      "word": "machine learning",
+      "definition": "机器学习",
+      "phonetic": ""
+    },
+    {
+      "word": "deep learning",
+      "definition": "深度学习",
+      "phonetic": ""
+    },
+    {
+      "word": "neural network",
+      "definition": "神经网络",
+      "phonetic": ""
+    }
+  ]
+}
