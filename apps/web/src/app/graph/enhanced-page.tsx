@@ -297,7 +297,7 @@ function GraphPageContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div data-testid="graph-workspace" className="min-h-screen flex flex-col bg-background">
       {/* 头部 */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -328,8 +328,7 @@ function GraphPageContent() {
                   transition={{ delay: 0.2 }}
                   className="text-sm text-muted-foreground"
                 >
-                  {filteredNodes.length} 个节点 · {filteredEdges.length} 条关系 ·{" "}
-                  {(stats.completionRate * 100).toFixed(1)}% 完成
+                  探索你的知识宇宙
                 </motion.p>
               </div>
             </motion.div>
@@ -341,7 +340,7 @@ function GraphPageContent() {
               transition={{ delay: 0.2 }}
               className="flex items-center gap-3"
             >
-              <div className="flex gap-1 rounded-lg bg-muted p-1">
+              <div data-testid="graph-mode-switcher" className="flex gap-1 rounded-lg bg-muted p-1">
                 <button
                   onClick={() => router.push("/graph?view=explore")}
                   className={cn(
@@ -392,27 +391,92 @@ function GraphPageContent() {
                   className="pl-9 focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
 
-              {/* 布局选择 */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+      {/* Main Content Area: Top Stats + 3-Column Layout */}
+      <div className="flex-1 flex flex-col overflow-hidden p-4 gap-4">
+        {/* Top Stats Bar */}
+        <div data-testid="graph-stats-bar" className="flex gap-4 p-3 bg-card/50 rounded-lg border shrink-0">
+          <div className="text-sm">
+            <span className="text-muted-foreground">星球</span>
+            <span className="ml-2 font-semibold">{graphData.nodes.length}</span>
+          </div>
+          <div className="text-sm">
+            <span className="text-muted-foreground">已掌握</span>
+            <span className="ml-2 font-semibold text-green-500">
+              {graphData.nodes.filter(n => n.masteryStage === "mastered").length}
+            </span>
+          </div>
+          <div className="text-sm">
+            <span className="text-muted-foreground">应用中</span>
+            <span className="ml-2 font-semibold text-yellow-500">
+              {graphData.nodes.filter(n => n.masteryStage === "applied").length}
+            </span>
+          </div>
+          <div className="text-sm">
+            <span className="text-muted-foreground">理解中</span>
+            <span className="ml-2 font-semibold text-blue-500">
+              {graphData.nodes.filter(n => n.masteryStage === "understood").length}
+            </span>
+          </div>
+          <div className="text-sm">
+            <span className="text-muted-foreground">已见</span>
+            <span className="ml-2 font-semibold text-gray-400">
+              {graphData.nodes.filter(n => n.masteryStage === "seen").length}
+            </span>
+          </div>
+        </div>
+
+        {/* 3-Column Layout */}
+        <div className="flex-1 flex min-h-0 gap-4">
+          {/* Left Filters */}
+          <div className="w-64 shrink-0 flex flex-col gap-6 bg-card/30 rounded-lg border p-4 overflow-y-auto">
+            <div>
+              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <Filter className="h-4 w-4" /> 节点类型
+              </h3>
+              <div className="flex flex-col gap-2">
+                {Object.entries(NODE_TYPE_CONFIG).map(([type, config]) => {
+                  const isActive = activeTypeFilters.has(type as NodeType);
+                  return (
+                    <Button
+                      key={type}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleTypeFilter(type as NodeType)}
+                      className={cn("justify-start", isActive && "bg-primary/10 text-primary hover:bg-primary/20")}
+                    >
+                      <div className={cn("w-2 h-2 rounded-full mr-2", config.color)} />
+                      {config.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <Settings className="h-4 w-4" /> 布局与主题
+              </h3>
+              <div className="flex flex-col gap-3">
                 <Select value={layout} onValueChange={(v) => setLayout(v as LayoutType)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择布局" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="force">力导向</SelectItem>
-                    <SelectItem value="hierarchical">层次</SelectItem>
-                    <SelectItem value="radial">径向</SelectItem>
-                    <SelectItem value="timeline">时间轴</SelectItem>
+                    <SelectItem value="force">力导向布局</SelectItem>
+                    <SelectItem value="hierarchical">层次布局</SelectItem>
+                    <SelectItem value="radial">径向布局</SelectItem>
+                    <SelectItem value="timeline">时间轴布局</SelectItem>
                   </SelectContent>
                 </Select>
-              </motion.div>
 
-              {/* 主题选择 */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Select value={theme} onValueChange={(v) => setTheme(v as ThemeType)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择主题" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="tech">科技风</SelectItem>
@@ -420,119 +484,184 @@ function GraphPageContent() {
                     <SelectItem value="minimal">简约风</SelectItem>
                   </SelectContent>
                 </Select>
-              </motion.div>
+              </div>
+            </div>
 
-              {/* 功能按钮 */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowLearningPath(!showLearningPath)}
-                  className={cn(
-                    "transition-all",
-                    showLearningPath && "bg-primary text-primary-foreground"
-                  )}
-                >
-                  <Route className="h-4 w-4 mr-1" />
-                  学习路径
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.1, rotate: 15 }} whileTap={{ scale: 0.9 }}>
-                <Button variant="outline" size="sm" onClick={handleExport}>
-                  <Download className="h-4 w-4" />
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.1, rotate: -15 }} whileTap={{ scale: 0.9 }}>
-                <Button variant="outline" size="sm" onClick={handleShare}>
-                  <Share2 className="h-4 w-4" />
-                </Button>
-              </motion.div>
-            </motion.div>
+            <div>
+              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <Route className="h-4 w-4" /> 学习路径
+              </h3>
+              <Button
+                variant={showLearningPath ? "default" : "outline"}
+                className="w-full justify-start"
+                onClick={() => setShowLearningPath(!showLearningPath)}
+              >
+                {showLearningPath ? "隐藏推荐路径" : "显示推荐路径"}
+              </Button>
+            </div>
           </div>
 
-          {/* 筛选器 */}
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex items-center gap-2 mt-4"
-          >
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">节点类型:</span>
-            {Object.entries(NODE_TYPE_CONFIG).map(([type, config], index) => {
-              const isActive = activeTypeFilters.has(type as NodeType);
-              return (
-                <motion.div
-                  key={type}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4 + index * 0.05 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+          {/* Center Canvas */}
+          <div className="flex-1 relative bg-card/20 rounded-lg border overflow-hidden">
+            <InteractiveGraph
+              nodes={filteredNodes}
+              edges={filteredEdges}
+              selectedNode={selectedNode}
+              onNodeClick={handleNodeClick}
+              onNodeHover={setHoveredNode}
+              layout={layout}
+              theme={theme}
+              showLearningPath={showLearningPath}
+              pathNodes={currentPath?.nodes || []}
+            />
+            {/* 进度图例 */}
+            <div className="absolute bottom-4 left-4 z-10 pointer-events-none">
+              <ProgressLegend stats={stats} />
+            </div>
+
+            {/* 学习路径叠加层 */}
+            {showLearningPath && (
+              <div className="absolute top-4 right-4 z-10 w-80">
+                <LearningPathOverlay
+                  paths={recommendedPaths}
+                  currentPath={currentPath}
+                  nodes={graphData.nodes}
+                  onSelectPath={handleSelectPath}
+                  onClearPath={handleClearPath}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Right Sidebar (Conditional) */}
+          {selectedNode && (
+            <div data-testid="graph-planet-sidebar" className="w-80 shrink-0 border bg-card rounded-lg overflow-y-auto flex flex-col">
+              {/* Section 1: Summary */}
+              <div data-testid="graph-sidebar-summary" className="p-4 border-b">
+                <div className="flex items-start justify-between mb-2">
+                  <h2 className="text-xl font-bold leading-tight">
+                    {selectedNode.name || (selectedNode as any).label}
+                  </h2>
+                  {(selectedNode as any).needsReview && (
+                    <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
+                      复习
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="secondary">
+                    {NODE_TYPE_CONFIG[selectedNode.type]?.label || selectedNode.type}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {nodeDetail?.relatedNotes?.[0]?.excerpt || "暂无相关描述信息..."}
+                </p>
+              </div>
+
+              {/* Section 2: Quick Learning Actions */}
+              <div data-testid="graph-sidebar-learning-actions" className="p-4 border-b">
+                <h3 className="text-sm font-medium mb-3">学习状态</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["seen", "understood", "applied", "mastered"] as const).map((stage) => {
+                    const stageLabels = {
+                      seen: "已见",
+                      understood: "理解",
+                      applied: "应用",
+                      mastered: "掌握"
+                    };
+                    const isActive = selectedNode.masteryStage === stage;
+                    return (
+                      <Button
+                        key={stage}
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toast("学习进度写入将在后续实现", "info")}
+                        className={cn("w-full", isActive && "ring-2 ring-primary ring-offset-1")}
+                      >
+                        {stageLabels[stage]}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section 3: Path Actions */}
+              <div data-testid="graph-sidebar-path-actions" className="p-4 border-b">
+                <h3 className="text-sm font-medium mb-3">路径信息</h3>
+                {selectedNode.skillNodeId ? (
+                  <div className="text-sm mb-3 text-muted-foreground">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Route className="h-3 w-3" />
+                      <span>已加入学习路径</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mb-3">尚未在任何路径中</p>
+                )}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => toast("路径操作将在后续实现", "info")}
                 >
+                  <Route className="h-4 w-4 mr-2" />
+                  添加到路径
+                </Button>
+              </div>
+
+              {/* Section 4: Content Info */}
+              <div data-testid="graph-sidebar-content-info" className="p-4 border-b">
+                <h3 className="text-sm font-medium mb-3">内容信息</h3>
+                <div className="flex flex-col gap-2 text-sm mb-4">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">创建时间</span>
+                    <span>
+                      {selectedNode.createdAt
+                        ? new Date(selectedNode.createdAt).toLocaleDateString()
+                        : "未知"}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
                   <Button
-                    variant={isActive ? "default" : "outline"}
+                    variant="default"
                     size="sm"
-                    onClick={() => toggleTypeFilter(type as NodeType)}
-                    className={cn(
-                      "h-7 transition-all",
-                      isActive && "bg-gradient-to-r from-primary to-accent shadow-md"
-                    )}
+                    className="flex-1"
+                    onClick={() => router.push(`/kb/${selectedNode.id}`)}
                   >
-                    {config.label}
+                    文档链接
                   </Button>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => router.push(`/kb/${selectedNode.id}?edit=true`)}
+                  >
+                    快捷编辑
+                  </Button>
+                </div>
+              </div>
+
+              {/* Section 5: AI Assistance */}
+              <div data-testid="graph-sidebar-ai" className="p-4 bg-primary/5 rounded-b-lg flex-1">
+                <h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-primary">
+                  <Sparkles className="h-4 w-4" /> AI 学习助手
+                </h3>
+                <p className="text-xs text-muted-foreground mb-4">
+                  AI 可以帮你总结核心知识点，并推荐相关的学习资料。
+                </p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => toast("AI 能力将在后续实现", "info")}
+                >
+                  生成总结
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-      </motion.div>
-
-      {/* 主内容区 */}
-      <div className="flex-1 flex relative overflow-hidden">
-        {/* 图谱画布 */}
-        <div className="flex-1 relative">
-          <InteractiveGraph
-            nodes={filteredNodes}
-            edges={filteredEdges}
-            selectedNode={selectedNode}
-            onNodeClick={handleNodeClick}
-            onNodeHover={setHoveredNode}
-            layout={layout}
-            theme={theme}
-            showLearningPath={showLearningPath}
-            pathNodes={currentPath?.nodes || []}
-          />
-
-          {/* 进度图例 */}
-          <ProgressLegend stats={stats} />
-        </div>
-
-        {/* 学习路径叠加层 - 移到外层避免影响布局 */}
-        {showLearningPath && (
-          <LearningPathOverlay
-            paths={recommendedPaths}
-            currentPath={currentPath}
-            nodes={graphData.nodes}
-            onSelectPath={handleSelectPath}
-            onClearPath={handleClearPath}
-          />
-        )}
-
-        {/* 节点详情面板 */}
-        {selectedNode && nodeDetail && (
-          <NodeDetailPanel
-            detail={nodeDetail}
-            onClose={() => {
-              setSelectedNode(null);
-              setNodeDetail(null);
-            }}
-            onNavigate={(nodeId) => {
-              const node = graphData.nodes.find((n) => n.id === nodeId);
-              if (node) handleNodeClick(node);
-            }}
-          />
-        )}
       </div>
     </div>
   );
