@@ -23,12 +23,139 @@ export type GraphView = {
   edges: GraphEdge[];
 };
 
-export async function getGraphView(userId: string, input?: { domain?: string }): Promise<GraphView>;
-export async function getGraphView(input?: { domain?: string; owner?: string }): Promise<GraphView>;
+export type MasteryStage = "seen" | "understood" | "applied" | "mastered";
+
+export type PathMembership = {
+  pathId: string;
+  pathName: string;
+  stage: string;
+  orderWithinStage: number;
+};
+
+export type WorkspaceGraphNode = GraphNode & {
+  masteryStage: MasteryStage;
+  needsReview: boolean;
+  pathMemberships: PathMembership[];
+  category: string;
+  kbDocumentId: string;
+};
+
+export type WorkspaceGraphView = {
+  nodes: WorkspaceGraphNode[];
+  edges: GraphEdge[];
+};
+
+function deriveMasteryStage(mastery: number): MasteryStage {
+  if (mastery >= 0.8) return "mastered";
+  if (mastery >= 0.5) return "applied";
+  if (mastery >= 0.25) return "understood";
+  return "seen";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function buildPathMembershipMap(paths: unknown[]): Map<string, PathMembership[]> {
+  const membershipMap = new Map<string, PathMembership[]>();
+
+  for (const path of paths) {
+    if (!isRecord(path)) continue;
+
+    const pathId = typeof path.pathId === "string" ? path.pathId : "";
+    if (!pathId) continue;
+
+    const pathName = typeof path.title === "string" && path.title.trim()
+      ? path.title.trim()
+      : "未命名路径";
+
+    let appendedByStages = false;
+    const stages = Array.isArray(path.stages) ? path.stages : [];
+    for (const stageItem of stages) {
+      if (!isRecord(stageItem)) continue;
+      const stageId =
+        typeof stageItem.stageId === "string" && stageItem.stageId.trim()
+          ? stageItem.stageId
+          : "默认";
+      const nodeIds = Array.isArray(stageItem.nodeIds)
+        ? stageItem.nodeIds.filter((nodeId): nodeId is string => typeof nodeId === "string")
+        : [];
+
+      for (const [index, nodeId] of nodeIds.entries()) {
+        if (!membershipMap.has(nodeId)) {
+          membershipMap.set(nodeId, []);
+        }
+        membershipMap.get(nodeId)?.push({
+          pathId,
+          pathName,
+          stage: stageId,
+          orderWithinStage: index,
+        });
+        appendedByStages = true;
+      }
+    }
+
+    if (appendedByStages) {
+      continue;
+    }
+
+    const tasks = Array.isArray(path.tasks) ? path.tasks : [];
+    for (const [index, task] of tasks.entries()) {
+      if (!isRecord(task) || typeof task.taskId !== "string" || !task.taskId.trim()) {
+        continue;
+      }
+
+      const taskNodeId = task.taskId.trim();
+      const stage =
+        typeof task.status === "string" && task.status.trim()
+          ? task.status
+          : "task";
+
+      if (!membershipMap.has(taskNodeId)) {
+        membershipMap.set(taskNodeId, []);
+      }
+      membershipMap.get(taskNodeId)?.push({
+        pathId,
+        pathName,
+        stage,
+        orderWithinStage: index,
+      });
+    }
+  }
+
+  return membershipMap;
+}
+
+function resolveNodeCategory(input: {
+  defaultDomain: string;
+  pathMemberships: PathMembership[];
+  userPaths: unknown[];
+}): string {
+  for (const membership of input.pathMemberships) {
+    const matchedPath = input.userPaths.find((path) => {
+      if (!isRecord(path)) return false;
+      return path.pathId === membership.pathId;
+    });
+
+    if (!isRecord(matchedPath) || !Array.isArray(matchedPath.tags)) {
+      continue;
+    }
+
+    const firstTag = matchedPath.tags.find((tag): tag is string => typeof tag === "string" && tag.trim().length > 0);
+    if (firstTag) {
+      return firstTag;
+    }
+  }
+
+  return input.defaultDomain;
+}
+
+export async function getGraphView(userId: string, input?: { domain?: string }): Promise<WorkspaceGraphView>;
+export async function getGraphView(input?: { domain?: string; owner?: string }): Promise<WorkspaceGraphView>;
 export async function getGraphView(
   arg1?: string | { domain?: string; owner?: string },
   arg2?: { domain?: string }
-): Promise<GraphView> {
+): Promise<WorkspaceGraphView> {
   const userId = typeof arg1 === 'string' ? arg1 : arg1?.owner;
   const domain = typeof arg1 === 'string' ? arg2?.domain : arg1?.domain;
 
@@ -56,7 +183,12 @@ export async function getGraphView(
           mastery,
           risk: meta?.risk ?? 0.5,
           domain: meta?.domain ?? "general",
-        } satisfies GraphNode;
+          masteryStage: deriveMasteryStage(mastery),
+          needsReview: false,
+          pathMemberships: [],
+          category: meta?.domain ?? "general",
+          kbDocumentId: nodeId,
+        } satisfies WorkspaceGraphNode;
       });
 
     const demoEdges = db.plans
@@ -86,13 +218,32 @@ export async function getGraphView(
     orderBy: { updatedAt: 'desc' },
   });
 
-  const nodes: GraphNode[] = documents.map((doc) => ({
-    id: doc.id,
-    label: doc.title,
-    mastery: 0.5,
-    risk: 0.5,
-    domain: 'general',
-  }));
+  const userPaths = db.syncedPaths.filter((path) => path.userId === userId);
+  const pathMembershipMap = buildPathMembershipMap(userPaths);
+
+  const nodes: WorkspaceGraphNode[] = documents.map((doc) => {
+    const mastery = db.masteryByNode[doc.id] ?? 0;
+    const domainValue = "general";
+    const pathMemberships = pathMembershipMap.get(doc.id) ?? [];
+    const category = resolveNodeCategory({
+      defaultDomain: domainValue,
+      pathMemberships,
+      userPaths,
+    });
+
+    return {
+      id: doc.id,
+      label: doc.title,
+      mastery,
+      risk: 0.5,
+      domain: domainValue,
+      masteryStage: deriveMasteryStage(mastery),
+      needsReview: false,
+      pathMemberships,
+      category,
+      kbDocumentId: doc.id,
+    };
+  });
 
   const edges: GraphEdge[] = [];
 

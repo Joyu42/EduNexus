@@ -1,4 +1,4 @@
-import type { GraphEdge, GraphNode, NodeStatus } from "@/lib/graph/types";
+import type { GraphEdge, GraphNode, NodeStatus, PathMembership } from "@/lib/graph/types";
 
 type GraphViewApiNode = {
   id: string;
@@ -6,6 +6,11 @@ type GraphViewApiNode = {
   domain?: string;
   mastery?: number;
   risk?: number;
+  masteryStage?: "seen" | "understood" | "applied" | "mastered";
+  needsReview?: boolean;
+  pathMemberships?: PathMembership[];
+  category?: string;
+  kbDocumentId?: string;
 };
 
 type GraphViewApiEdge = {
@@ -53,6 +58,19 @@ function resolveNodeStatus(mastery: number): NodeStatus {
   return "unlearned";
 }
 
+function resolveMasteryStage(mastery: number): "seen" | "understood" | "applied" | "mastered" {
+  if (mastery >= 0.8) {
+    return "mastered";
+  }
+  if (mastery >= 0.5) {
+    return "applied";
+  }
+  if (mastery >= 0.25) {
+    return "understood";
+  }
+  return "seen";
+}
+
 function buildConnectionMap(nodes: GraphViewApiNode[], edges: GraphViewApiEdge[]) {
   const counts = new Map(nodes.map((node) => [node.id, 0]));
   for (const edge of edges) {
@@ -71,6 +89,9 @@ function normalizeGraphResponse(payload: GraphViewApiResponse): GraphData {
   return {
     nodes: apiNodes.map((node) => {
       const mastery = Math.max(0, Math.min(node.mastery ?? 0.45, 1));
+      const normalizedPathMemberships = Array.isArray(node.pathMemberships) ? node.pathMemberships : [];
+      const category = node.category ?? node.domain ?? "general";
+      const kbDocumentId = node.kbDocumentId ?? node.id;
       return {
         id: node.id,
         name: node.label,
@@ -82,8 +103,13 @@ function normalizeGraphResponse(payload: GraphViewApiResponse): GraphData {
         noteCount: 1,
         practiceCount: 0,
         practiceCompleted: 0,
-        documentIds: [node.id],
-        keywords: node.domain ? [node.domain] : [],
+        documentIds: [kbDocumentId],
+        keywords: Array.from(new Set([node.domain, category].filter((value): value is string => Boolean(value)))),
+        masteryStage: node.masteryStage ?? resolveMasteryStage(mastery),
+        needsReview: node.needsReview ?? false,
+        pathMemberships: normalizedPathMemberships,
+        category,
+        kbDocumentId,
         createdAt: now,
         updatedAt: now,
       } satisfies GraphNode;
