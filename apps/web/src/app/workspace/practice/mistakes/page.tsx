@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   getPracticeStorage,
   WrongQuestion,
@@ -22,6 +23,8 @@ function MistakesContent() {
   const [questions, setQuestions] = useState<Record<string, Question>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [editingNotes, setEditingNotes] = useState<Record<string, string>>({});
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     loadWrongQuestions();
@@ -80,17 +83,8 @@ function MistakesContent() {
   };
 
   const handleDelete = async (questionId: string) => {
-    if (!confirm("确定要从错题本中删除这道题吗？")) {
-      return;
-    }
-
-    try {
-      const storage = getPracticeStorage();
-      await storage.deleteWrongQuestion(questionId);
-      await loadWrongQuestions();
-    } catch (error) {
-      console.error("Failed to delete wrong question:", error);
-    }
+    setPendingDeleteId(questionId);
+    setDeleteConfirmOpen(true);
   };
 
   if (isLoading) {
@@ -228,6 +222,29 @@ function MistakesContent() {
             })}
           </div>
         )}
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>确认删除</DialogTitle>
+            </DialogHeader>
+            <p>确定要从错题本中删除这道题吗？</p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>取消</Button>
+              <Button variant="destructive" onClick={async () => {
+                setDeleteConfirmOpen(false);
+                if (pendingDeleteId) {
+                  try {
+                    const storage = getPracticeStorage();
+                    await storage.deleteWrongQuestion(pendingDeleteId);
+                    await loadWrongQuestions();
+                  } catch (error) {
+                    console.error("Failed to delete wrong question:", error);
+                  }
+                }
+              }}>删除</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
