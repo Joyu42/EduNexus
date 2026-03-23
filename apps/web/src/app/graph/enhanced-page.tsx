@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,9 +58,20 @@ const NODE_TYPE_CONFIG = {
   skill: { label: "技能", color: "bg-orange-500" },
 };
 
-export default function EnhancedGraphPage() {
+type GraphMode = "explore" | "path" | "today" | "incomplete";
+
+function normalizeMode(view: string | null): GraphMode {
+  if (view === "path" || view === "today" || view === "incomplete") {
+    return view;
+  }
+  return "explore";
+}
+
+function GraphPageContent() {
   const { status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const view = searchParams.get("view") || "explore";
 
   // 状态管理
   const [graphData, setGraphData] = useState<{
@@ -83,6 +94,11 @@ export default function EnhancedGraphPage() {
   const [recommendedPaths, setRecommendedPaths] = useState<LearningPath[]>([]);
   const [nodeDetail, setNodeDetail] = useState<NodeDetail | null>(null);
   const [isGraphLoading, setIsGraphLoading] = useState(true);
+  const [activeMode, setActiveMode] = useState<GraphMode>("explore");
+
+  useEffect(() => {
+    setActiveMode(normalizeMode(view));
+  }, [view]);
 
   useEffect(() => {
     if (status !== 'authenticated') {
@@ -325,6 +341,45 @@ export default function EnhancedGraphPage() {
               transition={{ delay: 0.2 }}
               className="flex items-center gap-3"
             >
+              <div className="flex gap-1 rounded-lg bg-muted p-1">
+                <button
+                  onClick={() => router.push("/graph?view=explore")}
+                  className={cn(
+                    "rounded px-3 py-1 text-sm transition-colors",
+                    activeMode === "explore" ? "bg-background shadow" : "hover:bg-background/60"
+                  )}
+                >
+                  探索
+                </button>
+                <button
+                  onClick={() => router.push("/graph?view=path")}
+                  className={cn(
+                    "rounded px-3 py-1 text-sm transition-colors",
+                    activeMode === "path" ? "bg-background shadow" : "hover:bg-background/60"
+                  )}
+                >
+                  路径
+                </button>
+                <button
+                  onClick={() => router.push("/graph?view=today")}
+                  className={cn(
+                    "rounded px-3 py-1 text-sm transition-colors",
+                    activeMode === "today" ? "bg-background shadow" : "hover:bg-background/60"
+                  )}
+                >
+                  今日
+                </button>
+                <button
+                  onClick={() => router.push("/graph?view=incomplete")}
+                  className={cn(
+                    "rounded px-3 py-1 text-sm transition-colors",
+                    activeMode === "incomplete" ? "bg-background shadow" : "hover:bg-background/60"
+                  )}
+                >
+                  未完
+                </button>
+              </div>
+
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 className="relative w-64"
@@ -480,5 +535,19 @@ export default function EnhancedGraphPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function EnhancedGraphPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin h-12 w-12 rounded-full border-b-2 border-primary"></div>
+        </div>
+      }
+    >
+      <GraphPageContent />
+    </Suspense>
   );
 }
