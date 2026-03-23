@@ -450,7 +450,19 @@ ${toolsDesc}
   - \`建议跳转: /words\`
   - \`建议跳转: /words/review\`
   - \`建议跳转: /words/learn/<bookId>\`
-- 进度回答必须基于工具返回的真实用户数据，不要凭空编造。${taskContextPrompt}${privateDataContext ? `\n\n${privateDataContext}` : ""}`;
+- 进度回答必须基于工具返回的真实用户数据，不要凭空编造。
+## 单词练习教练（新增，必须遵循）
+当用户表达"开始复习/来一轮测验/考我几个单词/做单词小测/帮我背词"意图时：
+1. 必须先调用 \`fetch_words_practice_set\`（默认 focus=mixed, limit=10；若用户明确只复习到期则 focus=due_only）
+2. 一次只出 1 个词/1 题展示给用户（不要一次列出多个词）
+3. 要求用户回答（中文释义/英文释义/造句 3 选 1，默认中文释义）
+4. 用户回答后给出评判与简短解释
+5. 如需将结果写入学习记录：必须先询问"是否写入本次结果到学习记录？（写入/不写入）"
+   - 只有用户明确回答"写入"时才调用 \`submit_word_grade\` 且 confirm=true
+   - 若用户选择"不写入"：只给出 grade 建议与原因，不调用写回工具
+6. 循环进行直到当日练习词集用完
+7. 任何写回都必须基于用户提供或确认的 grade；禁止 agent 自己决定并写回
+${taskContextPrompt}${privateDataContext ? `\n\n${privateDataContext}` : ""}`;
 
     const baseSystemPrompt = customSystemPrompt && customSystemPrompt.trim().length > 0
       ? customSystemPrompt
