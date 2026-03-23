@@ -38,7 +38,7 @@ const coreEntries = [
     icon: Network
   },
   {
-    href: "/path",
+    href: "/graph?view=path",
     title: "🎮 成长地图",
     description: "基于图谱焦点生成可执行任务序列，并持续回写掌握度。",
     tag: "目标到执行闭环",
@@ -161,7 +161,7 @@ export default function HomePage() {
                   进入学习工作区
                 </Button>
               </Link>
-              <Link href="/path">
+              <Link href="/graph?view=path">
                 <Button size="lg" variant="outline" className="group">
                   <Route className="mr-2 h-4 w-4" />
                   查看成长地图
@@ -209,7 +209,7 @@ export default function HomePage() {
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
           variants={containerVariants}
         >
-          {coreEntries.map((item, index) => {
+          {coreEntries.map((item) => {
             const Icon = item.icon;
             return (
               <motion.div key={item.href} variants={itemVariants}>
@@ -265,7 +265,7 @@ export default function HomePage() {
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
           variants={containerVariants}
         >
-          {supportEntries.map((item, index) => {
+          {supportEntries.map((item) => {
             const Icon = item.icon;
             return (
               <motion.div key={item.href} variants={itemVariants}>

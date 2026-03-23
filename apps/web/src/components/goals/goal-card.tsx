@@ -96,7 +96,7 @@ export function GoalCard({
                 <span className="font-medium">关联学习路径</span>
                 <Badge variant="secondary" className="text-xs">{linkedPathsCount}</Badge>
               </div>
-              <Link href="/path">
+              <Link href="/graph?view=path">
                 <Button variant="ghost" size="sm" className="h-6 text-xs">
                   查看 <ExternalLink className="w-3 h-3 ml-1" />
                 </Button>
@@ -114,7 +114,7 @@ export function GoalCard({
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <BookOpen className="w-4 h-4" />
               <span>暂无关联学习路径</span>
-              <Link href="/path">
+              <Link href="/graph?view=path">
                 <Button variant="link" size="sm" className="h-auto p-0 text-xs">
                   去创建
                 </Button>

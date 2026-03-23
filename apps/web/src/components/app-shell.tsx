@@ -19,7 +19,7 @@ const navGroups = [
       { href: "/", label: "总览", hint: "平台入口与能力总览" },
       { href: "/workspace", label: "学习工作区", hint: "引导学习与会话沉淀" },
       { href: "/graph", label: "知识图谱", hint: "风险关系链与批次联动" },
-      { href: "/path", label: "学习路径", hint: "目标生成与任务回写" }
+      { href: "/graph?view=path", label: "学习路径", hint: "目标生成与任务回写" }
     ]
   },
   {
