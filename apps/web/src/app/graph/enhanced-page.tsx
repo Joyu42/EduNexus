@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -39,16 +45,18 @@ import { ProgressTracker } from "@/lib/graph/progress-tracker";
 import { cn } from "@/lib/utils";
 import { getGraphViewState, loadPrivateGraphView } from "./view-state";
 import { toast } from "@/lib/toast";
+import { pathStorage } from "@/lib/client/path-storage";
 import type {
   GraphNode,
   GraphEdge,
   NodeDetail,
-  LearningPath,
+  LearningPath as GraphLearningPath,
   LayoutType,
   ThemeType,
   NodeType,
   NodeStatus,
 } from "@/lib/graph/types";
+import type { LearningPath as StoredLearningPath, Task as StoredPathTask } from "@/lib/client/path-storage";
 
 // 节点类型配置
 const NODE_TYPE_CONFIG = {
@@ -59,6 +67,16 @@ const NODE_TYPE_CONFIG = {
 };
 
 type GraphMode = "explore" | "path" | "today" | "incomplete";
+
+type SidebarKBDoc = {
+  id: string;
+  title: string;
+  tags: string[];
+  summary?: string;
+  content: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+};
 
 function normalizeMode(view: string | null): GraphMode {
   if (view === "path" || view === "today" || view === "incomplete") {
@@ -90,15 +108,102 @@ function GraphPageContent() {
     new Set(["unlearned", "learning", "mastered", "review"])
   );
   const [showLearningPath, setShowLearningPath] = useState(false);
-  const [currentPath, setCurrentPath] = useState<LearningPath | null>(null);
-  const [recommendedPaths, setRecommendedPaths] = useState<LearningPath[]>([]);
+  const [currentPath, setCurrentPath] = useState<GraphLearningPath | null>(null);
+  const [recommendedPaths, setRecommendedPaths] = useState<GraphLearningPath[]>([]);
   const [nodeDetail, setNodeDetail] = useState<NodeDetail | null>(null);
   const [isGraphLoading, setIsGraphLoading] = useState(true);
   const [activeMode, setActiveMode] = useState<GraphMode>("explore");
 
+  const [kbDoc, setKbDoc] = useState<SidebarKBDoc | null>(null);
+  const [isKbDocLoading, setIsKbDocLoading] = useState(false);
+  const [isEditingKb, setIsEditingKb] = useState(false);
+  const [kbEditTitle, setKbEditTitle] = useState("");
+  const [kbEditTags, setKbEditTags] = useState("");
+  const [showPathDialog, setShowPathDialog] = useState(false);
+  const [userPaths, setUserPaths] = useState<StoredLearningPath[]>([]);
+  const [newPathTitle, setNewPathTitle] = useState("");
+
   useEffect(() => {
     setActiveMode(normalizeMode(view));
   }, [view]);
+
+  useEffect(() => {
+    const kbDocumentId = selectedNode?.kbDocumentId;
+
+    if (!kbDocumentId) {
+      setKbDoc(null);
+      setIsKbDocLoading(false);
+      setIsEditingKb(false);
+      setKbEditTitle("");
+      setKbEditTags("");
+      return;
+    }
+
+    let isMounted = true;
+    setIsKbDocLoading(true);
+    setIsEditingKb(false);
+
+    void (async () => {
+      try {
+        const { getDocumentFromServer } = await import("@/lib/client/kb-storage");
+        const doc = await getDocumentFromServer(kbDocumentId);
+        if (!isMounted) {
+          return;
+        }
+
+        if (!doc) {
+          setKbDoc(null);
+          return;
+        }
+
+        const localTagsKey = `edunexus_graph_kb_tags_${doc.id}`;
+        const localTagsRaw = typeof window !== "undefined" ? window.localStorage.getItem(localTagsKey) : null;
+        const localTags = (() => {
+          if (!localTagsRaw) {
+            return null;
+          }
+          try {
+            const parsed = JSON.parse(localTagsRaw) as unknown;
+            if (!Array.isArray(parsed)) {
+              return null;
+            }
+            const tags = parsed.filter((t): t is string => typeof t === "string").map((t) => t.trim()).filter(Boolean);
+            return tags.length > 0 ? tags : null;
+          } catch {
+            return null;
+          }
+        })();
+
+        const tagsFromServer = doc.tags ?? [];
+        const tags = tagsFromServer.length > 0 ? tagsFromServer : localTags ?? [];
+
+        setKbDoc({
+          id: doc.id,
+          title: doc.title,
+          tags,
+          summary: undefined,
+          content: doc.content,
+          createdAt: doc.createdAt,
+          updatedAt: doc.updatedAt,
+        });
+        setKbEditTitle(doc.title || "");
+        setKbEditTags(tags.join(", "));
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+        setKbDoc(null);
+      } finally {
+        if (isMounted) {
+          setIsKbDocLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedNode?.kbDocumentId]);
 
   useEffect(() => {
     if (status !== 'authenticated') {
@@ -230,7 +335,7 @@ function GraphPageContent() {
   };
 
   // 选择学习路径
-  const handleSelectPath = (path: LearningPath) => {
+  const handleSelectPath = (path: GraphLearningPath) => {
     setCurrentPath(path);
     setShowLearningPath(true);
   };
@@ -261,6 +366,134 @@ function GraphPageContent() {
     const nextSelectedNode = data.nodes.find((node) => node.id === nodeId) ?? null;
     setSelectedNode(nextSelectedNode);
   }, []);
+
+  const buildPathTaskFromNode = useCallback((node: GraphNode): StoredPathTask => {
+    return {
+      id: node.id,
+      title: node.name,
+      description: `来自知识星图节点「${node.name}」`,
+      estimatedTime: "30m",
+      progress: 0,
+      status: "not_started",
+      dependencies: [],
+      resources: [],
+      notes: "",
+      createdAt: new Date(),
+    };
+  }, []);
+
+  const loadUserPaths = useCallback(async () => {
+    try {
+      const paths = await pathStorage.getAllPaths();
+      setUserPaths(paths);
+    } catch {
+      setUserPaths([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!selectedNode || status !== "authenticated") {
+      setUserPaths([]);
+      return;
+    }
+
+    void loadUserPaths();
+  }, [loadUserPaths, selectedNode, status]);
+
+  const handleAddNodeToPath = useCallback(
+    async (pathId: string) => {
+      if (!selectedNode) {
+        return;
+      }
+
+      const targetPath = userPaths.find((path) => path.id === pathId) ?? (await pathStorage.getPath(pathId));
+      if (!targetPath) {
+        toast("路径不存在", "error");
+        return;
+      }
+
+      const alreadyInPath = targetPath.tasks.some((task) => task.id === selectedNode.id);
+      if (alreadyInPath) {
+        toast("该节点已在路径中", "info");
+        setShowPathDialog(false);
+        return;
+      }
+
+      await pathStorage.updatePath(pathId, {
+        tasks: [...targetPath.tasks, buildPathTaskFromNode(selectedNode)],
+      });
+
+      toast("路径操作已记录", "success");
+      setShowPathDialog(false);
+      await loadUserPaths();
+      await refreshGraphData(selectedNode.id);
+    },
+    [buildPathTaskFromNode, loadUserPaths, refreshGraphData, selectedNode, userPaths]
+  );
+
+  const handleCreatePathWithNode = useCallback(async () => {
+    if (!selectedNode) {
+      return;
+    }
+
+    const title = newPathTitle.trim();
+    if (!title) {
+      toast("请输入路径名称", "info");
+      return;
+    }
+
+    const initialTask = buildPathTaskFromNode(selectedNode);
+    await pathStorage.createPath({
+      title,
+      description: `从知识星图创建，包含「${selectedNode.name}」`,
+      status: "not_started",
+      progress: 0,
+      tags: ["graph"],
+      tasks: [initialTask],
+      milestones: [
+        {
+          id: `milestone_${Date.now()}`,
+          title: "初始阶段",
+          taskIds: [initialTask.id],
+        },
+      ],
+    });
+
+    toast("路径操作已记录", "success");
+    setShowPathDialog(false);
+    setNewPathTitle("");
+    await loadUserPaths();
+    await refreshGraphData(selectedNode.id);
+  }, [buildPathTaskFromNode, loadUserPaths, newPathTitle, refreshGraphData, selectedNode]);
+
+  const handleRemoveNodeFromPath = useCallback(
+    async (pathId: string) => {
+      if (!selectedNode) {
+        return;
+      }
+
+      const targetPath = userPaths.find((path) => path.id === pathId) ?? (await pathStorage.getPath(pathId));
+      if (!targetPath) {
+        toast("路径不存在", "error");
+        return;
+      }
+
+      const nextTasks = targetPath.tasks.filter((task) => task.id !== selectedNode.id);
+      if (nextTasks.length === targetPath.tasks.length) {
+        toast("该节点不在路径中", "info");
+        return;
+      }
+
+      await pathStorage.updatePath(pathId, {
+        tasks: nextTasks,
+      });
+
+      toast("已从路径移除", "success");
+      await loadUserPaths();
+      await refreshGraphData(selectedNode.id);
+    },
+    [loadUserPaths, refreshGraphData, selectedNode, userPaths]
+  );
 
   const handleMasteryAction = useCallback(
     async (nodeId: string, action: "seen" | "understood" | "applied" | "mastered") => {
@@ -668,21 +901,40 @@ function GraphPageContent() {
               {/* Section 3: Path Actions */}
               <div data-testid="graph-sidebar-path-actions" className="p-4 border-b">
                 <h3 className="text-sm font-medium mb-3">路径信息</h3>
-                {selectedNode.skillNodeId ? (
-                  <div className="text-sm mb-3 text-muted-foreground">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Route className="h-3 w-3" />
-                      <span>已加入学习路径</span>
-                    </div>
+                {selectedNode.pathMemberships && selectedNode.pathMemberships.length > 0 ? (
+                  <div className="space-y-2 mb-3">
+                    <p className="text-xs text-muted-foreground">当前星球所在路径：</p>
+                    {selectedNode.pathMemberships.map((membership) => (
+                      <div
+                        key={membership.pathId}
+                        className="flex items-center justify-between gap-2 rounded bg-muted p-2 text-sm"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-medium truncate">{membership.pathName}</span>
+                          <span className="ml-2 text-xs text-muted-foreground">阶段: {membership.stage}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleRemoveNodeFromPath(membership.pathId);
+                          }}
+                          className="text-xs text-destructive hover:underline"
+                        >
+                          移除
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground mb-3">尚未在任何路径中</p>
                 )}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="w-full"
-                  onClick={() => toast("路径操作将在后续实现", "info")}
+                  onClick={() => {
+                    setShowPathDialog(true);
+                  }}
                 >
                   <Route className="h-4 w-4 mr-2" />
                   添加到路径
@@ -691,34 +943,167 @@ function GraphPageContent() {
 
               {/* Section 4: Content Info */}
               <div data-testid="graph-sidebar-content-info" className="p-4 border-b">
-                <h3 className="text-sm font-medium mb-3">内容信息</h3>
-                <div className="flex flex-col gap-2 text-sm mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">创建时间</span>
-                    <span>
-                      {selectedNode.createdAt
-                        ? new Date(selectedNode.createdAt).toLocaleDateString()
-                        : "未知"}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => router.push(`/kb/${selectedNode.id}`)}
-                  >
-                    文档链接
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => router.push(`/kb/${selectedNode.id}?edit=true`)}
-                  >
-                    快捷编辑
-                  </Button>
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium">文档信息</h3>
+
+                  {!selectedNode.kbDocumentId ? (
+                    <p className="text-xs text-muted-foreground">该星球未关联知识库文档。</p>
+                  ) : isKbDocLoading ? (
+                    <p className="text-xs text-muted-foreground">加载中...</p>
+                  ) : kbDoc ? (
+                    <>
+                      {isEditingKb ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={kbEditTitle}
+                            onChange={(e) => setKbEditTitle(e.target.value)}
+                            className="text-sm"
+                            placeholder="文档标题"
+                          />
+                          <Input
+                            value={kbEditTags}
+                            onChange={(e) => setKbEditTags(e.target.value)}
+                            className="text-sm"
+                            placeholder="标签（逗号分隔）"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={async () => {
+                                if (!kbDoc) {
+                                  return;
+                                }
+
+                                const nodeId = selectedNode?.id;
+                                const tags = kbEditTags
+                                  .split(",")
+                                  .map((t) => t.trim())
+                                  .filter(Boolean);
+
+                                try {
+                                  const { updateDocumentOnServer, getDocumentFromServer } = await import(
+                                    "@/lib/client/kb-storage"
+                                  );
+
+                                  await updateDocumentOnServer(kbDoc.id, {
+                                    title: kbEditTitle,
+                                    content: kbDoc.content,
+                                    tags,
+                                  });
+
+                                  const localTagsKey = `edunexus_graph_kb_tags_${kbDoc.id}`;
+                                  window.localStorage.setItem(localTagsKey, JSON.stringify(tags));
+
+                                  const refreshed = await getDocumentFromServer(kbDoc.id);
+                                  if (refreshed) {
+                                    const refreshedTags = refreshed.tags ?? [];
+                                    setKbDoc({
+                                      id: refreshed.id,
+                                      title: refreshed.title,
+                                      content: refreshed.content,
+                                      createdAt: refreshed.createdAt,
+                                      updatedAt: refreshed.updatedAt,
+                                      tags: refreshedTags.length > 0 ? refreshedTags : tags,
+                                    });
+                                  } else {
+                                    setKbDoc((prev) =>
+                                      prev
+                                        ? {
+                                            ...prev,
+                                            title: kbEditTitle,
+                                            tags,
+                                          }
+                                        : prev
+                                    );
+                                  }
+
+                                  setIsEditingKb(false);
+                                  if (nodeId) {
+                                    await refreshGraphData(nodeId);
+                                  }
+                                  toast("文档已更新", "success");
+                                } catch {
+                                  toast("更新失败", "error");
+                                }
+                              }}
+                            >
+                              保存
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                setIsEditingKb(false);
+                                setKbEditTitle(kbDoc.title || "");
+                                setKbEditTags((kbDoc.tags || []).join(", "));
+                              }}
+                            >
+                              取消
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">{kbDoc.title || "无标题"}</p>
+                          {kbDoc.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {kbDoc.tags.map((tag) => (
+                                <Badge key={tag} variant="outline" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setIsEditingKb(true)}
+                            className="text-xs px-2"
+                          >
+                            编辑
+                          </Button>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                        <div className="flex justify-between">
+                          <span>创建</span>
+                          <span>
+                            {kbDoc.createdAt ? new Date(kbDoc.createdAt).toLocaleDateString() : "未知"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>更新</span>
+                          <span>
+                            {kbDoc.updatedAt ? new Date(kbDoc.updatedAt).toLocaleDateString() : "未知"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => router.push(`/kb/${kbDoc.id}`)}
+                          className="text-xs flex-1"
+                        >
+                          打开编辑器
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(`/kb/${kbDoc.id}`, "_blank")}
+                          className="text-xs"
+                          title="新窗口打开"
+                        >
+                          ↗
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">未找到文档或无权访问。</p>
+                  )}
                 </div>
               </div>
 
@@ -742,6 +1127,56 @@ function GraphPageContent() {
             </div>
           )}
         </div>
+
+        <Dialog open={showPathDialog} onOpenChange={setShowPathDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>添加到路径</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                为「{selectedNode?.name ?? "当前星球"}」选择或创建路径
+              </p>
+
+              {userPaths.length > 0 ? (
+                <div className="max-h-40 space-y-2 overflow-y-auto">
+                  {userPaths.map((path) => (
+                    <button
+                      type="button"
+                      key={path.id}
+                      onClick={() => {
+                        void handleAddNodeToPath(path.id);
+                      }}
+                      className="w-full rounded border p-2 text-left hover:bg-muted"
+                    >
+                      <p className="text-sm font-medium">{path.title}</p>
+                      <p className="text-xs text-muted-foreground">{path.tasks.length} 个任务</p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">暂无可用路径，请先创建一个新路径。</p>
+              )}
+
+              <div className="flex gap-2">
+                <Input
+                  value={newPathTitle}
+                  onChange={(event) => setNewPathTitle(event.target.value)}
+                  placeholder="新路径名称..."
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && newPathTitle.trim()) {
+                      void handleCreatePathWithNode();
+                    }
+                  }}
+                />
+                <Button size="sm" onClick={() => void handleCreatePathWithNode()} disabled={!newPathTitle.trim()}>
+                  创建
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
