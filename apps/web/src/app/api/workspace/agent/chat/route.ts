@@ -8,6 +8,7 @@ import { loadDb, saveDb } from "@/lib/server/store";
 import { DEMO_KB_DOCUMENTS } from "@/lib/server/demo-content";
 import { auth } from "@/auth";
 import { planLearningPack } from "@/lib/server/learning-pack-planner";
+import { buildLearningPackKbContext } from "@/lib/server/learning-pack-kb-context";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -199,6 +200,7 @@ export async function POST(request: Request) {
         apiEndpoint:
           process.env.MODELSCOPE_BASE_URL ?? "https://api-inference.modelscope.cn/v1",
         modelName: process.env.MODELSCOPE_CHAT_MODEL ?? "Qwen/Qwen3.5-122B-A10B",
+        kbContext: await buildLearningPackKbContext(userId, learningTopic),
       });
 
       const modules = plannerOutput.modules.map((m) => m.title);

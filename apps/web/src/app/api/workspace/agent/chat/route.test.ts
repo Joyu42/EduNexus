@@ -24,6 +24,7 @@ const createDocumentMock = vi.fn();
 const listDocumentsMock = vi.fn();
 const deleteDocumentMock = vi.fn();
 const planLearningPackMock = vi.fn();
+const buildLearningPackKbContextMock = vi.fn();
 
 vi.mock("@/lib/server/learning-pack-store", () => ({
   createLearningPack: createLearningPackMock,
@@ -33,6 +34,10 @@ vi.mock("@/lib/server/learning-pack-store", () => ({
 
 vi.mock("@/lib/server/learning-pack-planner", () => ({
   planLearningPack: planLearningPackMock,
+}));
+
+vi.mock("@/lib/server/learning-pack-kb-context", () => ({
+  buildLearningPackKbContext: buildLearningPackKbContextMock,
 }));
 
 vi.mock("@/lib/server/document-service", () => ({
@@ -96,6 +101,8 @@ describe("learning-pack quick creation", () => {
       fallbackUsed: false,
     });
 
+    buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
+
     createLearningPackMock.mockResolvedValueOnce({
       packId: "lp_java_1",
       userId: "u1",
@@ -150,6 +157,8 @@ describe("learning-pack quick creation", () => {
       usedExistingDocs: false,
       fallbackUsed: false,
     });
+
+    buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
 
     createLearningPackMock.mockResolvedValueOnce({
       packId: "lp_ai_1",
@@ -218,6 +227,8 @@ describe("learning-pack quick creation", () => {
       usedExistingDocs: false,
       fallbackUsed: true,
     });
+
+    buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
 
     createLearningPackMock.mockResolvedValueOnce({
       packId: "lp_fallback_1",

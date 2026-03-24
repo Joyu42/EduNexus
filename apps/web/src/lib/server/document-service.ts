@@ -75,3 +75,25 @@ export async function searchDocuments(
     snippet: doc.content.slice(0, 200) + (doc.content.length > 200 ? '...' : '')
   }));
 }
+
+export async function searchDocumentsForLearningPack(
+  query: string,
+  userId: string
+): Promise<Array<{ docId: string; title: string; snippet: string }>> {
+  const documents = await prisma.document.findMany({
+    where: {
+      authorId: userId,
+      OR: [
+        { title: { contains: query } },
+        { content: { contains: query } }
+      ]
+    },
+    take: 5,
+  });
+
+  return documents.map(doc => ({
+    docId: doc.id,
+    title: doc.title,
+    snippet: doc.content.slice(0, 200) + (doc.content.length > 200 ? '...' : '')
+  }));
+}
