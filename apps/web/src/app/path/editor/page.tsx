@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LearningPath } from '@/lib/path/path-types';
 import { getPath, getAllPaths } from '@/lib/path/path-storage';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, AlertTriangle } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
 function PathEditorContent() {
@@ -61,7 +61,22 @@ function PathEditorContent() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="flex flex-col h-screen">
+      <div className="bg-amber-50 border-b border-amber-200 px-6 py-3">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 text-amber-800">
+            <AlertTriangle className="w-4 h-4" />
+            <span>⚠️ 此页面已停用。学习路径功能已移至知识星图</span>
+          </div>
+          <button
+            onClick={() => router.push('/graph?view=path')}
+            className="text-amber-800 hover:text-amber-900 font-medium text-sm"
+          >
+            前往知识星图 →
+          </button>
+        </div>
+      </div>
+
       {/* 顶部导航 */}
       <div className="border-b bg-white px-6 py-4">
         <div className="flex items-center justify-between">
@@ -86,18 +101,16 @@ function PathEditorContent() {
       {/* 主内容区 */}
       <div className="flex-1 overflow-hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <div className="border-b bg-white px-6">
-            <TabsList>
-              <TabsTrigger value="market">路径市场</TabsTrigger>
-              <TabsTrigger value="editor">编辑器</TabsTrigger>
-              <TabsTrigger value="preview" disabled={!currentPath}>
-                预览
-              </TabsTrigger>
-              <TabsTrigger value="execute" disabled={!currentPath}>
-                执行
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="border-b bg-white px-6">
+            <TabsTrigger value="market">路径市场</TabsTrigger>
+            <TabsTrigger value="editor">编辑器</TabsTrigger>
+            <TabsTrigger value="preview" disabled={!currentPath}>
+              预览
+            </TabsTrigger>
+            <TabsTrigger value="execute" disabled={!currentPath}>
+              执行
+            </TabsTrigger>
+          </TabsList>
 
           <div className="flex-1 overflow-hidden">
             <TabsContent value="market" className="h-full m-0 overflow-y-auto">

@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   BookOpen,
   Network,
-  Route,
   Database,
   Settings,
   ArrowRight,
@@ -36,13 +35,6 @@ const coreEntries = [
     description: "定位高风险关系链，并把批次直接推送到学习执行面。",
     tag: "风险链路联动",
     icon: Network
-  },
-  {
-    href: "/graph?view=path",
-    title: "🎮 成长地图",
-    description: "基于图谱焦点生成可执行任务序列，并持续回写掌握度。",
-    tag: "目标到执行闭环",
-    icon: Route
   }
 ];
 
@@ -161,12 +153,6 @@ export default function HomePage() {
                   进入学习工作区
                 </Button>
               </Link>
-              <Link href="/graph?view=path">
-                <Button size="lg" variant="outline" className="group">
-                  <Route className="mr-2 h-4 w-4" />
-                  查看成长地图
-                </Button>
-              </Link>
             </>
           }
         />
@@ -206,7 +192,7 @@ export default function HomePage() {
         </div>
 
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
           variants={containerVariants}
         >
           {coreEntries.map((item) => {
