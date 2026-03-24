@@ -137,11 +137,11 @@ export default function HomePage() {
         <GalaxyHero
           badge="学习生态主入口"
           title="从「会做题」升级为「会学习、会迁移、会复盘」"
-          description="工作区负责引导，星图负责定位，地图负责执行，宝库负责沉淀。每次学习都会进入可检索、可回放、可复用的长期资产。"
+          description="工作区负责引导，星图负责定位与执行，宝库负责沉淀。每次学习都会进入可检索、可回放、可复用的长期资产。"
           quote="同一套界面里完成「问题理解 -> 结构化思考 -> 证据沉淀 -> 路径回写」，避免碎片化跳转。"
             chips={["LangGraph 工作流", "ModelScope 模型接入", "本地优先沉淀", "Web 全链路"]}
             metrics={[
-              { label: "核心工作台", value: "3", hint: "工作区 / 星图 / 地图" },
+              { label: "核心工作台", value: "2", hint: "工作区 / 星图" },
               { label: "生态模块", value: "2", hint: "知识库 / 配置中心" },
               { label: "上线形态", value: "Web", hint: "可直接部署到 Vercel" }
             ]}
