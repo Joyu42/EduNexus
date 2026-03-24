@@ -38,6 +38,7 @@ export type WorkspaceGraphNode = GraphNode & {
   pathMemberships: PathMembership[];
   category: string;
   kbDocumentId: string;
+  documentIds: string[];
 };
 
 export type WorkspaceGraphView = {
@@ -169,25 +170,53 @@ export async function getGraphView(
   );
 
   if (hasDemoPaths) {
+    const userPaths = db.syncedPaths.filter((path) => path.userId === userId);
+    const pathMembershipMap = buildPathMembershipMap(userPaths);
+    const needsReviewSet = new Set(db.needsReviewNodes ?? []);
     const demoNodeMeta = new Map(
       DEMO_GRAPH_BOOTSTRAP.nodes.map((node) => [node.id, node])
+    );
+    const demoNodeDocumentMap = new Map(
+      db.plans
+        .filter((plan) => plan.planId.startsWith("demo_graph_node::") && typeof plan.focusNodeId === "string")
+        .map((plan) => [
+          plan.focusNodeId as string,
+          {
+            label: typeof plan.goal === "string" ? plan.goal : "",
+            kbDocumentId:
+              typeof plan.focusNodeLabel === "string" && plan.focusNodeLabel.trim().length > 0
+                ? plan.focusNodeLabel
+                : ""
+          }
+        ])
     );
 
     const demoNodes = Object.entries(db.masteryByNode)
       .filter(([nodeId]) => nodeId.startsWith("demo_node_"))
       .map(([nodeId, mastery]) => {
         const meta = demoNodeMeta.get(nodeId);
+        const documentMeta = demoNodeDocumentMap.get(nodeId);
+        const pathMemberships = pathMembershipMap.get(nodeId) ?? [];
+        const category = resolveNodeCategory({
+          defaultDomain: meta?.domain ?? "general",
+          pathMemberships,
+          userPaths
+        });
+        const kbDocumentId = documentMeta?.kbDocumentId ?? "";
+        const documentIds = kbDocumentId ? [kbDocumentId] : [];
+
         return {
           id: nodeId,
-          label: meta?.label ?? nodeId,
+          label: documentMeta?.label || meta?.label || nodeId,
           mastery,
           risk: meta?.risk ?? 0.5,
           domain: meta?.domain ?? "general",
           masteryStage: deriveMasteryStage(mastery),
-          needsReview: false,
-          pathMemberships: [],
-          category: meta?.domain ?? "general",
-          kbDocumentId: nodeId,
+          needsReview: needsReviewSet.has(nodeId),
+          pathMemberships,
+          category,
+          kbDocumentId,
+          documentIds
         } satisfies WorkspaceGraphNode;
       });
 
@@ -243,6 +272,7 @@ export async function getGraphView(
       pathMemberships,
       category,
       kbDocumentId: doc.id,
+      documentIds: [doc.id],
     };
   });
 

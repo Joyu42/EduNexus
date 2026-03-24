@@ -31,6 +31,8 @@ export type DemoGraphBootstrapNode = {
   domain?: string;
   mastery?: number;
   risk?: number;
+  kbDocumentId?: string;
+  documentIds?: string[];
 };
 
 export type DemoGraphBootstrapEdge = {
@@ -218,6 +220,14 @@ function buildStarterGoal(seed: DemoGoalBootstrap, nowIso: string): Goal {
 
 function buildStarterGraphNode(seed: DemoGraphBootstrapNode, now: Date): GraphNode {
   const mastery = Math.max(0, Math.min(seed.mastery ?? 0.3, 1));
+  const documentIds = Array.isArray(seed.documentIds)
+    ? seed.documentIds.filter((docId): docId is string => typeof docId === "string" && docId.trim().length > 0)
+    : [];
+  const kbDocumentId =
+    typeof seed.kbDocumentId === "string" && seed.kbDocumentId.trim().length > 0
+      ? seed.kbDocumentId
+      : documentIds[0];
+
   return {
     id: seed.id,
     name: seed.label,
@@ -231,7 +241,8 @@ function buildStarterGraphNode(seed: DemoGraphBootstrapNode, now: Date): GraphNo
     practiceCompleted: 0,
     createdAt: now,
     updatedAt: now,
-    documentIds: []
+    kbDocumentId,
+    documentIds: kbDocumentId ? Array.from(new Set([kbDocumentId, ...documentIds])) : documentIds
   };
 }
 

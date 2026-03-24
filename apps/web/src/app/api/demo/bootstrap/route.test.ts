@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { DEMO_KB_DOCUMENTS, DEMO_WORKSPACE_SESSIONS } from "@/lib/server/demo-content";
 
 const auth = vi.fn();
 const listDocuments = vi.fn();
@@ -57,14 +58,14 @@ describe("demo bootstrap api", () => {
 
     expect(response.status).toBe(200);
     expect(listDocuments).toHaveBeenCalledWith("demo-user");
-    expect(createDocument).toHaveBeenCalledTimes(2);
+    expect(createDocument).toHaveBeenCalledTimes(DEMO_KB_DOCUMENTS.length);
     expect(createDocument).toHaveBeenNthCalledWith(
       1,
-      expect.objectContaining({ title: "前端开发入门路线", authorId: "demo-user" })
+      expect.objectContaining({ title: DEMO_KB_DOCUMENTS[0]?.title, authorId: "demo-user" })
     );
     expect(createDocument).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({ title: "React 项目实战清单", authorId: "demo-user" })
+      DEMO_KB_DOCUMENTS.length,
+      expect.objectContaining({ title: DEMO_KB_DOCUMENTS.at(-1)?.title, authorId: "demo-user" })
     );
 
     expect(saveDb).toHaveBeenCalledTimes(1);
@@ -74,11 +75,11 @@ describe("demo bootstrap api", () => {
     expect(savedDb.sessions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          title: "前端开发入门会话",
+          title: DEMO_WORKSPACE_SESSIONS[0]?.title,
           userId: "demo-user"
         }),
         expect.objectContaining({
-          title: "React 项目推进会话",
+          title: DEMO_WORKSPACE_SESSIONS[1]?.title,
           userId: "demo-user"
         })
       ])
@@ -89,53 +90,40 @@ describe("demo bootstrap api", () => {
         kb: { documents: Array<{ title: string }> };
         workspace: { sessions: Array<{ title: string }> };
         practice: { banks: Array<{ name: string; questions: Array<{ title: string }> }> };
-        graph: { nodes: Array<{ id: string }>; edges: Array<{ id: string }> };
+        graph: { nodes: Array<{ id: string; kbDocumentId?: string; documentIds?: string[] }>; edges: Array<{ id: string }> };
         goals: { items: Array<{ id: string; linkedPathIds: string[] }> };
         paths: { items: Array<{ id: string; title: string }> };
         path: { goal: string };
       };
     };
-    expect(payload.data.kb.documents.map((item) => item.title)).toEqual([
-      "前端开发入门路线",
-      "React 项目实战清单"
-    ]);
-    expect(payload.data.workspace.sessions.map((item) => item.title)).toEqual([
-      "前端开发入门会话",
-      "React 项目推进会话"
-    ]);
+    expect(payload.data.kb.documents.map((item) => item.title)).toEqual(DEMO_KB_DOCUMENTS.map((item) => item.title));
+    expect(payload.data.workspace.sessions.map((item) => item.title)).toEqual(DEMO_WORKSPACE_SESSIONS.map((item) => item.title));
     expect(payload.data.practice.banks).toHaveLength(1);
-    expect(payload.data.practice.banks[0]?.name).toBe("前端与算法演示题库");
-    expect(payload.data.practice.banks[0]?.questions.map((item) => item.title)).toEqual([
-      "语义化标签选择",
-      "为什么先复盘 JavaScript 再学 React？"
-    ]);
-    expect(payload.data.goals.items).toHaveLength(3);
+    expect(payload.data.practice.banks[0]?.name).toBe("前端基础演示题库");
+    expect(payload.data.practice.banks[0]?.questions.map((item) => item.title)).toEqual(["语义化标签选择", "Flexbox 主轴对齐"]);
+    expect(payload.data.goals.items).toHaveLength(2);
     expect(payload.data.paths.items.length).toBeGreaterThan(1);
     expect(payload.data.graph.nodes.length).toBeGreaterThan(1);
+    expect(payload.data.graph.nodes.every((item) => Boolean(item.kbDocumentId))).toBe(true);
+    expect(payload.data.graph.nodes.every((item) => Array.isArray(item.documentIds) && item.documentIds.length > 0)).toBe(true);
     expect(payload.data.path.goal).toBe(payload.data.paths.items[0]?.title);
     expect(seedDemoContentBundle).toHaveBeenCalledTimes(1);
   });
 
   it("is idempotent when demo content already exists", async () => {
-    listDocuments.mockResolvedValue([
-      {
-        id: "doc-frontend",
-        title: "前端开发入门路线",
-        content: "existing",
+    listDocuments.mockResolvedValue(
+      DEMO_KB_DOCUMENTS.map((item, index) => ({
+        id: `doc-${index}`,
+        title: item.title,
+        content: item.content,
         authorId: "demo-user"
-      },
-      {
-        id: "doc-react",
-        title: "React 项目实战清单",
-        content: "existing",
-        authorId: "demo-user"
-      }
-    ]);
+      }))
+    );
     loadDb.mockResolvedValue({
       sessions: [
         {
           id: "ws_demo_frontend_intro",
-          title: "前端开发入门会话",
+          title: DEMO_WORKSPACE_SESSIONS[0]?.title,
           userId: "demo-user",
           createdAt: "2026-03-16T00:00:00.000Z",
           updatedAt: "2026-03-16T00:00:00.000Z",
@@ -144,7 +132,7 @@ describe("demo bootstrap api", () => {
         },
         {
           id: "ws_demo_react_intro",
-          title: "React 项目推进会话",
+          title: DEMO_WORKSPACE_SESSIONS[1]?.title,
           userId: "demo-user",
           createdAt: "2026-03-16T00:00:00.000Z",
           updatedAt: "2026-03-16T00:00:00.000Z",

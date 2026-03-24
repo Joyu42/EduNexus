@@ -34,6 +34,31 @@ type SessionPayload = {
   }>;
 };
 
+const DEMO_PATH_NODE_MEMBERSHIPS: Record<string, Array<{ stageId: string; nodeIds: string[] }>> = {
+  demo_path_frontend_foundations: [
+    {
+      stageId: "foundation",
+      nodeIds: [
+        "demo_node_html_basics",
+        "demo_node_css_basics",
+        "demo_node_js_fundamentals",
+        "demo_node_flexbox",
+        "demo_node_grid"
+      ]
+    }
+  ],
+  demo_path_react_interface: [
+    {
+      stageId: "advanced_ui",
+      nodeIds: [
+        "demo_node_react_intro",
+        "demo_node_responsive",
+        "demo_node_accessibility"
+      ]
+    }
+  ]
+};
+
 function buildDemoSession(
   seed: (typeof DEMO_WORKSPACE_SESSIONS)[number],
   userId: string,
@@ -51,6 +76,48 @@ function buildDemoSession(
       content: message.content,
       createdAt: now
     }))
+  };
+}
+
+function buildDemoGraphWithDocuments(
+  documents: Array<{ id: string; title: string }>
+): {
+  graph: {
+    nodes: Array<{
+      id: string;
+      label: string;
+      domain: string;
+      mastery: number;
+      risk: number;
+      kbDocumentId: string;
+      documentIds: string[];
+    }>;
+    edges: typeof DEMO_GRAPH_BOOTSTRAP.edges;
+  };
+  nodeDocumentIds: Map<string, string>;
+} {
+  const documentsByTitle = new Map(documents.map((doc) => [doc.title, doc.id]));
+  const nodeDocumentIds = new Map<string, string>();
+
+  const nodes = DEMO_GRAPH_BOOTSTRAP.nodes.map((node) => {
+    const kbDocumentId = documentsByTitle.get(node.label) ?? "";
+    if (kbDocumentId) {
+      nodeDocumentIds.set(node.id, kbDocumentId);
+    }
+
+    return {
+      ...node,
+      kbDocumentId,
+      documentIds: kbDocumentId ? [kbDocumentId] : []
+    };
+  });
+
+  return {
+    graph: {
+      nodes,
+      edges: DEMO_GRAPH_BOOTSTRAP.edges
+    },
+    nodeDocumentIds
   };
 }
 
@@ -76,6 +143,10 @@ function seedDemoPathsToDb(
         progress?: number;
         dependencies?: string[];
       }>;
+      stages?: Array<{
+        stageId: string;
+        nodeIds: string[];
+      }>;
       updatedAt: string;
     }>;
   },
@@ -96,6 +167,7 @@ function seedDemoPathsToDb(
       status: pathSeed.status,
       progress: pathSeed.progress,
       tags: pathSeed.tags,
+      stages: DEMO_PATH_NODE_MEMBERSHIPS[pathSeed.id] ?? [],
       tasks: pathSeed.tasks.map((task) => ({
         taskId: task.id,
         title: task.title,
@@ -138,9 +210,7 @@ function seedDemoGoalsToDb(
       createdAt: string;
       updatedAt: string;
     }>;
-  },
-  userId: string,
-  now: string
+  }
 ): void {
   for (const goalSeed of DEMO_GOAL_SEEDS) {
     // Check if goal already exists (idempotency)
@@ -172,13 +242,48 @@ function seedDemoGoalsToDb(
 function seedDemoGraphNodesToDb(
   db: {
     masteryByNode: Record<string, number>;
+    plans: Array<{
+      planId: string;
+      goalType: "exam" | "project" | "certificate";
+      goal: string;
+      focusNodeId?: string | null;
+      focusNodeLabel?: string | null;
+      focusNodeRisk?: number | null;
+      tasks: Array<{
+        taskId: string;
+        title: string;
+        priority: number;
+        reason: string;
+        dueDate: string;
+      }>;
+      createdAt: string;
+      updatedAt: string;
+    }>;
   },
+  nodeDocumentIds: Map<string, string>,
   now: string
 ): void {
   for (const nodeSeed of DEMO_GRAPH_BOOTSTRAP.nodes) {
-    // Check if node already exists (idempotency)
-    if (!(nodeSeed.id in db.masteryByNode)) {
-      db.masteryByNode[nodeSeed.id] = nodeSeed.mastery;
+    db.masteryByNode[nodeSeed.id] = nodeSeed.mastery;
+
+    const planId = `demo_graph_node::${nodeSeed.id}`;
+    const existingIndex = db.plans.findIndex((plan) => plan.planId === planId);
+    const record = {
+      planId,
+      goalType: "project" as const,
+      goal: nodeSeed.label,
+      focusNodeId: nodeSeed.id,
+      focusNodeLabel: nodeDocumentIds.get(nodeSeed.id) ?? null,
+      focusNodeRisk: nodeSeed.risk,
+      tasks: [],
+      createdAt: now,
+      updatedAt: now
+    };
+
+    if (existingIndex >= 0) {
+      db.plans[existingIndex] = { ...db.plans[existingIndex], ...record };
+    } else {
+      db.plans.push(record);
     }
   }
 }
@@ -358,8 +463,9 @@ export async function POST() {
       demoDocuments.push({ id: created.id, title: created.title });
     }
 
+    const { graph: graphBootstrapWithLinks, nodeDocumentIds } = buildDemoGraphWithDocuments(demoDocuments);
+
     const db = await loadDb();
-    const beforeSnapshot = JSON.stringify(db);
     const existingUserSessions = db.sessions.filter((item) => item.userId === userId);
     const existingSessionTitles = new Set(existingUserSessions.map((item) => item.title));
     const now = new Date().toISOString();
@@ -398,7 +504,7 @@ export async function POST() {
       {
         workspace: { sessions: workspaceSessions },
         practice: { banks: DEMO_PRACTICE_BANKS },
-        graph: DEMO_GRAPH_BOOTSTRAP,
+        graph: graphBootstrapWithLinks,
         goals: { items: DEMO_GOAL_SEEDS },
         paths: { items: DEMO_PATH_SEEDS },
         path: DEMO_PATH_BOOTSTRAP
@@ -528,21 +634,31 @@ export async function POST() {
       getGraphNodes: async () =>
         Object.entries(db.masteryByNode)
           .filter(([nodeId]) => nodeId.startsWith("demo_node_"))
-          .map(([nodeId, mastery]) => ({
-            id: nodeId,
-            name: nodeId,
-            type: "concept" as const,
-            status: "learning" as const,
-            importance: 0.5,
-            mastery,
-            connections: 0,
-            noteCount: 0,
-            practiceCount: 0,
-            practiceCompleted: 0,
-            createdAt: new Date(now),
-            updatedAt: new Date(now),
-            documentIds: []
-          })),
+          .map(([nodeId, mastery]) => {
+            const nodeMeta = DEMO_GRAPH_BOOTSTRAP.nodes.find((node) => node.id === nodeId);
+            const nodePlan = db.plans.find((plan) => plan.planId === `demo_graph_node::${nodeId}`);
+            const kbDocumentId =
+              typeof nodePlan?.focusNodeLabel === "string" && nodePlan.focusNodeLabel.trim().length > 0
+                ? nodePlan.focusNodeLabel
+                : "";
+
+            return {
+              id: nodeId,
+              name: nodeMeta?.label ?? nodeId,
+              type: "concept" as const,
+              status: "learning" as const,
+              importance: 0.5,
+              mastery,
+              connections: 0,
+              noteCount: 0,
+              practiceCount: 0,
+              practiceCompleted: 0,
+              createdAt: new Date(now),
+              updatedAt: new Date(now),
+              kbDocumentId,
+              documentIds: kbDocumentId ? [kbDocumentId] : []
+            };
+          }),
       upsertGraphNode: async (_seedUserId, node) => {
         db.masteryByNode[node.id] = node.mastery;
       },
@@ -590,10 +706,10 @@ export async function POST() {
     seedDemoPathsToDb(db, userId, now);
     
     // 2. Seed all 3 goals to db.plans (idempotent)
-    seedDemoGoalsToDb(db, userId, now);
+    seedDemoGoalsToDb(db);
     
     // 3. Seed graph nodes to db.masteryByNode (idempotent)
-    seedDemoGraphNodesToDb(db, now);
+    seedDemoGraphNodesToDb(db, nodeDocumentIds, now);
     
     // 4. Seed graph edges to db.plans (idempotent)
     seedDemoGraphEdgesToDb(db, now);
@@ -607,7 +723,7 @@ export async function POST() {
       kb: { documents: demoDocuments },
       workspace: { sessions: workspaceSessions },
       practice: { banks: DEMO_PRACTICE_BANKS },
-      graph: DEMO_GRAPH_BOOTSTRAP,
+      graph: graphBootstrapWithLinks,
       goals: { items: DEMO_GOAL_SEEDS },
       paths: { items: DEMO_PATH_SEEDS },
       path: DEMO_PATH_BOOTSTRAP,

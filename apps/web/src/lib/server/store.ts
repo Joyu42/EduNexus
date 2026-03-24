@@ -55,6 +55,10 @@ type SyncedPathRecord = {
   status: "not_started" | "in_progress" | "completed";
   progress: number;
   tags: string[];
+  stages?: Array<{
+    stageId: string;
+    nodeIds: string[];
+  }>;
   tasks: SyncedPathTaskRecord[];
   updatedAt: string;
 };
@@ -446,6 +450,29 @@ function normalizeSyncedPathRecord(input: unknown): SyncedPathRecord | null {
     .map((task) => normalizeSyncedPathTaskRecord(task))
     .filter((task): task is SyncedPathTaskRecord => task !== null);
 
+  const stagesSource = Array.isArray(input.stages) ? input.stages : [];
+  const stages = stagesSource
+    .map((stage) => {
+      if (!isRecord(stage)) {
+        return null;
+      }
+
+      const stageId = typeof stage.stageId === "string" ? stage.stageId.trim() : "";
+      const nodeIds = Array.isArray(stage.nodeIds)
+        ? stage.nodeIds
+            .filter((item): item is string => typeof item === "string")
+            .map((item) => item.trim())
+            .filter(Boolean)
+        : [];
+
+      if (!stageId || nodeIds.length === 0) {
+        return null;
+      }
+
+      return { stageId, nodeIds };
+    })
+    .filter((stage): stage is NonNullable<SyncedPathRecord["stages"]>[number] => stage !== null);
+
   return {
     userId,
     pathId,
@@ -454,6 +481,7 @@ function normalizeSyncedPathRecord(input: unknown): SyncedPathRecord | null {
     status: normalizedStatus,
     progress: typeof input.progress === "number" ? input.progress : 0,
     tags,
+    stages: stages.length > 0 ? stages : undefined,
     tasks,
     updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : new Date().toISOString(),
   };

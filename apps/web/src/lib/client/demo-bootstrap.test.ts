@@ -46,7 +46,9 @@ describe("demo bootstrap content", () => {
             label: "HTML Basics",
             domain: "frontend",
             mastery: 0.35,
-            risk: 0.5
+            risk: 0.5,
+            kbDocumentId: "kb_doc_html",
+            documentIds: ["kb_doc_html"]
           }
         ],
         edges: [
@@ -130,7 +132,9 @@ describe("demo bootstrap content", () => {
     expect(bundle.graph.nodes[0]).toMatchObject({
       id: "graph_node_1",
       name: "HTML Basics",
-      type: "concept"
+      type: "concept",
+      kbDocumentId: "kb_doc_html",
+      documentIds: ["kb_doc_html"]
     });
     expect(bundle.goals[0]).toMatchObject({
       id: "demo_goal_1",
