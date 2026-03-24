@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { KBLayout } from "@/components/kb/kb-layout";
 import { LoginPrompt } from "@/components/ui/login-prompt";
 import {
@@ -15,6 +15,7 @@ import {
 import { useDocument } from "@/lib/ai/document-context";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { normalizeGraphToKbHandoff, resolveRequestedKbDocument } from "./handoff";
 import { getKnowledgeBaseViewState } from "./view-state";
 
 const SERVER_VAULT: KBVault = {
@@ -45,6 +46,32 @@ export default function KnowledgeBasePage() {
   const [documents, setDocuments] = useState<KBDocument[]>([]);
   const [currentDoc, setCurrentDoc] = useState<KBDocument | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [handoffNotice, setHandoffNotice] = useState<string | null>(null);
+  const [handoffInput, setHandoffInput] = useState<{ doc: string | null; node: string | null }>({
+    doc: null,
+    node: null,
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    setHandoffInput({
+      doc: params.get("doc"),
+      node: params.get("node"),
+    });
+  }, []);
+
+  const handoff = useMemo(
+    () =>
+      normalizeGraphToKbHandoff({
+        doc: handoffInput.doc,
+        node: handoffInput.node,
+      }),
+    [handoffInput.doc, handoffInput.node]
+  );
 
   useEffect(() => {
     setCurrentDocument(currentDoc);
@@ -70,6 +97,52 @@ export default function KnowledgeBasePage() {
 
     initializeData();
   }, [status]);
+
+  useEffect(() => {
+    if (handoff.source !== "node" || !handoff.requestedDocumentId) {
+      return;
+    }
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+    params.delete("node");
+    params.set("doc", handoff.requestedDocumentId);
+    window.history.replaceState(null, "", url.toString());
+
+    setHandoffInput({
+      doc: handoff.requestedDocumentId,
+      node: null,
+    });
+  }, [handoff.requestedDocumentId, handoff.source]);
+
+  useEffect(() => {
+    if (status !== "authenticated" || isLoading) {
+      return;
+    }
+
+    if (!handoff.requestedDocumentId) {
+      setHandoffNotice(null);
+      return;
+    }
+
+    const requestedDoc = resolveRequestedKbDocument(documents, handoff.requestedDocumentId);
+    if (requestedDoc) {
+      setCurrentDoc((previousCurrentDoc) =>
+        previousCurrentDoc?.id === requestedDoc.id ? previousCurrentDoc : requestedDoc
+      );
+      setHandoffNotice(null);
+      return;
+    }
+
+    setCurrentDoc((previousCurrentDoc) => previousCurrentDoc ?? documents[0] ?? null);
+    setHandoffNotice(
+      `未找到知识文档「${handoff.requestedDocumentId}」，已为你保留当前文档视图。`
+    );
+  }, [documents, handoff.requestedDocumentId, isLoading, status]);
 
   const handleCreateDocument = async (title: string) => {
     if (status !== 'authenticated') {
@@ -170,22 +243,34 @@ export default function KnowledgeBasePage() {
         <div className="max-w-md rounded-3xl border bg-card p-10 text-center shadow-sm">
           <h1 className="text-2xl font-semibold text-foreground">{viewState.title}</h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">{viewState.description}</p>
+          {handoffNotice ? (
+            <p className="mt-4 rounded-xl border border-amber-300/70 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">
+              {handoffNotice}
+            </p>
+          ) : null}
         </div>
       </div>
     );
   }
   
   return (
-    <KBLayout
-      vaults={[SERVER_VAULT]}
-      currentVault={SERVER_VAULT}
-      documents={documents}
-      currentDoc={currentDoc}
-      onVaultChange={handleVaultChange}
-      onCreateDocument={handleCreateDocument}
-      onSelectDocument={handleSelectDocument}
-      onDeleteDocument={handleDeleteDocument}
-      onUpdateDocument={handleUpdateDocument}
-    />
+    <>
+      {handoffNotice ? (
+        <div className="border-b border-amber-300/70 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+          {handoffNotice}
+        </div>
+      ) : null}
+      <KBLayout
+        vaults={[SERVER_VAULT]}
+        currentVault={SERVER_VAULT}
+        documents={documents}
+        currentDoc={currentDoc}
+        onVaultChange={handleVaultChange}
+        onCreateDocument={handleCreateDocument}
+        onSelectDocument={handleSelectDocument}
+        onDeleteDocument={handleDeleteDocument}
+        onUpdateDocument={handleUpdateDocument}
+      />
+    </>
   );
 }
