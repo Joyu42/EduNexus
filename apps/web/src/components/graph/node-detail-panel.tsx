@@ -321,7 +321,7 @@ export function NodeDetailPanel({
               className="w-full justify-start gap-2"
               variant="outline"
               onClick={() => {
-                const kbDocumentId = node.kbDocumentId ?? node.id;
+                const kbDocumentId = node.kbDocumentId || node.id;
                 window.location.href = `/kb?doc=${encodeURIComponent(kbDocumentId)}`;
               }}
             >
