@@ -1,6 +1,8 @@
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { normalizeLearningPackRecord } from "../learning-pack/schema";
+import type { LearningPackRecord } from "../learning-pack/schema";
 
 type SessionRecord = {
   id: string;
@@ -251,6 +253,7 @@ type DbSchema = {
   communityTopics: CommunityTopicRecord[];
   analyticsEvents: AnalyticsEventRecord[];
   analyticsSnapshots: AnalyticsSnapshotRecord[];
+  learningPacks: LearningPackRecord[];
 };
 
 const DEFAULT_DB: DbSchema = {
@@ -276,7 +279,8 @@ const DEFAULT_DB: DbSchema = {
   communityFollows: [],
   communityTopics: [],
   analyticsEvents: [],
-  analyticsSnapshots: []
+  analyticsSnapshots: [],
+  learningPacks: []
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -933,6 +937,7 @@ export async function loadDb(): Promise<DbSchema> {
     const communityTopicsSource = Array.isArray(parsed.communityTopics) ? parsed.communityTopics : [];
     const analyticsEventsSource = Array.isArray(parsed.analyticsEvents) ? parsed.analyticsEvents : [];
     const analyticsSnapshotsSource = Array.isArray(parsed.analyticsSnapshots) ? parsed.analyticsSnapshots : [];
+    const learningPacksSource = Array.isArray(parsed.learningPacks) ? parsed.learningPacks : [];
 
     return {
       sessions,
@@ -993,7 +998,10 @@ export async function loadDb(): Promise<DbSchema> {
         .filter((event): event is AnalyticsEventRecord => event !== null),
       analyticsSnapshots: analyticsSnapshotsSource
         .map((snapshot) => normalizeAnalyticsSnapshotRecord(snapshot))
-        .filter((snapshot): snapshot is AnalyticsSnapshotRecord => snapshot !== null)
+        .filter((snapshot): snapshot is AnalyticsSnapshotRecord => snapshot !== null),
+      learningPacks: learningPacksSource
+        .map((pack) => normalizeLearningPackRecord(pack))
+        .filter((pack): pack is LearningPackRecord => pack !== null)
     };
   } catch {
     await fs.writeFile(filePath, JSON.stringify(DEFAULT_DB, null, 2), "utf8");

@@ -1,6 +1,7 @@
 import { prisma } from './prisma';
 import { loadDb } from './store';
 import { DEMO_GRAPH_BOOTSTRAP } from './demo-content';
+import { getPackById } from './learning-pack-store';
 
 const MAX_NODES_PER_USER = 200;
 
@@ -44,6 +45,10 @@ export type WorkspaceGraphNode = GraphNode & {
 export type WorkspaceGraphView = {
   nodes: WorkspaceGraphNode[];
   edges: GraphEdge[];
+  /** The packId that was used to produce this view, if any */
+  packId?: string;
+  /** True when packId was explicitly requested but the pack does not exist */
+  packMissing?: boolean;
 };
 
 function deriveMasteryStage(mastery: number): MasteryStage {
@@ -151,17 +156,67 @@ function resolveNodeCategory(input: {
   return input.defaultDomain;
 }
 
-export async function getGraphView(userId: string, input?: { domain?: string }): Promise<WorkspaceGraphView>;
-export async function getGraphView(input?: { domain?: string; owner?: string }): Promise<WorkspaceGraphView>;
+export async function getGraphView(userId: string, input?: { domain?: string; packId?: string }): Promise<WorkspaceGraphView>;
+export async function getGraphView(input?: { domain?: string; owner?: string; packId?: string }): Promise<WorkspaceGraphView>;
 export async function getGraphView(
-  arg1?: string | { domain?: string; owner?: string },
-  arg2?: { domain?: string }
+  arg1?: string | { domain?: string; owner?: string; packId?: string },
+  arg2?: { domain?: string; packId?: string }
 ): Promise<WorkspaceGraphView> {
   const userId = typeof arg1 === 'string' ? arg1 : arg1?.owner;
   const domain = typeof arg1 === 'string' ? arg2?.domain : arg1?.domain;
+  const packId = typeof arg1 === 'string' ? arg2?.packId : arg1?.packId;
 
   if (!userId) {
     return { nodes: [], edges: [] };
+  }
+
+  if (packId) {
+    const pack = await getPackById(packId, userId);
+    if (!pack) {
+      return { nodes: [], edges: [], packId, packMissing: true };
+    }
+
+    const packDocIds = pack.modules
+      .map((m) => m.kbDocumentId)
+      .filter((id): id is string => id.length > 0);
+
+    if (packDocIds.length === 0) {
+      return { nodes: [], edges: [], packId };
+    }
+
+    const packDocs = await prisma.document.findMany({
+      where: { id: { in: packDocIds }, authorId: userId },
+    });
+
+    const packDocIdSet = new Set(packDocs.map((d) => d.id));
+    const packModuleMap = new Map(pack.modules.map((m) => [m.kbDocumentId, m]));
+
+    const db = await loadDb();
+    const userPaths = db.syncedPaths.filter((p) => p.userId === userId);
+    const pathMembershipMap = buildPathMembershipMap(userPaths);
+    const needsReviewSet = new Set(db.needsReviewNodes ?? []);
+
+    const nodes: WorkspaceGraphNode[] = packDocs.map((doc) => {
+      const mastery = db.masteryByNode[doc.id] ?? 0;
+      const mod = packModuleMap.get(doc.id);
+      const pathMemberships = pathMembershipMap.get(doc.id) ?? [];
+
+      return {
+        id: doc.id,
+        label: doc.title,
+        mastery,
+        risk: 0.5,
+        domain: pack.topic,
+        masteryStage: deriveMasteryStage(mastery),
+        needsReview: needsReviewSet.has(doc.id),
+        pathMemberships,
+        category: pack.topic,
+        kbDocumentId: doc.id,
+        documentIds: [doc.id],
+      };
+    });
+
+    return { nodes, edges: [], packId };
   }
 
   const db = await loadDb();

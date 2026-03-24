@@ -27,11 +27,15 @@ type GraphViewApiResponse = {
   };
   nodes?: GraphViewApiNode[];
   edges?: GraphViewApiEdge[];
+  packId?: string;
+  packMissing?: boolean;
 };
 
 type GraphViewStateInput = {
   isLoading: boolean;
   nodes: GraphNode[];
+  packId?: string;
+  packMissing?: boolean;
 };
 
 type GraphViewState =
@@ -46,6 +50,8 @@ type GraphViewState =
 type GraphData = {
   nodes: GraphNode[];
   edges: GraphEdge[];
+  packId?: string;
+  packMissing?: boolean;
 };
 
 function resolveNodeStatus(mastery: number): NodeStatus {
@@ -124,9 +130,11 @@ function normalizeGraphResponse(payload: GraphViewApiResponse): GraphData {
 }
 
 export async function loadPrivateGraphView(
+  packId?: string,
   fetcher: typeof fetch = fetch
 ): Promise<GraphData> {
-  const response = await fetcher("/api/graph/view", {
+  const url = packId ? `/api/graph/view?packId=${encodeURIComponent(packId)}` : "/api/graph/view";
+  const response = await fetcher(url, {
     credentials: "include",
   });
 
@@ -138,7 +146,8 @@ export async function loadPrivateGraphView(
   }
 
   const payload = (await response.json()) as GraphViewApiResponse;
-  return normalizeGraphResponse(payload);
+  const data = normalizeGraphResponse(payload);
+  return { ...data, packId: payload.packId, packMissing: payload.packMissing };
 }
 
 export function getGraphViewState(input: GraphViewStateInput): GraphViewState {
@@ -147,6 +156,20 @@ export function getGraphViewState(input: GraphViewStateInput): GraphViewState {
   }
 
   if (input.nodes.length === 0) {
+    if (input.packMissing) {
+      return {
+        kind: "empty",
+        title: "学习包不存在",
+        description: "该学习包不存在或你无权访问。",
+      };
+    }
+    if (input.packId) {
+      return {
+        kind: "empty",
+        title: "学习包还在生成中",
+        description: "模块文档尚未创建，请在知识库中查看进度。",
+      };
+    }
     return {
       kind: "empty",
       title: "你的知识星图还是空的",

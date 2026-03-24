@@ -20,7 +20,8 @@ export async function GET(request: Request) {
     
     const { searchParams } = new URL(request.url);
     const domain = searchParams.get("domain") ?? undefined;
-    const graph: WorkspaceGraphView = await getGraphView(userId, { domain });
+    const packId = searchParams.get("packId") ?? undefined;
+    const graph: WorkspaceGraphView = await getGraphView(userId, { domain, packId });
     return ok(graph);
   } catch (error) {
     return fail(

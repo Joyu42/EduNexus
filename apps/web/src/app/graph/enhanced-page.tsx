@@ -39,6 +39,7 @@ import {
 import { InteractiveGraph } from "@/components/graph/interactive-graph";
 import { NodeDetailPanel } from "@/components/graph/node-detail-panel";
 import { LearningPathOverlay } from "@/components/graph/learning-path-overlay";
+import { JourneyShell } from "@/components/graph/journey-shell";
 import { ProgressLegend } from "@/components/graph/progress-legend";
 import { LoginPrompt } from "@/components/ui/login-prompt";
 import { RecommendationEngine } from "@/lib/graph/recommendation-engine";
@@ -104,11 +105,14 @@ function GraphPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const view = searchParams.get("view") || "explore";
+  const urlPackId = searchParams.get("packId") || undefined;
 
   // 状态管理
   const [graphData, setGraphData] = useState<{
     nodes: GraphNode[];
     edges: GraphEdge[];
+    packId?: string;
+    packMissing?: boolean;
   }>({ nodes: [], edges: [] });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
@@ -238,7 +242,7 @@ function GraphPageContent() {
     const initializeGraph = async () => {
       setIsGraphLoading(true);
       try {
-        const data = await loadPrivateGraphView();
+        const data = await loadPrivateGraphView(urlPackId);
         if (!isMounted) {
           return;
         }
@@ -377,7 +381,7 @@ function GraphPageContent() {
   };
 
   const refreshGraphData = useCallback(async (nodeId?: string) => {
-    const data = await loadPrivateGraphView();
+    const data = await loadPrivateGraphView(urlPackId);
     setGraphData(data);
     if (!nodeId) {
       return;
@@ -570,6 +574,8 @@ function GraphPageContent() {
   const viewState = getGraphViewState({
     isLoading: isGraphLoading,
     nodes: graphData.nodes,
+    packId: graphData.packId,
+    packMissing: graphData.packMissing,
   });
 
   if (viewState.kind === "loading") {
@@ -764,7 +770,9 @@ function GraphPageContent() {
         {/* 3-Column Layout */}
         <div className="flex-1 flex min-h-0 gap-4">
           {/* Left Filters */}
-          <div className="w-64 shrink-0 flex flex-col gap-6 bg-card/30 rounded-lg border p-4 overflow-y-auto">
+          <div className="w-64 shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto">
+            {activeMode === "path" && <JourneyShell />}
+
             <div>
               <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
                 <Filter className="h-4 w-4" /> 节点类型
@@ -1211,7 +1219,7 @@ function GraphPageContent() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => router.push(`/kb/${kbDoc.id}`)}
+                          onClick={() => router.push(`/kb?doc=${encodeURIComponent(kbDoc.id)}`)}
                           className="text-xs flex-1"
                         >
                           打开编辑器
@@ -1219,7 +1227,7 @@ function GraphPageContent() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => window.open(`/kb/${kbDoc.id}`, "_blank")}
+                          onClick={() => window.open(`/kb?doc=${encodeURIComponent(kbDoc.id)}`, "_blank")}
                           className="text-xs"
                           title="新窗口打开"
                         >

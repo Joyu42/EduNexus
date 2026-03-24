@@ -29,6 +29,7 @@ export type WorkspaceMessage = {
   toolSteps?: AgentToolStep[];
   timestamp: Date;
   mode?: "normal" | "kb-qa";
+  learningPack?: LearningPackInfo;
 };
 
 export type WorkspaceControllerTeacher = {
@@ -62,10 +63,18 @@ export type SendWorkspaceMessageInput = {
   onAssistantResponse?: (content: string) => Promise<void> | void;
 };
 
+export type LearningPackInfo = {
+  packId: string;
+  title: string;
+  topic: string;
+  graphUrl: string;
+};
+
 type AgentChatResult = {
   content: string;
   thinking?: string;
   toolSteps?: AgentToolStep[];
+  learningPack?: LearningPackInfo;
 };
 
 type KBQAChatResult = {
@@ -244,6 +253,7 @@ async function runWorkspaceAgentChat(input: SendWorkspaceMessageInput): Promise<
     content: data.response,
     thinking: typeof data.thinking === "string" ? data.thinking : undefined,
     toolSteps: normalizeToolSteps(data.steps),
+    learningPack: data.learningPack as LearningPackInfo | undefined,
   };
 }
 
@@ -366,6 +376,7 @@ export function useWorkspaceSessionController({
         let assistantResult: AgentChatResult | KBQAChatResult;
         let assistantThinking: string | undefined;
         let assistantToolSteps: AgentToolStep[] | undefined;
+        let assistantLearningPack: LearningPackInfo | undefined;
 
         if (input.kbQAMode) {
           assistantResult = await deps.runKBQAChat(input);
@@ -374,6 +385,7 @@ export function useWorkspaceSessionController({
           assistantResult = agentResult;
           assistantThinking = agentResult.thinking;
           assistantToolSteps = agentResult.toolSteps;
+          assistantLearningPack = agentResult.learningPack;
         }
 
         const assistantMessage: WorkspaceMessage = {
@@ -384,6 +396,7 @@ export function useWorkspaceSessionController({
           toolSteps: assistantToolSteps,
           timestamp: new Date(),
           mode: input.kbQAMode ? "kb-qa" : "normal",
+          learningPack: assistantLearningPack,
         };
 
         setMessages((prev) => [...prev, assistantMessage]);

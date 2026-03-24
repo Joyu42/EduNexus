@@ -23,6 +23,7 @@ import {
   History,
   Trash2,
   Plus,
+  Route,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoginPrompt } from "@/components/ui/login-prompt";
@@ -735,6 +736,19 @@ function WorkspacePageContent() {
                     <div className="prose prose-sm max-w-none">
                       <MarkdownRenderer content={message.content} />
                     </div>
+                    {message.learningPack && (
+                      <div className="mt-3 pt-2 border-t border-gray-100">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs h-8 bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200 hover:border-orange-300 hover:bg-orange-100"
+                          onClick={() => { window.location.href = message.learningPack!.graphUrl; }}
+                        >
+                          <Route className="h-3 w-3 mr-1.5" />
+                          进入 {message.learningPack!.title}
+                        </Button>
+                      </div>
+                    )}
                     <div className="text-xs opacity-70 mt-2 flex items-center justify-between">
                       <span suppressHydrationWarning>{isMounted ? message.timestamp.toLocaleTimeString() : ""}</span>
                       {message.mode && (

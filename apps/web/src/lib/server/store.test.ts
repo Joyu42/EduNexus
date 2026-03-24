@@ -59,6 +59,7 @@ describe("server store", () => {
       "groupPosts",
       "groupSharedResources",
       "groupTasks",
+      "learningPacks",
       "masteryByNode",
       "needsReviewNodes",
       "plans",

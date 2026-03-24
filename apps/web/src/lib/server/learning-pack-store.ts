@@ -1,0 +1,189 @@
+import { randomUUID } from "crypto";
+import { loadDb, saveDb } from "./store";
+import type { LearningPackRecord, LearningPackModuleRecord } from "../learning-pack/schema";
+import { deriveModuleStage, derivePackStage, isTerminalStage, stageOrder } from "../learning-pack/schema";
+
+export type { LearningPackRecord, LearningPackModuleRecord, MasteryStage } from "../learning-pack/schema";
+export { MASTERY_STAGES } from "../learning-pack/schema";
+
+function generatePackId(): string {
+  return `lp_${randomUUID()}`;
+}
+
+function generateModuleId(): string {
+  return `mod_${randomUUID()}`;
+}
+
+async function getAllPacks(): Promise<LearningPackRecord[]> {
+  const db = await loadDb();
+  return db.learningPacks;
+}
+
+async function putAllPacks(packs: LearningPackRecord[]): Promise<void> {
+  const db = await loadDb();
+  db.learningPacks = packs;
+  await saveDb(db);
+}
+
+export async function upsertLearningPack(pack: LearningPackRecord): Promise<void> {
+  const packs = await getAllPacks();
+  const idx = packs.findIndex((p) => p.packId === pack.packId && p.userId === pack.userId);
+  if (idx >= 0) {
+    packs[idx] = pack;
+  } else {
+    packs.push(pack);
+  }
+  await putAllPacks(packs);
+}
+
+export async function createLearningPack(
+  userId: string,
+  title: string,
+  topic: string,
+  moduleTitles: string[]
+): Promise<LearningPackRecord> {
+  const now = new Date().toISOString();
+  const modules: LearningPackModuleRecord[] = moduleTitles.map((title, i) => ({
+    moduleId: generateModuleId(),
+    title,
+    kbDocumentId: "",
+    stage: "seen",
+    order: i,
+    studyMinutes: 0,
+    lastStudiedAt: null,
+  }));
+  const pack: LearningPackRecord = {
+    packId: generatePackId(),
+    userId,
+    title,
+    topic,
+    modules,
+    activeModuleId: modules[0]?.moduleId ?? null,
+    stage: "seen",
+    totalStudyMinutes: 0,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await upsertLearningPack(pack);
+  return pack;
+}
+
+export async function getPackById(packId: string, userId: string): Promise<LearningPackRecord | null> {
+  const packs = await getAllPacks();
+  return packs.find((p) => p.packId === packId && p.userId === userId) ?? null;
+}
+
+export async function getPacksByUser(userId: string): Promise<LearningPackRecord[]> {
+  const packs = await getAllPacks();
+  return packs
+    .filter((p) => p.userId === userId)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function getActivePack(userId: string): Promise<LearningPackRecord | null> {
+  const packs = await getAllPacks();
+  const userPacks = packs.filter((p) => p.userId === userId);
+  if (userPacks.length === 0) return null;
+  return userPacks.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
+}
+
+export async function setActivePack(packId: string, userId: string): Promise<void> {
+  const packs = await getAllPacks();
+  const now = new Date().toISOString();
+  const updated = packs.map((p) => {
+    if (p.packId === packId && p.userId === userId) {
+      return { ...p, updatedAt: now };
+    }
+    return p;
+  });
+  await putAllPacks(updated);
+}
+
+export async function setPackKbDocument(packId: string, moduleId: string, kbDocumentId: string): Promise<void> {
+  const packs = await getAllPacks();
+  const updated = packs.map((p) => {
+    if (p.packId !== packId) return p;
+    return {
+      ...p,
+      modules: p.modules.map((m) => (m.moduleId === moduleId ? { ...m, kbDocumentId } : m)),
+      updatedAt: new Date().toISOString(),
+    };
+  });
+  await putAllPacks(updated);
+}
+
+export async function recordModuleStudy(
+  packId: string,
+  moduleId: string,
+  minutes: number
+): Promise<void> {
+  const packs = await getAllPacks();
+  const now = new Date().toISOString();
+  const updated = packs.map((p) => {
+    if (p.packId !== packId) return p;
+    const modules = p.modules.map((m) => {
+      if (m.moduleId !== moduleId) return m;
+      const newMinutes = m.studyMinutes + minutes;
+      return {
+        ...m,
+        studyMinutes: newMinutes,
+        lastStudiedAt: now,
+        stage: deriveModuleStage(newMinutes),
+      };
+    });
+    return {
+      ...p,
+      modules,
+      totalStudyMinutes: modules.reduce((sum, m) => sum + m.studyMinutes, 0),
+      updatedAt: now,
+    };
+  });
+  await putAllPacks(updated);
+}
+
+export async function updateModuleStage(
+  packId: string,
+  moduleId: string,
+  stage: "seen" | "understood" | "applied" | "mastered"
+): Promise<void> {
+  const packs = await getAllPacks();
+  const now = new Date().toISOString();
+  const updated = packs.map((p) => {
+    if (p.packId !== packId) return p;
+    const modules = p.modules.map((m) => (m.moduleId === moduleId ? { ...m, stage } : m));
+    return {
+      ...p,
+      modules,
+      stage: derivePackStage(modules),
+      updatedAt: now,
+    };
+  });
+  await putAllPacks(updated);
+}
+
+export async function updatePackStage(packId: string, userId: string): Promise<void> {
+  const pack = await getPackById(packId, userId);
+  if (!pack) return;
+  const now = new Date().toISOString();
+  const stage = derivePackStage(pack.modules);
+  const packs = await getAllPacks();
+  const updated = packs.map((p) =>
+    p.packId === packId && p.userId === userId ? { ...p, stage, updatedAt: now } : p
+  );
+  await putAllPacks(updated);
+}
+
+export async function deleteLearningPack(packId: string, userId: string): Promise<void> {
+  const packs = await getAllPacks();
+  await putAllPacks(packs.filter((p) => !(p.packId === packId && p.userId === userId)));
+}
+
+export async function setActiveModule(packId: string, moduleId: string, userId: string): Promise<void> {
+  const packs = await getAllPacks();
+  const now = new Date().toISOString();
+  const updated = packs.map((p) => {
+    if (p.packId !== packId || p.userId !== userId) return p;
+    return { ...p, activeModuleId: moduleId, updatedAt: now };
+  });
+  await putAllPacks(updated);
+}

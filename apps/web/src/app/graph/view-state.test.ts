@@ -16,9 +16,11 @@ describe("graph view state", () => {
       }),
     });
 
-    await expect(loadPrivateGraphView(fetcher)).resolves.toEqual({
+    await expect(loadPrivateGraphView(undefined, fetcher)).resolves.toEqual({
       nodes: [],
       edges: [],
+      packId: undefined,
+      packMissing: undefined,
     });
     expect(fetcher).toHaveBeenCalledWith("/api/graph/view", {
       credentials: "include",
@@ -62,7 +64,7 @@ describe("graph view state", () => {
       }),
     });
 
-    const graph = await loadPrivateGraphView(fetcher);
+    const graph = await loadPrivateGraphView(undefined, fetcher);
 
     expect(graph.nodes).toHaveLength(2);
     expect(graph.nodes[0]).toMatchObject({
