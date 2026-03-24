@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { runAgentConversation, createChatHistory } from "@/lib/agent/learning-agent";
 import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
 import { getWordsProgressSummary } from "@/lib/server/words-service";
-import { createLearningPack, setActivePack, setPackKbDocument } from "@/lib/server/learning-pack-store";
+import { createLearningPack, setActivePack, setPackKbDocument, findPacksByTopic } from "@/lib/server/learning-pack-store";
 import { createDocument, deleteDocument, listDocuments } from "@/lib/server/document-service";
 import { loadDb, saveDb } from "@/lib/server/store";
 import { DEMO_KB_DOCUMENTS } from "@/lib/server/demo-content";
@@ -193,7 +193,40 @@ export async function POST(request: Request) {
         await cleanupDemoScaffold(userId);
       }
 
-      // KB context injected in Task 2; empty here in Task 1
+      const existingPacks = await findPacksByTopic(userId, learningTopic);
+
+      if (existingPacks.length > 0) {
+        const existing = existingPacks[0];
+        return NextResponse.json({
+          success: true,
+          response: `你已有一个「${existing.title}」学习包。\n\n你可以选择继续当前进度，或者重新规划一个新路线图。`,
+          learningPack: {
+            packId: existing.packId,
+            title: existing.title,
+            topic: existing.topic,
+            graphUrl: `/graph?view=path&packId=${encodeURIComponent(existing.packId)}`,
+          },
+          continueExistingPack: {
+            packId: existing.packId,
+            moduleCount: existing.modules.length,
+            createdAt: existing.createdAt,
+          },
+          steps: [
+            {
+              type: "tool_result",
+              tool: "find_existing_pack",
+              content: JSON.stringify({
+                packId: existing.packId,
+                title: existing.title,
+                topic: existing.topic,
+                moduleCount: existing.modules.length,
+              }),
+            },
+          ],
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       const plannerOutput = await planLearningPack({
         topic: learningTopic,
         apiKey: process.env.MODELSCOPE_API_KEY ?? "",

@@ -25,11 +25,13 @@ const listDocumentsMock = vi.fn();
 const deleteDocumentMock = vi.fn();
 const planLearningPackMock = vi.fn();
 const buildLearningPackKbContextMock = vi.fn();
+const findPacksByTopicMock = vi.fn();
 
 vi.mock("@/lib/server/learning-pack-store", () => ({
   createLearningPack: createLearningPackMock,
   setActivePack: setActivePackMock,
   setPackKbDocument: setPackKbDocumentMock,
+  findPacksByTopic: findPacksByTopicMock,
 }));
 
 vi.mock("@/lib/server/learning-pack-planner", () => ({
@@ -102,6 +104,7 @@ describe("learning-pack quick creation", () => {
     });
 
     buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
+    findPacksByTopicMock.mockResolvedValueOnce([]);
 
     createLearningPackMock.mockResolvedValueOnce({
       packId: "lp_java_1",
@@ -159,6 +162,7 @@ describe("learning-pack quick creation", () => {
     });
 
     buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
+    findPacksByTopicMock.mockResolvedValueOnce([]);
 
     createLearningPackMock.mockResolvedValueOnce({
       packId: "lp_ai_1",
@@ -229,6 +233,7 @@ describe("learning-pack quick creation", () => {
     });
 
     buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
+    findPacksByTopicMock.mockResolvedValueOnce([]);
 
     createLearningPackMock.mockResolvedValueOnce({
       packId: "lp_fallback_1",
@@ -268,5 +273,50 @@ describe("learning-pack quick creation", () => {
     expect(createLearningPackMock).toHaveBeenCalled();
     expect(setActivePackMock).toHaveBeenCalledWith("lp_fallback_1", "u1");
     expect(payload.learningPack.packId).toBe("lp_fallback_1");
+  });
+
+  it("returns continueExistingPack when same topic pack already exists", async () => {
+    const { auth } = await import("@/auth");
+
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u1", isDemo: false },
+    } as never);
+
+    const existingPack = {
+      packId: "lp_existing_java",
+      userId: "u1",
+      title: "Java 学习路线图",
+      topic: "java",
+      stage: "seen",
+      active: false,
+      modules: [
+        { moduleId: "m1", title: "Java 基础与环境搭建", kbDocumentId: "", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+      ],
+      currentModuleId: "m1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    findPacksByTopicMock.mockResolvedValueOnce([existingPack]);
+
+    const request = new Request("http://localhost/api/workspace/agent/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "我想学习 Java" }),
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(findPacksByTopicMock).toHaveBeenCalledWith("u1", "Java");
+    expect(planLearningPackMock).not.toHaveBeenCalled();
+    expect(createLearningPackMock).not.toHaveBeenCalled();
+    expect(payload.continueExistingPack).toMatchObject({
+      packId: "lp_existing_java",
+      moduleCount: 1,
+    });
+    expect(payload.learningPack.graphUrl).toContain("lp_existing_java");
   });
 });

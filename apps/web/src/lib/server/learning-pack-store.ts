@@ -187,3 +187,30 @@ export async function setActiveModule(packId: string, moduleId: string, userId: 
   });
   await putAllPacks(updated);
 }
+
+/**
+ * Normalize a topic string for deterministic comparison.
+ * Lowercase, trims whitespace, and removes leading/trailing special chars.
+ */
+export function normalizeTopic(topic: string): string {
+  return topic
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/^[#.+_-]+|[#.+_-]+$/g, "");
+}
+
+/**
+ * Find packs for a user whose normalized topic matches the given normalized topic.
+ * Returns packs sorted newest-first.
+ */
+export async function findPacksByTopic(
+  userId: string,
+  topic: string
+): Promise<LearningPackRecord[]> {
+  const normalized = normalizeTopic(topic);
+  const packs = await getAllPacks();
+  return packs
+    .filter((p) => p.userId === userId && normalizeTopic(p.topic) === normalized)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
