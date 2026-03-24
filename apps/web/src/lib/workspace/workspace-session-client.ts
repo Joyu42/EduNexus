@@ -21,6 +21,13 @@ const sessionMessageSchema = z.object({
       graphUrl: z.string(),
     })
     .optional(),
+  continueExistingPack: z
+    .object({
+      packId: z.string(),
+      moduleCount: z.number().int(),
+      createdAt: z.string(),
+    })
+    .optional(),
 });
 
 const sessionDetailSchema = z.object({
@@ -42,6 +49,13 @@ const appendMessageInputSchema = z.object({
       title: z.string().min(1),
       topic: z.string().min(1),
       graphUrl: z.string().min(1),
+    })
+    .optional(),
+  continueExistingPack: z
+    .object({
+      packId: z.string().min(1),
+      moduleCount: z.number().int().min(1),
+      createdAt: z.string(),
     })
     .optional(),
 });

@@ -17,6 +17,13 @@ export const appendMessageSchema = z.object({
       graphUrl: z.string().min(1),
     })
     .optional(),
+  continueExistingPack: z
+    .object({
+      packId: z.string().min(1),
+      moduleCount: z.number().int().min(1),
+      createdAt: z.string(),
+    })
+    .optional(),
 });
 
 export const socraticNextSchema = z.object({

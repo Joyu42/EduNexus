@@ -30,6 +30,7 @@ export type WorkspaceMessage = {
   timestamp: Date;
   mode?: "normal" | "kb-qa";
   learningPack?: LearningPackInfo;
+  continueExistingPack?: ContinueExistingPackInfo;
 };
 
 export type WorkspaceControllerTeacher = {
@@ -70,11 +71,18 @@ export type LearningPackInfo = {
   graphUrl: string;
 };
 
+export type ContinueExistingPackInfo = {
+  packId: string;
+  moduleCount: number;
+  createdAt: string;
+};
+
 type AgentChatResult = {
   content: string;
   thinking?: string;
   toolSteps?: AgentToolStep[];
   learningPack?: LearningPackInfo;
+  continueExistingPack?: ContinueExistingPackInfo;
 };
 
 type KBQAChatResult = {
@@ -179,6 +187,7 @@ function toUiMessages(detail: WorkspaceSessionDetail): WorkspaceMessage[] {
     timestamp: new Date(message.createdAt),
     mode: "normal",
     learningPack: message.learningPack,
+    continueExistingPack: message.continueExistingPack,
   }));
 }
 
@@ -255,6 +264,7 @@ async function runWorkspaceAgentChat(input: SendWorkspaceMessageInput): Promise<
     thinking: typeof data.thinking === "string" ? data.thinking : undefined,
     toolSteps: normalizeToolSteps(data.steps),
     learningPack: data.learningPack as LearningPackInfo | undefined,
+    continueExistingPack: data.continueExistingPack as ContinueExistingPackInfo | undefined,
   };
 }
 
@@ -378,6 +388,7 @@ export function useWorkspaceSessionController({
         let assistantThinking: string | undefined;
         let assistantToolSteps: AgentToolStep[] | undefined;
         let assistantLearningPack: LearningPackInfo | undefined;
+        let assistantContinueExistingPack: ContinueExistingPackInfo | undefined;
 
         if (input.kbQAMode) {
           assistantResult = await deps.runKBQAChat(input);
@@ -387,6 +398,7 @@ export function useWorkspaceSessionController({
           assistantThinking = agentResult.thinking;
           assistantToolSteps = agentResult.toolSteps;
           assistantLearningPack = agentResult.learningPack;
+          assistantContinueExistingPack = agentResult.continueExistingPack;
         }
 
         const assistantMessage: WorkspaceMessage = {
@@ -398,6 +410,7 @@ export function useWorkspaceSessionController({
           timestamp: new Date(),
           mode: input.kbQAMode ? "kb-qa" : "normal",
           learningPack: assistantLearningPack,
+          continueExistingPack: assistantContinueExistingPack,
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
@@ -410,6 +423,7 @@ export function useWorkspaceSessionController({
           role: "assistant",
           content: assistantMessage.content,
           learningPack: assistantLearningPack,
+          continueExistingPack: assistantContinueExistingPack,
         });
 
         if (input.onAssistantResponse) {
