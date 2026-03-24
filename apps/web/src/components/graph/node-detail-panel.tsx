@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  Route,
   Edit,
   Trash2,
 } from "lucide-react";
@@ -65,14 +66,22 @@ export function NodeDetailPanel({
                 创建于 {node.createdAt.toLocaleDateString("zh-CN")}
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline" size="sm" className="h-8">
+                <a href="/graph?view=path">
+                  <Route className="h-4 w-4 mr-1" />
+                  学习路径
+                </a>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           <Separator />

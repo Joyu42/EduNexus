@@ -128,6 +128,12 @@ function GraphPageContent() {
   }, [view]);
 
   useEffect(() => {
+    if (activeMode === "path") {
+      setShowLearningPath(true);
+    }
+  }, [activeMode]);
+
+  useEffect(() => {
     const kbDocumentId = selectedNode?.kbDocumentId;
 
     if (!kbDocumentId) {
@@ -638,7 +644,7 @@ function GraphPageContent() {
                     activeMode === "path" ? "bg-background shadow" : "hover:bg-background/60"
                   )}
                 >
-                  路径
+                  学习路径
                 </button>
                 <button
                   onClick={() => router.push("/graph?view=today")}
@@ -680,34 +686,64 @@ function GraphPageContent() {
       {/* Main Content Area: Top Stats + 3-Column Layout */}
       <div className="flex-1 flex flex-col overflow-hidden p-4 gap-4">
         {/* Top Stats Bar */}
-        <div data-testid="graph-stats-bar" className="flex gap-4 p-3 bg-card/50 rounded-lg border shrink-0">
-          <div className="text-sm">
-            <span className="text-muted-foreground">星球</span>
-            <span className="ml-2 font-semibold">{graphData.nodes.length}</span>
+        <div
+          data-testid="graph-stats-bar"
+          className="flex items-center justify-between gap-4 p-3 bg-card/50 rounded-lg border shrink-0"
+        >
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="text-sm">
+              <span className="text-muted-foreground">星球</span>
+              <span className="ml-2 font-semibold">{graphData.nodes.length}</span>
+            </div>
+            <div className="text-sm">
+              <span className="text-muted-foreground">已掌握</span>
+              <span className="ml-2 font-semibold text-green-500">
+                {graphData.nodes.filter((n) => n.masteryStage === "mastered").length}
+              </span>
+            </div>
+            <div className="text-sm">
+              <span className="text-muted-foreground">应用中</span>
+              <span className="ml-2 font-semibold text-yellow-500">
+                {graphData.nodes.filter((n) => n.masteryStage === "applied").length}
+              </span>
+            </div>
+            <div className="text-sm">
+              <span className="text-muted-foreground">理解中</span>
+              <span className="ml-2 font-semibold text-blue-500">
+                {graphData.nodes.filter((n) => n.masteryStage === "understood").length}
+              </span>
+            </div>
+            <div className="text-sm">
+              <span className="text-muted-foreground">已见</span>
+              <span className="ml-2 font-semibold text-gray-400">
+                {graphData.nodes.filter((n) => n.masteryStage === "seen").length}
+              </span>
+            </div>
           </div>
-          <div className="text-sm">
-            <span className="text-muted-foreground">已掌握</span>
-            <span className="ml-2 font-semibold text-green-500">
-              {graphData.nodes.filter(n => n.masteryStage === "mastered").length}
-            </span>
-          </div>
-          <div className="text-sm">
-            <span className="text-muted-foreground">应用中</span>
-            <span className="ml-2 font-semibold text-yellow-500">
-              {graphData.nodes.filter(n => n.masteryStage === "applied").length}
-            </span>
-          </div>
-          <div className="text-sm">
-            <span className="text-muted-foreground">理解中</span>
-            <span className="ml-2 font-semibold text-blue-500">
-              {graphData.nodes.filter(n => n.masteryStage === "understood").length}
-            </span>
-          </div>
-          <div className="text-sm">
-            <span className="text-muted-foreground">已见</span>
-            <span className="ml-2 font-semibold text-gray-400">
-              {graphData.nodes.filter(n => n.masteryStage === "seen").length}
-            </span>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {activeMode === "path" ? (
+              <>
+                <Badge variant="secondary" className="hidden sm:inline-flex">
+                  知识星图 · 学习路径模式
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setShowLearningPath(false);
+                    router.push("/graph?view=explore");
+                  }}
+                >
+                  返回探索
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={() => router.push("/graph?view=path")} className="whitespace-nowrap">
+                <Route className="h-4 w-4 mr-2" />
+                学习路径工作流
+              </Button>
+            )}
           </div>
         </div>
 
@@ -928,6 +964,17 @@ function GraphPageContent() {
                 ) : (
                   <p className="text-sm text-muted-foreground mb-3">尚未在任何路径中</p>
                 )}
+                <Button
+                  size="sm"
+                  className="w-full mb-2"
+                  onClick={() => {
+                    router.push("/graph?view=path");
+                    setShowPathDialog(true);
+                  }}
+                >
+                  <Route className="h-4 w-4 mr-2" />
+                  在学习路径中规划
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
