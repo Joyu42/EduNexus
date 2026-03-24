@@ -146,4 +146,36 @@ describe("demo bootstrap content", () => {
     });
     expect(bundle.paths[0]?.createdAt.toISOString()).toBe(now);
   });
+
+  it("derives canonical kbDocumentId from documentIds to prevent disconnected demo nodes", () => {
+    const payload: DemoBootstrapPayload = {
+      workspace: { sessions: [] },
+      practice: { banks: [] },
+      graph: {
+        nodes: [
+          {
+            id: "graph_node_legacy",
+            label: "Legacy linked node",
+            documentIds: ["", "kb_doc_legacy", "kb_doc_legacy"],
+          },
+        ],
+        edges: [],
+      },
+      goals: { items: [] },
+      paths: { items: [] },
+      path: {
+        goalType: "project",
+        goal: "Demo Goal",
+        tasks: [],
+      },
+    };
+
+    const bundle = buildDemoStarterBundle(payload, "2026-03-17T00:00:00.000Z");
+
+    expect(bundle.graph.nodes[0]).toMatchObject({
+      id: "graph_node_legacy",
+      kbDocumentId: "kb_doc_legacy",
+      documentIds: ["kb_doc_legacy"],
+    });
+  });
 });

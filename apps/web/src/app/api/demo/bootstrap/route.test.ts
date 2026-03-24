@@ -87,7 +87,7 @@ describe("demo bootstrap api", () => {
 
     const payload = (await response.json()) as {
       data: {
-        kb: { documents: Array<{ title: string }> };
+        kb: { documents: Array<{ id: string; title: string }> };
         workspace: { sessions: Array<{ title: string }> };
         practice: { banks: Array<{ name: string; questions: Array<{ title: string }> }> };
         graph: { nodes: Array<{ id: string; kbDocumentId?: string; documentIds?: string[] }>; edges: Array<{ id: string }> };
@@ -106,6 +106,9 @@ describe("demo bootstrap api", () => {
     expect(payload.data.graph.nodes.length).toBeGreaterThan(1);
     expect(payload.data.graph.nodes.every((item) => Boolean(item.kbDocumentId))).toBe(true);
     expect(payload.data.graph.nodes.every((item) => Array.isArray(item.documentIds) && item.documentIds.length > 0)).toBe(true);
+    const seededDocIds = new Set(payload.data.kb.documents.map((item) => item.id));
+    expect(payload.data.graph.nodes.every((item) => seededDocIds.has(item.kbDocumentId ?? ""))).toBe(true);
+    expect(payload.data.graph.nodes.every((item) => item.documentIds?.[0] === item.kbDocumentId)).toBe(true);
     expect(payload.data.path.goal).toBe(payload.data.paths.items[0]?.title);
     expect(seedDemoContentBundle).toHaveBeenCalledTimes(1);
   });
@@ -150,5 +153,69 @@ describe("demo bootstrap api", () => {
     expect(response.status).toBe(200);
     expect(createDocument).not.toHaveBeenCalled();
     expect(saveDb).toHaveBeenCalled();
+  });
+
+  it("remains idempotent across repeated bootstrap calls without duplicate demo records", async () => {
+    const now = "2026-03-24T00:00:00.000Z";
+    const db: {
+      sessions: Array<Record<string, unknown>>;
+      plans: Array<{ planId: string }>;
+      masteryByNode: Record<string, number>;
+      syncedPaths: Array<{ userId: string; pathId: string }>;
+      publicTopics: Array<Record<string, unknown>>;
+      publicResources: Array<Record<string, unknown>>;
+      publicGroups: Array<Record<string, unknown>>;
+      publicPosts: Array<Record<string, unknown>>;
+    } = {
+      sessions: [
+        {
+          id: "ws_demo_frontend_intro",
+          title: DEMO_WORKSPACE_SESSIONS[0]?.title,
+          userId: "demo-user",
+          createdAt: now,
+          updatedAt: now,
+          lastLevel: 1,
+          messages: [],
+        },
+      ],
+      plans: [],
+      masteryByNode: {},
+      syncedPaths: [],
+      publicTopics: [],
+      publicResources: [],
+      publicGroups: [],
+      publicPosts: [],
+    };
+
+    listDocuments.mockResolvedValue(
+      DEMO_KB_DOCUMENTS.map((item, index) => ({
+        id: `doc-${index}`,
+        title: item.title,
+        content: item.content,
+        authorId: "demo-user",
+      }))
+    );
+    loadDb.mockImplementation(async () => db);
+
+    const firstResponse = await bootstrapDemo();
+    const secondResponse = await bootstrapDemo();
+
+    expect(firstResponse.status).toBe(200);
+    expect(secondResponse.status).toBe(200);
+    expect(createDocument).not.toHaveBeenCalled();
+
+    const nodePlanIds = (db.plans as Array<{ planId: string }>)
+      .filter((plan) => String(plan.planId).startsWith("demo_graph_node::"))
+      .map((plan) => plan.planId);
+    const edgePlanIds = (db.plans as Array<{ planId: string }>)
+      .filter((plan) => String(plan.planId).startsWith("demo_graph_edge::"))
+      .map((plan) => plan.planId);
+    const pathIds = (db.syncedPaths as Array<{ userId: string; pathId: string }>)
+      .filter((path) => path.userId === "demo-user" && String(path.pathId).startsWith("demo_path_"))
+      .map((path) => path.pathId);
+
+    expect(new Set(nodePlanIds).size).toBe(nodePlanIds.length);
+    expect(new Set(edgePlanIds).size).toBe(edgePlanIds.length);
+    expect(new Set(pathIds).size).toBe(pathIds.length);
   });
 });
