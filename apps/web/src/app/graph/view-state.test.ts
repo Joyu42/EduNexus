@@ -27,6 +27,27 @@ describe("graph view state", () => {
     });
   });
 
+  it("reads pack metadata when api nests it under data", async () => {
+    const fetcher = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        data: {
+          nodes: [],
+          edges: [],
+          packId: "lp_123",
+          packMissing: true,
+        },
+      }),
+    });
+
+    await expect(loadPrivateGraphView("lp_123", fetcher)).resolves.toEqual({
+      nodes: [],
+      edges: [],
+      packId: "lp_123",
+      packMissing: true,
+    });
+  });
+
   it("returns the graph empty state when the user has no KB-backed graph nodes", () => {
     expect(
       getGraphViewState({

@@ -176,53 +176,59 @@ export async function getGraphView(
       return { nodes: [], edges: [], packId, packMissing: true };
     }
 
-    const packDocIds = pack.modules
+    const orderedModules = pack.modules
+      .slice()
+      .sort((a, b) => a.order - b.order);
+
+    const packDocIds = orderedModules
       .map((m) => m.kbDocumentId)
       .filter((id): id is string => id.length > 0);
 
-    if (packDocIds.length === 0) {
-      return { nodes: [], edges: [], packId };
-    }
+    const packDocs =
+      packDocIds.length > 0
+        ? await prisma.document.findMany({
+            where: { id: { in: packDocIds }, authorId: userId },
+          })
+        : [];
 
-    const packDocs = await prisma.document.findMany({
-      where: { id: { in: packDocIds }, authorId: userId },
-    });
-
-    const packDocIdSet = new Set(packDocs.map((d) => d.id));
+    const packDocsById = new Map(packDocs.map((doc) => [doc.id, doc]));
     const db = await loadDb();
     const userPaths = db.syncedPaths.filter((p) => p.userId === userId);
     const pathMembershipMap = buildPathMembershipMap(userPaths);
     const needsReviewSet = new Set(db.needsReviewNodes ?? []);
 
-    const nodes: WorkspaceGraphNode[] = packDocs.map((doc) => {
-      const mastery = db.masteryByNode[doc.id] ?? 0;
-      const pathMemberships = pathMembershipMap.get(doc.id) ?? [];
+    const moduleNodeIdMap = new Map<string, string>();
+    const nodes: WorkspaceGraphNode[] = orderedModules.map((module) => {
+      const linkedDocId = module.kbDocumentId.trim();
+      const linkedDoc = linkedDocId ? packDocsById.get(linkedDocId) : undefined;
+      const nodeId = linkedDoc?.id ?? `pack:${pack.packId}:${module.moduleId}`;
+      moduleNodeIdMap.set(module.moduleId, nodeId);
+
+      const masteryKey = linkedDoc?.id ?? module.moduleId;
+      const mastery = db.masteryByNode[masteryKey] ?? 0;
+      const pathMemberships = linkedDoc ? pathMembershipMap.get(linkedDoc.id) ?? [] : [];
+      const kbDocumentId = linkedDoc?.id ?? linkedDocId;
+      const documentIds = linkedDoc?.id ? [linkedDoc.id] : [];
 
       return {
-        id: doc.id,
-        label: doc.title,
+        id: nodeId,
+        label: linkedDoc?.title ?? module.title,
         mastery,
         risk: 0.5,
         domain: pack.topic,
         masteryStage: deriveMasteryStage(mastery),
-        needsReview: needsReviewSet.has(doc.id),
+        needsReview: needsReviewSet.has(masteryKey),
         pathMemberships,
         category: pack.topic,
-        kbDocumentId: doc.id,
-        documentIds: [doc.id],
+        kbDocumentId,
+        documentIds,
       };
     });
 
-    const orderedModuleDocIds = pack.modules
-      .slice()
-      .sort((a, b) => a.order - b.order)
-      .map((module) => module.kbDocumentId)
-      .filter((kbDocumentId): kbDocumentId is string => kbDocumentId.length > 0 && packDocIdSet.has(kbDocumentId));
-
     const edges: GraphEdge[] = [];
-    for (let index = 0; index < orderedModuleDocIds.length - 1; index += 1) {
-      const source = orderedModuleDocIds[index];
-      const target = orderedModuleDocIds[index + 1];
+    for (let index = 0; index < orderedModules.length - 1; index += 1) {
+      const source = moduleNodeIdMap.get(orderedModules[index]?.moduleId);
+      const target = moduleNodeIdMap.get(orderedModules[index + 1]?.moduleId);
       if (!source || !target || source === target) {
         continue;
       }

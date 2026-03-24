@@ -7,6 +7,7 @@ import { createDocument, deleteDocument, listDocuments } from "@/lib/server/docu
 import { loadDb, saveDb } from "@/lib/server/store";
 import { DEMO_KB_DOCUMENTS } from "@/lib/server/demo-content";
 import { auth } from "@/auth";
+import { planLearningPack } from "@/lib/server/learning-pack-planner";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -101,38 +102,7 @@ function extractLearningTopic(message: string): string | null {
   return null;
 }
 
-function getStarterModules(topic: string): string[] {
-  return [
-    `${topic} 基础与环境搭建`,
-    `${topic} 语法核心`,
-    `${topic} 面向对象实践`,
-    `${topic} 常用库与工程化`,
-    `${topic} 综合项目实战`,
-  ];
-}
 
-async function createStarterLearningPack(input: { userId: string; topic: string }) {
-  const modules = getStarterModules(input.topic);
-  const pack = await createLearningPack(input.userId, `${input.topic} 学习路线图`, input.topic, modules);
-
-  for (const module of pack.modules) {
-    const doc = await createDocument({
-      title: module.title,
-      content: `# ${module.title}\n\n## 学习目标\n- 理解 ${input.topic} 在本模块的核心概念\n\n## 今日任务\n- 阅读并完成本节示例\n- 记录 3 个关键知识点\n\n## 练习建议\n- 写 1-2 个最小可运行示例\n`,
-      authorId: input.userId,
-    });
-    await setPackKbDocument(pack.packId, module.moduleId, doc.id);
-  }
-
-  await setActivePack(pack.packId, input.userId);
-
-  return {
-    packId: pack.packId,
-    title: pack.title,
-    topic: pack.topic,
-    graphUrl: `/graph?view=path&packId=${encodeURIComponent(pack.packId)}`,
-  };
-}
 
 async function cleanupDemoScaffold(userId: string): Promise<void> {
   const demoTitles = new Set(DEMO_KB_DOCUMENTS.map((doc) => doc.title));
@@ -221,16 +191,53 @@ export async function POST(request: Request) {
       if (isDemo) {
         await cleanupDemoScaffold(userId);
       }
-      const learningPack = await createStarterLearningPack({ userId, topic: learningTopic });
+
+      // KB context injected in Task 2; empty here in Task 1
+      const plannerOutput = await planLearningPack({
+        topic: learningTopic,
+        apiKey: process.env.MODELSCOPE_API_KEY ?? "",
+        apiEndpoint:
+          process.env.MODELSCOPE_BASE_URL ?? "https://api-inference.modelscope.cn/v1",
+        modelName: process.env.MODELSCOPE_CHAT_MODEL ?? "Qwen/Qwen3.5-122B-A10B",
+      });
+
+      const modules = plannerOutput.modules.map((m) => m.title);
+      const pack = await createLearningPack(userId, plannerOutput.title, learningTopic, modules);
+
+      for (const module of pack.modules) {
+        const planned = plannerOutput.modules.find((pm) => pm.title === module.title);
+        if (planned?.existingDocId) {
+          await setPackKbDocument(pack.packId, module.moduleId, planned.existingDocId);
+        } else {
+          const doc = await createDocument({
+            title: module.title,
+            content: `# ${module.title}\n\n## 学习目标\n- 理解 ${learningTopic} 在本模块的核心概念\n\n## 今日任务\n- 阅读并完成本节示例\n- 记录 3 个关键知识点\n\n## 练习建议\n- 写 1-2 个最小可运行示例\n`,
+            authorId: userId,
+          });
+          await setPackKbDocument(pack.packId, module.moduleId, doc.id);
+        }
+      }
+
+      await setActivePack(pack.packId, userId);
+
       return NextResponse.json({
         success: true,
-        response: `已为你创建「${learningPack.title}」。\n\n我已经生成了 5 个阶段并写入知识文档，你可以直接进入知识星图开始学习。`,
-        learningPack,
+        response: `已为你创建「${pack.title}」。\n\n我已经规划了 ${pack.modules.length} 个学习阶段，你可以直接进入知识星图开始学习。`,
+        learningPack: {
+          packId: pack.packId,
+          title: pack.title,
+          topic: pack.topic,
+          graphUrl: `/graph?view=path&packId=${encodeURIComponent(pack.packId)}`,
+        },
         steps: [
           {
             type: "tool_result",
             tool: "create_learning_pack",
-            content: JSON.stringify(learningPack),
+            content: JSON.stringify({
+              packId: pack.packId,
+              title: pack.title,
+              topic: pack.topic,
+            }),
           },
         ],
         timestamp: new Date().toISOString(),

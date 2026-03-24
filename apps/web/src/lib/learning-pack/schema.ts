@@ -6,7 +6,7 @@ export type MasteryStage = (typeof MASTERY_STAGES)[number];
 export const LearningPackModuleSchema = z.object({
   moduleId: z.string().min(1),
   title: z.string().min(1),
-  kbDocumentId: z.string().min(1),
+  kbDocumentId: z.string().default(""),
   stage: z.enum(MASTERY_STAGES).default("seen"),
   order: z.number().int().min(0).default(0),
   studyMinutes: z.number().int().min(0).default(0),

@@ -24,6 +24,8 @@ type GraphViewApiResponse = {
   data?: {
     nodes?: GraphViewApiNode[];
     edges?: GraphViewApiEdge[];
+    packId?: string;
+    packMissing?: boolean;
   };
   nodes?: GraphViewApiNode[];
   edges?: GraphViewApiEdge[];
@@ -147,7 +149,16 @@ export async function loadPrivateGraphView(
 
   const payload = (await response.json()) as GraphViewApiResponse;
   const data = normalizeGraphResponse(payload);
-  return { ...data, packId: payload.packId, packMissing: payload.packMissing };
+  const resolvedPackId =
+    payload.packId ??
+    (typeof payload.data?.packId === "string" ? payload.data.packId : undefined);
+  const resolvedPackMissing =
+    payload.packMissing ??
+    (typeof payload.data?.packMissing === "boolean"
+      ? payload.data.packMissing
+      : undefined);
+
+  return { ...data, packId: resolvedPackId, packMissing: resolvedPackMissing };
 }
 
 export function getGraphViewState(input: GraphViewStateInput): GraphViewState {

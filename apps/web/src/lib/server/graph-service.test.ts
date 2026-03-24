@@ -164,4 +164,73 @@ describe("graph service demo projection", () => {
 
     await fs.rm(dataDir, { recursive: true, force: true });
   });
+
+  it("builds module nodes and edges even when kb docs are not yet bound", async () => {
+    const dataDir = await createDataDir();
+    process.env.EDUNEXUS_DATA_DIR = dataDir;
+
+    const db = await loadDb();
+    const now = new Date().toISOString();
+    db.learningPacks.push({
+      packId: "lp_pending_docs",
+      userId: "pack-user",
+      title: "Java 学习路线图",
+      topic: "java",
+      activeModuleId: "mod_2",
+      stage: "seen",
+      totalStudyMinutes: 0,
+      createdAt: now,
+      updatedAt: now,
+      modules: [
+        {
+          moduleId: "mod_2",
+          title: "Java 语法核心",
+          kbDocumentId: "",
+          stage: "seen",
+          order: 1,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+        {
+          moduleId: "mod_1",
+          title: "Java 基础与环境搭建",
+          kbDocumentId: "",
+          stage: "seen",
+          order: 0,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+        {
+          moduleId: "mod_3",
+          title: "Java 综合项目实战",
+          kbDocumentId: "",
+          stage: "seen",
+          order: 2,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+      ],
+    });
+    await saveDb(db);
+
+    const graph = await getGraphView("pack-user", { packId: "lp_pending_docs" });
+
+    expect(graph.nodes).toHaveLength(3);
+    expect(graph.nodes.map((node) => node.id)).toEqual([
+      "pack:lp_pending_docs:mod_1",
+      "pack:lp_pending_docs:mod_2",
+      "pack:lp_pending_docs:mod_3",
+    ]);
+    expect(graph.nodes.map((node) => node.label)).toEqual([
+      "Java 基础与环境搭建",
+      "Java 语法核心",
+      "Java 综合项目实战",
+    ]);
+    expect(graph.edges).toEqual([
+      { source: "pack:lp_pending_docs:mod_1", target: "pack:lp_pending_docs:mod_2", weight: 0.9 },
+      { source: "pack:lp_pending_docs:mod_2", target: "pack:lp_pending_docs:mod_3", weight: 0.9 },
+    ]);
+
+    await fs.rm(dataDir, { recursive: true, force: true });
+  });
 });

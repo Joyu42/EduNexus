@@ -23,11 +23,16 @@ const setPackKbDocumentMock = vi.fn();
 const createDocumentMock = vi.fn();
 const listDocumentsMock = vi.fn();
 const deleteDocumentMock = vi.fn();
+const planLearningPackMock = vi.fn();
 
 vi.mock("@/lib/server/learning-pack-store", () => ({
   createLearningPack: createLearningPackMock,
   setActivePack: setActivePackMock,
   setPackKbDocument: setPackKbDocumentMock,
+}));
+
+vi.mock("@/lib/server/learning-pack-planner", () => ({
+  planLearningPack: planLearningPackMock,
 }));
 
 vi.mock("@/lib/server/document-service", () => ({
@@ -83,6 +88,14 @@ describe("learning-pack quick creation", () => {
       user: { id: "u1", isDemo: false },
     } as never);
 
+    planLearningPackMock.mockResolvedValueOnce({
+      title: "Java 学习路线图",
+      modules: [{ title: "基础语法", order: 0 }],
+      confidence: "medium",
+      usedExistingDocs: false,
+      fallbackUsed: false,
+    });
+
     createLearningPackMock.mockResolvedValueOnce({
       packId: "lp_java_1",
       userId: "u1",
@@ -117,5 +130,132 @@ describe("learning-pack quick creation", () => {
     });
     expect(createLearningPackMock).toHaveBeenCalled();
     expect(setActivePackMock).toHaveBeenCalledWith("lp_java_1", "u1");
+  });
+
+  it("uses AI planner — calls planLearningPack with topic and creates pack from AI modules", async () => {
+    const { auth } = await import("@/auth");
+
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u1", isDemo: false },
+    } as never);
+
+    planLearningPackMock.mockResolvedValueOnce({
+      title: "Java 系统性学习路线",
+      modules: [
+        { title: "Java 环境搭建与工具链", order: 0 },
+        { title: "Java 语法基础与数据类型", order: 1 },
+        { title: "面向对象编程与设计模式", order: 2 },
+      ],
+      confidence: "high",
+      usedExistingDocs: false,
+      fallbackUsed: false,
+    });
+
+    createLearningPackMock.mockResolvedValueOnce({
+      packId: "lp_ai_1",
+      userId: "u1",
+      title: "Java 系统性学习路线",
+      topic: "java",
+      stage: "seen",
+      active: false,
+      modules: [
+        { moduleId: "m1", title: "Java 环境搭建与工具链", kbDocumentId: "", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "m2", title: "Java 语法基础与数据类型", kbDocumentId: "", stage: "seen", order: 1, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "m3", title: "面向对象编程与设计模式", kbDocumentId: "", stage: "seen", order: 2, studyMinutes: 0, lastStudiedAt: null },
+      ],
+      currentModuleId: "m1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    // 3 docs created for 3 modules
+    createDocumentMock.mockResolvedValueOnce({ id: "doc_1" });
+    createDocumentMock.mockResolvedValueOnce({ id: "doc_2" });
+    createDocumentMock.mockResolvedValueOnce({ id: "doc_3" });
+
+    const request = new Request("http://localhost/api/workspace/agent/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "我想学习 java" }),
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(planLearningPackMock).toHaveBeenCalledWith(
+      expect.objectContaining({ topic: "java" })
+    );
+    expect(createLearningPackMock).toHaveBeenCalledWith(
+      "u1",
+      "Java 系统性学习路线",
+      "java",
+      ["Java 环境搭建与工具链", "Java 语法基础与数据类型", "面向对象编程与设计模式"]
+    );
+    expect(createDocumentMock).toHaveBeenCalledTimes(3);
+    expect(setPackKbDocumentMock).toHaveBeenCalledTimes(3);
+    expect(payload.learningPack.packId).toBe("lp_ai_1");
+  });
+
+  it("falls back to template when planLearningPack returns fallbackUsed=true", async () => {
+    const { auth } = await import("@/auth");
+
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u1", isDemo: false },
+    } as never);
+
+    planLearningPackMock.mockResolvedValueOnce({
+      title: "java 学习路线图",
+      modules: [
+        { title: "java 基础与环境搭建", order: 0 },
+        { title: "java 语法核心", order: 1 },
+        { title: "java 面向对象实践", order: 2 },
+        { title: "java 常用库与工程化", order: 3 },
+        { title: "java 综合项目实战", order: 4 },
+      ],
+      confidence: "medium",
+      usedExistingDocs: false,
+      fallbackUsed: true,
+    });
+
+    createLearningPackMock.mockResolvedValueOnce({
+      packId: "lp_fallback_1",
+      userId: "u1",
+      title: "java 学习路线图",
+      topic: "java",
+      stage: "seen",
+      active: false,
+      modules: [
+        { moduleId: "m1", title: "java 基础与环境搭建", kbDocumentId: "", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "m2", title: "java 语法核心", kbDocumentId: "", stage: "seen", order: 1, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "m3", title: "java 面向对象实践", kbDocumentId: "", stage: "seen", order: 2, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "m4", title: "java 常用库与工程化", kbDocumentId: "", stage: "seen", order: 3, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "m5", title: "java 综合项目实战", kbDocumentId: "", stage: "seen", order: 4, studyMinutes: 0, lastStudiedAt: null },
+      ],
+      currentModuleId: "m1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    for (let i = 0; i < 5; i++) {
+      createDocumentMock.mockResolvedValueOnce({ id: `doc_fallback_${i}` });
+    }
+
+    const request = new Request("http://localhost/api/workspace/agent/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "我想学习 java" }),
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(planLearningPackMock).toHaveBeenCalled();
+    expect(createLearningPackMock).toHaveBeenCalled();
+    expect(setActivePackMock).toHaveBeenCalledWith("lp_fallback_1", "u1");
+    expect(payload.learningPack.packId).toBe("lp_fallback_1");
   });
 });

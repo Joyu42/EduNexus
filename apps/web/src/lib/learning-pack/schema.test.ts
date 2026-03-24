@@ -113,6 +113,15 @@ describe("LearningPackModuleSchema", () => {
     }
   });
 
+  it("allows empty kbDocumentId before document binding", () => {
+    const result = LearningPackModuleSchema.safeParse({
+      moduleId: "mod_1",
+      title: "Test",
+      kbDocumentId: "",
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("rejects empty moduleId", () => {
     const result = LearningPackModuleSchema.safeParse({
       moduleId: "",
