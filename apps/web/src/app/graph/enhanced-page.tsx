@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -77,6 +78,19 @@ type SidebarKBDoc = {
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
+
+function buildKbIdentityExcerpt(kbDoc: SidebarKBDoc | null, fallbackExcerpt?: string): string {
+  const content = (kbDoc?.summary || fallbackExcerpt || kbDoc?.content || "")
+    .replace(/[#>*`\-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!content) {
+    return "暂无摘要，建议在知识宝库文档中补充核心说明。";
+  }
+
+  return content.length > 88 ? `${content.slice(0, 88)}...` : content;
+}
 
 function normalizeMode(view: string | null): GraphMode {
   if (view === "path" || view === "today" || view === "incomplete") {
@@ -991,13 +1005,78 @@ function GraphPageContent() {
               {/* Section 4: Content Info */}
               <div data-testid="graph-sidebar-content-info" className="p-4 border-b">
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium">文档信息</h3>
+                  <div>
+                    <h3 className="text-sm font-medium">知识宝库文档</h3>
+                    <p className="text-xs text-muted-foreground mt-1">当前星球固定映射到 1 篇知识宝库文档（唯一主文档）。</p>
+                  </div>
 
                   {!selectedNode.kbDocumentId ? (
-                    <p className="text-xs text-muted-foreground">该星球未关联知识库文档。</p>
+                    <Card className="border-dashed">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <CardTitle className="text-sm">未关联知识宝库文档</CardTitle>
+                          <Badge variant="destructive" className="text-[10px]">关联缺失</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2 pt-0">
+                        <p className="text-xs text-muted-foreground">
+                          该星球缺少 kbDocumentId，暂时无法确认其唯一主文档。请先在知识宝库建立关联。
+                        </p>
+                      </CardContent>
+                    </Card>
                   ) : isKbDocLoading ? (
-                    <p className="text-xs text-muted-foreground">加载中...</p>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <CardTitle className="text-sm">知识宝库文档载入中</CardTitle>
+                          <Badge variant="secondary" className="text-[10px]">加载中</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-xs text-muted-foreground">正在读取该星球对应的知识宝库文档...</p>
+                      </CardContent>
+                    </Card>
                   ) : kbDoc ? (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <CardTitle className="text-sm leading-tight">{kbDoc.title || "无标题文档"}</CardTitle>
+                          <Badge variant="secondary" className="text-[10px]">已关联主文档</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3 pt-0">
+                        <p className="text-xs text-muted-foreground">该星球与此知识宝库文档保持一一映射，作为权威内容来源。</p>
+                        {kbDoc.tags.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {kbDoc.tags.map((tag) => (
+                              <Badge key={tag} variant="outline" className="text-[10px]">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">未设置标签</p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {buildKbIdentityExcerpt(kbDoc, nodeDetail?.relatedNotes?.[0]?.excerpt)}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <CardTitle className="text-sm">知识宝库文档不可用</CardTitle>
+                          <Badge variant="secondary" className="text-[10px]">文档缺失</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-xs text-muted-foreground">已配置 kbDocumentId，但未找到对应文档或当前账号无访问权限。</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {selectedNode.kbDocumentId && !isKbDocLoading && kbDoc ? (
                     <>
                       {isEditingKb ? (
                         <div className="space-y-2">
@@ -1148,9 +1227,7 @@ function GraphPageContent() {
                         </Button>
                       </div>
                     </>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">未找到文档或无权访问。</p>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
