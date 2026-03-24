@@ -319,4 +319,60 @@ describe("learning-pack quick creation", () => {
     });
     expect(payload.learningPack.graphUrl).toContain("lp_existing_java");
   });
+
+  it("reuses existing KB doc when planner marks existingDocId", async () => {
+    const { auth } = await import("@/auth");
+
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u1", isDemo: false },
+    } as never);
+
+    planLearningPackMock.mockResolvedValueOnce({
+      title: "Java 系统性学习路线",
+      modules: [
+        { title: "Java 环境搭建", order: 0, existingDocId: "doc_java_env" },
+        { title: "Java 语法基础", order: 1 },
+      ],
+      confidence: "high",
+      usedExistingDocs: true,
+      fallbackUsed: false,
+    });
+
+    buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
+    findPacksByTopicMock.mockResolvedValueOnce([]);
+
+    createLearningPackMock.mockResolvedValueOnce({
+      packId: "lp_ai_reuse_1",
+      userId: "u1",
+      title: "Java 系统性学习路线",
+      topic: "java",
+      stage: "seen",
+      active: false,
+      modules: [
+        { moduleId: "m1", title: "Java 环境搭建", kbDocumentId: "", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "m2", title: "Java 语法基础", kbDocumentId: "", stage: "seen", order: 1, studyMinutes: 0, lastStudiedAt: null },
+      ],
+      currentModuleId: "m1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    createDocumentMock.mockResolvedValueOnce({ id: "doc_new" });
+
+    const request = new Request("http://localhost/api/workspace/agent/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "我想学习 java" }),
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(createDocumentMock).toHaveBeenCalledTimes(1);
+    expect(setPackKbDocumentMock).toHaveBeenCalledTimes(2);
+    expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_ai_reuse_1", "m1", "doc_java_env");
+    expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_ai_reuse_1", "m2", "doc_new");
+  });
 });
