@@ -129,45 +129,161 @@ type DemoPracticeBankSeed = {
 
 export const DEMO_KB_DOCUMENTS: DemoDocumentSeed[] = [
   {
-    title: "前端开发入门路线",
-    content:
-      "建议先完成 HTML 语义化，再进入 CSS 布局，最后用 JavaScript 串起交互流程。每个阶段都要有可交付练习页面。"
+    title: "HTML 基础",
+    content: `# HTML 基础：构建 Web 的骨架
+
+HTML（超文本标记语言）是所有 Web 开发的基础。它定义了网页的内容和结构。
+
+## 核心要点
+1. **语义化标签**：使用 \`<header>\`, \`<nav>\`, \`<main>\`, \`<article>\`, \`<footer>\` 等标签，不仅对 SEO 友好，还能提升可访问性。
+2. **文档结构**：了解 \`<!DOCTYPE html>\`, \`<html>\`, \`<head>\`, \`<body>\` 的层级关系。
+3. **常用元素**：掌握标题（h1-h6）、段落（p）、链接（a）、图片（img）以及列表（ul/ol/li）。
+
+## 练习建议
+尝试在不使用任何 CSS 的情况下，仅用 HTML 构建一个结构清晰的新闻文章页面。`
   },
   {
-    title: "React 项目实战清单",
-    content:
-      "React 路径建议按 JavaScript 复盘 -> 组件与 Hooks -> 最小可交付项目推进，并在每一步保留复盘笔记与代码提交。"
+    title: "CSS 基础",
+    content: `# CSS 基础：美化你的网页
+
+CSS（层叠样式表）负责网页的视觉表现，包括布局、颜色、字体等。
+
+## 核心概念
+1. **选择器**：学习如何通过类（.class）、ID（#id）和标签名来选中元素。
+2. **盒模型**：这是 CSS 的基石。每个元素都是一个盒子，由 content, padding, border, margin 组成。
+3. **层叠与继承**：理解样式冲突时如何通过优先级（权重）来决定最终表现。
+
+## 关键属性
+- \`color\`, \`font-size\`, \`background-color\`
+- \`width\`, \`height\`, \`display\`
+- \`position\` (static, relative, absolute, fixed)`
+  },
+  {
+    title: "JavaScript 基础",
+    content: `# JavaScript 基础：让页面动起来
+
+JavaScript 是赋予网页交互能力的脚本语言。
+
+## 核心语法
+1. **变量与数据类型**：使用 \`let\`, \`const\` 声明变量；了解 string, number, boolean, array, object。
+2. **控制流**：掌握 \`if/else\` 条件判断，以及 \`for\`, \`while\` 循环。
+3. **函数**：学习声明式函数与箭头函数的区别。
+
+## DOM 操作
+了解如何通过 JavaScript 选中页面元素（如 \`querySelector\`）并修改它们的内容或样式，这是前端交互的核心。
+
+## 异步编程基础
+初步认识 \`Promise\` 和 \`async/await\`，这对于后续请求数据至关重要。`
+  },
+  {
+    title: "Flexbox 布局",
+    content: `# Flexbox 布局：一维布局利器
+
+Flexbox（弹性盒子）是目前最常用的 CSS 布局模式，非常适合处理一行或一列的排版。
+
+## 核心容器属性
+- \`display: flex\`: 开启弹性布局。
+- \`flex-direction\`: 决定主轴方向（row 或 column）。
+- \`justify-content\`: 主轴对齐方式（center, space-between 等）。
+- \`align-items\`: 交叉轴对齐方式。
+
+## 项目属性
+- \`flex-grow\`: 剩余空间分配。
+- \`flex-shrink\`: 空间不足时的收缩比例。
+- \`flex-basis\`: 元素的初始大小。
+
+掌握 Flexbox 能解决 90% 的日常排版问题。`
+  },
+  {
+    title: "Grid 布局",
+    content: `# Grid 布局：二维布局终极方案
+
+CSS Grid 允许你同时在行和列上进行布局，适合构建复杂的整体页面架构。
+
+## 基本用法
+1. \`display: grid\`
+2. \`grid-template-columns\`: 定义列（如 \`repeat(3, 1fr)\`）。
+3. \`grid-template-rows\`: 定义行。
+4. \`gap\`: 控制网格间距。
+
+## 优势
+Grid 特别适合“大框架”布局，而 Flexbox 适合“小组件”内部排版。两者结合使用是现代前端的最佳实践。`
+  },
+  {
+    title: "React 入门",
+    content: `# React 入门：组件化开发思维
+
+React 是目前最流行的前端库，它将 UI 拆分为独立的、可复用的组件。
+
+## 核心概念
+1. **JSX**：在 JavaScript 中写类似 HTML 的语法。
+2. **Props**：父组件向子组件传递数据的方式。
+3. **State**：组件内部的状态，驱动 UI 更新的核心。
+
+## 常用 Hooks
+- \`useState\`: 管理状态。
+- \`useEffect\`: 处理副作用（如数据请求、DOM 修改）。
+
+React 的核心是“声明式编程”，你只需描述 UI 应该是什么样子，React 负责高效更新。`
+  },
+  {
+    title: "响应式设计",
+    content: `# 响应式设计：适配所有屏幕
+
+响应式设计确保你的网页在手机、平板和电脑上都能完美显示。
+
+## 实现手段
+1. **媒体查询 (Media Queries)**：使用 \`@media\` 根据屏幕宽度应用不同样式。
+2. **流式布局**：使用百分比或 \`vw/vh\` 代替固定像素。
+3. **响应式图片**：确保图片不会溢出容器。
+
+## 移动优先 (Mobile First)
+现代开发的标准做法：先写移动端样式，再通过媒体查询为大屏幕增加增强效果。`
+  },
+  {
+    title: "Web 无障碍",
+    content: `# Web 无障碍 (Accessibility)：人人享有 Web
+
+无障碍（A11y）确保残障人士也能顺畅使用你的网站。
+
+## 实践准则
+1. **语义化 HTML**：这是最基础也最重要的无障碍手段。
+2. **ARIA 属性**：在语义化标签不足时，使用 \`aria-label\`, \`aria-expanded\` 等属性辅助屏幕阅读器。
+3. **颜色对比度**：确保文字与背景有足够的对比，方便视障用户。
+4. **键盘导航**：确保所有交互元素（按钮、链接）都能通过 Tab 键选中并操作。
+
+这不仅是道德责任，也是专业前端开发者的必备技能。`
   }
 ];
 
 export const DEMO_WORKSPACE_SESSIONS: DemoSessionSeed[] = [
   {
-    id: "ws_demo_frontend_intro",
-    title: "前端开发入门会话",
+    id: "ws_demo_frontend_foundations",
+    title: "前端基础打底：从 HTML 到 Grid",
     lastLevel: 2,
     messages: [
       {
         role: "system",
-        content: "欢迎进入前端开发入门学习。"
+        content: "你正在进行“前端基础打底”路径的学习。该路径涵盖了 HTML、CSS 及其高级布局。"
       },
       {
         role: "assistant",
-        content: "先从 HTML 语义化结构开始，再推进 CSS 布局和 JavaScript 基础，按任务逐步完成。"
+        content: "建议先深入理解 HTML 语义化，这是后续 CSS 布局和无障碍设计的基础。完成 HTML 后，我们将依次攻克 Flexbox 和 Grid。"
       }
     ]
   },
   {
-    id: "ws_demo_react_intro",
-    title: "React 项目推进会话",
-    lastLevel: 2,
+    id: "ws_demo_react_interface",
+    title: "React 界面进阶：框架与体验",
+    lastLevel: 1,
     messages: [
       {
         role: "system",
-        content: "欢迎进入 React 项目实战路径。"
+        content: "欢迎进入 React 界面进阶。我们将探讨如何利用 React 构建组件化应用，并兼顾响应式与无障碍。"
       },
       {
         role: "assistant",
-        content: "先复盘 JavaScript 核心，再拆分组件与 Hooks，最后完成可演示的 React 页面交付。"
+        content: "准备好开始了吗？我们将从 React 的基础 Hooks 开始，逐步构建出一个符合无障碍标准的响应式界面。"
       }
     ]
   }
@@ -229,212 +345,141 @@ export const DEMO_GRAPH_BOOTSTRAP: DemoGraphBootstrap = {
 export const DEMO_PATH_SEEDS: DemoPathSeed[] = [
   {
     id: "demo_path_frontend_foundations",
-    title: "前端基础冲刺路径",
-    description: "从 HTML/CSS 到响应式布局，完成可交付的前端基础项目。",
+    title: "前端基础打底",
+    description: "从 HTML/CSS 核心到 Flexbox 与 Grid 高级布局，夯实前端开发根基。",
     status: "in_progress",
-    progress: 46,
-    tags: ["演示", "前端", "基础"],
+    progress: 40,
+    tags: ["演示", "前端", "核心"],
     goalId: "demo_goal_1",
     tasks: [
       {
-        id: "demo_task_html_semantics",
-        title: "HTML 语义化结构",
-        description: "使用语义化标签重构页面结构并提升可读性。",
+        id: "demo_task_html",
+        title: "HTML 核心与语义化",
+        description: "理解标签背后的含义，构建高可访问性的文档结构。",
         estimatedTime: "2小时",
         progress: 100,
         status: "completed",
         dependencies: [],
         resources: [
           {
-            id: "demo_res_mdn_html",
-            title: "MDN HTML 指南",
+            id: "res_html_mdn",
+            title: "MDN HTML 入门",
             type: "article",
-            url: "https://developer.mozilla.org/zh-CN/docs/Web/HTML"
+            url: "https://developer.mozilla.org/zh-CN/docs/Learn/HTML"
           }
         ],
-        notes: "已完成页面结构重构。"
+        notes: "已掌握常用语义化标签。"
       },
       {
-        id: "demo_task_css_layout",
-        title: "CSS 布局基础",
-        description: "掌握盒模型、定位和常见布局模式。",
+        id: "demo_task_css",
+        title: "CSS 盒模型与选择器",
+        description: "深入理解 CSS 渲染机制，解决样式覆盖难题。",
         estimatedTime: "3小时",
-        progress: 70,
+        progress: 60,
         status: "in_progress",
-        dependencies: ["demo_task_html_semantics"],
+        dependencies: ["demo_task_html"],
         resources: [
           {
-            id: "demo_res_mdn_css",
-            title: "MDN CSS 文档",
+            id: "res_css_mdn",
+            title: "MDN CSS 基础",
             type: "article",
-            url: "https://developer.mozilla.org/zh-CN/docs/Web/CSS"
+            url: "https://developer.mozilla.org/zh-CN/docs/Learn/CSS"
           }
         ],
-        notes: "正在优化页面间距体系。"
+        notes: "正在练习复杂选择器的权重计算。"
       },
       {
-        id: "demo_task_responsive_layout",
-        title: "响应式页面实战",
-        description: "完成移动端与桌面端双端适配。",
-        estimatedTime: "4小时",
+        id: "demo_task_js",
+        title: "JS 基础语法与 DOM",
+        description: "编写脚本驱动页面交互，掌握核心数据类型。",
+        estimatedTime: "5小时",
         progress: 20,
         status: "in_progress",
-        dependencies: ["demo_task_css_layout"],
+        dependencies: ["demo_task_css"],
         resources: [
           {
-            id: "demo_res_refactoring_ui",
-            title: "Refactoring UI",
-            type: "document",
-            url: "https://www.refactoringui.com/"
-          }
-        ],
-        notes: "断点策略已确定，待完善细节。"
-      }
-    ],
-    milestones: [
-      { id: "demo_milestone_frontend_1", title: "页面基础可用", taskIds: ["demo_task_html_semantics", "demo_task_css_layout"] },
-      { id: "demo_milestone_frontend_2", title: "完成响应式改造", taskIds: ["demo_task_responsive_layout"] }
-    ]
-  },
-  {
-    id: "demo_path_react_project",
-    title: "React 项目落地路径",
-    description: "围绕组件化、状态管理与性能优化完成 React 小项目。",
-    status: "not_started",
-    progress: 0,
-    tags: ["演示", "React", "项目"],
-    goalId: "demo_goal_2",
-    tasks: [
-      {
-        id: "demo_task_js_refresh",
-        title: "JavaScript 核心复盘",
-        description: "复盘作用域、闭包与异步流程，巩固 React 前置知识。",
-        estimatedTime: "3小时",
-        progress: 0,
-        status: "not_started",
-        dependencies: [],
-        resources: [
-          {
-            id: "demo_res_js_info",
-            title: "JavaScript.info 现代教程",
+            id: "res_js_info",
+            title: "JavaScript.info",
             type: "article",
             url: "https://zh.javascript.info/"
           }
         ],
+        notes: "初步理解了闭包的概念。"
+      },
+      {
+        id: "demo_task_flex",
+        title: "Flexbox 实战布局",
+        description: "快速实现响应式导航栏与卡片排列。",
+        estimatedTime: "2小时",
+        progress: 0,
+        status: "not_started",
+        dependencies: ["demo_task_css"],
+        resources: [],
         notes: ""
       },
       {
-        id: "demo_task_react_core",
-        title: "React 组件与 Hooks",
-        description: "用函数组件和 Hooks 构建可复用模块。",
-        estimatedTime: "5小时",
+        id: "demo_task_grid",
+        title: "Grid 复杂页面架构",
+        description: "利用网格系统构建多栏式复杂后台布局。",
+        estimatedTime: "3小时",
         progress: 0,
         status: "not_started",
-        dependencies: ["demo_task_js_refresh"],
-        resources: [
-          {
-            id: "demo_res_react_docs",
-            title: "React 官方文档",
-            type: "document",
-            url: "https://react.dev/"
-          }
-        ],
-        notes: ""
-      },
-      {
-        id: "demo_task_react_delivery",
-        title: "React 页面交付",
-        description: "输出包含表单、列表、路由的最小可交付项目。",
-        estimatedTime: "6小时",
-        progress: 0,
-        status: "not_started",
-        dependencies: ["demo_task_react_core"],
-        resources: [
-          {
-            id: "demo_res_vscode",
-            title: "VS Code",
-            type: "document",
-            url: "https://code.visualstudio.com/"
-          }
-        ],
+        dependencies: ["demo_task_css"],
+        resources: [],
         notes: ""
       }
     ],
     milestones: [
-      { id: "demo_milestone_react_1", title: "搭建 React 基础框架", taskIds: ["demo_task_js_refresh", "demo_task_react_core"] },
-      { id: "demo_milestone_react_2", title: "输出可演示项目", taskIds: ["demo_task_react_delivery"] }
+      { id: "ms_foundation_basic", title: "三剑客基础达成", taskIds: ["demo_task_html", "demo_task_css", "demo_task_js"] },
+      { id: "ms_foundation_layout", title: "现代布局专家", taskIds: ["demo_task_flex", "demo_task_grid"] }
     ]
   },
   {
-    id: "demo_path_data_structures",
-    title: "数据结构与算法路径",
-    description: "从数组链表到树图与算法练习，建立系统化的算法基础。",
-    status: "in_progress",
-    progress: 35,
-    tags: ["演示", "算法", "进阶"],
-    goalId: "demo_goal_3",
+    id: "demo_path_react_interface",
+    title: "React 界面进阶",
+    description: "利用 React 框架提升开发效率，并专注于响应式与无障碍的最佳实践。",
+    status: "not_started",
+    progress: 0,
+    tags: ["演示", "React", "进阶"],
+    goalId: "demo_goal_2",
     tasks: [
       {
-        id: "demo_task_array_list",
-        title: "数组与链表基础",
-        description: "掌握数组与链表的核心操作和适用场景。",
-        estimatedTime: "4小时",
-        progress: 80,
-        status: "in_progress",
-        dependencies: [],
-        resources: [
-          {
-            id: "demo_res_algo_array",
-            title: "数组与链表入门",
-            type: "document",
-            url: "https://leetcode.cn/"
-          }
-        ],
-        notes: "双指针与链表遍历已完成一轮练习。"
-      },
-      {
-        id: "demo_task_stack_queue",
-        title: "栈与队列",
-        description: "掌握 LIFO/FIFO 结构并能解决基础题型。",
-        estimatedTime: "3小时",
-        progress: 30,
-        status: "in_progress",
-        dependencies: ["demo_task_array_list"],
-        resources: [
-          {
-            id: "demo_res_algo_stack",
-            title: "栈队列专题",
-            type: "document",
-            url: "https://leetcode.cn/"
-          }
-        ],
-        notes: "已完成基础实现，待补充单调栈题型。"
-      },
-      {
-        id: "demo_task_tree_graph",
-        title: "树与图遍历",
-        description: "练习 DFS/BFS 并建立图模型思维。",
-        estimatedTime: "5小时",
+        id: "demo_task_react",
+        title: "React 组件与状态管理",
+        description: "从 JSX 到 Hooks，构建可复用的 UI 逻辑。",
+        estimatedTime: "6小时",
         progress: 0,
         status: "not_started",
-        dependencies: ["demo_task_stack_queue"],
-        resources: [
-          {
-            id: "demo_res_algo_tree",
-            title: "树与图基础",
-            type: "document",
-            url: "https://leetcode.cn/"
-          }
-        ],
+        dependencies: [],
+        resources: [],
+        notes: ""
+      },
+      {
+        id: "demo_task_responsive",
+        title: "全端响应式适配",
+        description: "使用断点与流式设计适配从手机到 4K 屏的所有设备。",
+        estimatedTime: "4小时",
+        progress: 0,
+        status: "not_started",
+        dependencies: [],
+        resources: [],
+        notes: ""
+      },
+      {
+        id: "demo_task_a11y",
+        title: "Web 无障碍深度审计",
+        description: "使用辅助工具修复页面中的可访问性问题。",
+        estimatedTime: "3小时",
+        progress: 0,
+        status: "not_started",
+        dependencies: [],
+        resources: [],
         notes: ""
       }
     ],
     milestones: [
-      {
-        id: "demo_milestone_exam_1",
-        title: "完成基础结构训练",
-        taskIds: ["demo_task_array_list", "demo_task_stack_queue", "demo_task_tree_graph"]
-      }
+      { id: "ms_react_dev", title: "React 开发就绪", taskIds: ["demo_task_react"] },
+      { id: "ms_experience_opt", title: "极致用户体验", taskIds: ["demo_task_responsive", "demo_task_a11y"] }
     ]
   }
 ];
@@ -442,59 +487,40 @@ export const DEMO_PATH_SEEDS: DemoPathSeed[] = [
 export const DEMO_GOAL_SEEDS: DemoGoalSeed[] = [
   {
     id: "demo_goal_1",
-    title: "在两周内完成前端基础站点",
-    description: "聚焦 HTML/CSS/响应式布局，产出一个可展示的学习主页。",
+    title: "精通前端基础布局",
+    description: "在月底前彻底掌握从语义化到 Grid 的所有现代布局手段。",
     goalType: "project",
-    category: "project",
+    category: "skill",
     linkedPathIds: ["demo_path_frontend_foundations"],
     smart: {
-      specific: "完成语义化页面和响应式适配",
-      measurable: "完成 3 个关键任务与 2 个里程碑",
-      achievable: "每晚投入 1-2 小时",
-      relevant: "支撑后续 React 项目开发",
+      specific: "独立完成 5 个基于 Grid 和 Flexbox 的练习页面",
+      measurable: "所有练习均通过语义化验证和无障碍测试",
+      achievable: "每日固定投入 2 小时进行实战练习",
+      relevant: "为后续学习 React 和参与公司项目打下基础",
       timeBound: "2026-03-31"
     },
-    startDate: "2026-03-17",
+    startDate: "2026-03-01",
     endDate: "2026-03-31",
-    progress: 46,
+    progress: 40,
     status: "active"
   },
   {
     id: "demo_goal_2",
-    title: "完成 React 项目并形成作品集",
-    description: "完成一个可交互 React 页面，整理成可展示作品。",
+    title: "构建高可用 React 组件库",
+    description: "利用 React 开发出一套既美观又符合无障碍标准的组件库。",
     goalType: "project",
-    category: "skill",
-    linkedPathIds: ["demo_path_react_project"],
+    category: "project",
+    linkedPathIds: ["demo_path_react_interface"],
     smart: {
-      specific: "实现组件化页面与基础状态管理",
-      measurable: "完成 3 个任务并提交项目仓库",
-      achievable: "按路径逐步推进",
-      relevant: "对接求职和能力展示",
-      timeBound: "2026-04-12"
+      specific: "包含 Button, Modal, Tabs 等 8 个常用组件",
+      measurable: "Jest 测试覆盖率达到 80%，并通过 Lighthouse 无障碍评分",
+      achievable: "基于已有的 HTML/CSS 基础进行组件化封装",
+      relevant: "提升个人作品集质量，展现专业开发标准",
+      timeBound: "2026-04-15"
     },
     startDate: "2026-03-24",
-    endDate: "2026-04-12",
+    endDate: "2026-04-15",
     progress: 0,
-    status: "active"
-  },
-  {
-    id: "demo_goal_3",
-    title: "在三周内完成算法基础路径",
-    description: "完成数据结构核心任务并建立基础题型解题习惯。",
-    goalType: "project",
-    category: "skill",
-    linkedPathIds: ["demo_path_data_structures"],
-    smart: {
-      specific: "完成数组链表、栈队列、树图三个核心模块",
-      measurable: "完成 3 个任务并产出阶段性笔记",
-      achievable: "每天投入 1 小时练习",
-      relevant: "补齐前端工程中的算法基础能力",
-      timeBound: "2026-04-10"
-    },
-    startDate: "2026-03-17",
-    endDate: "2026-04-10",
-    progress: 35,
     status: "active"
   }
 ];
@@ -620,34 +646,39 @@ export const DEMO_PATH_BOOTSTRAP: DemoPathBootstrap = {
 
 export const DEMO_PRACTICE_BANKS: DemoPracticeBankSeed[] = [
   {
-    name: "前端与算法演示题库",
-    description: "演示账号预置题库，用于体验前端与算法练习流程。",
-    tags: ["演示", "前端", "算法"],
+    name: "前端基础演示题库",
+    description: "演示账号预置题库，用于体验前端基础知识点的练习流程。",
+    tags: ["演示", "前端", "基础"],
     questions: [
       {
         type: "multiple_choice",
         title: "语义化标签选择",
-        content: "页面主导航区域应优先使用哪个语义化标签？",
+        content: "在构建网页时，用于表示页面主导航区域的最合适标签是？",
         difficulty: "easy",
         status: "active",
         tags: ["HTML", "语义化"],
         points: 5,
-        explanation: "主导航语义化标签应优先使用 nav。",
+        explanation: "<nav> 标签专门用于定义页面的导航链接区域。",
         options: [
           { id: "a", text: "nav", isCorrect: true },
           { id: "b", text: "aside", isCorrect: false },
-          { id: "c", text: "footer", isCorrect: false }
+          { id: "c", text: "menu", isCorrect: false }
         ]
       },
       {
-        type: "short_answer",
-        title: "为什么先复盘 JavaScript 再学 React？",
-        content: "请说明在 React 路径中先复盘 JavaScript 核心概念的意义。",
-        difficulty: "medium",
+        type: "multiple_choice",
+        title: "Flexbox 主轴对齐",
+        content: "在 Flexbox 中，哪项属性用于控制子元素在主轴（Main Axis）上的对齐方式？",
+        difficulty: "easy",
         status: "active",
-        tags: ["JavaScript", "React"],
-        points: 10,
-        explanation: "React 的组件与 Hooks 依赖闭包、状态更新与异步机制的扎实基础。"
+        tags: ["CSS", "Flexbox"],
+        points: 5,
+        explanation: "justify-content 负责主轴对齐，align-items 负责交叉轴对齐。",
+        options: [
+          { id: "a", text: "justify-content", isCorrect: true },
+          { id: "b", text: "align-items", isCorrect: false },
+          { id: "c", text: "flex-direction", isCorrect: false }
+        ]
       }
     ]
   }
