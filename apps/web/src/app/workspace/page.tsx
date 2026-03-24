@@ -1190,7 +1190,7 @@ function WorkspacePageContent() {
                         { icon: BookOpen, label: "搜索知识宝库", desc: "查找相关文档", color: "blue", prompt: "搜索知识宝库:" },
                         { icon: Brain, label: "查询知识星图", desc: "获取知识关系", color: "purple", prompt: "查询知识星图:" },
                         { icon: Target, label: "生成练习", desc: "个性化题目", color: "green", prompt: "我想练习" },
-                        { icon: Lightbulb, label: "成长地图", desc: "智能规划", color: "orange", prompt: "帮我规划成长地图" },
+                        { icon: Lightbulb, label: "知识星图", desc: "智能规划", color: "orange", prompt: "帮我规划知识星图" },
                         { icon: ImageIcon, label: "图片分析", desc: "多模态理解", color: "pink", prompt: "分析这张图片:" },
                       ].map((tool, idx) => {
                         const Icon = tool.icon;

@@ -77,7 +77,7 @@ export function PathEditDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit className="h-5 w-5 text-orange-500" />
-            编辑成长地图
+            编辑学习路径
           </DialogTitle>
           <DialogDescription>
             修改学习路径的基本信息

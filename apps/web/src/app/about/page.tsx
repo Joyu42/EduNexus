@@ -56,7 +56,7 @@ export default function AboutPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-orange-500">•</span>
-                <span>成长地图 - 个性化学习路径规划</span>
+                <span>知识星图 - 可视化学习路径规划</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-orange-500">•</span>
