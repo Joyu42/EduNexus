@@ -11,7 +11,24 @@ if (!resolvedSecret) {
   throw new Error("AUTH_SECRET is required when NODE_ENV=production");
 }
 
-const trustHost = process.env.AUTH_TRUST_HOST === "true" || process.env.NODE_ENV !== "production";
+function isLocalAuthUrl(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const hostname = new URL(value).hostname;
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  } catch {
+    return false;
+  }
+}
+
+const trustHost =
+  process.env.AUTH_TRUST_HOST === "true" ||
+  process.env.NODE_ENV !== "production" ||
+  isLocalAuthUrl(process.env.AUTH_URL) ||
+  isLocalAuthUrl(process.env.NEXTAUTH_URL);
 
 export const authConfig = {
   providers: [

@@ -178,6 +178,7 @@ function toUiMessages(detail: WorkspaceSessionDetail): WorkspaceMessage[] {
     content: message.content,
     timestamp: new Date(message.createdAt),
     mode: "normal",
+    learningPack: message.learningPack,
   }));
 }
 
@@ -408,6 +409,7 @@ export function useWorkspaceSessionController({
         await deps.appendMessage(sessionId, {
           role: "assistant",
           content: assistantMessage.content,
+          learningPack: assistantLearningPack,
         });
 
         if (input.onAssistantResponse) {

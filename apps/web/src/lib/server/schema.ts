@@ -8,7 +8,15 @@ export const createSessionSchema = z.object({
 
 export const appendMessageSchema = z.object({
   role: z.enum(["user", "assistant", "system"]),
-  content: z.string().min(1).max(10000)
+  content: z.string().min(1).max(10000),
+  learningPack: z
+    .object({
+      packId: z.string().min(1),
+      title: z.string().min(1),
+      topic: z.string().min(1),
+      graphUrl: z.string().min(1),
+    })
+    .optional(),
 });
 
 export const socraticNextSchema = z.object({

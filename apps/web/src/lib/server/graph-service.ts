@@ -189,8 +189,6 @@ export async function getGraphView(
     });
 
     const packDocIdSet = new Set(packDocs.map((d) => d.id));
-    const packModuleMap = new Map(pack.modules.map((m) => [m.kbDocumentId, m]));
-
     const db = await loadDb();
     const userPaths = db.syncedPaths.filter((p) => p.userId === userId);
     const pathMembershipMap = buildPathMembershipMap(userPaths);
@@ -198,7 +196,6 @@ export async function getGraphView(
 
     const nodes: WorkspaceGraphNode[] = packDocs.map((doc) => {
       const mastery = db.masteryByNode[doc.id] ?? 0;
-      const mod = packModuleMap.get(doc.id);
       const pathMemberships = pathMembershipMap.get(doc.id) ?? [];
 
       return {
@@ -216,7 +213,23 @@ export async function getGraphView(
       };
     });
 
-    return { nodes, edges: [], packId };
+    const orderedModuleDocIds = pack.modules
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((module) => module.kbDocumentId)
+      .filter((kbDocumentId): kbDocumentId is string => kbDocumentId.length > 0 && packDocIdSet.has(kbDocumentId));
+
+    const edges: GraphEdge[] = [];
+    for (let index = 0; index < orderedModuleDocIds.length - 1; index += 1) {
+      const source = orderedModuleDocIds[index];
+      const target = orderedModuleDocIds[index + 1];
+      if (!source || !target || source === target) {
+        continue;
+      }
+      edges.push({ source, target, weight: 0.9 });
+    }
+
+    return { nodes, edges, packId };
   }
 
   const db = await loadDb();

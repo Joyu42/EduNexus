@@ -115,6 +115,16 @@ describe("custom wordbook service", () => {
     );
   });
 
+  it("returns empty list when custom book table is missing", async () => {
+    prismaMock.customWordBook.findMany.mockRejectedValueOnce({ code: "P2021" });
+    await expect(service.listCustomWordBooks("user_a")).resolves.toEqual([]);
+  });
+
+  it("returns empty list when custom entry table is missing", async () => {
+    prismaMock.customWordEntry.findMany.mockRejectedValueOnce({ code: "P2021" });
+    await expect(service.listCustomWords("user_a")).resolves.toEqual([]);
+  });
+
   it("updates book metadata with normalized strings", async () => {
     prismaMock.customWordBook.updateMany.mockResolvedValueOnce({ count: 1 });
     prismaMock.customWordBook.findFirst.mockResolvedValueOnce({

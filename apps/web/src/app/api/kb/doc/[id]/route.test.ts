@@ -40,6 +40,14 @@ describe("kb doc [id] api", () => {
   });
 
   it("updates document successfully", async () => {
+    getDocument.mockResolvedValueOnce({
+      id: "doc_1",
+      title: "Updated",
+      content: "Content",
+      authorId: "session-user",
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-02T00:00:00.000Z"),
+    });
     updateDocument.mockResolvedValueOnce({
       id: "doc_1",
       title: "Updated",
@@ -71,6 +79,42 @@ describe("kb doc [id] api", () => {
         content: "Content",
       },
     });
+  });
+
+  it("updates document when request contains partial fields", async () => {
+    getDocument.mockResolvedValueOnce({
+      id: "doc_1",
+      title: "Original",
+      content: "Original content",
+      authorId: "session-user",
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-02T00:00:00.000Z"),
+    });
+    updateDocument.mockResolvedValueOnce({
+      id: "doc_1",
+      title: "New title",
+      content: "Original content",
+      authorId: "session-user",
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-01-03T00:00:00.000Z"),
+    });
+
+    const response = await PUT(
+      new Request("http://localhost/api/kb/doc/doc_1", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "New title" }),
+      }),
+      { params: Promise.resolve({ id: "doc_1" }) }
+    );
+
+    expect(response.status).toBe(200);
+    expect(getDocument).toHaveBeenCalledWith("doc_1", "session-user");
+    expect(updateDocument).toHaveBeenCalledWith(
+      "doc_1",
+      { title: "New title", content: "Original content" },
+      "session-user"
+    );
   });
 
   it("returns 404 when deleting missing document", async () => {

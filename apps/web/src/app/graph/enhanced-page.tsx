@@ -35,6 +35,8 @@ import {
   AlertCircle,
   Sparkles,
   BarChart3,
+  PlusCircle,
+  Link2,
 } from "lucide-react";
 import { InteractiveGraph } from "@/components/graph/interactive-graph";
 import { NodeDetailPanel } from "@/components/graph/node-detail-panel";
@@ -78,6 +80,11 @@ type SidebarKBDoc = {
   content: string;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+};
+
+type UserKBDocOption = {
+  id: string;
+  title: string;
 };
 
 function buildKbIdentityExcerpt(kbDoc: SidebarKBDoc | null, fallbackExcerpt?: string): string {
@@ -140,6 +147,12 @@ function GraphPageContent() {
   const [showPathDialog, setShowPathDialog] = useState(false);
   const [userPaths, setUserPaths] = useState<StoredLearningPath[]>([]);
   const [newPathTitle, setNewPathTitle] = useState("");
+  const [showCreatePlanetDialog, setShowCreatePlanetDialog] = useState(false);
+  const [newPlanetTitle, setNewPlanetTitle] = useState("");
+  const [newPlanetBindDocId, setNewPlanetBindDocId] = useState("__create_new__");
+  const [bindExistingDocId, setBindExistingDocId] = useState("");
+  const [isPlanetSubmitting, setIsPlanetSubmitting] = useState(false);
+  const [userKbDocs, setUserKbDocs] = useState<UserKBDocOption[]>([]);
 
   useEffect(() => {
     setActiveMode(normalizeMode(view));
@@ -268,7 +281,7 @@ function GraphPageContent() {
     return () => {
       isMounted = false;
     };
-  }, [status]);
+  }, [status, urlPackId]);
 
   // 筛选节点
   const filteredNodes = graphData.nodes.filter((node) => {
@@ -389,7 +402,7 @@ function GraphPageContent() {
 
     const nextSelectedNode = data.nodes.find((node) => node.id === nodeId) ?? null;
     setSelectedNode(nextSelectedNode);
-  }, []);
+  }, [urlPackId]);
 
   const buildPathTaskFromNode = useCallback((node: GraphNode): StoredPathTask => {
     return {
@@ -418,9 +431,11 @@ function GraphPageContent() {
   useEffect(() => {
     if (!selectedNode || status !== "authenticated") {
       setUserPaths([]);
+      setBindExistingDocId("");
       return;
     }
 
+    setBindExistingDocId("");
     void loadUserPaths();
   }, [loadUserPaths, selectedNode, status]);
 
@@ -489,6 +504,99 @@ function GraphPageContent() {
     await loadUserPaths();
     await refreshGraphData(selectedNode.id);
   }, [buildPathTaskFromNode, loadUserPaths, newPathTitle, refreshGraphData, selectedNode]);
+
+  const loadUserKbDocs = useCallback(async () => {
+    try {
+      const { fetchDocumentsFromServer } = await import("@/lib/client/kb-storage");
+      const docs = await fetchDocumentsFromServer();
+      setUserKbDocs(docs.map((doc) => ({ id: doc.id, title: doc.title || "无标题文档" })));
+    } catch {
+      setUserKbDocs([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setUserKbDocs([]);
+      return;
+    }
+
+    if (!showCreatePlanetDialog && !(selectedNode && selectedNode.id.startsWith("demo_node_"))) {
+      return;
+    }
+
+    void loadUserKbDocs();
+  }, [loadUserKbDocs, selectedNode, showCreatePlanetDialog, status]);
+
+  const handleCreatePlanet = useCallback(async () => {
+    const title = newPlanetTitle.trim();
+    if (!title || isPlanetSubmitting) {
+      return;
+    }
+
+    setIsPlanetSubmitting(true);
+    try {
+      const payload: { title: string; kbDocumentId?: string } = { title };
+      if (newPlanetBindDocId && newPlanetBindDocId !== "__create_new__") {
+        payload.kbDocumentId = newPlanetBindDocId;
+      }
+
+      const response = await fetch("/api/graph/planet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error?.message ?? "创建星球失败");
+      }
+
+      const nodeId = result?.data?.node?.nodeId as string | undefined;
+      await refreshGraphData(nodeId);
+      setShowCreatePlanetDialog(false);
+      setNewPlanetTitle("");
+      setNewPlanetBindDocId("__create_new__");
+      toast("已创建星球", "success");
+    } catch {
+      toast("创建星球失败", "error");
+    } finally {
+      setIsPlanetSubmitting(false);
+    }
+  }, [isPlanetSubmitting, newPlanetBindDocId, newPlanetTitle, refreshGraphData]);
+
+  const handleBindPlanetDocument = useCallback(async () => {
+    if (!selectedNode || !bindExistingDocId || isPlanetSubmitting) {
+      return;
+    }
+
+    setIsPlanetSubmitting(true);
+    try {
+      const response = await fetch("/api/graph/planet", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          nodeId: selectedNode.id,
+          kbDocumentId: bindExistingDocId,
+          label: selectedNode.name,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error?.message ?? "绑定失败");
+      }
+
+      await refreshGraphData(selectedNode.id);
+      toast("已绑定知识文档", "success");
+    } catch {
+      toast("绑定知识文档失败", "error");
+    } finally {
+      setIsPlanetSubmitting(false);
+    }
+  }, [bindExistingDocId, isPlanetSubmitting, refreshGraphData, selectedNode]);
 
   const handleRemoveNodeFromPath = useCallback(
     async (pathId: string) => {
@@ -698,6 +806,19 @@ function GraphPageContent() {
                   className="pl-9 focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </motion.div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowCreatePlanetDialog(true);
+                  setNewPlanetBindDocId("__create_new__");
+                  setNewPlanetTitle("");
+                }}
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                新建星球
+              </Button>
             </motion.div>
           </div>
         </div>
@@ -879,9 +1000,9 @@ function GraphPageContent() {
               <div data-testid="graph-sidebar-summary" className="p-4 border-b">
                 <div className="flex items-start justify-between mb-2">
                   <h2 className="text-xl font-bold leading-tight">
-                    {selectedNode.name || (selectedNode as any).label}
+                    {selectedNode.name}
                   </h2>
-                  {(selectedNode as any).needsReview && (
+                  {selectedNode.needsReview && (
                     <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
                       复习
                     </Badge>
@@ -1030,6 +1151,34 @@ function GraphPageContent() {
                         <p className="text-xs text-muted-foreground">
                           该星球缺少 kbDocumentId，暂时无法确认其唯一主文档。请先在知识宝库建立关联。
                         </p>
+                        {selectedNode.id.startsWith("demo_node_") ? (
+                          <div className="space-y-2">
+                            <Select value={bindExistingDocId} onValueChange={setBindExistingDocId}>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="选择要绑定的知识文档" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {userKbDocs.map((doc) => (
+                                  <SelectItem key={doc.id} value={doc.id}>
+                                    {doc.title}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full"
+                              disabled={!bindExistingDocId || isPlanetSubmitting}
+                              onClick={() => {
+                                void handleBindPlanetDocument();
+                              }}
+                            >
+                              <Link2 className="h-4 w-4 mr-2" />
+                              绑定知识文档
+                            </Button>
+                          </div>
+                        ) : null}
                       </CardContent>
                     </Card>
                   ) : isKbDocLoading ? (
@@ -1259,6 +1408,49 @@ function GraphPageContent() {
             </div>
           )}
         </div>
+
+        <Dialog open={showCreatePlanetDialog} onOpenChange={setShowCreatePlanetDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>新建星球</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-3">
+              <Input
+                value={newPlanetTitle}
+                onChange={(event) => setNewPlanetTitle(event.target.value)}
+                placeholder="星球名称，例如：Java 并发核心"
+              />
+
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">绑定知识文档（可选）</p>
+                <Select value={newPlanetBindDocId} onValueChange={setNewPlanetBindDocId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="创建新文档并绑定" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__create_new__">创建新文档并绑定</SelectItem>
+                    {userKbDocs.map((doc) => (
+                      <SelectItem key={doc.id} value={doc.id}>
+                        {doc.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                className="w-full"
+                onClick={() => {
+                  void handleCreatePlanet();
+                }}
+                disabled={!newPlanetTitle.trim() || isPlanetSubmitting}
+              >
+                创建并保存星球
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={showPathDialog} onOpenChange={setShowPathDialog}>
           <DialogContent>

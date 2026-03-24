@@ -18,6 +18,12 @@ type SessionMessage = {
   role: "user" | "assistant" | "system";
   content: string;
   createdAt: string;
+  learningPack?: {
+    packId: string;
+    title: string;
+    topic: string;
+    graphUrl: string;
+  };
 };
 
 type PlanRecord = {
@@ -296,10 +302,23 @@ function normalizeSessionMessage(input: unknown, fallbackCreatedAt: string): Ses
 
   const content = typeof input.content === "string" ? input.content : "";
   const createdAt = typeof input.createdAt === "string" ? input.createdAt : fallbackCreatedAt;
+  const learningPack = isRecord(input.learningPack)
+    && typeof input.learningPack.packId === "string"
+    && typeof input.learningPack.title === "string"
+    && typeof input.learningPack.topic === "string"
+    && typeof input.learningPack.graphUrl === "string"
+    ? {
+        packId: input.learningPack.packId,
+        title: input.learningPack.title,
+        topic: input.learningPack.topic,
+        graphUrl: input.learningPack.graphUrl,
+      }
+    : undefined;
   return {
     role,
     content,
-    createdAt
+    createdAt,
+    ...(learningPack ? { learningPack } : {}),
   };
 }
 

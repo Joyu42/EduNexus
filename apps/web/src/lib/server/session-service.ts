@@ -124,6 +124,12 @@ export async function appendSessionMessage(
   input: {
     role: "user" | "assistant" | "system";
     content: string;
+    learningPack?: {
+      packId: string;
+      title: string;
+      topic: string;
+      graphUrl: string;
+    };
   },
   userId: string
 ) {
@@ -140,7 +146,8 @@ export async function appendSessionMessage(
   target.messages.push({
     role: input.role,
     content: input.content,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    ...(input.learningPack ? { learningPack: input.learningPack } : {}),
   });
   target.updatedAt = new Date().toISOString();
   await saveDb(db);

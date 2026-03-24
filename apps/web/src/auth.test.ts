@@ -239,6 +239,39 @@ describe("auth callbacks", () => {
   });
 });
 
+describe("auth host trust policy", () => {
+  it("trusts localhost AUTH_URL in production", async () => {
+    const nextAuth = vi.fn((config) => ({
+      handlers: {},
+      auth: vi.fn(),
+      signIn: vi.fn(),
+      signOut: vi.fn(),
+      config,
+    }));
+    const credentials = vi.fn((config) => config);
+
+    vi.doMock("next-auth", () => ({ default: nextAuth }));
+    vi.doMock("next-auth/providers/credentials", () => ({ default: credentials }));
+    vi.doMock("./lib/server/user-service", () => ({
+      getUserByEmail: vi.fn(),
+      getUserById: vi.fn(),
+      verifyPassword: vi.fn(),
+    }));
+
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("AUTH_URL", "http://localhost:3002");
+    vi.stubEnv("AUTH_TRUST_HOST", "");
+    vi.stubEnv("AUTH_SECRET", "test-secret");
+
+    try {
+      const { authConfig } = await import("./auth");
+      expect(authConfig.trustHost).toBe(true);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
 describe("auth callback url sanitization", () => {
   it("returns /workspace when callbackUrl missing or unsafe", async () => {
     let getSafeCallbackUrl: ((callbackUrl: string | null) => string) | undefined;

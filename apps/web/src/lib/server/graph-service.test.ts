@@ -99,4 +99,69 @@ describe("graph service demo projection", () => {
 
     await fs.rm(dataDir, { recursive: true, force: true });
   });
+
+  it("builds sequential edges for learning-pack modules", async () => {
+    const dataDir = await createDataDir();
+    process.env.EDUNEXUS_DATA_DIR = dataDir;
+
+    const db = await loadDb();
+    const now = new Date().toISOString();
+    db.learningPacks.push({
+      packId: "lp_java_test",
+      userId: "pack-user",
+      title: "Java 学习路线图",
+      topic: "java",
+      activeModuleId: "mod_1",
+      stage: "seen",
+      totalStudyMinutes: 0,
+      createdAt: now,
+      updatedAt: now,
+      modules: [
+        {
+          moduleId: "mod_1",
+          title: "Java 基础",
+          kbDocumentId: "doc_java_1",
+          stage: "seen",
+          order: 0,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+        {
+          moduleId: "mod_2",
+          title: "Java OOP",
+          kbDocumentId: "doc_java_2",
+          stage: "seen",
+          order: 1,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+        {
+          moduleId: "mod_3",
+          title: "Java 项目实战",
+          kbDocumentId: "doc_java_3",
+          stage: "seen",
+          order: 2,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+      ],
+    });
+    await saveDb(db);
+
+    findMany.mockResolvedValueOnce([
+      { id: "doc_java_1", title: "Java 基础" },
+      { id: "doc_java_2", title: "Java OOP" },
+      { id: "doc_java_3", title: "Java 项目实战" },
+    ]);
+
+    const graph = await getGraphView("pack-user", { packId: "lp_java_test" });
+
+    expect(graph.nodes).toHaveLength(3);
+    expect(graph.edges).toEqual([
+      { source: "doc_java_1", target: "doc_java_2", weight: 0.9 },
+      { source: "doc_java_2", target: "doc_java_3", weight: 0.9 },
+    ]);
+
+    await fs.rm(dataDir, { recursive: true, force: true });
+  });
 });

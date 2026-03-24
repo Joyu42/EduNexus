@@ -9,6 +9,15 @@ export const CUSTOM_WORD_ID_PREFIX = "custom_word_";
 export const MAX_WORDS_PER_IMPORT = 800;
 export const MAX_FILE_BYTES = 512 * 1024;
 
+function isMissingTableError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2021"
+  );
+}
+
 export type CustomBookImportFormat = "csv" | "json";
 
 export class WordImportError extends Error {
@@ -555,17 +564,24 @@ export async function createCustomWordBook(params: {
 }
 
 export async function listCustomWordBooks(userId: string): Promise<WordBook[]> {
-  const books = await prisma.customWordBook.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      wordCount: true,
-      category: true,
-    },
-  });
+  const books = await prisma.customWordBook
+    .findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        wordCount: true,
+        category: true,
+      },
+    })
+    .catch((error) => {
+      if (isMissingTableError(error)) {
+        return [];
+      }
+      throw error;
+    });
   return books.map(toWordBook);
 }
 
@@ -804,25 +820,32 @@ export async function listCustomWords(
     }
   }
 
-  const entries = await prisma.customWordEntry.findMany({
-    where: {
-      ...(rawBookId ? { bookId: rawBookId } : {}),
-      book: {
-        userId,
+  const entries = await prisma.customWordEntry
+    .findMany({
+      where: {
+        ...(rawBookId ? { bookId: rawBookId } : {}),
+        book: {
+          userId,
+        },
       },
-    },
-    orderBy: rawBookId ? [{ sortOrder: "asc" }] : [{ bookId: "asc" }, { sortOrder: "asc" }],
-    select: {
-      id: true,
-      word: true,
-      phonetic: true,
-      definition: true,
-      example: true,
-      exampleZh: true,
-      difficulty: true,
-      bookId: true,
-    },
-  });
+      orderBy: rawBookId ? [{ sortOrder: "asc" }] : [{ bookId: "asc" }, { sortOrder: "asc" }],
+      select: {
+        id: true,
+        word: true,
+        phonetic: true,
+        definition: true,
+        example: true,
+        exampleZh: true,
+        difficulty: true,
+        bookId: true,
+      },
+    })
+    .catch((error) => {
+      if (isMissingTableError(error)) {
+        return [];
+      }
+      throw error;
+    });
 
   return entries.map(toWord);
 }

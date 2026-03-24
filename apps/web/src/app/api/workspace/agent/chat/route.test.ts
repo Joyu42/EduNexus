@@ -17,7 +17,35 @@ vi.mock("@/lib/agent/learning-agent", () => ({
   createChatHistory: vi.fn(() => []),
 }));
 
-const { isWordsProgressQuery } = await import("./route");
+const createLearningPackMock = vi.fn();
+const setActivePackMock = vi.fn();
+const setPackKbDocumentMock = vi.fn();
+const createDocumentMock = vi.fn();
+const listDocumentsMock = vi.fn();
+const deleteDocumentMock = vi.fn();
+
+vi.mock("@/lib/server/learning-pack-store", () => ({
+  createLearningPack: createLearningPackMock,
+  setActivePack: setActivePackMock,
+  setPackKbDocument: setPackKbDocumentMock,
+}));
+
+vi.mock("@/lib/server/document-service", () => ({
+  createDocument: createDocumentMock,
+  listDocuments: listDocumentsMock,
+  deleteDocument: deleteDocumentMock,
+}));
+
+vi.mock("@/lib/server/store", () => ({
+  loadDb: vi.fn().mockResolvedValue({ syncedPaths: [] }),
+  saveDb: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/server/demo-content", () => ({
+  DEMO_KB_DOCUMENTS: [],
+}));
+
+const { isWordsProgressQuery, POST } = await import("./route");
 
 const WORDS_CONTEXT = "你正处于 EduNexus 的 Words 模块，需要结合真实学习进度给出行动建议：";
 
@@ -44,5 +72,50 @@ describe("words progress query detection", () => {
 
   it("does not trigger when neither words nor context are provided", () => {
     expect(isWordsProgressQuery("随便聊聊")).toBe(false);
+  });
+});
+
+describe("learning-pack quick creation", () => {
+  it("creates and returns learningPack for '我想学习 java'", async () => {
+    const { auth } = await import("@/auth");
+
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u1", isDemo: false },
+    } as never);
+
+    createLearningPackMock.mockResolvedValueOnce({
+      packId: "lp_java_1",
+      userId: "u1",
+      title: "Java 学习路线图",
+      topic: "java",
+      stage: "seen",
+      active: false,
+      modules: [
+        { moduleId: "m1", title: "基础语法", kbDocumentId: "", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+      ],
+      currentModuleId: "m1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    createDocumentMock.mockResolvedValueOnce({ id: "doc_java_1" });
+
+    const request = new Request("http://localhost/api/workspace/agent/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "我想学习 java" }),
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(payload.learningPack).toMatchObject({
+      packId: "lp_java_1",
+      topic: "java",
+      graphUrl: "/graph?view=path&packId=lp_java_1",
+    });
+    expect(createLearningPackMock).toHaveBeenCalled();
+    expect(setActivePackMock).toHaveBeenCalledWith("lp_java_1", "u1");
   });
 });

@@ -85,21 +85,34 @@ export async function PUT(
       content?: string;
     };
 
-    if (typeof json.title !== "string" || typeof json.content !== "string") {
+    const hasTitle = typeof json.title === "string";
+    const hasContent = typeof json.content === "string";
+    if (!hasTitle && !hasContent) {
       return fail(
         {
           code: "INVALID_REQUEST",
-          message: "标题和内容不能为空。",
+          message: "标题或内容至少提供一个。",
         },
         400
+      );
+    }
+
+    const existing = await getDocument(id, userId);
+    if (!existing) {
+      return fail(
+        {
+          code: "DOC_NOT_FOUND",
+          message: "未找到对应知识文档，或无权访问。",
+        },
+        404
       );
     }
 
     const updated = await updateDocument(
       id,
       {
-        title: json.title,
-        content: json.content,
+        title: hasTitle ? json.title : existing.title,
+        content: hasContent ? json.content : existing.content,
       },
       userId
     );

@@ -12,7 +12,15 @@ const sessionSummarySchema = z.object({
 const sessionMessageSchema = z.object({
   role: z.enum(["user", "assistant", "system"]),
   content: z.string(),
-  createdAt: z.string()
+  createdAt: z.string(),
+  learningPack: z
+    .object({
+      packId: z.string(),
+      title: z.string(),
+      topic: z.string(),
+      graphUrl: z.string(),
+    })
+    .optional(),
 });
 
 const sessionDetailSchema = z.object({
@@ -27,7 +35,15 @@ const sessionDetailSchema = z.object({
 
 const appendMessageInputSchema = z.object({
   role: z.enum(["user", "assistant", "system"]),
-  content: z.string().min(1)
+  content: z.string().min(1),
+  learningPack: z
+    .object({
+      packId: z.string().min(1),
+      title: z.string().min(1),
+      topic: z.string().min(1),
+      graphUrl: z.string().min(1),
+    })
+    .optional(),
 });
 
 const createSessionInputSchema = z.object({

@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { runAgentConversation, createChatHistory } from "@/lib/agent/learning-agent";
 import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
 import { getWordsProgressSummary } from "@/lib/server/words-service";
+import { createLearningPack, setActivePack, setPackKbDocument } from "@/lib/server/learning-pack-store";
+import { createDocument, deleteDocument, listDocuments } from "@/lib/server/document-service";
+import { loadDb, saveDb } from "@/lib/server/store";
+import { DEMO_KB_DOCUMENTS } from "@/lib/server/demo-content";
 import { auth } from "@/auth";
 
 export const runtime = "nodejs";
@@ -73,6 +77,80 @@ export function isWordsProgressQuery(message: string, contextPrompt?: string): b
   return false;
 }
 
+function extractLearningTopic(message: string): string | null {
+  const text = message.trim();
+  if (!text) {
+    return null;
+  }
+
+  const normalized = text.replace(/\s+/g, " ");
+  const patterns = [
+    /我想学习\s*([\w\u4e00-\u9fa5+#.-]{1,40})/i,
+    /想学\s*([\w\u4e00-\u9fa5+#.-]{1,40})/i,
+    /学习\s*([\w\u4e00-\u9fa5+#.-]{1,40})/i,
+    /learn\s+([\w+#.-]{1,40})/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (match?.[1]) {
+      return match[1].trim();
+    }
+  }
+
+  return null;
+}
+
+function getStarterModules(topic: string): string[] {
+  return [
+    `${topic} 基础与环境搭建`,
+    `${topic} 语法核心`,
+    `${topic} 面向对象实践`,
+    `${topic} 常用库与工程化`,
+    `${topic} 综合项目实战`,
+  ];
+}
+
+async function createStarterLearningPack(input: { userId: string; topic: string }) {
+  const modules = getStarterModules(input.topic);
+  const pack = await createLearningPack(input.userId, `${input.topic} 学习路线图`, input.topic, modules);
+
+  for (const module of pack.modules) {
+    const doc = await createDocument({
+      title: module.title,
+      content: `# ${module.title}\n\n## 学习目标\n- 理解 ${input.topic} 在本模块的核心概念\n\n## 今日任务\n- 阅读并完成本节示例\n- 记录 3 个关键知识点\n\n## 练习建议\n- 写 1-2 个最小可运行示例\n`,
+      authorId: input.userId,
+    });
+    await setPackKbDocument(pack.packId, module.moduleId, doc.id);
+  }
+
+  await setActivePack(pack.packId, input.userId);
+
+  return {
+    packId: pack.packId,
+    title: pack.title,
+    topic: pack.topic,
+    graphUrl: `/graph?view=path&packId=${encodeURIComponent(pack.packId)}`,
+  };
+}
+
+async function cleanupDemoScaffold(userId: string): Promise<void> {
+  const demoTitles = new Set(DEMO_KB_DOCUMENTS.map((doc) => doc.title));
+  const existingDocs = await listDocuments(userId);
+
+  for (const doc of existingDocs) {
+    if (demoTitles.has(doc.title)) {
+      await deleteDocument(doc.id, userId);
+    }
+  }
+
+  const db = await loadDb();
+  db.syncedPaths = db.syncedPaths.filter(
+    (path) => !(path.userId === userId && path.pathId.startsWith("demo_path_"))
+  );
+  await saveDb(db);
+}
+
 function buildWordsProgressReport(summary: Awaited<ReturnType<typeof getWordsProgressSummary>>) {
   const avg = summary.recentProgress.averageDailyLearnedWords.toFixed(1);
   return [
@@ -138,6 +216,27 @@ export async function POST(request: Request) {
     const userId = session.user.id;
     const isDemo = session.user.isDemo === true;
 
+    const learningTopic = extractLearningTopic(message);
+    if (learningTopic) {
+      if (isDemo) {
+        await cleanupDemoScaffold(userId);
+      }
+      const learningPack = await createStarterLearningPack({ userId, topic: learningTopic });
+      return NextResponse.json({
+        success: true,
+        response: `已为你创建「${learningPack.title}」。\n\n我已经生成了 5 个阶段并写入知识文档，你可以直接进入知识星图开始学习。`,
+        learningPack,
+        steps: [
+          {
+            type: "tool_result",
+            tool: "create_learning_pack",
+            content: JSON.stringify(learningPack),
+          },
+        ],
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     const graphContext = await buildWorkspaceGraphContext({
       userId,
       taskId: typeof taskContext?.taskId === "string" ? taskContext.taskId : undefined,
@@ -202,6 +301,7 @@ export async function POST(request: Request) {
       response: result.output,
       thinking: result.thinking,
       steps: result.intermediateSteps,
+      learningPack: (result as { learningPack?: unknown }).learningPack,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

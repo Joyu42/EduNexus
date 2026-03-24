@@ -194,6 +194,42 @@ export default function KnowledgeBasePage() {
     }
   };
 
+  const handleDeleteDocuments = async (docIds: string[]) => {
+    const uniqueIds = Array.from(new Set(docIds)).filter(Boolean);
+    if (uniqueIds.length === 0) {
+      return;
+    }
+
+    let deletedCount = 0;
+    for (const docId of uniqueIds) {
+      try {
+        await deleteDocumentOnServer(docId);
+        deletedCount += 1;
+      } catch (error) {
+        console.error(`Failed to delete document ${docId}:`, error);
+      }
+    }
+
+    if (deletedCount === 0) {
+      toast.error("批量删除失败");
+      return;
+    }
+
+    setDocuments((prev) => {
+      const deleteSet = new Set(uniqueIds);
+      const nextDocuments = prev.filter((doc) => !deleteSet.has(doc.id));
+      setCurrentDoc((previousCurrentDoc) => {
+        if (!previousCurrentDoc || !deleteSet.has(previousCurrentDoc.id)) {
+          return previousCurrentDoc;
+        }
+        return nextDocuments[0] ?? null;
+      });
+      return nextDocuments;
+    });
+
+    toast.success(`已删除 ${deletedCount} 篇文档`);
+  };
+
   const handleUpdateDocument = async (doc: KBDocument) => {
     try {
       const updatedFromServer = await updateDocumentOnServer(doc.id, {
@@ -269,6 +305,7 @@ export default function KnowledgeBasePage() {
         onCreateDocument={handleCreateDocument}
         onSelectDocument={handleSelectDocument}
         onDeleteDocument={handleDeleteDocument}
+        onDeleteDocuments={handleDeleteDocuments}
         onUpdateDocument={handleUpdateDocument}
       />
     </>

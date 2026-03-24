@@ -74,6 +74,11 @@ describe("listBuiltinWordBooks", () => {
     await listBuiltinWordBooks();
     expect(mockFindMany).toHaveBeenCalledWith(expect.objectContaining({ orderBy: { id: "asc" } }));
   });
+
+  it("returns empty list when builtin book table is missing", async () => {
+    mockFindMany.mockRejectedValueOnce({ code: "P2021" });
+    await expect(listBuiltinWordBooks()).resolves.toEqual([]);
+  });
 });
 
 describe("listBuiltinWords", () => {
@@ -145,6 +150,11 @@ describe("listBuiltinWords", () => {
     mockFindMany.mockResolvedValueOnce([]);
     const words = await listBuiltinWords();
     expect(words).toHaveLength(0);
+  });
+
+  it("returns empty array when builtin entry table is missing", async () => {
+    mockFindMany.mockRejectedValueOnce({ code: "P2021" });
+    await expect(listBuiltinWords()).resolves.toEqual([]);
   });
 });
 

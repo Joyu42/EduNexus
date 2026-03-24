@@ -5,6 +5,15 @@ import type { Word, WordBook } from "@/lib/words/types";
 export const BUILTIN_BOOK_ID_PREFIX = "builtin_book_";
 export const BUILTIN_WORD_ID_PREFIX = "builtin_word_";
 
+function isMissingTableError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2021"
+  );
+}
+
 export function toBuiltinBookId(rawId: string): string {
   return `${BUILTIN_BOOK_ID_PREFIX}${rawId}`;
 }
@@ -33,10 +42,17 @@ function normalizeDifficulty(value?: string | null): "easy" | "medium" | "hard" 
 }
 
 export async function listBuiltinWordBooks(): Promise<WordBook[]> {
-  const books = await prisma.builtinWordBook.findMany({
-    orderBy: { id: "asc" },
-    select: { id: true, name: true, description: true, wordCount: true, category: true },
-  });
+  const books = await prisma.builtinWordBook
+    .findMany({
+      orderBy: { id: "asc" },
+      select: { id: true, name: true, description: true, wordCount: true, category: true },
+    })
+    .catch((error) => {
+      if (isMissingTableError(error)) {
+        return [];
+      }
+      throw error;
+    });
   return books.map((book) => ({
     id: toBuiltinBookId(book.id),
     name: book.name,
@@ -49,10 +65,17 @@ export async function listBuiltinWordBooks(): Promise<WordBook[]> {
 export async function listBuiltinWords(options?: { bookId?: string }): Promise<Word[]> {
   const where = options?.bookId ? { bookId: parseBuiltinBookId(options.bookId) } : {};
 
-  const entries = await prisma.builtinWordEntry.findMany({
-    where,
-    orderBy: options?.bookId ? { sortOrder: "asc" } : [{ bookId: "asc" }, { sortOrder: "asc" }],
-  });
+  const entries = await prisma.builtinWordEntry
+    .findMany({
+      where,
+      orderBy: options?.bookId ? { sortOrder: "asc" } : [{ bookId: "asc" }, { sortOrder: "asc" }],
+    })
+    .catch((error) => {
+      if (isMissingTableError(error)) {
+        return [];
+      }
+      throw error;
+    });
 
   return entries.map((entry) => ({
     id: toBuiltinWordId(entry.id),

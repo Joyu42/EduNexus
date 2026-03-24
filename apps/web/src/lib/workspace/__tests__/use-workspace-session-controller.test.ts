@@ -158,6 +158,61 @@ describe("useWorkspaceSessionController", () => {
     expect(result.current.messages[0]?.timestamp).toBeInstanceOf(Date);
   });
 
+  it("restores learningPack metadata from persisted assistant messages", async () => {
+    const detail = {
+      id: "ws_lp",
+      title: "Java Session",
+      userId: "user-1",
+      createdAt: "2026-03-17T09:00:00.000Z",
+      updatedAt: "2026-03-17T10:00:00.000Z",
+      lastLevel: 1,
+      messages: [
+        {
+          role: "assistant" as const,
+          content: "已创建学习路线",
+          createdAt: "2026-03-17T10:00:00.000Z",
+          learningPack: {
+            packId: "lp_java_1",
+            title: "java 学习路线图",
+            topic: "java",
+            graphUrl: "/graph?view=path&packId=lp_java_1",
+          },
+        },
+      ],
+    };
+
+    const deps = createDependencies({
+      listSessions: vi.fn().mockResolvedValue([
+        {
+          id: detail.id,
+          title: detail.title,
+          createdAt: detail.createdAt,
+          updatedAt: detail.updatedAt,
+          lastLevel: detail.lastLevel,
+          messageCount: detail.messages.length,
+        },
+      ]),
+      getSession: vi.fn().mockResolvedValue(detail),
+    });
+
+    const { result } = renderHook(() =>
+      useWorkspaceSessionController({
+        enabled: true,
+        isDemoUser: false,
+        dependencies: deps,
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.currentSessionId).toBe("ws_lp");
+    });
+
+    expect(result.current.messages[0]?.learningPack).toMatchObject({
+      packId: "lp_java_1",
+      graphUrl: "/graph?view=path&packId=lp_java_1",
+    });
+  });
+
   it("does not persist history when the assistant response fails", async () => {
     const deps = createDependencies({
       createSession: vi.fn().mockResolvedValue({

@@ -31,6 +31,7 @@ interface KBSidebarProps {
   onVaultChange: (vaultId: string) => void;
   onCreateDocument: (title: string) => Promise<void>;
   onDeleteDocument: (docId: string) => Promise<void>;
+  onDeleteDocuments: (docIds: string[]) => Promise<void>;
   onSelectDocument: (doc: KBDocument) => void;
 }
 
@@ -42,6 +43,7 @@ export function KBSidebar({
   onVaultChange,
   onCreateDocument,
   onDeleteDocument,
+  onDeleteDocuments,
   onSelectDocument,
 }: KBSidebarProps) {
   const router = useRouter();
@@ -54,6 +56,8 @@ export function KBSidebar({
     favorites: false,
     tags: false,
   });
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
 
   // 过滤文档（优化搜索）
   const filteredDocs = documents.filter(doc => {
@@ -85,6 +89,38 @@ export function KBSidebar({
       ...prev,
       [section]: !prev[section],
     }));
+  };
+
+  const toggleDocSelection = (docId: string) => {
+    setSelectedDocIds((previous) => {
+      const next = new Set(previous);
+      if (next.has(docId)) {
+        next.delete(docId);
+      } else {
+        next.add(docId);
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedDocIds(new Set());
+  };
+
+  const handleBatchDelete = async () => {
+    const selectedIds = Array.from(selectedDocIds);
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    const confirmed = window.confirm(`确定批量删除 ${selectedIds.length} 篇文档吗？此操作不可撤销。`);
+    if (!confirmed) {
+      return;
+    }
+
+    await onDeleteDocuments(selectedIds);
+    clearSelection();
+    setSelectionMode(false);
   };
 
   return (
@@ -157,6 +193,9 @@ export function KBSidebar({
                   key={doc.id}
                   doc={doc}
                   isActive={currentDoc?.id === doc.id}
+                  selectionMode={selectionMode}
+                  isSelected={selectedDocIds.has(doc.id)}
+                  onToggleSelect={toggleDocSelection}
                   onSelect={onSelectDocument}
                   onDelete={onDeleteDocument}
                 />
@@ -191,6 +230,9 @@ export function KBSidebar({
                   key={doc.id}
                   doc={doc}
                   isActive={currentDoc?.id === doc.id}
+                  selectionMode={selectionMode}
+                  isSelected={selectedDocIds.has(doc.id)}
+                  onToggleSelect={toggleDocSelection}
                   onSelect={onSelectDocument}
                   onDelete={onDeleteDocument}
                 />
@@ -207,6 +249,34 @@ export function KBSidebar({
 
       {/* 底部操作栏 */}
       <div className="p-4 pt-2 border-t space-y-2">
+        {selectionMode ? (
+          <div className="rounded-md border p-2 space-y-2">
+            <p className="text-xs text-muted-foreground">已选择 {selectedDocIds.size} 篇文档</p>
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="flex-1"
+                disabled={selectedDocIds.size === 0}
+                onClick={() => {
+                  void handleBatchDelete();
+                }}
+              >
+                批量删除
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  clearSelection();
+                  setSelectionMode(false);
+                }}
+              >
+                取消
+              </Button>
+            </div>
+          </div>
+        ) : null}
         <Button
           onClick={() => setShowNewDocDialog(true)}
           className="w-full"
@@ -218,6 +288,18 @@ export function KBSidebar({
         <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => router.push('/settings')}>
           <Settings className="h-4 w-4 mr-2" />
           设置
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start"
+          onClick={() => {
+            setSelectionMode(true);
+            clearSelection();
+          }}
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          多选删除
         </Button>
       </div>
 
@@ -258,11 +340,17 @@ export function KBSidebar({
 function DocumentItem({
   doc,
   isActive,
+  selectionMode,
+  isSelected,
+  onToggleSelect,
   onSelect,
   onDelete,
 }: {
   doc: KBDocument;
   isActive: boolean;
+  selectionMode: boolean;
+  isSelected: boolean;
+  onToggleSelect: (docId: string) => void;
   onSelect: (doc: KBDocument) => void;
   onDelete: (docId: string) => Promise<void>;
 }) {
@@ -272,8 +360,23 @@ function DocumentItem({
         "group flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer transition-colors",
         isActive ? "bg-accent" : "hover:bg-accent/50"
       )}
-      onClick={() => onSelect(doc)}
+      onClick={() => {
+        if (selectionMode) {
+          onToggleSelect(doc.id);
+          return;
+        }
+        onSelect(doc);
+      }}
     >
+      {selectionMode ? (
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect(doc.id)}
+          onClick={(event) => event.stopPropagation()}
+          className="h-4 w-4"
+        />
+      ) : null}
       <FileText className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
       <span className="flex-1 text-sm truncate">{doc.title}</span>
       <DropdownMenu>
@@ -281,7 +384,7 @@ function DocumentItem({
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100"
+            className="h-6 w-6 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
             onClick={(e) => e.stopPropagation()}
           >
             <MoreHorizontal className="h-3 w-3" />
