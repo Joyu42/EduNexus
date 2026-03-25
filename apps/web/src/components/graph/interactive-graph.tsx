@@ -317,6 +317,26 @@ export function InteractiveGraph({
     return 0.8;
   }, [showLearningPath, pathNodes]);
 
+  const linkDirectionalParticles = useCallback((link: any) => {
+    const graphLink = link as GraphEdge;
+    const sourceId = typeof graphLink.source === "string" ? graphLink.source : graphLink.source.id;
+    const targetId = typeof graphLink.target === "string" ? graphLink.target : graphLink.target.id;
+    if (showLearningPath && pathNodes.includes(sourceId) && pathNodes.includes(targetId)) {
+      return 3;
+    }
+    return 0;
+  }, [showLearningPath, pathNodes]);
+
+  const linkDirectionalParticleColor = useCallback((link: any) => {
+    const graphLink = link as GraphEdge;
+    const sourceId = typeof graphLink.source === "string" ? graphLink.source : graphLink.source.id;
+    const targetId = typeof graphLink.target === "string" ? graphLink.target : graphLink.target.id;
+    if (showLearningPath && pathNodes.includes(sourceId) && pathNodes.includes(targetId)) {
+      return "#60a5fa";
+    }
+    return "rgba(148, 163, 184, 0.55)";
+  }, [showLearningPath, pathNodes]);
+
   return (
     <div
       className="w-full h-full relative overflow-hidden"
@@ -335,10 +355,10 @@ export function InteractiveGraph({
         nodeCanvasObject={nodeCanvasObject}
         linkColor={linkColor}
         linkWidth={linkWidth}
-        linkDirectionalParticles={showLearningPath ? 3 : 0}
+        linkDirectionalParticles={linkDirectionalParticles}
         linkDirectionalParticleWidth={2}
         linkDirectionalParticleSpeed={0.003}
-        linkDirectionalParticleColor={() => "#60a5fa"}
+        linkDirectionalParticleColor={linkDirectionalParticleColor}
         onNodeClick={handleNodeClick}
         onNodeHover={handleNodeHover}
         cooldownTicks={layout === "force" ? 200 : 0}

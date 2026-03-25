@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/server/words-service", () => ({
   getWordsProgressSummary: vi.fn(),
@@ -88,6 +88,18 @@ describe("words progress query detection", () => {
 });
 
 describe("learning-pack quick creation", () => {
+  beforeEach(() => {
+    createLearningPackMock.mockReset();
+    setActivePackMock.mockReset();
+    setPackKbDocumentMock.mockReset();
+    createDocumentMock.mockReset();
+    listDocumentsMock.mockReset();
+    deleteDocumentMock.mockReset();
+    planLearningPackMock.mockReset();
+    buildLearningPackKbContextMock.mockReset();
+    findPacksByTopicMock.mockReset();
+  });
+
   it("creates and returns learningPack for '我想学习 java'", async () => {
     const { auth } = await import("@/auth");
 
@@ -290,6 +302,75 @@ describe("learning-pack quick creation", () => {
     expect(payload.learningPack.packId).toBe("lp_fallback_1");
   });
 
+  it("reuses existing KB doc by exact title match even when fallback modules omit existingDocId", async () => {
+    const { auth } = await import("@/auth");
+
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u1", isDemo: false },
+    } as never);
+
+    planLearningPackMock.mockResolvedValueOnce({
+      title: "java 学习路线图",
+      modules: [
+        { title: "java 基础与环境搭建", order: 0 },
+        { title: "java 语法核心", order: 1 },
+      ],
+      confidence: "medium",
+      usedExistingDocs: false,
+      fallbackUsed: true,
+    });
+
+    buildLearningPackKbContextMock.mockResolvedValueOnce({
+      existingDocs: [
+        { docId: "doc_exact_match", title: "java 基础与环境搭建", snippet: "已有同名文档" },
+      ],
+      topicMatches: 1,
+    });
+    findPacksByTopicMock.mockResolvedValueOnce([]);
+
+    createLearningPackMock.mockResolvedValueOnce({
+      packId: "lp_fallback_reuse_1",
+      userId: "u1",
+      title: "java 学习路线图",
+      topic: "java",
+      stage: "seen",
+      active: false,
+      modules: [
+        { moduleId: "m1", title: "java 基础与环境搭建", kbDocumentId: "", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "m2", title: "java 语法核心", kbDocumentId: "", stage: "seen", order: 1, studyMinutes: 0, lastStudiedAt: null },
+      ],
+      currentModuleId: "m1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    createDocumentMock.mockResolvedValueOnce({ id: "doc_created_1" });
+    createDocumentMock.mockResolvedValueOnce({ id: "doc_created_2" });
+
+    const request = new Request("http://localhost/api/workspace/agent/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "我想学习 java" }),
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(createDocumentMock).toHaveBeenCalledTimes(1);
+    expect(setPackKbDocumentMock).toHaveBeenCalledWith(
+      "lp_fallback_reuse_1",
+      "m1",
+      "doc_exact_match"
+    );
+    expect(setPackKbDocumentMock).toHaveBeenCalledWith(
+      "lp_fallback_reuse_1",
+      "m2",
+      "doc_created_1"
+    );
+  });
+
   it("returns continueExistingPack when same topic pack already exists", async () => {
     const { auth } = await import("@/auth");
 
@@ -332,7 +413,93 @@ describe("learning-pack quick creation", () => {
       packId: "lp_existing_java",
       moduleCount: 1,
     });
+    expect(payload.replanAvailable).toMatchObject({
+      packId: "lp_existing_java",
+      topic: "java",
+    });
     expect(payload.learningPack.graphUrl).toContain("lp_existing_java");
+  });
+
+  it("bypasses same-topic short-circuit when message includes replan keyword", async () => {
+    const { auth } = await import("@/auth");
+
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u1", isDemo: false },
+    } as never);
+
+    const existingPack = {
+      packId: "lp_existing_java",
+      userId: "u1",
+      title: "Java 学习路线图",
+      topic: "java",
+      stage: "seen",
+      active: false,
+      modules: [
+        { moduleId: "m1", title: "Java 基础与环境搭建", kbDocumentId: "", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+      ],
+      currentModuleId: "m1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    findPacksByTopicMock.mockResolvedValueOnce([existingPack]);
+
+    planLearningPackMock.mockResolvedValueOnce({
+      title: "Java 重新规划路线",
+      modules: [
+        { title: "Java 基础复盘", order: 0 },
+        { title: "Java 并发进阶", order: 1 },
+      ],
+      confidence: "high",
+      usedExistingDocs: false,
+      fallbackUsed: false,
+    });
+
+    buildLearningPackKbContextMock.mockResolvedValueOnce({
+      existingDocs: [],
+      topicMatches: 0,
+    });
+
+    createLearningPackMock.mockResolvedValueOnce({
+      packId: "lp_java_replan_1",
+      userId: "u1",
+      title: "Java 重新规划路线",
+      topic: "java",
+      stage: "seen",
+      active: false,
+      modules: [
+        { moduleId: "m1", title: "Java 基础复盘", kbDocumentId: "", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "m2", title: "Java 并发进阶", kbDocumentId: "", stage: "seen", order: 1, studyMinutes: 0, lastStudiedAt: null },
+      ],
+      currentModuleId: "m1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    createDocumentMock.mockResolvedValueOnce({ id: "doc_replan_1" });
+    createDocumentMock.mockResolvedValueOnce({ id: "doc_replan_2" });
+
+    const request = new Request("http://localhost/api/workspace/agent/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "我想学习 Java，重新规划" }),
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(findPacksByTopicMock).toHaveBeenCalledWith("u1", "Java");
+    expect(planLearningPackMock).toHaveBeenCalled();
+    expect(createLearningPackMock).toHaveBeenCalledWith(
+      "u1",
+      "Java 重新规划路线",
+      "Java",
+      ["Java 基础复盘", "Java 并发进阶"]
+    );
+    expect(payload.continueExistingPack).toBeUndefined();
+    expect(payload.learningPack.packId).toBe("lp_java_replan_1");
   });
 
   it("reuses existing KB doc when planner marks existingDocId", async () => {

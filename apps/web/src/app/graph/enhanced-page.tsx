@@ -880,10 +880,7 @@ function GraphPageContent() {
           <div className="w-64 shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto">
             {activeMode === "path" ? (
               <>
-                <JourneyShell />
-                <p className="text-xs leading-5 text-muted-foreground">
-                  路径模式下仅展示学习路径列表与星图本体，已隐藏节点类型、布局与主题等通用控制。
-                </p>
+                <JourneyShell className="flex-1 min-h-0" />
               </>
             ) : (
               <>

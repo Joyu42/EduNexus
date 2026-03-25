@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { act, render, screen, fireEvent, waitFor, within, cleanup } from "@testing-library/react";
 import { JourneyShell } from "./journey-shell";
 
 const mockRouterPush = vi.fn();
@@ -24,6 +24,10 @@ describe("JourneyShell", () => {
     mockRouterPush.mockClear();
     mockFetch.mockClear();
     global.fetch = mockFetch;
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   async function flush() {
@@ -199,9 +203,61 @@ describe("JourneyShell", () => {
     expect(mockRouterPush).toHaveBeenCalledWith("/kb?doc=doc_123");
   });
 
-  // StrictMode double-renders in jsdom, causing button index offset in getAllByRole.
-  // Skipping until StrictMode can be disabled for this component's test scope.
-  it.skip("navigates to graph when clicking 图谱 on history pack", async () => {
+  it("renders active pack by explicit marker even when not first", async () => {
+    const mockPacks = [
+      {
+        packId: "lp_history_1",
+        title: "历史学习包",
+        topic: "Java",
+        active: false,
+        stage: "mastered" as const,
+        totalStudyMinutes: 10,
+        updatedAt: new Date(Date.now() - 86400000).toISOString(),
+        moduleCount: 1,
+        currentModule: {
+          moduleId: "m1",
+          title: "旧模块",
+          kbDocumentId: "doc_old",
+          stage: "mastered" as const,
+          studyMinutes: 10,
+          order: 0,
+        },
+      },
+      {
+        packId: "lp_active_1",
+        title: "当前学习包（真正 active）",
+        topic: "Java",
+        active: true,
+        stage: "understood" as const,
+        totalStudyMinutes: 0,
+        updatedAt: new Date().toISOString(),
+        moduleCount: 1,
+        currentModule: {
+          moduleId: "m2",
+          title: "新模块",
+          kbDocumentId: "doc_new",
+          stage: "understood" as const,
+          studyMinutes: 0,
+          order: 0,
+        },
+      },
+    ];
+
+    mockFetch.mockResolvedValue(createMockResponse({ packs: mockPacks }));
+    render(<JourneyShell />);
+    await flush();
+
+    expect(screen.getByText("当前学习包（真正 active）")).toBeTruthy();
+    expect(screen.getByText("历史 (1)")).toBeTruthy();
+
+    const historyHeader = screen.getByText("历史 (1)");
+    const historyList = historyHeader.parentElement?.nextElementSibling;
+    expect(historyList).toBeTruthy();
+    expect(within(historyList as HTMLElement).getByText("历史学习包")).toBeTruthy();
+    expect(within(historyList as HTMLElement).queryByText("当前学习包（真正 active）")).toBeNull();
+  });
+
+  it("navigates to graph when clicking 图谱 on history pack", async () => {
     const mockPacks = [
       {
         packId: "lp_java_002",
@@ -243,8 +299,11 @@ describe("JourneyShell", () => {
     render(<JourneyShell />);
     await flush();
 
-    const graphButtons = screen.getAllByRole("button", { name: /图谱/ });
-    fireEvent.click(graphButtons[graphButtons.length - 1]);
+    const historyHeader = screen.getByText("历史 (1)");
+    const historyList = historyHeader.parentElement?.nextElementSibling;
+    expect(historyList).toBeTruthy();
+    const graphButtons = within(historyList as HTMLElement).getAllByRole("button", { name: /图谱/ });
+    fireEvent.click(graphButtons[0]);
 
     expect(mockRouterPush).toHaveBeenCalledWith(
       "/graph?view=path&packId=lp_java_001"

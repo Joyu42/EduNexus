@@ -56,6 +56,10 @@ function includesAny(text: string, keywords: string[]): boolean {
   return keywords.some((keyword) => text.includes(keyword));
 }
 
+function normalizeTitleForMatch(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, "").trim();
+}
+
 export function isWordsProgressQuery(message: string, contextPrompt?: string): boolean {
   const text = message.toLowerCase();
   const normalized = text.replace(/\s+/g, "");
@@ -101,6 +105,14 @@ function extractLearningTopic(message: string): string | null {
   }
 
   return null;
+}
+
+
+const REPLAN_INTENT_KEYWORDS = ["重新规划", "重规划", "replan"];
+
+function hasReplanIntent(message: string): boolean {
+  const normalized = message.toLowerCase().replace(/\s+/g, "");
+  return REPLAN_INTENT_KEYWORDS.some((keyword) => normalized.includes(keyword));
 }
 
 
@@ -194,8 +206,9 @@ export async function POST(request: Request) {
       }
 
       const existingPacks = await findPacksByTopic(userId, learningTopic);
+      const wantsReplan = hasReplanIntent(message);
 
-      if (existingPacks.length > 0) {
+      if (existingPacks.length > 0 && !wantsReplan) {
         const existing = existingPacks[0];
         return NextResponse.json({
           success: true,
@@ -210,6 +223,11 @@ export async function POST(request: Request) {
             packId: existing.packId,
             moduleCount: existing.modules.length,
             createdAt: existing.createdAt,
+          },
+          replanAvailable: {
+            packId: existing.packId,
+            topic: existing.topic,
+            triggerKeywords: REPLAN_INTENT_KEYWORDS,
           },
           steps: [
             {
@@ -239,6 +257,8 @@ export async function POST(request: Request) {
       const plannerModelName =
         typeof config.modelName === "string" && config.modelName.trim()
           ? config.modelName.trim()
+          : typeof config.model === "string" && config.model.trim()
+            ? config.model.trim()
           : process.env.MODELSCOPE_CHAT_MODEL ?? "Qwen/Qwen3.5-122B-A10B";
 
       const plannerOutput = await planLearningPack({
@@ -256,6 +276,13 @@ export async function POST(request: Request) {
         (kbContext?.existingDocs ?? []).map((doc) => doc.docId)
       );
 
+      const exactTitleReuseMap = new Map<string, string>();
+      for (const doc of kbContext?.existingDocs ?? []) {
+        exactTitleReuseMap.set(normalizeTitleForMatch(doc.title), doc.docId);
+      }
+
+      let usedExistingDocs = plannerOutput.usedExistingDocs;
+
       for (const module of pack.modules) {
         const planned = plannerOutput.modules.find((pm) => pm.title === module.title);
         const existingDocId = planned?.existingDocId;
@@ -264,7 +291,18 @@ export async function POST(request: Request) {
           reusableDocIds.has(existingDocId);
 
         if (canReuseExistingDoc) {
+          usedExistingDocs = true;
           await setPackKbDocument(pack.packId, module.moduleId, existingDocId);
+          continue;
+        }
+
+        const exactMatchDocId = exactTitleReuseMap.get(
+          normalizeTitleForMatch(module.title)
+        );
+
+        if (typeof exactMatchDocId === "string" && reusableDocIds.has(exactMatchDocId)) {
+          usedExistingDocs = true;
+          await setPackKbDocument(pack.packId, module.moduleId, exactMatchDocId);
         } else {
           const doc = await createDocument({
             title: module.title,
@@ -277,10 +315,34 @@ export async function POST(request: Request) {
 
       await setActivePack(pack.packId, userId);
 
+      const plannerFallbackMessage = (() => {
+        if (!plannerOutput.fallbackUsed) {
+          return "";
+        }
+
+        if (plannerOutput.fallbackReason === "missing_api_key") {
+          return `已为你创建「${pack.title}」。\n\n检测到缺少可用 API Key，已使用模板路径兜底生成 ${pack.modules.length} 个学习阶段。请在设置中补充 ModelScope Key 后重试，以获得 AI 智能规划。`;
+        }
+
+        if (plannerOutput.fallbackReason === "auth") {
+          return `已为你创建「${pack.title}」。\n\n当前模型鉴权失败，已使用模板路径兜底生成 ${pack.modules.length} 个学习阶段。请在设置中更新可用的 ModelScope Key 后重试。`;
+        }
+
+        if (plannerOutput.fallbackReason === "response_format_unsupported") {
+          return `已为你创建「${pack.title}」。\n\n当前模型不支持规划所需的结构化返回格式，已使用模板路径兜底生成 ${pack.modules.length} 个学习阶段。请切换到兼容模型后重试。`;
+        }
+
+        if (plannerOutput.fallbackReason === "invalid_response") {
+          return `已为你创建「${pack.title}」。\n\n模型返回结果格式异常，已使用模板路径兜底生成 ${pack.modules.length} 个学习阶段。请稍后重试或切换模型。`;
+        }
+
+        return `已为你创建「${pack.title}」。\n\n当前模型服务暂时不可用，已使用模板路径兜底生成 ${pack.modules.length} 个学习阶段。请稍后重试。`;
+      })();
+
       return NextResponse.json({
         success: true,
         response: plannerOutput.fallbackUsed
-          ? `已为你创建「${pack.title}」。\n\n当前模型鉴权失败或不可用，已使用模板路径兜底生成 ${pack.modules.length} 个学习阶段。请在设置中更新可用的 ModelScope Key 后重试，以获得 AI 智能规划。`
+          ? plannerFallbackMessage
           : `已为你创建「${pack.title}」。\n\n我已经规划了 ${pack.modules.length} 个学习阶段，你可以直接进入知识星图开始学习。`,
         learningPack: {
           packId: pack.packId,
@@ -291,7 +353,7 @@ export async function POST(request: Request) {
         planner: {
           fallbackUsed: plannerOutput.fallbackUsed,
           confidence: plannerOutput.confidence,
-          usedExistingDocs: plannerOutput.usedExistingDocs,
+          usedExistingDocs,
         },
         steps: [
           {

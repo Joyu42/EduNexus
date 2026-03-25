@@ -173,11 +173,6 @@ export async function updatePackStage(packId: string, userId: string): Promise<v
   await putAllPacks(updated);
 }
 
-export async function deleteLearningPack(packId: string, userId: string): Promise<void> {
-  const packs = await getAllPacks();
-  await putAllPacks(packs.filter((p) => !(p.packId === packId && p.userId === userId)));
-}
-
 export async function detachDocumentFromLearningPacks(
   userId: string,
   docId: string
@@ -223,6 +218,69 @@ export async function detachDocumentFromLearningPacks(
           modules.find((module) => module.moduleId === pack.activeModuleId)?.moduleId ??
           modules[0]?.moduleId ??
           null,
+        updatedAt: now,
+      },
+    ];
+  });
+
+  if (changed) {
+    await putAllPacks(nextPacks);
+  }
+
+  return { updatedPackIds, removedPackIds };
+}
+
+export async function pruneStaleLearningPacks(
+  userId: string,
+  validDocIds: Set<string>
+): Promise<{ updatedPackIds: string[]; removedPackIds: string[] }> {
+  const packs = await getAllPacks();
+  const now = new Date().toISOString();
+  const updatedPackIds: string[] = [];
+  const removedPackIds: string[] = [];
+  let changed = false;
+
+  const nextPacks = packs.flatMap((pack) => {
+    if (pack.userId !== userId) {
+      return [pack];
+    }
+
+    let touched = false;
+    const modules = pack.modules.map((module) => {
+      const docId = module.kbDocumentId.trim();
+      if (!docId || validDocIds.has(docId)) {
+        return module;
+      }
+
+      touched = true;
+      return { ...module, kbDocumentId: "" };
+    });
+
+    const hasBoundDocument = modules.some((module) => module.kbDocumentId.trim().length > 0);
+    if (!hasBoundDocument) {
+      changed = true;
+      removedPackIds.push(pack.packId);
+      return [];
+    }
+
+    if (!touched) {
+      return [pack];
+    }
+
+    changed = true;
+    updatedPackIds.push(pack.packId);
+    const preferredActiveModule =
+      modules.find((module) => module.moduleId === pack.activeModuleId && module.kbDocumentId.trim().length > 0)
+        ?.moduleId ??
+      modules.find((module) => module.kbDocumentId.trim().length > 0)?.moduleId ??
+      modules[0]?.moduleId ??
+      null;
+
+    return [
+      {
+        ...pack,
+        modules,
+        activeModuleId: preferredActiveModule,
         updatedAt: now,
       },
     ];

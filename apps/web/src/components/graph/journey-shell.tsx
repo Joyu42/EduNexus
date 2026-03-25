@@ -13,6 +13,7 @@ type PackSummary = {
   packId: string;
   title: string;
   topic: string;
+  active?: boolean;
   stage: "seen" | "understood" | "applied" | "mastered";
   totalStudyMinutes: number;
   updatedAt: string;
@@ -154,24 +155,25 @@ export function JourneyShell({ className }: JourneyShellProps) {
     );
   }
 
-  if (error || packs.length === 0) {
+  if (packs.length === 0) {
     return (
       <Card className={className}>
         <CardContent className="p-4">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <BookOpen className="h-4 w-4" />
-            <span>暂无学习包</span>
+            <span>{error ? `暂无学习包（${error}）` : "暂无学习包"}</span>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const [activePack, ...historyPacks] = packs;
+  const activePack = packs.find((pack) => pack.active === true) ?? packs[0];
+  const historyPacks = packs.filter((pack) => pack.packId !== activePack.packId);
 
   return (
-    <Card className={cn("", className)}>
-      <CardContent className="p-4 space-y-3">
+    <Card className={cn("h-full", className)}>
+      <CardContent className="p-4 h-full min-h-0 flex flex-col gap-3">
         <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
           <List className="h-3.5 w-3.5" />
           <span>当前学习包</span>
@@ -202,7 +204,7 @@ export function JourneyShell({ className }: JourneyShellProps) {
               <BookOpen className="h-3.5 w-3.5" />
               <span>历史 ({historyPacks.length})</span>
             </div>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
               {historyPacks.map((pack) => (
                 <PackCard
                   key={pack.packId}
