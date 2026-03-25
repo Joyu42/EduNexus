@@ -8,6 +8,8 @@ const settingsSchema = z.object({
   dailyNewLimit: z.number().int().min(1).max(100),
   reviewFirst: z.boolean(),
   defaultRevealMode: z.enum(["hidden", "definition"]),
+  selectedMajor: z.enum(["computer", "electrical", "economics", "medical"]).or(z.literal("")).optional(),
+  lastSelectedBookId: z.string().optional(),
 });
 
 export const runtime = "nodejs";
@@ -48,6 +50,10 @@ export async function PUT(request: Request) {
     );
   }
 
-  await saveWordsPlanSettings(userId, parsed.data);
+  await saveWordsPlanSettings(userId, {
+    ...parsed.data,
+    selectedMajor: parsed.data.selectedMajor ?? "",
+    lastSelectedBookId: parsed.data.lastSelectedBookId ?? "",
+  });
   return ok({ saved: true });
 }

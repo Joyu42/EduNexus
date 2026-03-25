@@ -1,3 +1,5 @@
+import type { WordsMajor } from "./major-gating";
+
 export type WordDifficulty = "easy" | "medium" | "hard";
 
 export type LearningStatus = "new" | "learning" | "reviewing" | "mastered";
@@ -62,6 +64,8 @@ export type WordsPlanSettings = {
   dailyNewLimit: number;
   reviewFirst: boolean;
   defaultRevealMode: "hidden" | "definition";
+  selectedMajor: "" | WordsMajor;
+  lastSelectedBookId: string;
 };
 
 export type LearningStats = {

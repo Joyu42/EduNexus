@@ -39,6 +39,8 @@ const DEFAULT_PLAN_SETTINGS: WordsPlanSettings = {
   dailyNewLimit: 20,
   reviewFirst: true,
   defaultRevealMode: "hidden",
+  selectedMajor: "",
+  lastSelectedBookId: "",
 };
 
 function toIsoDate(value: Date): string {

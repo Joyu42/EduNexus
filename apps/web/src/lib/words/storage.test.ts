@@ -165,6 +165,8 @@ describe("words storage", () => {
       dailyNewLimit: 20,
       reviewFirst: true,
       defaultRevealMode: "hidden",
+      selectedMajor: "",
+      lastSelectedBookId: "",
     });
   });
 
