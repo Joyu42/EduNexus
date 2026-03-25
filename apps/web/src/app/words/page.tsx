@@ -34,7 +34,14 @@ import type {
   WordsTodaySummary,
 } from "@/lib/words/types";
 import { getCompletedCountFromSummary, syncWordsProgressToGoal } from "@/lib/words/integration";
-import { filterBooksByMajor, isMajor, nextSelectedBookIdAfterVisibilityChange, PROFESSIONAL_BOOK_IDS, type WordsMajor } from "@/lib/words/major-gating";
+import {
+  filterBooksByMajor,
+  nextSelectedBookIdAfterVisibilityChange,
+  normalizePersistedSelection,
+  PROFESSIONAL_BOOK_IDS,
+  MAJOR_TO_PRO_BOOK_ID,
+  type WordsMajor,
+} from "@/lib/words/major-gating";
 
 const SELECTED_BOOK_STORAGE_KEY = "edunexus_words_selected_book";
 const SELECTED_MAJOR_STORAGE_KEY = "edunexus_words_selected_major";
@@ -74,6 +81,8 @@ export default function WordsDashboardPage() {
   const [deletingBookId, setDeletingBookId] = useState<string | null>(null);
 
   const [selectedMajor, setSelectedMajor] = useState<WordsMajor | "">("");
+  const [selectionHydrated, setSelectionHydrated] = useState(false);
+  const hasHydratedOnceRef = useRef(false);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -129,77 +138,89 @@ export default function WordsDashboardPage() {
     return cleanup;
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    if (books.length === 0) {
-      if (!selectedBookId) return;
-      setSelectedBookId("");
-      try {
-        localStorage.removeItem(SELECTED_BOOK_STORAGE_KEY);
-      } catch {
-        // ignore storage errors
+  const persistSelection = useCallback(async (major: string, bookId: string) => {
+    try {
+      if (typeof window !== "undefined") {
+        if (major) localStorage.setItem(SELECTED_MAJOR_STORAGE_KEY, major);
+        else localStorage.removeItem(SELECTED_MAJOR_STORAGE_KEY);
+        if (bookId) localStorage.setItem(SELECTED_BOOK_STORAGE_KEY, bookId);
+        else localStorage.removeItem(SELECTED_BOOK_STORAGE_KEY);
       }
-      return;
+    } catch {
+      // ignore storage errors
     }
 
-    const selectedExists = selectedBookId && books.some((book) => book.id === selectedBookId);
-    if (selectedExists) return;
-
-    let nextSelected = "";
-    if (!selectedBookId) {
+    if (status === "authenticated") {
       try {
-        const stored = localStorage.getItem(SELECTED_BOOK_STORAGE_KEY);
-        if (stored && books.some((book) => book.id === stored)) {
-          nextSelected = stored;
-        }
+        const current = await wordsStorage.getWordsPlanSettings();
+        await wordsStorage.saveWordsPlanSettings({
+          ...current,
+          selectedMajor: major as WordsMajor | "",
+          lastSelectedBookId: bookId,
+        });
       } catch {
         // ignore storage errors
       }
     }
-
-    if (!nextSelected) {
-      nextSelected = pickFallbackBookId(books);
-    }
-
-    setSelectedBookId(nextSelected);
-    try {
-      if (nextSelected) {
-        localStorage.setItem(SELECTED_BOOK_STORAGE_KEY, nextSelected);
-      } else {
-        localStorage.removeItem(SELECTED_BOOK_STORAGE_KEY);
-      }
-    } catch {
-      // ignore storage errors
-    }
-  }, [books, selectedBookId]);
+  }, [status]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const stored = localStorage.getItem(SELECTED_MAJOR_STORAGE_KEY);
-      if (stored && isMajor(stored)) {
-        setSelectedMajor(stored);
-      } else {
-        setSelectedMajor("");
-      }
-    } catch {
-      // ignore storage errors
-    }
-  }, []);
+    if (books.length === 0) return;
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      if (selectedMajor) {
-        localStorage.setItem(SELECTED_MAJOR_STORAGE_KEY, selectedMajor);
-      } else {
-        localStorage.removeItem(SELECTED_MAJOR_STORAGE_KEY);
+    setSelectionHydrated(false);
+
+    const doHydrate = async () => {
+      let localMajor = "";
+      let localBookId = "";
+
+      try {
+        localMajor = localStorage.getItem(SELECTED_MAJOR_STORAGE_KEY) ?? "";
+        localBookId = localStorage.getItem(SELECTED_BOOK_STORAGE_KEY) ?? "";
+      } catch {
+        // ignore storage errors
       }
-    } catch {
-      // ignore storage errors
-    }
-  }, [selectedMajor]);
+
+      let serverMajor = "";
+      let serverBookId = "";
+
+      if (status === "authenticated") {
+        try {
+          const settings = await wordsStorage.getWordsPlanSettings();
+          serverMajor = settings.selectedMajor;
+          serverBookId = settings.lastSelectedBookId;
+        } catch {}
+      }
+
+      const hasServerPair = Boolean(serverMajor || serverBookId);
+      const sourceMajor = hasServerPair ? serverMajor : localMajor;
+      const sourceBookId = hasServerPair ? serverBookId : localBookId;
+
+      const normalized = normalizePersistedSelection(
+        sourceMajor as WordsMajor | "",
+        sourceBookId,
+        books
+      );
+      const needsRepair =
+        normalized.selectedMajor !== sourceMajor ||
+        normalized.selectedBookId !== sourceBookId;
+      const needsServerMigration =
+        status === "authenticated" &&
+        !hasServerPair &&
+        Boolean(localMajor || localBookId);
+
+      setSelectedMajor(normalized.selectedMajor);
+      setSelectedBookId(normalized.selectedBookId);
+
+      if (needsRepair || needsServerMigration) {
+        await persistSelection(normalized.selectedMajor, normalized.selectedBookId);
+      }
+
+      setSelectionHydrated(true);
+    };
+
+    void doHydrate();
+  }, [books, persistSelection, status]);
 
   const visibleBooks = useMemo(
     () => filterBooksByMajor(books, selectedMajor),
@@ -207,41 +228,52 @@ export default function WordsDashboardPage() {
   );
 
   useEffect(() => {
-    const next = nextSelectedBookIdAfterVisibilityChange({
-      visibleBooks,
-      selectedBookId,
-      storedSelectedBookId: (() => {
-        if (typeof window === "undefined") return undefined;
-        try { return localStorage.getItem(SELECTED_BOOK_STORAGE_KEY) ?? undefined; }
-        catch { return undefined; }
-      })(),
-    });
-    if (next && next !== selectedBookId) {
-      setSelectedBookId(next);
-      if (typeof window !== "undefined") {
-        try { localStorage.setItem(SELECTED_BOOK_STORAGE_KEY, next); }
-        catch { /* ignore */ }
-      }
+    if (typeof window === "undefined") return;
+    if (!selectionHydrated) return;
+    if (!hasHydratedOnceRef.current) {
+      hasHydratedOnceRef.current = true;
+      return;
     }
-  }, [books, selectedMajor, selectedBookId, visibleBooks]);
+
+    const syncVisibilityFallback = async () => {
+      const next = nextSelectedBookIdAfterVisibilityChange({
+        visibleBooks,
+        selectedBookId,
+        storedSelectedBookId: (() => {
+          if (typeof window === "undefined") return undefined;
+          try { return localStorage.getItem(SELECTED_BOOK_STORAGE_KEY) ?? undefined; }
+          catch { return undefined; }
+        })(),
+      });
+
+      if (next && next !== selectedBookId) {
+        setSelectedBookId(next);
+        await persistSelection(selectedMajor, next);
+      }
+
+      setSelectionHydrated(true);
+    };
+
+    void syncVisibilityFallback();
+  }, [books, persistSelection, selectedMajor, selectedBookId, selectionHydrated, visibleBooks]);
 
   const handleSelectBook = (bookId: string) => {
-    setSelectedBookId(bookId);
-    if (typeof window !== "undefined") {
-      try {
-        if (bookId) {
-          localStorage.setItem(SELECTED_BOOK_STORAGE_KEY, bookId);
-        } else {
-          localStorage.removeItem(SELECTED_BOOK_STORAGE_KEY);
-        }
-      } catch {
-        // ignore storage errors
-      }
-    }
+    // Major-sticky rule: if a major is active, clicking a non-professional book
+    // redirects to that major's professional book instead
+    const effectiveBookId =
+      selectedMajor !== "" && !PROFESSIONAL_BOOK_IDS.has(bookId)
+        ? MAJOR_TO_PRO_BOOK_ID[selectedMajor]
+        : bookId;
+    setSelectedBookId(effectiveBookId);
+    void persistSelection(selectedMajor, effectiveBookId);
   };
 
   const handleMajorChange = (major: WordsMajor) => {
+    // Major-sticky: always select the professional book for this major immediately
+    const newBookId = MAJOR_TO_PRO_BOOK_ID[major];
     setSelectedMajor(major);
+    setSelectedBookId(newBookId);
+    void persistSelection(major, newBookId);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  deriveMajorFromBookId,
   filterBooksByMajor,
   isMajor,
   nextSelectedBookIdAfterVisibilityChange,
+  normalizePersistedSelection,
   pickFallbackBookId,
 } from "./major-gating";
 import type { WordBook } from "./types";
@@ -122,5 +124,112 @@ describe("nextSelectedBookIdAfterVisibilityChange", () => {
       selectedBookId: "builtin_book_electrical",
     });
     expect(result).toBe("custom_book_1");
+  });
+});
+
+describe("deriveMajorFromBookId", () => {
+  it("returns medical for builtin_book_medical", () => {
+    expect(deriveMajorFromBookId("builtin_book_medical")).toBe("medical");
+  });
+
+  it("returns computer for builtin_book_computer", () => {
+    expect(deriveMajorFromBookId("builtin_book_computer")).toBe("computer");
+  });
+
+  it("returns economics for builtin_book_economics", () => {
+    expect(deriveMajorFromBookId("builtin_book_economics")).toBe("economics");
+  });
+
+  it("returns electrical for builtin_book_electrical", () => {
+    expect(deriveMajorFromBookId("builtin_book_electrical")).toBe("electrical");
+  });
+
+  it("returns empty string for non-professional book id", () => {
+    expect(deriveMajorFromBookId("cet4")).toBe("");
+    expect(deriveMajorFromBookId("custom_book_foo")).toBe("");
+  });
+});
+
+describe("normalizePersistedSelection", () => {
+  const books: WordBook[] = [
+    makeBook("cet4"),
+    makeBook("builtin_book_medical"),
+    makeBook("builtin_book_computer"),
+    makeBook("builtin_book_economics"),
+    makeBook("builtin_book_electrical"),
+    makeBook("custom_book_foo"),
+  ];
+
+  // Case 1: professional book + matching major → unchanged
+  it("case 1: professional book + matching major → unchanged", () => {
+    const result = normalizePersistedSelection(
+      "medical",
+      "builtin_book_medical",
+      books
+    );
+    expect(result.selectedMajor).toBe("medical");
+    expect(result.selectedBookId).toBe("builtin_book_medical");
+  });
+
+  // Case 2: professional book + empty major → derive major from book
+  it("case 2: professional book + empty major → derive major from book", () => {
+    const result = normalizePersistedSelection(
+      "",
+      "builtin_book_computer",
+      books
+    );
+    expect(result.selectedMajor).toBe("computer");
+    expect(result.selectedBookId).toBe("builtin_book_computer");
+  });
+
+  // Case 3: professional book + mismatched major → repair to book's major
+  it("case 3: professional book + mismatched major → repair to book's major", () => {
+    const result = normalizePersistedSelection(
+      "economics",
+      "builtin_book_medical",
+      books
+    );
+    expect(result.selectedMajor).toBe("medical");
+    expect(result.selectedBookId).toBe("builtin_book_medical");
+  });
+
+  // Case 4: stored book missing + non-empty major → preserve major, pick fallback from filtered books
+  it("case 4: stored book missing + non-empty major → preserve major, pick fallback from filtered books", () => {
+    const result = normalizePersistedSelection(
+      "computer",
+      "builtin_book_nonexistent",
+      books
+    );
+    // filterBooksByMajor(books, "computer") → [cet4, custom_book_foo]
+    // fallback: custom_book_* > cet4 > first → custom_book_foo
+    expect(result.selectedBookId).toBe("custom_book_foo");
+    // major is preserved since it was valid
+    expect(result.selectedMajor).toBe("computer");
+  });
+
+  // Case 4b: stored book missing + empty major → clear major, pick fallback from all non-pro books
+  it("case 4b: stored book missing + empty major → clear major, pick fallback from non-pro books", () => {
+    const result = normalizePersistedSelection(
+      "",
+      "builtin_book_nonexistent",
+      books
+    );
+    // filterBooksByMajor(books, "") → [cet4, custom_book_foo] (all non-pro)
+    // fallback: custom_book_foo
+    expect(result.selectedBookId).toBe("custom_book_foo");
+    expect(result.selectedMajor).toBe("");
+  });
+
+  // Case 5: non-professional stored book → preserve empty major
+  it("case 5: non-professional stored book → preserve empty major", () => {
+    const result = normalizePersistedSelection("", "cet4", books);
+    expect(result.selectedMajor).toBe("");
+    expect(result.selectedBookId).toBe("cet4");
+  });
+
+  it("non-professional stored book with existing major promotes to that major's professional book", () => {
+    const result = normalizePersistedSelection("medical", "cet4", books);
+    expect(result.selectedMajor).toBe("medical");
+    expect(result.selectedBookId).toBe("builtin_book_medical");
   });
 });
