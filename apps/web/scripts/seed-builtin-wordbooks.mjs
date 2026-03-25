@@ -10,23 +10,23 @@ import { fileURLToPath } from 'node:url';
 const BOOKS = {
   medical: {
     id: 'medical',
-    name: '医学词汇 500',
-    description: '来自 vocabulary_source/medical_words_500.csv',
+    name: '医学词汇',
+    description: '来自 vocabulary_source/medical_words_500.csv（条目数以实际为准）',
   },
   computer: {
     id: 'computer',
-    name: '计算机词汇 500',
-    description: '来自 vocabulary_source/computer_words_500.csv',
+    name: '计算机词汇',
+    description: '来自 vocabulary_source/computer_words_500.csv（条目数以实际为准）',
   },
   economics: {
     id: 'economics',
-    name: '经济学词汇 500',
-    description: '来自 vocabulary_source/economics_words_500.csv',
+    name: '经济学词汇',
+    description: '来自 vocabulary_source/economics_words_500.csv（条目数以实际为准）',
   },
   electrical: {
     id: 'electrical',
-    name: '电气工程词汇 500',
-    description: '来自 vocabulary_source/electrical_words_500.csv',
+    name: '电气工程词汇',
+    description: '来自 vocabulary_source/electrical_words_500.csv（条目数以实际为准）',
   },
 };
 
@@ -46,28 +46,57 @@ function findVocabularySource(startDir) {
   return null;
 }
 
+function parseCsvLine(line) {
+  const fields = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      fields.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  fields.push(current.trim());
+  if (fields.length > 0) fields[0] = fields[0].replace(/^\uFEFF/, '');
+  return fields;
+}
+
 function parseSimpleCsv(content) {
   const lines = content.split(/\r\n|\n|\r/).filter((l) => l.trim());
   if (lines.length < 2) return [];
 
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
-    const parts = lines[i].split(',');
+    const parts = parseCsvLine(lines[i]);
     if (parts.length < 2) continue;
 
-    const word = (parts[0] ?? '').trim();
+    let word = (parts[0] ?? '').trim();
     if (!word) continue;
+    word = word.replace(/^\uFEFF/, '');
 
     let definition = '';
     let phonetic = null;
+    let example = null;
+
     if (parts.length === 2) {
       definition = (parts[1] ?? '').trim();
     } else if (parts.length === 3) {
       definition = (parts[1] ?? '').trim();
       phonetic = (parts[2] ?? '').trim() || null;
-    } else {
-      phonetic = (parts[parts.length - 1] ?? '').trim() || null;
-      definition = parts.slice(1, parts.length - 1).join(',').trim();
+    } else if (parts.length >= 4) {
+      definition = (parts[1] ?? '').trim();
+      phonetic = (parts[2] ?? '').trim() || null;
+      example = (parts[3] ?? '').trim() || null;
     }
     if (!definition) continue;
 
@@ -76,6 +105,7 @@ function parseSimpleCsv(content) {
       word: normalizedWord,
       definition,
       phonetic,
+      example,
       sortOrder: i - 1,
     });
   }
@@ -85,7 +115,7 @@ function parseSimpleCsv(content) {
 
 function dedupeRows(rows) {
   const seen = new Map();
-  for (const row of rows) {
+  for (let row of rows) {
     const key = row.word.toLowerCase().trim();
     const existing = seen.get(key);
     if (!existing) {
@@ -94,7 +124,17 @@ function dedupeRows(rows) {
     }
     const existingScore = (existing.phonetic ? 1 : 0) * 1000 + existing.definition.length;
     const newScore = (row.phonetic ? 1 : 0) * 1000 + row.definition.length;
-    if (newScore > existingScore) seen.set(key, row);
+    if (newScore > existingScore) {
+      // new wins but preserve example from old if new has none
+      if (!row.example && existing.example) {
+        row = { ...row, example: existing.example };
+      }
+      seen.set(key, row);
+    } else if (!existing.example && row.example) {
+      // old wins but new has example — copy it over
+      existing.example = row.example;
+      seen.set(key, existing);
+    }
   }
   return Array.from(seen.values());
 }
@@ -127,6 +167,7 @@ async function seedBook(prisma, vocabDir, bookKey, force) {
   const totalInput = rows.length;
   const droppedDupes = totalInput - deduped.length;
   const missingPhonetics = deduped.filter((r) => !r.phonetic).length;
+  const missingExamples = deduped.filter((r) => !r.example).length;
 
   if (force && existing) {
     await prisma.$transaction([
@@ -147,6 +188,7 @@ async function seedBook(prisma, vocabDir, bookKey, force) {
         totalInput,
         droppedDupes,
         missingPhonetics,
+        missingExamples: deduped.filter(r => !r.example).length,
         seededAt: new Date().toISOString(),
       },
       entries: {
@@ -156,7 +198,7 @@ async function seedBook(prisma, vocabDir, bookKey, force) {
           phonetic: row.phonetic,
           definition: row.definition,
           difficulty: null,
-          example: null,
+          example: row.example?.trim() || null,
           exampleZh: null,
           sortOrder: row.sortOrder,
         })),
@@ -165,7 +207,7 @@ async function seedBook(prisma, vocabDir, bookKey, force) {
   });
 
   console.log(
-    `[seed] ${bookDef.name}: ${deduped.length} entries (input=${totalInput}, dupes_dropped=${droppedDupes}, missing_phonetics=${missingPhonetics})`
+    `[seed] ${bookDef.name}: ${deduped.length} entries (input=${totalInput}, dupes_dropped=${droppedDupes}, missing_phonetics=${missingPhonetics}, missing_examples=${missingExamples})`
   );
 }
 

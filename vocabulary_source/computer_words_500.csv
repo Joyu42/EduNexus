@@ -1,501 +1,501 @@
-﻿word,definition,phonetic
-algorithm,算法,/ˈælɡərɪðəm/
-data,数据,/ˈdeɪtə/
-database,数据库,/ˈdeɪtəbeɪs/
-network,网络,/ˈnetwɜːrk/
-protocol,协议,/ˈproʊtəkɒl/
-encryption,加密,/ɪnˈkrɪpʃən/
-decryption,解密,/diːˈkrɪpʃən/
-software,软件,/ˈsɔːftwer/
-hardware,硬件,/ˈhɑːrdwer/
-program,程序,/ˈproʊɡræm/
-compiler,编译器,/kəmˈpaɪlər/
-interpreter,解释器,/ɪnˈtɜːrprɪtər/
-function,函数,/ˈfʌŋkʃən/
-variable,变量,/ˈveriəbl/
-loop,循环,/luːp/
-array,数组,/əˈreɪ/
-pointer,指针,/ˈpɔɪntər/
-object,对象,/ˈɒbdʒekt/
-class,类,/klæs/
-inheritance,继承,/ɪnˈherɪtəns/
-encapsulation,封装,/ɪnˌkæpsjuˈleɪʃən/
-polymorphism,多态,/ˌpɒlɪˈmɔːrfɪzəm/
-thread,线程,/θred/
-process,进程,/ˈprɒses/
-memory,内存,/ˈmeməri/
-cache,缓存,/kæʃ/
-cpu,中央处理器,
-gpu,图形处理器,
-bandwidth,带宽,/ˈbændwɪdθ/
-latency,延迟,/ˈleɪtənsi/
-server,服务器,/ˈsɜːrvər/
-client,客户端,/ˈklaɪənt/
-api,应用程序接口,
-http,超文本传输协议,
-https,安全超文本传输协议,
-frontend,前端,
-backend,后端,
-fullstack,全栈,
-framework,框架,/ˈfreɪmwɜːrk/
-library,库,/ˈlaɪbreri/
-debug,调试,
-deploy,部署,
-container,容器,/kənˈteɪnər/
-docker,容器技术,
-kubernetes,容器编排,
-cloud,云计算,/klaʊd/
-virtualization,虚拟化,/ˌvɜːrtʃuəlaɪˈzeɪʃən/
-machine learning,机器学习,
-deep learning,深度学习,
-neural network,神经网络,
-algorithm,算法,/ˈælɡərɪðəm/
-data,数据,/ˈdeɪtə/
-database,数据库,/ˈdeɪtəbeɪs/
-network,网络,/ˈnetwɜːrk/
-protocol,协议,/ˈproʊtəkɒl/
-encryption,加密,/ɪnˈkrɪpʃən/
-decryption,解密,/diːˈkrɪpʃən/
-software,软件,/ˈsɔːftwer/
-hardware,硬件,/ˈhɑːrdwer/
-program,程序,/ˈproʊɡræm/
-compiler,编译器,/kəmˈpaɪlər/
-interpreter,解释器,/ɪnˈtɜːrprɪtər/
-function,函数,/ˈfʌŋkʃən/
-variable,变量,/ˈveriəbl/
-loop,循环,/luːp/
-array,数组,/əˈreɪ/
-pointer,指针,/ˈpɔɪntər/
-object,对象,/ˈɒbdʒekt/
-class,类,/klæs/
-inheritance,继承,/ɪnˈherɪtəns/
-encapsulation,封装,/ɪnˌkæpsjuˈleɪʃən/
-polymorphism,多态,/ˌpɒlɪˈmɔːrfɪzəm/
-thread,线程,/θred/
-process,进程,/ˈprɒses/
-memory,内存,/ˈmeməri/
-cache,缓存,/kæʃ/
-cpu,中央处理器,
-gpu,图形处理器,
-bandwidth,带宽,/ˈbændwɪdθ/
-latency,延迟,/ˈleɪtənsi/
-server,服务器,/ˈsɜːrvər/
-client,客户端,/ˈklaɪənt/
-api,应用程序接口,
-http,超文本传输协议,
-https,安全超文本传输协议,
-frontend,前端,
-backend,后端,
-fullstack,全栈,
-framework,框架,/ˈfreɪmwɜːrk/
-library,库,/ˈlaɪbreri/
-debug,调试,
-deploy,部署,
-container,容器,/kənˈteɪnər/
-docker,容器技术,
-kubernetes,容器编排,
-cloud,云计算,/klaʊd/
-virtualization,虚拟化,/ˌvɜːrtʃuəlaɪˈzeɪʃən/
-machine learning,机器学习,
-deep learning,深度学习,
-neural network,神经网络,
-algorithm,算法,/ˈælɡərɪðəm/
-data,数据,/ˈdeɪtə/
-database,数据库,/ˈdeɪtəbeɪs/
-network,网络,/ˈnetwɜːrk/
-protocol,协议,/ˈproʊtəkɒl/
-encryption,加密,/ɪnˈkrɪpʃən/
-decryption,解密,/diːˈkrɪpʃən/
-software,软件,/ˈsɔːftwer/
-hardware,硬件,/ˈhɑːrdwer/
-program,程序,/ˈproʊɡræm/
-compiler,编译器,/kəmˈpaɪlər/
-interpreter,解释器,/ɪnˈtɜːrprɪtər/
-function,函数,/ˈfʌŋkʃən/
-variable,变量,/ˈveriəbl/
-loop,循环,/luːp/
-array,数组,/əˈreɪ/
-pointer,指针,/ˈpɔɪntər/
-object,对象,/ˈɒbdʒekt/
-class,类,/klæs/
-inheritance,继承,/ɪnˈherɪtəns/
-encapsulation,封装,/ɪnˌkæpsjuˈleɪʃən/
-polymorphism,多态,/ˌpɒlɪˈmɔːrfɪzəm/
-thread,线程,/θred/
-process,进程,/ˈprɒses/
-memory,内存,/ˈmeməri/
-cache,缓存,/kæʃ/
-cpu,中央处理器,
-gpu,图形处理器,
-bandwidth,带宽,/ˈbændwɪdθ/
-latency,延迟,/ˈleɪtənsi/
-server,服务器,/ˈsɜːrvər/
-client,客户端,/ˈklaɪənt/
-api,应用程序接口,
-http,超文本传输协议,
-https,安全超文本传输协议,
-frontend,前端,
-backend,后端,
-fullstack,全栈,
-framework,框架,/ˈfreɪmwɜːrk/
-library,库,/ˈlaɪbreri/
-debug,调试,
-deploy,部署,
-container,容器,/kənˈteɪnər/
-docker,容器技术,
-kubernetes,容器编排,
-cloud,云计算,/klaʊd/
-virtualization,虚拟化,/ˌvɜːrtʃuəlaɪˈzeɪʃən/
-machine learning,机器学习,
-deep learning,深度学习,
-neural network,神经网络,
-algorithm,算法,/ˈælɡərɪðəm/
-data,数据,/ˈdeɪtə/
-database,数据库,/ˈdeɪtəbeɪs/
-network,网络,/ˈnetwɜːrk/
-protocol,协议,/ˈproʊtəkɒl/
-encryption,加密,/ɪnˈkrɪpʃən/
-decryption,解密,/diːˈkrɪpʃən/
-software,软件,/ˈsɔːftwer/
-hardware,硬件,/ˈhɑːrdwer/
-program,程序,/ˈproʊɡræm/
-compiler,编译器,/kəmˈpaɪlər/
-interpreter,解释器,/ɪnˈtɜːrprɪtər/
-function,函数,/ˈfʌŋkʃən/
-variable,变量,/ˈveriəbl/
-loop,循环,/luːp/
-array,数组,/əˈreɪ/
-pointer,指针,/ˈpɔɪntər/
-object,对象,/ˈɒbdʒekt/
-class,类,/klæs/
-inheritance,继承,/ɪnˈherɪtəns/
-encapsulation,封装,/ɪnˌkæpsjuˈleɪʃən/
-polymorphism,多态,/ˌpɒlɪˈmɔːrfɪzəm/
-thread,线程,/θred/
-process,进程,/ˈprɒses/
-memory,内存,/ˈmeməri/
-cache,缓存,/kæʃ/
-cpu,中央处理器,
-gpu,图形处理器,
-bandwidth,带宽,/ˈbændwɪdθ/
-latency,延迟,/ˈleɪtənsi/
-server,服务器,/ˈsɜːrvər/
-client,客户端,/ˈklaɪənt/
-api,应用程序接口,
-http,超文本传输协议,
-https,安全超文本传输协议,
-frontend,前端,
-backend,后端,
-fullstack,全栈,
-framework,框架,/ˈfreɪmwɜːrk/
-library,库,/ˈlaɪbreri/
-debug,调试,
-deploy,部署,
-container,容器,/kənˈteɪnər/
-docker,容器技术,
-kubernetes,容器编排,
-cloud,云计算,/klaʊd/
-virtualization,虚拟化,/ˌvɜːrtʃuəlaɪˈzeɪʃən/
-machine learning,机器学习,
-deep learning,深度学习,
-neural network,神经网络,
-algorithm,算法,/ˈælɡərɪðəm/
-data,数据,/ˈdeɪtə/
-database,数据库,/ˈdeɪtəbeɪs/
-network,网络,/ˈnetwɜːrk/
-protocol,协议,/ˈproʊtəkɒl/
-encryption,加密,/ɪnˈkrɪpʃən/
-decryption,解密,/diːˈkrɪpʃən/
-software,软件,/ˈsɔːftwer/
-hardware,硬件,/ˈhɑːrdwer/
-program,程序,/ˈproʊɡræm/
-compiler,编译器,/kəmˈpaɪlər/
-interpreter,解释器,/ɪnˈtɜːrprɪtər/
-function,函数,/ˈfʌŋkʃən/
-variable,变量,/ˈveriəbl/
-loop,循环,/luːp/
-array,数组,/əˈreɪ/
-pointer,指针,/ˈpɔɪntər/
-object,对象,/ˈɒbdʒekt/
-class,类,/klæs/
-inheritance,继承,/ɪnˈherɪtəns/
-encapsulation,封装,/ɪnˌkæpsjuˈleɪʃən/
-polymorphism,多态,/ˌpɒlɪˈmɔːrfɪzəm/
-thread,线程,/θred/
-process,进程,/ˈprɒses/
-memory,内存,/ˈmeməri/
-cache,缓存,/kæʃ/
-cpu,中央处理器,
-gpu,图形处理器,
-bandwidth,带宽,/ˈbændwɪdθ/
-latency,延迟,/ˈleɪtənsi/
-server,服务器,/ˈsɜːrvər/
-client,客户端,/ˈklaɪənt/
-api,应用程序接口,
-http,超文本传输协议,
-https,安全超文本传输协议,
-frontend,前端,
-backend,后端,
-fullstack,全栈,
-framework,框架,/ˈfreɪmwɜːrk/
-library,库,/ˈlaɪbreri/
-debug,调试,
-deploy,部署,
-container,容器,/kənˈteɪnər/
-docker,容器技术,
-kubernetes,容器编排,
-cloud,云计算,/klaʊd/
-virtualization,虚拟化,/ˌvɜːrtʃuəlaɪˈzeɪʃən/
-machine learning,机器学习,
-deep learning,深度学习,
-neural network,神经网络,
-algorithm,算法,/ˈælɡərɪðəm/
-data,数据,/ˈdeɪtə/
-database,数据库,/ˈdeɪtəbeɪs/
-network,网络,/ˈnetwɜːrk/
-protocol,协议,/ˈproʊtəkɒl/
-encryption,加密,/ɪnˈkrɪpʃən/
-decryption,解密,/diːˈkrɪpʃən/
-software,软件,/ˈsɔːftwer/
-hardware,硬件,/ˈhɑːrdwer/
-program,程序,/ˈproʊɡræm/
-compiler,编译器,/kəmˈpaɪlər/
-interpreter,解释器,/ɪnˈtɜːrprɪtər/
-function,函数,/ˈfʌŋkʃən/
-variable,变量,/ˈveriəbl/
-loop,循环,/luːp/
-array,数组,/əˈreɪ/
-pointer,指针,/ˈpɔɪntər/
-object,对象,/ˈɒbdʒekt/
-class,类,/klæs/
-inheritance,继承,/ɪnˈherɪtəns/
-encapsulation,封装,/ɪnˌkæpsjuˈleɪʃən/
-polymorphism,多态,/ˌpɒlɪˈmɔːrfɪzəm/
-thread,线程,/θred/
-process,进程,/ˈprɒses/
-memory,内存,/ˈmeməri/
-cache,缓存,/kæʃ/
-cpu,中央处理器,
-gpu,图形处理器,
-bandwidth,带宽,/ˈbændwɪdθ/
-latency,延迟,/ˈleɪtənsi/
-server,服务器,/ˈsɜːrvər/
-client,客户端,/ˈklaɪənt/
-api,应用程序接口,
-http,超文本传输协议,
-https,安全超文本传输协议,
-frontend,前端,
-backend,后端,
-fullstack,全栈,
-framework,框架,/ˈfreɪmwɜːrk/
-library,库,/ˈlaɪbreri/
-debug,调试,
-deploy,部署,
-container,容器,/kənˈteɪnər/
-docker,容器技术,
-kubernetes,容器编排,
-cloud,云计算,/klaʊd/
-virtualization,虚拟化,/ˌvɜːrtʃuəlaɪˈzeɪʃən/
-machine learning,机器学习,
-deep learning,深度学习,
-neural network,神经网络,
-algorithm,算法,/ˈælɡərɪðəm/
-data,数据,/ˈdeɪtə/
-database,数据库,/ˈdeɪtəbeɪs/
-network,网络,/ˈnetwɜːrk/
-protocol,协议,/ˈproʊtəkɒl/
-encryption,加密,/ɪnˈkrɪpʃən/
-decryption,解密,/diːˈkrɪpʃən/
-software,软件,/ˈsɔːftwer/
-hardware,硬件,/ˈhɑːrdwer/
-program,程序,/ˈproʊɡræm/
-compiler,编译器,/kəmˈpaɪlər/
-interpreter,解释器,/ɪnˈtɜːrprɪtər/
-function,函数,/ˈfʌŋkʃən/
-variable,变量,/ˈveriəbl/
-loop,循环,/luːp/
-array,数组,/əˈreɪ/
-pointer,指针,/ˈpɔɪntər/
-object,对象,/ˈɒbdʒekt/
-class,类,/klæs/
-inheritance,继承,/ɪnˈherɪtəns/
-encapsulation,封装,/ɪnˌkæpsjuˈleɪʃən/
-polymorphism,多态,/ˌpɒlɪˈmɔːrfɪzəm/
-thread,线程,/θred/
-process,进程,/ˈprɒses/
-memory,内存,/ˈmeməri/
-cache,缓存,/kæʃ/
-cpu,中央处理器,
-gpu,图形处理器,
-bandwidth,带宽,/ˈbændwɪdθ/
-latency,延迟,/ˈleɪtənsi/
-server,服务器,/ˈsɜːrvər/
-client,客户端,/ˈklaɪənt/
-api,应用程序接口,
-http,超文本传输协议,
-https,安全超文本传输协议,
-frontend,前端,
-backend,后端,
-fullstack,全栈,
-framework,框架,/ˈfreɪmwɜːrk/
-library,库,/ˈlaɪbreri/
-debug,调试,
-deploy,部署,
-container,容器,/kənˈteɪnər/
-docker,容器技术,
-kubernetes,容器编排,
-cloud,云计算,/klaʊd/
-virtualization,虚拟化,/ˌvɜːrtʃuəlaɪˈzeɪʃən/
-machine learning,机器学习,
-deep learning,深度学习,
-neural network,神经网络,
-algorithm,算法,/ˈælɡərɪðəm/
-data,数据,/ˈdeɪtə/
-database,数据库,/ˈdeɪtəbeɪs/
-network,网络,/ˈnetwɜːrk/
-protocol,协议,/ˈproʊtəkɒl/
-encryption,加密,/ɪnˈkrɪpʃən/
-decryption,解密,/diːˈkrɪpʃən/
-software,软件,/ˈsɔːftwer/
-hardware,硬件,/ˈhɑːrdwer/
-program,程序,/ˈproʊɡræm/
-compiler,编译器,/kəmˈpaɪlər/
-interpreter,解释器,/ɪnˈtɜːrprɪtər/
-function,函数,/ˈfʌŋkʃən/
-variable,变量,/ˈveriəbl/
-loop,循环,/luːp/
-array,数组,/əˈreɪ/
-pointer,指针,/ˈpɔɪntər/
-object,对象,/ˈɒbdʒekt/
-class,类,/klæs/
-inheritance,继承,/ɪnˈherɪtəns/
-encapsulation,封装,/ɪnˌkæpsjuˈleɪʃən/
-polymorphism,多态,/ˌpɒlɪˈmɔːrfɪzəm/
-thread,线程,/θred/
-process,进程,/ˈprɒses/
-memory,内存,/ˈmeməri/
-cache,缓存,/kæʃ/
-cpu,中央处理器,
-gpu,图形处理器,
-bandwidth,带宽,/ˈbændwɪdθ/
-latency,延迟,/ˈleɪtənsi/
-server,服务器,/ˈsɜːrvər/
-client,客户端,/ˈklaɪənt/
-api,应用程序接口,
-http,超文本传输协议,
-https,安全超文本传输协议,
-frontend,前端,
-backend,后端,
-fullstack,全栈,
-framework,框架,/ˈfreɪmwɜːrk/
-library,库,/ˈlaɪbreri/
-debug,调试,
-deploy,部署,
-container,容器,/kənˈteɪnər/
-docker,容器技术,
-kubernetes,容器编排,
-cloud,云计算,/klaʊd/
-virtualization,虚拟化,/ˌvɜːrtʃuəlaɪˈzeɪʃən/
-machine learning,机器学习,
-deep learning,深度学习,
-neural network,神经网络,
-algorithm,算法,/ˈælɡərɪðəm/
-data,数据,/ˈdeɪtə/
-database,数据库,/ˈdeɪtəbeɪs/
-network,网络,/ˈnetwɜːrk/
-protocol,协议,/ˈproʊtəkɒl/
-encryption,加密,/ɪnˈkrɪpʃən/
-decryption,解密,/diːˈkrɪpʃən/
-software,软件,/ˈsɔːftwer/
-hardware,硬件,/ˈhɑːrdwer/
-program,程序,/ˈproʊɡræm/
-compiler,编译器,/kəmˈpaɪlər/
-interpreter,解释器,/ɪnˈtɜːrprɪtər/
-function,函数,/ˈfʌŋkʃən/
-variable,变量,/ˈveriəbl/
-loop,循环,/luːp/
-array,数组,/əˈreɪ/
-pointer,指针,/ˈpɔɪntər/
-object,对象,/ˈɒbdʒekt/
-class,类,/klæs/
-inheritance,继承,/ɪnˈherɪtəns/
-encapsulation,封装,/ɪnˌkæpsjuˈleɪʃən/
-polymorphism,多态,/ˌpɒlɪˈmɔːrfɪzəm/
-thread,线程,/θred/
-process,进程,/ˈprɒses/
-memory,内存,/ˈmeməri/
-cache,缓存,/kæʃ/
-cpu,中央处理器,
-gpu,图形处理器,
-bandwidth,带宽,/ˈbændwɪdθ/
-latency,延迟,/ˈleɪtənsi/
-server,服务器,/ˈsɜːrvər/
-client,客户端,/ˈklaɪənt/
-api,应用程序接口,
-http,超文本传输协议,
-https,安全超文本传输协议,
-frontend,前端,
-backend,后端,
-fullstack,全栈,
-framework,框架,/ˈfreɪmwɜːrk/
-library,库,/ˈlaɪbreri/
-debug,调试,
-deploy,部署,
-container,容器,/kənˈteɪnər/
-docker,容器技术,
-kubernetes,容器编排,
-cloud,云计算,/klaʊd/
-virtualization,虚拟化,/ˌvɜːrtʃuəlaɪˈzeɪʃən/
-machine learning,机器学习,
-deep learning,深度学习,
-neural network,神经网络,
-algorithm,算法,/ˈælɡərɪðəm/
-data,数据,/ˈdeɪtə/
-database,数据库,/ˈdeɪtəbeɪs/
-network,网络,/ˈnetwɜːrk/
-protocol,协议,/ˈproʊtəkɒl/
-encryption,加密,/ɪnˈkrɪpʃən/
-decryption,解密,/diːˈkrɪpʃən/
-software,软件,/ˈsɔːftwer/
-hardware,硬件,/ˈhɑːrdwer/
-program,程序,/ˈproʊɡræm/
-compiler,编译器,/kəmˈpaɪlər/
-interpreter,解释器,/ɪnˈtɜːrprɪtər/
-function,函数,/ˈfʌŋkʃən/
-variable,变量,/ˈveriəbl/
-loop,循环,/luːp/
-array,数组,/əˈreɪ/
-pointer,指针,/ˈpɔɪntər/
-object,对象,/ˈɒbdʒekt/
-class,类,/klæs/
-inheritance,继承,/ɪnˈherɪtəns/
-encapsulation,封装,/ɪnˌkæpsjuˈleɪʃən/
-polymorphism,多态,/ˌpɒlɪˈmɔːrfɪzəm/
-thread,线程,/θred/
-process,进程,/ˈprɒses/
-memory,内存,/ˈmeməri/
-cache,缓存,/kæʃ/
-cpu,中央处理器,
-gpu,图形处理器,
-bandwidth,带宽,/ˈbændwɪdθ/
-latency,延迟,/ˈleɪtənsi/
-server,服务器,/ˈsɜːrvər/
-client,客户端,/ˈklaɪənt/
-api,应用程序接口,
-http,超文本传输协议,
-https,安全超文本传输协议,
-frontend,前端,
-backend,后端,
-fullstack,全栈,
-framework,框架,/ˈfreɪmwɜːrk/
-library,库,/ˈlaɪbreri/
-debug,调试,
-deploy,部署,
-container,容器,/kənˈteɪnər/
-docker,容器技术,
-kubernetes,容器编排,
-cloud,云计算,/klaʊd/
-virtualization,虚拟化,/ˌvɜːrtʃuəlaɪˈzeɪʃən/
-machine learning,机器学习,
-deep learning,深度学习,
-neural network,神经网络,
+word,definition,phonetic,example
+algorithm,算法,/ælɡɚɪðəm/,"In this project, algorithm is important for writing clear and reliable code."
+variable,变量,/veriəbəl/,"In this project, variable is important for writing clear and reliable code."
+constant,常量,/kɑnstənt/,"In this project, constant is important for writing clear and reliable code."
+function,函数,/fʌŋkʃən/,"In this project, function is important for writing clear and reliable code."
+method,方法,/meθəd/,"In this project, method is important for writing clear and reliable code."
+parameter,参数,/pɚæmətɚ/,"In this project, parameter is important for writing clear and reliable code."
+argument,实参,/ɑrɡjəmənt/,"In this project, argument is important for writing clear and reliable code."
+return value,返回值,/rɪtɝn vælju/,"In this project, return value is important for writing clear and reliable code."
+expression,表达式,/ɪkspreʃən/,"In this project, expression is important for writing clear and reliable code."
+statement,语句,/steɪtmənt/,"In this project, statement is important for writing clear and reliable code."
+operator,运算符,/ɑpɚeɪtɚ/,"In this project, operator is important for writing clear and reliable code."
+operand,操作数,/ˈɑpəˌrænd/,"In this project, operand is important for writing clear and reliable code."
+syntax,语法,/sɪntæks/,"In this project, syntax is important for writing clear and reliable code."
+semantics,语义,/sɪmæntɪks/,"In this project, semantics is important for writing clear and reliable code."
+compiler,编译器,/kəmpaɪlɚ/,"In this project, compiler is important for writing clear and reliable code."
+interpreter,解释器,/ɪntɝprətɚ/,"In this project, interpreter is important for writing clear and reliable code."
+debugger,调试器,/diˈbʌɡər/,"In this project, debugger is important for writing clear and reliable code."
+runtime,运行时,/ˈrʌnˌtaɪm/,"In this project, runtime is important for writing clear and reliable code."
+source code,源代码,/sɔrs koʊd/,"In this project, source code is important for writing clear and reliable code."
+bytecode,字节码,/ˈbaɪtˌkoʊd/,"In this project, bytecode is important for writing clear and reliable code."
+library,库,/laɪbreri/,"In this project, library is important for writing clear and reliable code."
+framework,框架,/freɪmwɝk/,"In this project, framework is important for writing clear and reliable code."
+package,包,/pækədʒ/,"In this project, package is important for writing clear and reliable code."
+module,模块,/mɑdʒul/,"In this project, module is important for writing clear and reliable code."
+dependency,依赖,/dɪpendənsi/,"In this project, dependency is important for writing clear and reliable code."
+namespace,命名空间,/ˈneɪmˌspeɪs/,"In this project, namespace is important for writing clear and reliable code."
+identifier,标识符,/aɪdentəfaɪɚ/,"In this project, identifier is important for writing clear and reliable code."
+comment,注释,/kɑment/,"In this project, comment is important for writing clear and reliable code."
+documentation,文档,/dɑkjəmenteɪʃən/,"In this project, documentation is important for writing clear and reliable code."
+recursion,递归,/rɪˈkɜrʒən/,"In this project, recursion is important for writing clear and reliable code."
+iteration,迭代,/ɪtɚeɪʃən/,"In this project, iteration is important for writing clear and reliable code."
+loop,循环,/lup/,"In this project, loop is important for writing clear and reliable code."
+conditional,条件语句,/kəndɪʃənəl/,"In this project, conditional is important for writing clear and reliable code."
+boolean,布尔值,/buliən/,"In this project, boolean is important for writing clear and reliable code."
+integer,整数,/ɪntədʒɚ/,"In this project, integer is important for writing clear and reliable code."
+floating point,浮点数,/floʊtɪŋ pɔɪnt/,"In this project, floating point is important for writing clear and reliable code."
+string,字符串,/strɪŋ/,"In this project, string is important for writing clear and reliable code."
+character,字符,/kerɪktɚ/,"In this project, character is important for writing clear and reliable code."
+array,数组,/ɚeɪ/,"In this project, array is important for writing clear and reliable code."
+pointer,指针,/pɔɪntɚ/,"In this project, pointer is important for writing clear and reliable code."
+reference,引用,/refɚəns/,"In this project, reference is important for writing clear and reliable code."
+enumeration,枚举,/ɪnumɚeɪʃən/,"In this project, enumeration is important for writing clear and reliable code."
+generic type,泛型类型,/dʒənerɪk taɪp/,"In this project, generic type is important for writing clear and reliable code."
+type inference,类型推断,/taɪp ɪnfɚəns/,"In this project, type inference is important for writing clear and reliable code."
+type casting,类型转换,/taɪp kæstɪŋ/,"In this project, type casting is important for writing clear and reliable code."
+exception,异常,/ɪksepʃən/,"In this project, exception is important for writing clear and reliable code."
+error handling,错误处理,/erɚ hændlɪŋ/,"In this project, error handling is important for writing clear and reliable code."
+assertion,断言,/əsɝʃən/,"In this project, assertion is important for writing clear and reliable code."
+logging,日志记录,/lɔɡɪŋ/,"In this project, logging is important for writing clear and reliable code."
+profiling,性能分析,/proʊfaɪlɪŋ/,"In this project, profiling is important for writing clear and reliable code."
+optimization,优化,/ɑptəməzeɪʃən/,"In this project, optimization is important for writing clear and reliable code."
+refactoring,重构,/riˈfæktərɪŋ/,"In this project, refactoring is important for writing clear and reliable code."
+code review,代码审查,/koʊd rivju/,"In this project, code review is important for writing clear and reliable code."
+unit test,单元测试,/junət test/,"In this project, unit test is important for writing clear and reliable code."
+integration test,集成测试,/ɪntəɡreɪʃən test/,"In this project, integration test is important for writing clear and reliable code."
+mock object,模拟对象,/mɑk ɑbdʒekt/,"In this project, mock object is important for writing clear and reliable code."
+build script,构建脚本,/bɪld skrɪpt/,"In this project, build script is important for writing clear and reliable code."
+command line,命令行,/kəmænd laɪn/,"In this project, command line is important for writing clear and reliable code."
+configuration file,配置文件,/kənfɪɡjɚeɪʃən faɪl/,"In this project, configuration file is important for writing clear and reliable code."
+environment variable,环境变量,/ɪnvaɪrənmənt veriəbəl/,"In this project, environment variable is important for writing clear and reliable code."
+object,对象,/ɑbdʒekt/,The team added object to keep the software architecture flexible.
+class,类,/klæs/,The team added class to keep the software architecture flexible.
+instance,实例,/ɪnstəns/,The team added instance to keep the software architecture flexible.
+attribute,属性,/ætrəbjut/,The team added attribute to keep the software architecture flexible.
+constructor,构造函数,/kənstrʌktɚ/,The team added constructor to keep the software architecture flexible.
+destructor,析构函数,/dɪˈstrʌktər/,The team added destructor to keep the software architecture flexible.
+inheritance,继承,/ɪnherətəns/,The team added inheritance to keep the software architecture flexible.
+polymorphism,多态,/pɑlimɔrfɪzəm/,The team added polymorphism to keep the software architecture flexible.
+encapsulation,封装,/ɪnˌkæpsjəˈleɪʃən/,The team added encapsulation to keep the software architecture flexible.
+abstraction,抽象,/æbstrækʃən/,The team added abstraction to keep the software architecture flexible.
+interface,接口,/ɪntɚfeɪs/,The team added interface to keep the software architecture flexible.
+implementation,实现,/ɪmpləmenteɪʃən/,The team added implementation to keep the software architecture flexible.
+override,重写,/oʊvɚraɪd/,The team added override to keep the software architecture flexible.
+overload,重载,/oʊvɚloʊd/,The team added overload to keep the software architecture flexible.
+composition,组合,/kɑmpəzɪʃən/,The team added composition to keep the software architecture flexible.
+aggregation,聚合,/æɡrəɡeɪʃən/,The team added aggregation to keep the software architecture flexible.
+design pattern,设计模式,/dɪzaɪn pætɚn/,The team added design pattern to keep the software architecture flexible.
+singleton,单例模式,/sɪŋɡəltən/,The team added singleton to keep the software architecture flexible.
+factory method,工厂方法,/fæktɚi meθəd/,The team added factory method to keep the software architecture flexible.
+adapter pattern,适配器模式,/ədæptɚ pætɚn/,The team added adapter pattern to keep the software architecture flexible.
+observer pattern,观察者模式,/əbzɝvɚ pætɚn/,The team added observer pattern to keep the software architecture flexible.
+strategy pattern,策略模式,/strætədʒi pætɚn/,The team added strategy pattern to keep the software architecture flexible.
+dependency injection,依赖注入,/dɪpendənsi ɪndʒekʃən/,The team added dependency injection to keep the software architecture flexible.
+service locator,服务定位器,/sɝvəs loʊkeɪtɚ/,The team added service locator to keep the software architecture flexible.
+event handler,事件处理器,/ɪvent hændlɚ/,The team added event handler to keep the software architecture flexible.
+callback function,回调函数,/kɔlbæk fʌŋkʃən/,The team added callback function to keep the software architecture flexible.
+closure,闭包,/kloʊʒɚ/,The team added closure to keep the software architecture flexible.
+lambda expression,Lambda 表达式,/læmdə ɪkspreʃən/,The team added lambda expression to keep the software architecture flexible.
+decorator,装饰器,/dekɚeɪtɚ/,The team added decorator to keep the software architecture flexible.
+annotation,注解,/ænəteɪʃən/,The team added annotation to keep the software architecture flexible.
+metadata,元数据,/ˈmetəˌdeɪtə/,The team added metadata to keep the software architecture flexible.
+serialization,序列化,/sɪˌriəlaɪˈzeɪʃən/,The team added serialization to keep the software architecture flexible.
+deserialization,反序列化,/diˌsɪriəlaɪˈzeɪʃən/,The team added deserialization to keep the software architecture flexible.
+reflection,反射,/rɪflekʃən/,The team added reflection to keep the software architecture flexible.
+introspection,自省,/ɪntrəspekʃən/,The team added introspection to keep the software architecture flexible.
+state machine,状态机,/steɪt məʃin/,The team added state machine to keep the software architecture flexible.
+finite automaton,有限自动机,/faɪnaɪt ɔtɑmətɑn/,The team added finite automaton to keep the software architecture flexible.
+workflow engine,工作流引擎,/wɝkfloʊ endʒən/,The team added workflow engine to keep the software architecture flexible.
+domain model,领域模型,/doʊmeɪn mɑdəl/,The team added domain model to keep the software architecture flexible.
+business logic,业务逻辑,/bɪznəs lɑdʒɪk/,The team added business logic to keep the software architecture flexible.
+presentation layer,表现层,/prezənteɪʃən leɪɚ/,The team added presentation layer to keep the software architecture flexible.
+service layer,服务层,/sɝvəs leɪɚ/,The team added service layer to keep the software architecture flexible.
+data access layer,数据访问层,/deɪtə ækses leɪɚ/,The team added data access layer to keep the software architecture flexible.
+application layer,应用层,/æpləkeɪʃən leɪɚ/,The team added application layer to keep the software architecture flexible.
+middleware,中间件,/ˈmɪdəlˌwer/,The team added middleware to keep the software architecture flexible.
+message queue,消息队列,/mesədʒ kju/,The team added message queue to keep the software architecture flexible.
+event bus,事件总线,/ɪvent bʌs/,The team added event bus to keep the software architecture flexible.
+plugin system,插件系统,/plʌɡɪn sɪstəm/,The team added plugin system to keep the software architecture flexible.
+extension point,扩展点,/ɪkstenʃən pɔɪnt/,The team added extension point to keep the software architecture flexible.
+software architecture,软件架构,/sɔftwer ɑrkətektʃɚ/,The team added software architecture to keep the software architecture flexible.
+data structure,数据结构,/deɪtə strʌktʃɚ/,This feature relies on data structure to store and retrieve data efficiently.
+linked list,链表,/lɪŋkt lɪst/,This feature relies on linked list to store and retrieve data efficiently.
+singly linked list,单向链表,/sɪŋɡli lɪŋkt lɪst/,This feature relies on singly linked list to store and retrieve data efficiently.
+doubly linked list,双向链表,/dʌbli lɪŋkt lɪst/,This feature relies on doubly linked list to store and retrieve data efficiently.
+stack,栈,/stæk/,This feature relies on stack to store and retrieve data efficiently.
+queue,队列,/kju/,This feature relies on queue to store and retrieve data efficiently.
+deque,双端队列,/dek/,This feature relies on deque to store and retrieve data efficiently.
+priority queue,优先队列,/praɪɔrəti kju/,This feature relies on priority queue to store and retrieve data efficiently.
+hash table,哈希表,/hæʃ teɪbəl/,This feature relies on hash table to store and retrieve data efficiently.
+hash map,哈希映射,/hæʃ mæp/,This feature relies on hash map to store and retrieve data efficiently.
+dictionary,字典,/dɪkʃəneri/,This feature relies on dictionary to store and retrieve data efficiently.
+set,集合,/set/,This feature relies on set to store and retrieve data efficiently.
+tuple,元组,/ˈtuːpəl/,This feature relies on tuple to store and retrieve data efficiently.
+heap,堆,/hip/,This feature relies on heap to store and retrieve data efficiently.
+binary heap,二叉堆,/baɪnɚi hip/,This feature relies on binary heap to store and retrieve data efficiently.
+tree,树,/tri/,This feature relies on tree to store and retrieve data efficiently.
+binary tree,二叉树,/baɪnɚi tri/,This feature relies on binary tree to store and retrieve data efficiently.
+binary search tree,二叉搜索树,/baɪnɚi sɝtʃ tri/,This feature relies on binary search tree to store and retrieve data efficiently.
+balanced tree,平衡树,/bælənst tri/,This feature relies on balanced tree to store and retrieve data efficiently.
+red black tree,红黑树,/red blæk tri/,This feature relies on red black tree to store and retrieve data efficiently.
+B tree,B 树,/bi tri/,This feature relies on B tree to store and retrieve data efficiently.
+trie,前缀树,/traɪ/,This feature relies on trie to store and retrieve data efficiently.
+graph,图,/ɡræf/,This feature relies on graph to store and retrieve data efficiently.
+directed graph,有向图,/dɚektəd ɡræf/,This feature relies on directed graph to store and retrieve data efficiently.
+undirected graph,无向图,/ˌʌndəˈrektɪd ɡræf/,This feature relies on undirected graph to store and retrieve data efficiently.
+node,节点,/noʊd/,This feature relies on node to store and retrieve data efficiently.
+edge,边,/edʒ/,This feature relies on edge to store and retrieve data efficiently.
+vertex,顶点,/vɝteks/,This feature relies on vertex to store and retrieve data efficiently.
+adjacency list,邻接表,/əˈdʒeɪsənsi lɪst/,This feature relies on adjacency list to store and retrieve data efficiently.
+adjacency matrix,邻接矩阵,/əˈdʒeɪsənsi meɪtrɪks/,This feature relies on adjacency matrix to store and retrieve data efficiently.
+matrix,矩阵,/meɪtrɪks/,This feature relies on matrix to store and retrieve data efficiently.
+sparse matrix,稀疏矩阵,/spɑrs meɪtrɪks/,This feature relies on sparse matrix to store and retrieve data efficiently.
+buffer,缓冲区,/bʌfɚ/,This feature relies on buffer to store and retrieve data efficiently.
+ring buffer,环形缓冲区,/rɪŋ bʌfɚ/,This feature relies on ring buffer to store and retrieve data efficiently.
+bitmap,位图,/ˈbɪtmæp/,This feature relies on bitmap to store and retrieve data efficiently.
+bitset,位集合,/ˈbɪtset/,This feature relies on bitset to store and retrieve data efficiently.
+index,索引,/ɪndeks/,This feature relies on index to store and retrieve data efficiently.
+inverted index,倒排索引,/ɪnvɝtɪd ɪndeks/,This feature relies on inverted index to store and retrieve data efficiently.
+suffix array,后缀数组,/sʌfɪks ɚeɪ/,This feature relies on suffix array to store and retrieve data efficiently.
+segment tree,线段树,/seɡmənt tri/,This feature relies on segment tree to store and retrieve data efficiently.
+Fenwick tree,树状数组,/ˈfenwɪk tri/,This feature relies on Fenwick tree to store and retrieve data efficiently.
+disjoint set,并查集,/dɪsdʒɔɪnt set/,This feature relies on disjoint set to store and retrieve data efficiently.
+union find,并查集算法,/junjən faɪnd/,This feature relies on union find to store and retrieve data efficiently.
+bloom filter,布隆过滤器,/blum fɪltɚ/,This feature relies on bloom filter to store and retrieve data efficiently.
+skip list,跳表,/skɪp lɪst/,This feature relies on skip list to store and retrieve data efficiently.
+prefix sum,前缀和,/prifɪks sʌm/,This feature relies on prefix sum to store and retrieve data efficiently.
+sliding window,滑动窗口,/slaɪdɪŋ wɪndoʊ/,This feature relies on sliding window to store and retrieve data efficiently.
+lookup table,查找表,/lʊkəp teɪbəl/,This feature relies on lookup table to store and retrieve data efficiently.
+symbol table,符号表,/sɪmbəl teɪbəl/,This feature relies on symbol table to store and retrieve data efficiently.
+record structure,记录结构,/rəkɔrd strʌktʃɚ/,This feature relies on record structure to store and retrieve data efficiently.
+time complexity,时间复杂度,/taɪm kəmpleksəti/,time complexity helped the program solve the problem more efficiently.
+space complexity,空间复杂度,/speɪs kəmpleksəti/,space complexity helped the program solve the problem more efficiently.
+big O notation,大 O 记法,/bɪɡ oʊ noʊteɪʃən/,big O notation helped the program solve the problem more efficiently.
+constant time,常数时间,/kɑnstənt taɪm/,constant time helped the program solve the problem more efficiently.
+linear time,线性时间,/lɪniɚ taɪm/,linear time helped the program solve the problem more efficiently.
+logarithmic time,对数时间,/lɑɡɚɪðmɪk taɪm/,logarithmic time helped the program solve the problem more efficiently.
+polynomial time,多项式时间,/pɑlinoʊmiəl taɪm/,polynomial time helped the program solve the problem more efficiently.
+sorting,排序,/sɔrtɪŋ/,sorting helped the program solve the problem more efficiently.
+searching,查找,/sɝtʃɪŋ/,searching helped the program solve the problem more efficiently.
+binary search,二分查找,/baɪnɚi sɝtʃ/,binary search helped the program solve the problem more efficiently.
+linear search,线性查找,/lɪniɚ sɝtʃ/,linear search helped the program solve the problem more efficiently.
+depth first search,深度优先搜索,/depθ fɝst sɝtʃ/,depth first search helped the program solve the problem more efficiently.
+breadth first search,广度优先搜索,/bredθ fɝst sɝtʃ/,breadth first search helped the program solve the problem more efficiently.
+divide and conquer,分治法,/dɪvaɪd ənd kɑŋkɚ/,divide and conquer helped the program solve the problem more efficiently.
+dynamic programming,动态规划,/daɪnæmɪk proʊɡræmɪŋ/,dynamic programming helped the program solve the problem more efficiently.
+greedy algorithm,贪心算法,/ɡridi ælɡɚɪðəm/,greedy algorithm helped the program solve the problem more efficiently.
+backtracking,回溯法,/bæktrækɪŋ/,backtracking helped the program solve the problem more efficiently.
+branch and bound,分支限界法,/bræntʃ ənd baʊnd/,branch and bound helped the program solve the problem more efficiently.
+heuristic search,启发式搜索,/hjʊrɪstɪk sɝtʃ/,heuristic search helped the program solve the problem more efficiently.
+randomized algorithm,随机算法,/rændəmaɪzd ælɡɚɪðəm/,randomized algorithm helped the program solve the problem more efficiently.
+deterministic algorithm,确定性算法,/dɪtɝmənɪstɪk ælɡɚɪðəm/,deterministic algorithm helped the program solve the problem more efficiently.
+approximation algorithm,近似算法,/əprɑksəmeɪʃən ælɡɚɪðəm/,approximation algorithm helped the program solve the problem more efficiently.
+parallel algorithm,并行算法,/perəlel ælɡɚɪðəm/,parallel algorithm helped the program solve the problem more efficiently.
+distributed algorithm,分布式算法,/dɪstrɪbjətəd ælɡɚɪðəm/,distributed algorithm helped the program solve the problem more efficiently.
+merge sort,归并排序,/mɝdʒ sɔrt/,merge sort helped the program solve the problem more efficiently.
+quick sort,快速排序,/kwɪk sɔrt/,quick sort helped the program solve the problem more efficiently.
+heap sort,堆排序,/hip sɔrt/,heap sort helped the program solve the problem more efficiently.
+bubble sort,冒泡排序,/bʌbəl sɔrt/,bubble sort helped the program solve the problem more efficiently.
+insertion sort,插入排序,/ɪnsɝʃən sɔrt/,insertion sort helped the program solve the problem more efficiently.
+selection sort,选择排序,/səlekʃən sɔrt/,selection sort helped the program solve the problem more efficiently.
+topological sort,拓扑排序,/təpəlɑdʒɪkəl sɔrt/,topological sort helped the program solve the problem more efficiently.
+shortest path,最短路径,/ʃɔrtɪst pæθ/,shortest path helped the program solve the problem more efficiently.
+minimum spanning tree,最小生成树,/mɪnəməm spænɪŋ tri/,minimum spanning tree helped the program solve the problem more efficiently.
+Dijkstra algorithm,迪杰斯特拉算法,/ˈdaɪkstrə ælɡɚɪðəm/,Dijkstra algorithm helped the program solve the problem more efficiently.
+Bellman Ford algorithm,贝尔曼-福特算法,/belmən fɔrd ælɡɚɪðəm/,Bellman Ford algorithm helped the program solve the problem more efficiently.
+Floyd Warshall algorithm,弗洛伊德-沃舍尔算法,/flɔɪd ˈwɔrʃəl ælɡɚɪðəm/,Floyd Warshall algorithm helped the program solve the problem more efficiently.
+knapsack problem,背包问题,/næpsæk prɑbləm/,knapsack problem helped the program solve the problem more efficiently.
+traveling salesman problem,旅行商问题,/trævəlɪŋ seɪlzmən prɑbləm/,traveling salesman problem helped the program solve the problem more efficiently.
+state transition,状态转移,/steɪt trænzɪʃən/,state transition helped the program solve the problem more efficiently.
+memoization,记忆化,/ˌmemoʊəˈzeɪʃən/,memoization helped the program solve the problem more efficiently.
+pruning,剪枝,/prunɪŋ/,pruning helped the program solve the problem more efficiently.
+partitioning,划分,/pɑrtɪʃənɪŋ/,partitioning helped the program solve the problem more efficiently.
+hashing,哈希处理,/hæʃɪŋ/,hashing helped the program solve the problem more efficiently.
+collision resolution,冲突解决,/kəlɪʒən rezəluʃən/,collision resolution helped the program solve the problem more efficiently.
+load factor,装载因子,/loʊd fæktɚ/,load factor helped the program solve the problem more efficiently.
+sampling,采样,/sæmplɪŋ/,sampling helped the program solve the problem more efficiently.
+interpolation,插值,/ɪtɝpəleɪʃən/,interpolation helped the program solve the problem more efficiently.
+clustering,聚类,/klʌstɚɪŋ/,clustering helped the program solve the problem more efficiently.
+ranking,排序排名,/ræŋkɪŋ/,ranking helped the program solve the problem more efficiently.
+recommendation,推荐,/rekəməndeɪʃən/,recommendation helped the program solve the problem more efficiently.
+database,数据库,/deɪtəbeɪs/,The database uses database to keep queries fast and data consistent.
+relational database,关系型数据库,/rileɪʃənəl deɪtəbeɪs/,The database uses relational database to keep queries fast and data consistent.
+table schema,表结构,/teɪbəl skimə/,The database uses table schema to keep queries fast and data consistent.
+table,数据表,/teɪbəl/,The database uses table to keep queries fast and data consistent.
+column,列,/kɑləm/,The database uses column to keep queries fast and data consistent.
+row,行,/roʊ/,The database uses row to keep queries fast and data consistent.
+record,记录,/rəkɔrd/,The database uses record to keep queries fast and data consistent.
+field,字段,/fild/,The database uses field to keep queries fast and data consistent.
+query,查询,/kwiri/,The database uses query to keep queries fast and data consistent.
+structured query language,结构化查询语言,/strʌktʃɚd kwiri læŋɡwədʒ/,The database uses structured query language to keep queries fast and data consistent.
+join,连接查询,/dʒɔɪn/,The database uses join to keep queries fast and data consistent.
+inner join,内连接,/ɪnɚ dʒɔɪn/,The database uses inner join to keep queries fast and data consistent.
+left join,左连接,/left dʒɔɪn/,The database uses left join to keep queries fast and data consistent.
+primary key,主键,/praɪmeri ki/,The database uses primary key to keep queries fast and data consistent.
+foreign key,外键,/fɔrən ki/,The database uses foreign key to keep queries fast and data consistent.
+unique constraint,唯一约束,/junik kənstreɪnt/,The database uses unique constraint to keep queries fast and data consistent.
+check constraint,检查约束,/tʃek kənstreɪnt/,The database uses check constraint to keep queries fast and data consistent.
+index scan,索引扫描,/ɪndeks skæn/,The database uses index scan to keep queries fast and data consistent.
+full table scan,全表扫描,/fʊl teɪbəl skæn/,The database uses full table scan to keep queries fast and data consistent.
+query planner,查询规划器,/kwiri plænɚ/,The database uses query planner to keep queries fast and data consistent.
+execution plan,执行计划,/eksəkjuʃən plæn/,The database uses execution plan to keep queries fast and data consistent.
+transaction,事务,/trænzækʃən/,The database uses transaction to keep queries fast and data consistent.
+atomicity,原子性,/ˌætəˈmɪsɪti/,The database uses atomicity to keep queries fast and data consistent.
+consistency,一致性,/kənsɪstənsi/,The database uses consistency to keep queries fast and data consistent.
+isolation,隔离性,/aɪsəleɪʃən/,The database uses isolation to keep queries fast and data consistent.
+durability,持久性,/dɚəbɪlɪti/,The database uses durability to keep queries fast and data consistent.
+commit,提交,/kəmɪt/,The database uses commit to keep queries fast and data consistent.
+rollback,回滚,/roʊlbæk/,The database uses rollback to keep queries fast and data consistent.
+locking,锁机制,/lɑkɪŋ/,The database uses locking to keep queries fast and data consistent.
+deadlock,死锁,/dedlɑk/,The database uses deadlock to keep queries fast and data consistent.
+database normalization,数据库规范化,/deɪtəbeɪs nɔrməlɪzeɪʃən/,The database uses database normalization to keep queries fast and data consistent.
+denormalization,反规范化,/diˌnɔrmələˈzeɪʃən/,The database uses denormalization to keep queries fast and data consistent.
+partitioned table,分区表,/pɑrtɪʃənd teɪbəl/,The database uses partitioned table to keep queries fast and data consistent.
+sharding,分片,/ˈʃɑrdɪŋ/,The database uses sharding to keep queries fast and data consistent.
+replication,复制,/repləkeɪʃən/,The database uses replication to keep queries fast and data consistent.
+read replica,只读副本,/red replɪkə/,The database uses read replica to keep queries fast and data consistent.
+data warehouse,数据仓库,/deɪtə werhaʊs/,The database uses data warehouse to keep queries fast and data consistent.
+materialized view,物化视图,/mətɪriəlaɪzd vju/,The database uses materialized view to keep queries fast and data consistent.
+stored procedure,存储过程,/stɔrd prəsidʒɚ/,The database uses stored procedure to keep queries fast and data consistent.
+trigger,触发器,/trɪɡɚ/,The database uses trigger to keep queries fast and data consistent.
+cursor,游标,/kɝsɚ/,The database uses cursor to keep queries fast and data consistent.
+migration,迁移,/maɪɡreɪʃən/,The database uses migration to keep queries fast and data consistent.
+backup,备份,/bækʌp/,The database uses backup to keep queries fast and data consistent.
+restore,恢复,/rɪstɔr/,The database uses restore to keep queries fast and data consistent.
+data retention,数据保留策略,/deɪtə ritenʃən/,The database uses data retention to keep queries fast and data consistent.
+computer network,计算机网络,/kəmpjutɚ netwɝk/,The web service depends on computer network to communicate with clients reliably.
+protocol,协议,/proʊtəkɑl/,The web service depends on protocol to communicate with clients reliably.
+packet,数据包,/pækət/,The web service depends on packet to communicate with clients reliably.
+frame,帧,/freɪm/,The web service depends on frame to communicate with clients reliably.
+header,首部,/hedɚ/,The web service depends on header to communicate with clients reliably.
+payload,有效载荷,/peɪloʊd/,The web service depends on payload to communicate with clients reliably.
+socket,套接字,/sɑkət/,The web service depends on socket to communicate with clients reliably.
+port number,端口号,/pɔrt nʌmbɚ/,The web service depends on port number to communicate with clients reliably.
+internet protocol,互联网协议,/ɪntɚnet proʊtəkɑl/,The web service depends on internet protocol to communicate with clients reliably.
+transmission control protocol,传输控制协议,/trænsmɪʃən kəntroʊl proʊtəkɑl/,The web service depends on transmission control protocol to communicate with clients reliably.
+user datagram protocol,用户数据报协议,/juzɚ ˈdeɪtəɡræm proʊtəkɑl/,The web service depends on user datagram protocol to communicate with clients reliably.
+domain name system,域名系统,/doʊmeɪn neɪm sɪstəm/,The web service depends on domain name system to communicate with clients reliably.
+hostname,主机名,/ˈhoʊstˌneɪm/,The web service depends on hostname to communicate with clients reliably.
+domain name,域名,/doʊmeɪn neɪm/,The web service depends on domain name to communicate with clients reliably.
+uniform resource locator,统一资源定位符,/junəfɔrm risɔrs loʊkeɪtɚ/,The web service depends on uniform resource locator to communicate with clients reliably.
+hypertext transfer protocol,超文本传输协议,/haɪpɚtekst trænsfɝ proʊtəkɑl/,The web service depends on hypertext transfer protocol to communicate with clients reliably.
+hypertext markup language,超文本标记语言,/haɪpɚtekst mɑrkʌp læŋɡwədʒ/,The web service depends on hypertext markup language to communicate with clients reliably.
+cascading style sheets,层叠样式表,/kæskeɪdɪŋ staɪl ʃits/,The web service depends on cascading style sheets to communicate with clients reliably.
+javascript engine,JavaScript 引擎,/ˈdʒɑːvəˌskrɪpt endʒən/,The web service depends on javascript engine to communicate with clients reliably.
+browser cache,浏览器缓存,/braʊzɚ kæʃ/,The web service depends on browser cache to communicate with clients reliably.
+cookie,Cookie,/kʊki/,The web service depends on cookie to communicate with clients reliably.
+session,会话,/seʃən/,The web service depends on session to communicate with clients reliably.
+request header,请求头,/rɪkwest hedɚ/,The web service depends on request header to communicate with clients reliably.
+response header,响应头,/rɪspɑns hedɚ/,The web service depends on response header to communicate with clients reliably.
+status code,状态码,/stætəs koʊd/,The web service depends on status code to communicate with clients reliably.
+application server,应用服务器,/æpləkeɪʃən sɝvɚ/,The web service depends on application server to communicate with clients reliably.
+web server,Web 服务器,/web sɝvɚ/,The web service depends on web server to communicate with clients reliably.
+reverse proxy,反向代理,/rɪvɝs prɑksi/,The web service depends on reverse proxy to communicate with clients reliably.
+load balancer,负载均衡器,/loʊd bælənsɚ/,The web service depends on load balancer to communicate with clients reliably.
+content delivery network,内容分发网络,/kɑntent dɪlɪvɚi netwɝk/,The web service depends on content delivery network to communicate with clients reliably.
+bandwidth,带宽,/bændwɪdθ/,The web service depends on bandwidth to communicate with clients reliably.
+latency,延迟,/leɪtənsi/,The web service depends on latency to communicate with clients reliably.
+throughput,吞吐量,/θrupʊt/,The web service depends on throughput to communicate with clients reliably.
+handshake,握手,/hændʃeɪk/,The web service depends on handshake to communicate with clients reliably.
+routing,路由,/raʊtɪŋ/,The web service depends on routing to communicate with clients reliably.
+switching,交换,/swɪtʃɪŋ/,The web service depends on switching to communicate with clients reliably.
+gateway,网关,/ɡeɪtweɪ/,The web service depends on gateway to communicate with clients reliably.
+subnet,子网,/ˈsʌbˌnet/,The web service depends on subnet to communicate with clients reliably.
+virtual private network,虚拟专用网络,/vɝtʃuəl praɪvət netwɝk/,The web service depends on virtual private network to communicate with clients reliably.
+firewall,防火墙,/faɪrwɑl/,The web service depends on firewall to communicate with clients reliably.
+network address translation,网络地址转换,/netwɝk ædres trænzleɪʃən/,The web service depends on network address translation to communicate with clients reliably.
+transport layer security,传输层安全协议,/trænspɔrt leɪɚ sɪkjʊrəti/,The web service depends on transport layer security to communicate with clients reliably.
+certificate authority,证书颁发机构,/sɚtɪfɪkət əθɔrəti/,The web service depends on certificate authority to communicate with clients reliably.
+public key,公钥,/pʌblɪk ki/,The web service depends on public key to communicate with clients reliably.
+private key,私钥,/praɪvət ki/,The web service depends on private key to communicate with clients reliably.
+encryption,加密,/enkrɪpʃən/,The web service depends on encryption to communicate with clients reliably.
+decryption,解密,/diˈkrɪpʃən/,The web service depends on decryption to communicate with clients reliably.
+authentication,身份认证,/ɔθentəkeɪʃən/,The web service depends on authentication to communicate with clients reliably.
+authorization,授权,/ɔθɚəzeɪʃən/,The web service depends on authorization to communicate with clients reliably.
+single sign on,单点登录,/sɪŋɡəl saɪn ɑn/,The web service depends on single sign on to communicate with clients reliably.
+websocket connection,WebSocket 连接,/ˈwebˌsɑkɪt kənekʃən/,The web service depends on websocket connection to communicate with clients reliably.
+restful service,RESTful 服务,/ˈrestfəl sɝvəs/,The web service depends on restful service to communicate with clients reliably.
+graphql query,GraphQL 查询,/ˈɡrɑf kjuː ɛl kwiri/,The web service depends on graphql query to communicate with clients reliably.
+service endpoint,服务端点,/sɝvəs endpɔɪnt/,The web service depends on service endpoint to communicate with clients reliably.
+request timeout,请求超时,/rɪkwest taɪmaʊt/,The web service depends on request timeout to communicate with clients reliably.
+cross origin resource sharing,跨域资源共享,/krɔs ɔrədʒən risɔrs ʃerɪŋ/,The web service depends on cross origin resource sharing to communicate with clients reliably.
+responsive design,响应式设计,/rɪspɑnsɪv dɪzaɪn/,The web service depends on responsive design to communicate with clients reliably.
+viewport,视口,/ˈvjuːˌpɔrt/,The web service depends on viewport to communicate with clients reliably.
+markup language,标记语言,/mɑrkʌp læŋɡwədʒ/,The web service depends on markup language to communicate with clients reliably.
+rendering engine,渲染引擎,/rendɚɪŋ endʒən/,The web service depends on rendering engine to communicate with clients reliably.
+operating system,操作系统,/ɑpɚeɪtɪŋ sɪstəm/,Our platform uses operating system to keep the service stable in production.
+kernel,内核,/kɝnəl/,Our platform uses kernel to keep the service stable in production.
+user space,用户空间,/juzɚ speɪs/,Our platform uses user space to keep the service stable in production.
+system call,系统调用,/sɪstəm kɔl/,Our platform uses system call to keep the service stable in production.
+process scheduler,进程调度器,/prɑses skedʒʊlɚ/,Our platform uses process scheduler to keep the service stable in production.
+process,进程,/prɑses/,Our platform uses process to keep the service stable in production.
+thread,线程,/θred/,Our platform uses thread to keep the service stable in production.
+context switch,上下文切换,/kɑntekst swɪtʃ/,Our platform uses context switch to keep the service stable in production.
+mutex,互斥锁,/ˈmjuːteks/,Our platform uses mutex to keep the service stable in production.
+semaphore,信号量,/ˈseməˌfɔr/,Our platform uses semaphore to keep the service stable in production.
+monitor,监视器,/mɑnətɚ/,Our platform uses monitor to keep the service stable in production.
+race condition,竞争条件,/reɪs kəndɪʃən/,Our platform uses race condition to keep the service stable in production.
+critical section,临界区,/krɪtɪkəl sekʃən/,Our platform uses critical section to keep the service stable in production.
+resource starvation,资源饥饿,/risɔrs stɑrveɪʃən/,Our platform uses resource starvation to keep the service stable in production.
+virtual memory,虚拟内存,/vɝtʃuəl memɚi/,Our platform uses virtual memory to keep the service stable in production.
+page table,页表,/peɪdʒ teɪbəl/,Our platform uses page table to keep the service stable in production.
+cache line,缓存行,/kæʃ laɪn/,Our platform uses cache line to keep the service stable in production.
+interrupt,中断,/ɪntɚʌpt/,Our platform uses interrupt to keep the service stable in production.
+device driver,设备驱动,/dɪvaɪs draɪvɚ/,Our platform uses device driver to keep the service stable in production.
+file system,文件系统,/faɪl sɪstəm/,Our platform uses file system to keep the service stable in production.
+directory tree,目录树,/dɚektɚi tri/,Our platform uses directory tree to keep the service stable in production.
+permission bit,权限位,/pɚmɪʃən bɪt/,Our platform uses permission bit to keep the service stable in production.
+shell script,Shell 脚本,/ʃel skrɪpt/,Our platform uses shell script to keep the service stable in production.
+terminal emulator,终端模拟器,/tɝmənəl emjəleɪtɚ/,Our platform uses terminal emulator to keep the service stable in production.
+command prompt,命令提示符,/kəmænd prɑmpt/,Our platform uses command prompt to keep the service stable in production.
+container image,容器镜像,/kənteɪnɚ ɪmədʒ/,Our platform uses container image to keep the service stable in production.
+container runtime,容器运行时,/kənteɪnɚ ˈrʌnˌtaɪm/,Our platform uses container runtime to keep the service stable in production.
+orchestration platform,编排平台,/ɔrkəstreɪʃən plætfɔrm/,Our platform uses orchestration platform to keep the service stable in production.
+virtual machine,虚拟机,/vɝtʃuəl məʃin/,Our platform uses virtual machine to keep the service stable in production.
+hypervisor,虚拟机监控器,/ˈhaɪpərˌvaɪzər/,Our platform uses hypervisor to keep the service stable in production.
+cloud computing,云计算,/klaʊd kəmpjutɪŋ/,Our platform uses cloud computing to keep the service stable in production.
+infrastructure as code,基础设施即代码,/ɪnfrəstrʌktʃɚ æz koʊd/,Our platform uses infrastructure as code to keep the service stable in production.
+continuous integration,持续集成,/kəntɪnjuəs ɪntəɡreɪʃən/,Our platform uses continuous integration to keep the service stable in production.
+continuous delivery,持续交付,/kəntɪnjuəs dɪlɪvɚi/,Our platform uses continuous delivery to keep the service stable in production.
+continuous deployment,持续部署,/kəntɪnjuəs dɪplɔɪmənt/,Our platform uses continuous deployment to keep the service stable in production.
+deployment pipeline,部署流水线,/dɪplɔɪmənt paɪplaɪn/,Our platform uses deployment pipeline to keep the service stable in production.
+staging environment,预发布环境,/steɪdʒɪŋ ɪnvaɪrənmənt/,Our platform uses staging environment to keep the service stable in production.
+production environment,生产环境,/prədʌkʃən ɪnvaɪrənmənt/,Our platform uses production environment to keep the service stable in production.
+rollback plan,回滚方案,/roʊlbæk plæn/,Our platform uses rollback plan to keep the service stable in production.
+canary release,金丝雀发布,/kəneri rilis/,Our platform uses canary release to keep the service stable in production.
+blue green deployment,蓝绿部署,/blu ɡrin dɪplɔɪmənt/,Our platform uses blue green deployment to keep the service stable in production.
+observability,可观测性,/əbˌzɜrvəˈbɪləti/,Our platform uses observability to keep the service stable in production.
+monitoring system,监控系统,/mɑnətɚɪŋ sɪstəm/,Our platform uses monitoring system to keep the service stable in production.
+log aggregation,日志聚合,/lɔɡ æɡrəɡeɪʃən/,Our platform uses log aggregation to keep the service stable in production.
+distributed tracing,分布式追踪,/dɪstrɪbjətəd treɪsɪŋ/,Our platform uses distributed tracing to keep the service stable in production.
+alert policy,告警策略,/əlɝt pɑləsi/,Our platform uses alert policy to keep the service stable in production.
+service level objective,服务级目标,/sɝvəs levəl əbdʒektɪv/,Our platform uses service level objective to keep the service stable in production.
+service level indicator,服务级指标,/sɝvəs levəl ɪndəkeɪtɚ/,Our platform uses service level indicator to keep the service stable in production.
+high availability,高可用性,/haɪ əveɪləbɪləti/,Our platform uses high availability to keep the service stable in production.
+fault tolerance,容错能力,/fɔlt tɑlɚəns/,Our platform uses fault tolerance to keep the service stable in production.
+auto scaling,自动扩缩容,/ɔtoʊ skeɪlɪŋ/,Our platform uses auto scaling to keep the service stable in production.
+resource quota,资源配额,/risɔrs kwoʊtə/,Our platform uses resource quota to keep the service stable in production.
+cluster manager,集群管理器,/klʌstɚ mænədʒɚ/,Our platform uses cluster manager to keep the service stable in production.
+node pool,节点池,/noʊd pul/,Our platform uses node pool to keep the service stable in production.
+job scheduler,任务调度器,/dʒɑb skedʒʊlɚ/,Our platform uses job scheduler to keep the service stable in production.
+checkpoint,检查点,/tʃekpɔɪnt/,Our platform uses checkpoint to keep the service stable in production.
+snapshot,快照,/snæpʃɑt/,Our platform uses snapshot to keep the service stable in production.
+failover,故障切换,/ˈfeɪlˌoʊvər/,Our platform uses failover to keep the service stable in production.
+disaster recovery,灾难恢复,/dɪzæstɚ rɪkʌvri/,Our platform uses disaster recovery to keep the service stable in production.
+uptime,在线时长,/ˈʌpˌtaɪm/,Our platform uses uptime to keep the service stable in production.
+cybersecurity,网络安全,/ˌsaɪbərsɪˈkjʊrəti/,The security team reviewed cybersecurity to reduce attack risk.
+vulnerability,漏洞,/vʌlnɚəbɪlɪti/,The security team reviewed vulnerability to reduce attack risk.
+exploit,利用程序,/eksplɔɪt/,The security team reviewed exploit to reduce attack risk.
+security patch,安全补丁,/sɪkjʊrəti pætʃ/,The security team reviewed security patch to reduce attack risk.
+malware,恶意软件,/mælwer/,The security team reviewed malware to reduce attack risk.
+spyware,间谍软件,/spaɪwer/,The security team reviewed spyware to reduce attack risk.
+ransomware,勒索软件,/ˈrænsəmˌwer/,The security team reviewed ransomware to reduce attack risk.
+phishing attack,网络钓鱼攻击,/fɪʃɪŋ ətæk/,The security team reviewed phishing attack to reduce attack risk.
+spoofing,欺骗攻击,/spufɪŋ/,The security team reviewed spoofing to reduce attack risk.
+sniffing,嗅探,/snɪfɪŋ/,The security team reviewed sniffing to reduce attack risk.
+eavesdropping,窃听,/ivzdrɑpɪŋ/,The security team reviewed eavesdropping to reduce attack risk.
+intrusion detection,入侵检测,/ɪntruʒən dɪtekʃən/,The security team reviewed intrusion detection to reduce attack risk.
+intrusion prevention,入侵防御,/ɪntruʒən privenʃən/,The security team reviewed intrusion prevention to reduce attack risk.
+threat model,威胁模型,/θret mɑdəl/,The security team reviewed threat model to reduce attack risk.
+attack surface,攻击面,/ətæk sɝfəs/,The security team reviewed attack surface to reduce attack risk.
+security audit,安全审计,/sɪkjʊrəti ɔdɪt/,The security team reviewed security audit to reduce attack risk.
+compliance check,合规检查,/kəmplaɪəns tʃek/,The security team reviewed compliance check to reduce attack risk.
+credential,凭证,/krɪdenʃəl/,The security team reviewed credential to reduce attack risk.
+password hash,密码哈希,/pæswɝd hæʃ/,The security team reviewed password hash to reduce attack risk.
+multi factor authentication,多因素认证,/mʌlti fæktɚ ɔθentəkeɪʃən/,The security team reviewed multi factor authentication to reduce attack risk.
+biometric verification,生物特征验证,/baɪəmetrək verəfəkeɪʃən/,The security team reviewed biometric verification to reduce attack risk.
+digital signature,数字签名,/dɪdʒətəl sɪɡnətʃɚ/,The security team reviewed digital signature to reduce attack risk.
+certificate revocation,证书吊销,/sɚtɪfɪkət revəkeɪʃən/,The security team reviewed certificate revocation to reduce attack risk.
+key exchange,密钥交换,/ki ɪkstʃeɪndʒ/,The security team reviewed key exchange to reduce attack risk.
+salting,加盐处理,/sɔltɪŋ/,The security team reviewed salting to reduce attack risk.
+hardening,加固,/hɑrdənɪŋ/,The security team reviewed hardening to reduce attack risk.
+obfuscation,混淆,/ɑbfəskeɪʃən/,The security team reviewed obfuscation to reduce attack risk.
+sandboxing,沙箱化,/ˈsændˌbɑksɪŋ/,The security team reviewed sandboxing to reduce attack risk.
+data exfiltration,数据渗漏,/deɪtə ˌeksfɪlˈtreɪʃən/,The security team reviewed data exfiltration to reduce attack risk.
+quarantine,隔离,/kwɔrəntin/,The security team reviewed quarantine to reduce attack risk.
+secure boot,安全启动,/sɪkjʊr but/,The security team reviewed secure boot to reduce attack risk.
+code signing,代码签名,/koʊd saɪnɪŋ/,The security team reviewed code signing to reduce attack risk.
+least privilege,最小权限原则,/list prɪvlədʒ/,The security team reviewed least privilege to reduce attack risk.
+access control list,访问控制列表,/ækses kəntroʊl lɪst/,The security team reviewed access control list to reduce attack risk.
+role based access control,基于角色的访问控制,/roʊl beɪst ækses kəntroʊl/,The security team reviewed role based access control to reduce attack risk.
+permission escalation,权限提升,/pɚmɪʃən eskəleɪʃən/,The security team reviewed permission escalation to reduce attack risk.
+session hijacking,会话劫持,/seʃən haɪdʒækɪŋ/,The security team reviewed session hijacking to reduce attack risk.
+cross site scripting,跨站脚本攻击,/krɔs saɪt ˈskrɪptɪŋ/,The security team reviewed cross site scripting to reduce attack risk.
+sql injection,SQL 注入,/ˌes kjuː ˈel ɪndʒekʃən/,The security team reviewed sql injection to reduce attack risk.
+command injection,命令注入,/kəmænd ɪndʒekʃən/,The security team reviewed command injection to reduce attack risk.
+buffer overflow,缓冲区溢出,/bʌfɚ oʊvɚfloʊ/,The security team reviewed buffer overflow to reduce attack risk.
+denial of service,拒绝服务攻击,/dɪnaɪəl ʌv sɝvəs/,The security team reviewed denial of service to reduce attack risk.
+brute force attack,暴力破解攻击,/brut fɔrs ətæk/,The security team reviewed brute force attack to reduce attack risk.
+zero day vulnerability,零日漏洞,/zɪroʊ deɪ vʌlnɚəbɪlɪti/,The security team reviewed zero day vulnerability to reduce attack risk.
+incident response,事件响应,/ɪnsədənt rɪspɑns/,The security team reviewed incident response to reduce attack risk.
+artificial intelligence,人工智能,/ɑrtəfɪʃəl ɪntelədʒəns/,The model improved after we tuned artificial intelligence during training.
+machine learning,机器学习,/məʃin lɝnɪŋ/,The model improved after we tuned machine learning during training.
+deep learning,深度学习,/dip lɝnɪŋ/,The model improved after we tuned deep learning during training.
+neural network,神经网络,/nʊrəl netwɝk/,The model improved after we tuned neural network during training.
+artificial neuron,人工神经元,/ɑrtəfɪʃəl nʊrɑn/,The model improved after we tuned artificial neuron during training.
+activation function,激活函数,/æktəveɪʃən fʌŋkʃən/,The model improved after we tuned activation function during training.
+loss function,损失函数,/lɔs fʌŋkʃən/,The model improved after we tuned loss function during training.
+gradient descent,梯度下降,/ɡreɪdiənt dɪsent/,The model improved after we tuned gradient descent during training.
+optimizer,优化器,/ˈɑptəˌmaɪzər/,The model improved after we tuned optimizer during training.
+training set,训练集,/treɪnɪŋ set/,The model improved after we tuned training set during training.
+validation set,验证集,/vælədeɪʃən set/,The model improved after we tuned validation set during training.
+test set,测试集,/test set/,The model improved after we tuned test set during training.
+feature vector,特征向量,/fitʃɚ vektɚ/,The model improved after we tuned feature vector during training.
+label,标签,/leɪbəl/,The model improved after we tuned label during training.
+classifier,分类器,/ˈklæsəfaɪər/,The model improved after we tuned classifier during training.
+regression model,回归模型,/rəɡreʃən mɑdəl/,The model improved after we tuned regression model during training.
+decision tree,决策树,/dɪsɪʒən tri/,The model improved after we tuned decision tree during training.
+random forest,随机森林,/rændəm fɔrəst/,The model improved after we tuned random forest during training.
+support vector machine,支持向量机,/səpɔrt vektɚ məʃin/,The model improved after we tuned support vector machine during training.
+nearest neighbor,最近邻算法,/nɪrəst neɪbɚ/,The model improved after we tuned nearest neighbor during training.
+clustering algorithm,聚类算法,/klʌstɚɪŋ ælɡɚɪðəm/,The model improved after we tuned clustering algorithm during training.
+dimensionality reduction,降维,/dɪmenʃənæləti rədʌkʃən/,The model improved after we tuned dimensionality reduction during training.
+principal component analysis,主成分分析,/prɪnsəpəl kəmpoʊnənt ənæləsəs/,The model improved after we tuned principal component analysis during training.
+embedding vector,嵌入向量,/embedɪŋ vektɚ/,The model improved after we tuned embedding vector during training.
+attention mechanism,注意力机制,/ətenʃən mekənɪzəm/,The model improved after we tuned attention mechanism during training.
+transformer model,Transformer 模型,/trænsfɔrmɚ mɑdəl/,The model improved after we tuned transformer model during training.
+tokenization,分词,/ˌtoʊkənəˈzeɪʃən/,The model improved after we tuned tokenization during training.
+language model,语言模型,/læŋɡwədʒ mɑdəl/,The model improved after we tuned language model during training.
+prompt engineering,提示工程,/prɑmpt endʒənɪrɪŋ/,The model improved after we tuned prompt engineering during training.
+fine tuning,微调,/faɪn tunɪŋ/,The model improved after we tuned fine tuning during training.
+transfer learning,迁移学习,/trænsfɝ lɝnɪŋ/,The model improved after we tuned transfer learning during training.
+reinforcement learning,强化学习,/riɪnfɔrsmənt lɝnɪŋ/,The model improved after we tuned reinforcement learning during training.
+reward function,奖励函数,/rɪwɔrd fʌŋkʃən/,The model improved after we tuned reward function during training.
+policy network,策略网络,/pɑləsi netwɝk/,The model improved after we tuned policy network during training.
+inference engine,推理引擎,/ɪnfɚəns endʒən/,The model improved after we tuned inference engine during training.
+batch size,批大小,/bætʃ saɪz/,The model improved after we tuned batch size during training.
+epoch,训练轮次,/epək/,The model improved after we tuned epoch during training.
+tensor,张量,/tensɚ/,The model improved after we tuned tensor during training.
+vector database,向量数据库,/vektɚ deɪtəbeɪs/,The model improved after we tuned vector database during training.
+similarity search,相似度搜索,/sɪməlerəti sɝtʃ/,The model improved after we tuned similarity search during training.
+retrieval augmented generation,检索增强生成,/rɪtrivəl ɑɡmentɪd dʒenɚeɪʃən/,The model improved after we tuned retrieval augmented generation during training.
+knowledge graph,知识图谱,/nɑlədʒ ɡræf/,The model improved after we tuned knowledge graph during training.
+precision,精确率,/prisɪʒən/,The model improved after we tuned precision during training.
+recall,召回率,/rikɔl/,The model improved after we tuned recall during training.
+accuracy,准确率,/ækjɚəsi/,The model improved after we tuned accuracy during training.
+F one score,F1 分数,/ef wʌn skɔr/,The model improved after we tuned F one score during training.
+confusion matrix,混淆矩阵,/kənfjuʒən meɪtrɪks/,The model improved after we tuned confusion matrix during training.
+bias variance tradeoff,偏差方差权衡,/baɪəs veriəns treɪdɔf/,The model improved after we tuned bias variance tradeoff during training.
+overfitting,过拟合,/ˌoʊvərˈfɪtɪŋ/,The model improved after we tuned overfitting during training.
+underfitting,欠拟合,/ˌʌndərˈfɪtɪŋ/,The model improved after we tuned underfitting during training.
+regularization,正则化,/ˌreɡjələrəˈzeɪʃən/,The model improved after we tuned regularization during training.
+normalization,归一化,/nɔrməlɪzeɪʃən/,The model improved after we tuned normalization during training.
+data augmentation,数据增强,/deɪtə ɑɡmenteɪʃən/,The model improved after we tuned data augmentation during training.
+model serving,模型服务,/mɑdəl sɝvɪŋ/,The model improved after we tuned model serving during training.
+evaluation metric,评估指标,/ɪvæljueɪʃən metrɪk/,The model improved after we tuned evaluation metric during training.
+central processing unit,中央处理器,/sentrəl prɑsesɪŋ junət/,The device uses central processing unit to improve overall system performance.
+graphics processing unit,图形处理器,/ɡræfɪks prɑsesɪŋ junət/,The device uses graphics processing unit to improve overall system performance.
+memory module,内存模块,/memɚi mɑdʒul/,The device uses memory module to improve overall system performance.
+random access memory,随机存取存储器,/rændəm ækses memɚi/,The device uses random access memory to improve overall system performance.
+read only memory,只读存储器,/red oʊnli memɚi/,The device uses read only memory to improve overall system performance.
+solid state drive,固态硬盘,/sɑləd steɪt draɪv/,The device uses solid state drive to improve overall system performance.
+hard disk drive,机械硬盘,/hɑrd dɪsk draɪv/,The device uses hard disk drive to improve overall system performance.
+motherboard,主板,/mʌðɚbɔrd/,The device uses motherboard to improve overall system performance.
+chipset,芯片组,/ˈtʃɪpˌset/,The device uses chipset to improve overall system performance.
+microprocessor,微处理器,/maɪkroʊprɑsesɚ/,The device uses microprocessor to improve overall system performance.
+instruction set,指令集,/ɪnstrʌkʃən set/,The device uses instruction set to improve overall system performance.
+clock frequency,时钟频率,/klɑk frikwənsi/,The device uses clock frequency to improve overall system performance.
+bus interface,总线接口,/bʌs ɪntɚfeɪs/,The device uses bus interface to improve overall system performance.
+power supply,电源供应器,/paʊɚ səplaɪ/,The device uses power supply to improve overall system performance.
+network interface card,网络接口卡,/netwɝk ɪntɚfeɪs kɑrd/,The device uses network interface card to improve overall system performance.
+graphics card,显卡,/ɡræfɪks kɑrd/,The device uses graphics card to improve overall system performance.
+cooling system,散热系统,/kulɪŋ sɪstəm/,The device uses cooling system to improve overall system performance.
+firmware,固件,/fɝmwer/,The device uses firmware to improve overall system performance.
+bootloader,引导加载程序,/ˈbuːtˌloʊdər/,The device uses bootloader to improve overall system performance.
+register,寄存器,/redʒɪstɚ/,The device uses register to improve overall system performance.
+cache memory,缓存存储器,/kæʃ memɚi/,The device uses cache memory to improve overall system performance.
+memory address,内存地址,/memɚi ædres/,The device uses memory address to improve overall system performance.
+pipeline register,流水线寄存器,/paɪplaɪn redʒɪstɚ/,The device uses pipeline register to improve overall system performance.
+instruction pointer,指令指针,/ɪnstrʌkʃən pɔɪntɚ/,The device uses instruction pointer to improve overall system performance.
+input output controller,输入输出控制器,/ɪnpʊt aʊtpʊt kəntroʊlɚ/,The device uses input output controller to improve overall system performance.

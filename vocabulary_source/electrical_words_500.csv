@@ -1,501 +1,201 @@
-﻿word,definition,phonetic
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
-signal,信号,/ˈsɪɡnəl/
-analog,模拟,/ˈænəlɒɡ/
-digital,数字,/ˈdɪdʒɪtl/
-amplifier,放大器,/ˈæmplɪfaɪər/
-oscillator,振荡器,/ˈɒsɪleɪtər/
-waveform,波形,/ˈweɪvfɔːrm/
-power,功率,/ˈpaʊər/
-energy,能量,/ˈenərdʒi/
-impedance,阻抗,/ɪmˈpiːdəns/
-reactance,电抗,/riˈæktəns/
-transformer,变压器,/trænsˈfɔːrmər/
-generator,发电机,/ˈdʒenəreɪtər/
-motor,电机,/ˈmoʊtər/
-relay,继电器,/ˈriːleɪ/
-sensor,传感器,/ˈsensər/
-controller,控制器,/kənˈtroʊlər/
-microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/
-microprocessor,微处理器,/ˌmaɪkroʊˈprɑːsesər/
-pcb,印刷电路板,
-cable,电缆,/ˈkeɪbl/
-ground,接地,/ɡraʊnd/
-phase,相位,/feɪz/
-load,负载,/loʊd/
-short circuit,短路,
-open circuit,开路,
-voltmeter,电压表,/ˈvoʊltmiːtər/
-ammeter,电流表,/ˈæmiːtər/
-watt,瓦特,/wɒt/
-ohm,欧姆,/oʊm/
-farad,法拉,/ˈfærəd/
-henry,亨利,/ˈhenri/
-hertz,赫兹,/hɜːrts/
-bandwidth,带宽,/ˈbændwɪdθ/
-modulation,调制,/ˌmɒdjʊˈleɪʃən/
-demodulation,解调,/diːˌmɒdjʊˈleɪʃən/
-noise,噪声,/nɔɪz/
-filter,滤波器,/ˈfɪltər/
-attenuation,衰减,/əˌtenjuˈeɪʃən/
-gain,增益,/ɡeɪn/
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
-signal,信号,/ˈsɪɡnəl/
-analog,模拟,/ˈænəlɒɡ/
-digital,数字,/ˈdɪdʒɪtl/
-amplifier,放大器,/ˈæmplɪfaɪər/
-oscillator,振荡器,/ˈɒsɪleɪtər/
-waveform,波形,/ˈweɪvfɔːrm/
-power,功率,/ˈpaʊər/
-energy,能量,/ˈenərdʒi/
-impedance,阻抗,/ɪmˈpiːdəns/
-reactance,电抗,/riˈæktəns/
-transformer,变压器,/trænsˈfɔːrmər/
-generator,发电机,/ˈdʒenəreɪtər/
-motor,电机,/ˈmoʊtər/
-relay,继电器,/ˈriːleɪ/
-sensor,传感器,/ˈsensər/
-controller,控制器,/kənˈtroʊlər/
-microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/
-microprocessor,微处理器,/ˌmaɪkroʊˈprɑːsesər/
-pcb,印刷电路板,
-cable,电缆,/ˈkeɪbl/
-ground,接地,/ɡraʊnd/
-phase,相位,/feɪz/
-load,负载,/loʊd/
-short circuit,短路,
-open circuit,开路,
-voltmeter,电压表,/ˈvoʊltmiːtər/
-ammeter,电流表,/ˈæmiːtər/
-watt,瓦特,/wɒt/
-ohm,欧姆,/oʊm/
-farad,法拉,/ˈfærəd/
-henry,亨利,/ˈhenri/
-hertz,赫兹,/hɜːrts/
-bandwidth,带宽,/ˈbændwɪdθ/
-modulation,调制,/ˌmɒdjʊˈleɪʃən/
-demodulation,解调,/diːˌmɒdjʊˈleɪʃən/
-noise,噪声,/nɔɪz/
-filter,滤波器,/ˈfɪltər/
-attenuation,衰减,/əˌtenjuˈeɪʃən/
-gain,增益,/ɡeɪn/
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
-signal,信号,/ˈsɪɡnəl/
-analog,模拟,/ˈænəlɒɡ/
-digital,数字,/ˈdɪdʒɪtl/
-amplifier,放大器,/ˈæmplɪfaɪər/
-oscillator,振荡器,/ˈɒsɪleɪtər/
-waveform,波形,/ˈweɪvfɔːrm/
-power,功率,/ˈpaʊər/
-energy,能量,/ˈenərdʒi/
-impedance,阻抗,/ɪmˈpiːdəns/
-reactance,电抗,/riˈæktəns/
-transformer,变压器,/trænsˈfɔːrmər/
-generator,发电机,/ˈdʒenəreɪtər/
-motor,电机,/ˈmoʊtər/
-relay,继电器,/ˈriːleɪ/
-sensor,传感器,/ˈsensər/
-controller,控制器,/kənˈtroʊlər/
-microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/
-microprocessor,微处理器,/ˌmaɪkroʊˈprɑːsesər/
-pcb,印刷电路板,
-cable,电缆,/ˈkeɪbl/
-ground,接地,/ɡraʊnd/
-phase,相位,/feɪz/
-load,负载,/loʊd/
-short circuit,短路,
-open circuit,开路,
-voltmeter,电压表,/ˈvoʊltmiːtər/
-ammeter,电流表,/ˈæmiːtər/
-watt,瓦特,/wɒt/
-ohm,欧姆,/oʊm/
-farad,法拉,/ˈfærəd/
-henry,亨利,/ˈhenri/
-hertz,赫兹,/hɜːrts/
-bandwidth,带宽,/ˈbændwɪdθ/
-modulation,调制,/ˌmɒdjʊˈleɪʃən/
-demodulation,解调,/diːˌmɒdjʊˈleɪʃən/
-noise,噪声,/nɔɪz/
-filter,滤波器,/ˈfɪltər/
-attenuation,衰减,/əˌtenjuˈeɪʃən/
-gain,增益,/ɡeɪn/
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
-signal,信号,/ˈsɪɡnəl/
-analog,模拟,/ˈænəlɒɡ/
-digital,数字,/ˈdɪdʒɪtl/
-amplifier,放大器,/ˈæmplɪfaɪər/
-oscillator,振荡器,/ˈɒsɪleɪtər/
-waveform,波形,/ˈweɪvfɔːrm/
-power,功率,/ˈpaʊər/
-energy,能量,/ˈenərdʒi/
-impedance,阻抗,/ɪmˈpiːdəns/
-reactance,电抗,/riˈæktəns/
-transformer,变压器,/trænsˈfɔːrmər/
-generator,发电机,/ˈdʒenəreɪtər/
-motor,电机,/ˈmoʊtər/
-relay,继电器,/ˈriːleɪ/
-sensor,传感器,/ˈsensər/
-controller,控制器,/kənˈtroʊlər/
-microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/
-microprocessor,微处理器,/ˌmaɪkroʊˈprɑːsesər/
-pcb,印刷电路板,
-cable,电缆,/ˈkeɪbl/
-ground,接地,/ɡraʊnd/
-phase,相位,/feɪz/
-load,负载,/loʊd/
-short circuit,短路,
-open circuit,开路,
-voltmeter,电压表,/ˈvoʊltmiːtər/
-ammeter,电流表,/ˈæmiːtər/
-watt,瓦特,/wɒt/
-ohm,欧姆,/oʊm/
-farad,法拉,/ˈfærəd/
-henry,亨利,/ˈhenri/
-hertz,赫兹,/hɜːrts/
-bandwidth,带宽,/ˈbændwɪdθ/
-modulation,调制,/ˌmɒdjʊˈleɪʃən/
-demodulation,解调,/diːˌmɒdjʊˈleɪʃən/
-noise,噪声,/nɔɪz/
-filter,滤波器,/ˈfɪltər/
-attenuation,衰减,/əˌtenjuˈeɪʃən/
-gain,增益,/ɡeɪn/
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
-signal,信号,/ˈsɪɡnəl/
-analog,模拟,/ˈænəlɒɡ/
-digital,数字,/ˈdɪdʒɪtl/
-amplifier,放大器,/ˈæmplɪfaɪər/
-oscillator,振荡器,/ˈɒsɪleɪtər/
-waveform,波形,/ˈweɪvfɔːrm/
-power,功率,/ˈpaʊər/
-energy,能量,/ˈenərdʒi/
-impedance,阻抗,/ɪmˈpiːdəns/
-reactance,电抗,/riˈæktəns/
-transformer,变压器,/trænsˈfɔːrmər/
-generator,发电机,/ˈdʒenəreɪtər/
-motor,电机,/ˈmoʊtər/
-relay,继电器,/ˈriːleɪ/
-sensor,传感器,/ˈsensər/
-controller,控制器,/kənˈtroʊlər/
-microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/
-microprocessor,微处理器,/ˌmaɪkroʊˈprɑːsesər/
-pcb,印刷电路板,
-cable,电缆,/ˈkeɪbl/
-ground,接地,/ɡraʊnd/
-phase,相位,/feɪz/
-load,负载,/loʊd/
-short circuit,短路,
-open circuit,开路,
-voltmeter,电压表,/ˈvoʊltmiːtər/
-ammeter,电流表,/ˈæmiːtər/
-watt,瓦特,/wɒt/
-ohm,欧姆,/oʊm/
-farad,法拉,/ˈfærəd/
-henry,亨利,/ˈhenri/
-hertz,赫兹,/hɜːrts/
-bandwidth,带宽,/ˈbændwɪdθ/
-modulation,调制,/ˌmɒdjʊˈleɪʃən/
-demodulation,解调,/diːˌmɒdjʊˈleɪʃən/
-noise,噪声,/nɔɪz/
-filter,滤波器,/ˈfɪltər/
-attenuation,衰减,/əˌtenjuˈeɪʃən/
-gain,增益,/ɡeɪn/
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
-signal,信号,/ˈsɪɡnəl/
-analog,模拟,/ˈænəlɒɡ/
-digital,数字,/ˈdɪdʒɪtl/
-amplifier,放大器,/ˈæmplɪfaɪər/
-oscillator,振荡器,/ˈɒsɪleɪtər/
-waveform,波形,/ˈweɪvfɔːrm/
-power,功率,/ˈpaʊər/
-energy,能量,/ˈenərdʒi/
-impedance,阻抗,/ɪmˈpiːdəns/
-reactance,电抗,/riˈæktəns/
-transformer,变压器,/trænsˈfɔːrmər/
-generator,发电机,/ˈdʒenəreɪtər/
-motor,电机,/ˈmoʊtər/
-relay,继电器,/ˈriːleɪ/
-sensor,传感器,/ˈsensər/
-controller,控制器,/kənˈtroʊlər/
-microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/
-microprocessor,微处理器,/ˌmaɪkroʊˈprɑːsesər/
-pcb,印刷电路板,
-cable,电缆,/ˈkeɪbl/
-ground,接地,/ɡraʊnd/
-phase,相位,/feɪz/
-load,负载,/loʊd/
-short circuit,短路,
-open circuit,开路,
-voltmeter,电压表,/ˈvoʊltmiːtər/
-ammeter,电流表,/ˈæmiːtər/
-watt,瓦特,/wɒt/
-ohm,欧姆,/oʊm/
-farad,法拉,/ˈfærəd/
-henry,亨利,/ˈhenri/
-hertz,赫兹,/hɜːrts/
-bandwidth,带宽,/ˈbændwɪdθ/
-modulation,调制,/ˌmɒdjʊˈleɪʃən/
-demodulation,解调,/diːˌmɒdjʊˈleɪʃən/
-noise,噪声,/nɔɪz/
-filter,滤波器,/ˈfɪltər/
-attenuation,衰减,/əˌtenjuˈeɪʃən/
-gain,增益,/ɡeɪn/
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
-signal,信号,/ˈsɪɡnəl/
-analog,模拟,/ˈænəlɒɡ/
-digital,数字,/ˈdɪdʒɪtl/
-amplifier,放大器,/ˈæmplɪfaɪər/
-oscillator,振荡器,/ˈɒsɪleɪtər/
-waveform,波形,/ˈweɪvfɔːrm/
-power,功率,/ˈpaʊər/
-energy,能量,/ˈenərdʒi/
-impedance,阻抗,/ɪmˈpiːdəns/
-reactance,电抗,/riˈæktəns/
-transformer,变压器,/trænsˈfɔːrmər/
-generator,发电机,/ˈdʒenəreɪtər/
-motor,电机,/ˈmoʊtər/
-relay,继电器,/ˈriːleɪ/
-sensor,传感器,/ˈsensər/
-controller,控制器,/kənˈtroʊlər/
-microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/
-microprocessor,微处理器,/ˌmaɪkroʊˈprɑːsesər/
-pcb,印刷电路板,
-cable,电缆,/ˈkeɪbl/
-ground,接地,/ɡraʊnd/
-phase,相位,/feɪz/
-load,负载,/loʊd/
-short circuit,短路,
-open circuit,开路,
-voltmeter,电压表,/ˈvoʊltmiːtər/
-ammeter,电流表,/ˈæmiːtər/
-watt,瓦特,/wɒt/
-ohm,欧姆,/oʊm/
-farad,法拉,/ˈfærəd/
-henry,亨利,/ˈhenri/
-hertz,赫兹,/hɜːrts/
-bandwidth,带宽,/ˈbændwɪdθ/
-modulation,调制,/ˌmɒdjʊˈleɪʃən/
-demodulation,解调,/diːˌmɒdjʊˈleɪʃən/
-noise,噪声,/nɔɪz/
-filter,滤波器,/ˈfɪltər/
-attenuation,衰减,/əˌtenjuˈeɪʃən/
-gain,增益,/ɡeɪn/
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
-signal,信号,/ˈsɪɡnəl/
-analog,模拟,/ˈænəlɒɡ/
-digital,数字,/ˈdɪdʒɪtl/
-amplifier,放大器,/ˈæmplɪfaɪər/
-oscillator,振荡器,/ˈɒsɪleɪtər/
-waveform,波形,/ˈweɪvfɔːrm/
-power,功率,/ˈpaʊər/
-energy,能量,/ˈenərdʒi/
-impedance,阻抗,/ɪmˈpiːdəns/
-reactance,电抗,/riˈæktəns/
-transformer,变压器,/trænsˈfɔːrmər/
-generator,发电机,/ˈdʒenəreɪtər/
-motor,电机,/ˈmoʊtər/
-relay,继电器,/ˈriːleɪ/
-sensor,传感器,/ˈsensər/
-controller,控制器,/kənˈtroʊlər/
-microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/
-microprocessor,微处理器,/ˌmaɪkroʊˈprɑːsesər/
-pcb,印刷电路板,
-cable,电缆,/ˈkeɪbl/
-ground,接地,/ɡraʊnd/
-phase,相位,/feɪz/
-load,负载,/loʊd/
-short circuit,短路,
-open circuit,开路,
-voltmeter,电压表,/ˈvoʊltmiːtər/
-ammeter,电流表,/ˈæmiːtər/
-watt,瓦特,/wɒt/
-ohm,欧姆,/oʊm/
-farad,法拉,/ˈfærəd/
-henry,亨利,/ˈhenri/
-hertz,赫兹,/hɜːrts/
-bandwidth,带宽,/ˈbændwɪdθ/
-modulation,调制,/ˌmɒdjʊˈleɪʃən/
-demodulation,解调,/diːˌmɒdjʊˈleɪʃən/
-noise,噪声,/nɔɪz/
-filter,滤波器,/ˈfɪltər/
-attenuation,衰减,/əˌtenjuˈeɪʃən/
-gain,增益,/ɡeɪn/
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
-signal,信号,/ˈsɪɡnəl/
-analog,模拟,/ˈænəlɒɡ/
-digital,数字,/ˈdɪdʒɪtl/
-amplifier,放大器,/ˈæmplɪfaɪər/
-oscillator,振荡器,/ˈɒsɪleɪtər/
-waveform,波形,/ˈweɪvfɔːrm/
-power,功率,/ˈpaʊər/
-energy,能量,/ˈenərdʒi/
-impedance,阻抗,/ɪmˈpiːdəns/
-reactance,电抗,/riˈæktəns/
-transformer,变压器,/trænsˈfɔːrmər/
-generator,发电机,/ˈdʒenəreɪtər/
-motor,电机,/ˈmoʊtər/
-relay,继电器,/ˈriːleɪ/
-sensor,传感器,/ˈsensər/
-controller,控制器,/kənˈtroʊlər/
-microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/
-microprocessor,微处理器,/ˌmaɪkroʊˈprɑːsesər/
-pcb,印刷电路板,
-cable,电缆,/ˈkeɪbl/
-ground,接地,/ɡraʊnd/
-phase,相位,/feɪz/
-load,负载,/loʊd/
-short circuit,短路,
-open circuit,开路,
-voltmeter,电压表,/ˈvoʊltmiːtər/
-ammeter,电流表,/ˈæmiːtər/
-watt,瓦特,/wɒt/
-ohm,欧姆,/oʊm/
-farad,法拉,/ˈfærəd/
-henry,亨利,/ˈhenri/
-hertz,赫兹,/hɜːrts/
-bandwidth,带宽,/ˈbændwɪdθ/
-modulation,调制,/ˌmɒdjʊˈleɪʃən/
-demodulation,解调,/diːˌmɒdjʊˈleɪʃən/
-noise,噪声,/nɔɪz/
-filter,滤波器,/ˈfɪltər/
-attenuation,衰减,/əˌtenjuˈeɪʃən/
-gain,增益,/ɡeɪn/
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
-signal,信号,/ˈsɪɡnəl/
-analog,模拟,/ˈænəlɒɡ/
-digital,数字,/ˈdɪdʒɪtl/
-amplifier,放大器,/ˈæmplɪfaɪər/
-oscillator,振荡器,/ˈɒsɪleɪtər/
-waveform,波形,/ˈweɪvfɔːrm/
-power,功率,/ˈpaʊər/
-energy,能量,/ˈenərdʒi/
-impedance,阻抗,/ɪmˈpiːdəns/
-reactance,电抗,/riˈæktəns/
-transformer,变压器,/trænsˈfɔːrmər/
-generator,发电机,/ˈdʒenəreɪtər/
-motor,电机,/ˈmoʊtər/
-relay,继电器,/ˈriːleɪ/
-sensor,传感器,/ˈsensər/
-controller,控制器,/kənˈtroʊlər/
-microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/
-microprocessor,微处理器,/ˌmaɪkroʊˈprɑːsesər/
-pcb,印刷电路板,
-cable,电缆,/ˈkeɪbl/
-ground,接地,/ɡraʊnd/
-phase,相位,/feɪz/
-load,负载,/loʊd/
-short circuit,短路,
-open circuit,开路,
-voltmeter,电压表,/ˈvoʊltmiːtər/
-ammeter,电流表,/ˈæmiːtər/
-watt,瓦特,/wɒt/
-ohm,欧姆,/oʊm/
-farad,法拉,/ˈfærəd/
-henry,亨利,/ˈhenri/
-hertz,赫兹,/hɜːrts/
-bandwidth,带宽,/ˈbændwɪdθ/
-modulation,调制,/ˌmɒdjʊˈleɪʃən/
-demodulation,解调,/diːˌmɒdjʊˈleɪʃən/
-noise,噪声,/nɔɪz/
-filter,滤波器,/ˈfɪltər/
-attenuation,衰减,/əˌtenjuˈeɪʃən/
-gain,增益,/ɡeɪn/
-voltage,电压,/ˈvoʊltɪdʒ/
-current,电流,/ˈkɜːrənt/
-resistance,电阻,/rɪˈzɪstəns/
-circuit,电路,/ˈsɜːrkɪt/
-capacitor,电容器,/kəˈpæsɪtər/
-inductor,电感,/ɪnˈdʌktər/
-transistor,晶体管,/trænˈzɪstər/
-diode,二极管,/ˈdaɪoʊd/
-semiconductor,半导体,/ˌsemikənˈdʌktər/
-frequency,频率,/ˈfriːkwənsi/
+word,definition,phonetic,example
+alternating current,交流电,/ˌɔːltərˌneɪtɪŋ ˈkɝːənt/,Alternating current is widely used in power transmission systems.
+direct current,直流电,/dəˌrɛkt ˈkɝːənt/,Direct current is supplied by most batteries.
+voltage,电压,/ˈvoʊltɪdʒ/,The voltage across the resistor was measured with a multimeter.
+current,电流,/ˈkɝːənt/,Current increases when the circuit resistance decreases.
+resistance,电阻,/rɪˈzɪstəns/,The resistance of the wire depends on its material and length.
+impedance,阻抗,/ɪmˈpiːdəns/,Impedance affects the behavior of AC circuits.
+capacitance,电容,/kəˈpæsɪtəns/,Capacitance determines how much charge a capacitor can store.
+inductance,电感,/ɪnˈdʌktəns/,The inductance of the coil influences the transient response.
+power factor,功率因数,/ˈpaʊər ˌfæktər/,A low power factor can reduce system efficiency.
+frequency,频率,/ˈfriːkwənsi/,The frequency of the supply is 50 hertz.
+hertz,赫兹,/hɝːts/,The motor operates at a frequency of 60 hertz.
+watt,瓦特,/wɑːt/,This lamp consumes 10 watts of power.
+kilowatt,千瓦,/ˈkɪləwɑːt/,The generator has a rated output of 5 kilowatts.
+megawatt,兆瓦,/ˈmɛɡəwɑːt/,The wind farm can deliver 200 megawatts.
+kilowatt-hour,千瓦时,/ˈkɪləwɑːt ˈaʊər/,The household used 300 kilowatt-hours last month.
+electric power,电功率,/ɪˈlɛktrɪk ˈpaʊər/,Electric power is the product of voltage and current.
+active power,有功功率,/ˈæktɪv ˈpaʊər/,Active power performs useful work in the load.
+reactive power,无功功率,/riˈæktɪv ˈpaʊər/,Reactive power supports the magnetic fields of motors.
+apparent power,视在功率,/əˈpærənt ˈpaʊər/,Apparent power is measured in volt-amperes.
+phase angle,相角,/feɪz ˈæŋɡəl/,The phase angle changed after the capacitor bank was connected.
+single-phase,单相,/ˈsɪŋɡəl feɪz/,Single-phase power is common in residential buildings.
+three-phase,三相,/ˌθriː ˈfeɪz/,Three-phase systems are widely used in industry.
+phase sequence,相序,/feɪz ˈsiːkwəns/,Incorrect phase sequence can reverse motor rotation.
+neutral wire,中性线,/ˈnuːtrəl waɪər/,The neutral wire completes the return path in the circuit.
+ground wire,接地线,/ɡraʊnd waɪər/,The ground wire improves electrical safety.
+earth fault,接地故障,/ɝːθ fɔːlt/,The relay detected an earth fault on the feeder.
+short circuit,短路,/ʃɔːrt ˈsɝːkɪt/,A short circuit can cause severe equipment damage.
+open circuit,开路,/ˈoʊpən ˈsɝːkɪt/,The sensor failed because the wire became an open circuit.
+overload,过载,/ˌoʊvərˈloʊd/,The motor tripped due to overload.
+surge,浪涌,/sɝːdʒ/,A voltage surge damaged the control board.
+transient,暂态,/ˈtrænziənt/,The transient lasted only a few milliseconds.
+harmonic,谐波,/hɑːrˈmɑːnɪk/,Harmonic distortion can overheat transformers.
+distortion,畸变,/dɪˈstɔːrʃən/,The engineer measured waveform distortion at the inverter output.
+ripple,纹波,/ˈrɪpəl/,The filter capacitor reduced the ripple voltage.
+noise,噪声,/nɔɪz/,Electrical noise affected the sensor readings.
+electromagnetic interference,电磁干扰,/ɪˌlɛktroʊmæɡˈnɛtɪk ˌɪntərˈfɪrəns/,Proper shielding can reduce electromagnetic interference.
+electromagnetic compatibility,电磁兼容,/ɪˌlɛktroʊmæɡˈnɛtɪk kəmˌpætəˈbɪləti/,The product must pass electromagnetic compatibility testing.
+shielding,屏蔽,/ˈʃiːldɪŋ/,Shielding protects the signal cable from interference.
+grounding,接地,/ˈɡraʊndɪŋ/,Proper grounding is essential for safe operation.
+bonding,等电位连接,/ˈbɑːndɪŋ/,Bonding reduces the voltage difference between metal parts.
+insulation,绝缘,/ˌɪnsəˈleɪʃən/,The insulation must withstand high temperature.
+dielectric,介电材料,/ˌdaɪəˈlɛktrɪk/,The dielectric constant affects capacitor performance.
+permittivity,介电常数,/ˌpɝːmɪˈtɪvəti/,Permittivity determines how an electric field interacts with a material.
+permeability,磁导率,/ˌpɝːmiəˈbɪləti/,Core permeability influences inductance.
+conductivity,电导率,/ˌkɑːndʌkˈtɪvəti/,Copper has high conductivity.
+semiconductor,半导体,/ˌsɛmikənˈdʌktər/,Silicon is the most widely used semiconductor.
+conductor,导体,/kənˈdʌktər/,Aluminum is often used as a conductor in power lines.
+insulator,绝缘体,/ˈɪnsəleɪtər/,Glass is a good electrical insulator.
+junction,结,/ˈdʒʌŋkʃən/,A PN junction is the basis of many electronic devices.
+anode,阳极,/ˈænoʊd/,Current enters the diode through the anode.
+cathode,阴极,/ˈkæθoʊd/,The cathode emits electrons in certain devices.
+diode,二极管,/ˈdaɪoʊd/,A diode allows current to flow in only one direction.
+zener diode,齐纳二极管,/ˈziːnər ˈdaɪoʊd/,The zener diode stabilizes the output voltage.
+light-emitting diode,发光二极管,/laɪt ɪˌmɪtɪŋ ˈdaɪoʊd/,A light-emitting diode is used as an indicator.
+rectifier,整流器,/ˈrɛktəˌfaɪər/,The rectifier converts AC to DC.
+bridge rectifier,桥式整流器,/brɪdʒ ˈrɛktəˌfaɪər/,The bridge rectifier provides full-wave conversion.
+thyristor,晶闸管,/θaɪˈrɪstər/,The thyristor is widely used in power control applications.
+silicon controlled rectifier,可控硅整流器,/ˈsɪlɪkən kənˈtroʊld ˈrɛktəˌfaɪər/,The silicon controlled rectifier was triggered by the gate pulse.
+triac,双向可控硅,/ˈtraɪæk/,A triac is often used in AC dimmer circuits.
+transistor,晶体管,/trænˈzɪstər/,The transistor amplifies the input signal.
+bipolar junction transistor,双极结型晶体管,/baɪˈpoʊlər ˈdʒʌŋkʃən trænˈzɪstər/,"A bipolar junction transistor has emitter, base, and collector terminals."
+field-effect transistor,场效应晶体管,/fiːld ɪˌfɛkt trænˈzɪstər/,The field-effect transistor is controlled by gate voltage.
+MOSFET,金属氧化物半导体场效应晶体管,/ˈmɑːsfɛt/,A MOSFET is commonly used in switching power supplies.
+IGBT,绝缘栅双极型晶体管,/ˌaɪ dʒiː biː ˈtiː/,The IGBT combines high input impedance with low conduction loss.
+gate driver,栅极驱动器,/ɡeɪt ˈdraɪvər/,The gate driver provides fast switching for the MOSFET.
+op-amp,运算放大器,/ˌoʊ piː ˈæmp/,The op-amp was configured as a voltage follower.
+comparator,比较器,/kəmˈpærətər/,The comparator switches its output when the input exceeds the reference.
+amplifier,放大器,/ˈæmpləˌfaɪər/,The amplifier increased the weak sensor signal.
+gain,增益,/ɡeɪn/,The gain of the amplifier was set to ten.
+bandwidth,带宽,/ˈbændwɪdθ/,The bandwidth of the filter determines its frequency range.
+filter,滤波器,/ˈfɪltər/,The filter removes unwanted high-frequency noise.
+low-pass filter,低通滤波器,/ˌloʊ ˈpæs ˈfɪltər/,A low-pass filter blocks high-frequency components.
+high-pass filter,高通滤波器,/ˌhaɪ ˈpæs ˈfɪltər/,The high-pass filter attenuates low-frequency signals.
+band-pass filter,带通滤波器,/ˌbænd ˈpæs ˈfɪltər/,The band-pass filter selects the desired signal range.
+oscillator,振荡器,/ˈɑːsəˌleɪtər/,The oscillator generates a stable clock signal.
+resonance,谐振,/ˈrɛzənəns/,Resonance can cause large current peaks in the circuit.
+quality factor,品质因数,/ˈkwɑːləti ˌfæktər/,A high quality factor indicates low energy loss.
+transformer,变压器,/trænsˈfɔːrmər/,The transformer steps the voltage down for household use.
+step-up transformer,升压变压器,/ˌstɛp ˈʌp trænsˈfɔːrmər/,The step-up transformer raises the transmission voltage.
+step-down transformer,降压变压器,/ˌstɛp ˈdaʊn trænsˈfɔːrmər/,The step-down transformer supplies low voltage to the load.
+autotransformer,自耦变压器,/ˌɔːtoʊtrænsˈfɔːrmər/,An autotransformer can provide adjustable output voltage.
+core,磁芯,/kɔːr/,The ferrite core reduces high-frequency losses.
+winding,绕组,/ˈwaɪndɪŋ/,The winding must be insulated properly.
+turn ratio,匝数比,/tɝːn ˈreɪʃioʊ/,The turn ratio determines the voltage conversion.
+flux,磁通,/flʌks/,Magnetic flux links the turns of the coil.
+flux density,磁通密度,/flʌks ˈdɛnsəti/,The core reached its maximum flux density.
+saturation,饱和,/ˌsætʃəˈreɪʃən/,Core saturation can distort the current waveform.
+hysteresis,磁滞,/ˌhɪstəˈriːsɪs/,Hysteresis causes energy loss in magnetic materials.
+eddy current,涡流,/ˈɛdi ˈkɝːənt/,Laminated steel reduces eddy current losses.
+relay,继电器,/ˈriːleɪ/,The relay opened the circuit during the fault.
+contactor,接触器,/ˈkɑːntæktər/,The contactor controls the large motor load.
+circuit breaker,断路器,/ˈsɝːkɪt ˌbreɪkər/,The circuit breaker tripped instantly during the fault.
+fuse,熔断器,/fjuːz/,The fuse melted when the current exceeded its rating.
+isolator,隔离开关,/ˈaɪsəˌleɪtər/,The technician opened the isolator before maintenance.
+switchgear,开关设备,/ˈswɪtʃˌɡɪr/,The switchgear protects and controls the feeder.
+busbar,母线,/ˈbʌsˌbɑːr/,The busbar distributes power to multiple outgoing circuits.
+feeder,馈线,/ˈfiːdər/,The feeder supplies electricity to the industrial zone.
+substation,变电站,/ˈsʌbˌsteɪʃən/,The substation steps down transmission voltage.
+transmission line,输电线路,/trænzˈmɪʃən laɪn/,The transmission line connects two substations.
+distribution line,配电线路,/ˌdɪstrɪˈbjuːʃən laɪn/,The distribution line delivers power to local users.
+power grid,电网,/ˈpaʊər ɡrɪd/,The power grid must remain stable during peak demand.
+load,负载,/loʊd/,The load increased sharply in the afternoon.
+base load,基荷,/beɪs loʊd/,Coal plants often provide the base load.
+peak load,峰值负载,/piːk loʊd/,The utility prepared for the peak load in summer.
+load flow,潮流,/loʊd floʊ/,Load flow analysis helps engineers plan network operation.
+short-circuit current,短路电流,/ʃɔːrt ˈsɝːkɪt ˈkɝːənt/,The breaker rating must exceed the prospective short-circuit current.
+fault current,故障电流,/fɔːlt ˈkɝːənt/,The relay measured the fault current accurately.
+protection relay,保护继电器,/prəˈtɛkʃən ˈriːleɪ/,The protection relay isolated the faulty section.
+overcurrent relay,过电流继电器,/ˌoʊvərˈkɝːənt ˈriːleɪ/,The overcurrent relay operated within the specified time.
+differential protection,差动保护,/ˌdɪfəˈrɛnʃəl prəˈtɛkʃən/,Differential protection is sensitive to internal transformer faults.
+distance protection,距离保护,/ˈdɪstəns prəˈtɛkʃən/,Distance protection is commonly used on transmission lines.
+selectivity,选择性,/sɪˌlɛkˈtɪvəti/,Protection selectivity prevents unnecessary outages.
+coordination,配合,/koʊˌɔːrdəˈneɪʃən/,Relay coordination improves system reliability.
+motor,电动机,/ˈmoʊtər/,The induction motor drives the conveyor belt.
+generator,发电机,/ˈdʒɛnəˌreɪtər/,The generator supplied backup power during the outage.
+alternator,交流发电机,/ˈɔːltərˌneɪtər/,The alternator provides AC power for the system.
+induction motor,感应电动机,/ɪnˈdʌkʃən ˈmoʊtər/,An induction motor is robust and inexpensive.
+synchronous motor,同步电动机,/ˈsɪŋkrənəs ˈmoʊtər/,The synchronous motor runs at constant speed.
+servo motor,伺服电机,/ˈsɝːvoʊ ˈmoʊtər/,The servo motor enables precise position control.
+stepper motor,步进电机,/ˈstɛpər ˈmoʊtər/,The stepper motor moves one step per input pulse.
+rotor,转子,/ˈroʊtər/,The rotor spins inside the stator.
+stator,定子,/ˈsteɪtər/,The stator windings produce a rotating magnetic field.
+torque,转矩,/tɔːrk/,The motor provides enough torque to start the load.
+speed control,调速,/spiːd kənˈtroʊl/,The inverter offers smooth speed control.
+slip,转差率,/slɪp/,Motor slip increases as the mechanical load rises.
+efficiency,效率,/ɪˈfɪʃənsi/,The efficiency of the machine exceeded 95 percent.
+loss,损耗,/lɔːs/,Copper loss increases with current.
+copper loss,铜损,/ˈkɑːpər lɔːs/,Copper loss is proportional to the square of current.
+iron loss,铁损,/ˈaɪərn lɔːs/,Iron loss occurs in the magnetic core.
+mechanical loss,机械损耗,/məˈkænɪkəl lɔːs/,Mechanical loss includes friction and windage.
+inverter,逆变器,/ɪnˈvɝːtər/,The inverter converts DC power into AC output.
+converter,变换器,/kənˈvɝːtər/,The converter regulates the energy flow between stages.
+DC-DC converter,直流变换器,/ˌdiː siː ˌdiː siː kənˈvɝːtər/,A DC-DC converter adjusts the battery voltage.
+buck converter,降压变换器,/bʌk kənˈvɝːtər/,The buck converter reduced the voltage efficiently.
+boost converter,升压变换器,/buːst kənˈvɝːtər/,The boost converter raised the low input voltage.
+flyback converter,反激变换器,/ˈflaɪˌbæk kənˈvɝːtər/,The flyback converter is common in low-power supplies.
+switching frequency,开关频率,/ˈswɪtʃɪŋ ˈfriːkwənsi/,Higher switching frequency allows smaller magnetic components.
+pulse-width modulation,脉宽调制,/pʌls wɪdθ ˌmɑːdʒəˈleɪʃən/,Pulse-width modulation controls the average output voltage.
+duty cycle,占空比,/ˈduːti ˌsaɪkəl/,The duty cycle determines the output of the converter.
+snubber,缓冲电路,/ˈsnʌbər/,A snubber protects the switch from voltage spikes.
+freewheeling diode,续流二极管,/ˈfriːˌwiːlɪŋ ˈdaɪoʊd/,The freewheeling diode provides a path for inductive current.
+heat sink,散热器,/ˈhiːt sɪŋk/,The heat sink keeps the power device within safe temperature limits.
+thermal resistance,热阻,/ˈθɝːməl rɪˈzɪstəns/,Thermal resistance affects junction temperature rise.
+junction temperature,结温,/ˈdʒʌŋkʃən ˈtɛmprətʃər/,The junction temperature must stay below the device limit.
+battery,电池,/ˈbætəri/,The battery stores energy for later use.
+cell,电芯,/sɛl/,Each cell contributes to the total pack voltage.
+state of charge,荷电状态,/steɪt əv tʃɑːrdʒ/,The state of charge dropped to 30 percent.
+battery management system,电池管理系统,/ˈbætəri ˈmænɪdʒmənt ˈsɪstəm/,The battery management system monitors voltage and temperature.
+photovoltaic,光伏的,/ˌfoʊtoʊvoʊlˈteɪɪk/,Photovoltaic panels convert sunlight into electricity.
+solar inverter,太阳能逆变器,/ˈsoʊlər ɪnˈvɝːtər/,The solar inverter synchronized with the grid.
+wind turbine,风力涡轮机,/wɪnd ˈtɝːbaɪn/,The wind turbine generated power throughout the night.
+smart grid,智能电网,/smɑːrt ɡrɪd/,A smart grid uses communication to improve power management.
+power quality,电能质量,/ˈpaʊər ˈkwɑːləti/,Voltage sag is a common power quality problem.
+voltage sag,电压暂降,/ˈvoʊltɪdʒ sæɡ/,The factory experienced a voltage sag during startup.
+voltage swell,电压暂升,/ˈvoʊltɪdʒ swɛl/,Sensitive equipment may fail during a voltage swell.
+blackout,停电,/ˈblækaʊt/,The hospital relies on backup generators during a blackout.
+brownout,电压降低,/ˈbraʊnaʊt/,A brownout can damage some appliances.
+uninterruptible power supply,不间断电源,/ˌʌnɪntəˈrʌptəbəl ˈpaʊər səˌplaɪ/,The server room is protected by an uninterruptible power supply.
+backup generator,备用发电机,/ˈbækˌʌp ˈdʒɛnəˌreɪtər/,The backup generator started automatically.
+sensing resistor,采样电阻,/ˈsɛnsɪŋ rɪˈzɪstər/,The controller measured current through a sensing resistor.
+shunt,分流器,/ʃʌnt/,A low-resistance shunt is used for current measurement.
+Hall sensor,霍尔传感器,/hɔːl ˈsɛnsər/,The Hall sensor detects magnetic field changes.
+current transformer,电流互感器,/ˈkɝːənt trænsˈfɔːrmər/,The current transformer isolates the measurement circuit.
+potential transformer,电压互感器,/pəˈtɛnʃəl trænsˈfɔːrmər/,The potential transformer steps down the high voltage for metering.
+metering,计量,/ˈmiːtərɪŋ/,Accurate metering is important for energy billing.
+ammeter,电流表,/ˈæmˌmiːtər/,The ammeter was connected in series with the load.
+voltmeter,电压表,/ˈvoʊltˌmiːtər/,The voltmeter measured 230 volts.
+multimeter,万用表,/ˌmʌltiˈmiːtər/,The technician used a multimeter to troubleshoot the board.
+oscilloscope,示波器,/əˈsɪləˌskoʊp/,The oscilloscope displayed the switching waveform.
+signal generator,信号发生器,/ˈsɪɡnəl ˈdʒɛnəˌreɪtər/,The signal generator provided a 1 kHz test input.
+probe,探头,/proʊb/,The oscilloscope probe must be compensated correctly.
+calibration,校准,/ˌkælɪˈbreɪʃən/,Regular calibration improves measurement accuracy.
+accuracy,准确度,/ˈækjərəsi/,Instrument accuracy is specified in the datasheet.
+resolution,分辨率,/ˌrɛzəˈluːʃən/,Higher ADC resolution improves measurement precision.
+sampling,采样,/ˈsæmplɪŋ/,The controller performs current sampling every cycle.
+analog-to-digital converter,模数转换器,/ˈænəlɔːɡ tuː ˈdɪdʒɪtəl kənˈvɝːtər/,The analog-to-digital converter digitized the sensor voltage.
+digital-to-analog converter,数模转换器,/ˈdɪdʒɪtəl tuː ˈænəlɔːɡ kənˈvɝːtər/,The digital-to-analog converter generated the reference waveform.
+microcontroller,微控制器,/ˌmaɪkroʊkənˈtroʊlər/,The microcontroller executes the motor control algorithm.
+firmware,固件,/ˈfɝːrmˌwɛr/,The firmware update fixed the startup issue.
+control loop,控制回路,/kənˈtroʊl luːp/,The control loop maintains a stable output voltage.
+feedback,反馈,/ˈfiːdˌbæk/,Feedback improves the accuracy of the regulator.
+PID controller,PID 控制器,/ˌpiː aɪ ˈdiː kənˈtroʊlər/,The PID controller reduced the speed error.
+setpoint,设定值,/ˈsɛtˌpɔɪnt/,The setpoint was adjusted from the user interface.
+stability,稳定性,/stəˈbɪləti/,The engineer checked the stability of the closed-loop system.
+compensation,补偿,/ˌkɑːmpənˈseɪʃən/,Loop compensation improved phase margin.
+phase margin,相位裕度,/feɪz ˈmɑːrdʒɪn/,A larger phase margin usually means better stability.
+gain margin,增益裕度,/ɡeɪn ˈmɑːrdʒɪn/,Gain margin was verified during the design review.
+Bode plot,波特图,/ˈboʊdi plɑːt/,The Bode plot shows magnitude and phase versus frequency.
+root mean square,均方根值,/ruːt miːn skwɛr/,Root mean square voltage is used for AC ratings.
+crest factor,峰值因数,/krɛst ˈfæktər/,The waveform had a high crest factor.
+line-to-line voltage,线电压,/laɪn tə laɪn ˈvoʊltɪdʒ/,The line-to-line voltage was measured between two phases.
+line-to-neutral voltage,相电压,/laɪn tə ˈnuːtrəl ˈvoʊltɪdʒ/,The line-to-neutral voltage is lower in a three-phase system.
+star connection,星形连接,/stɑːr kəˈnɛkʃən/,The transformer secondary uses a star connection.
+delta connection,三角形连接,/ˈdɛltə kəˈnɛkʃən/,The motor stator was wired in delta connection.
+neutral point,中性点,/ˈnuːtrəl pɔɪnt/,The neutral point was grounded through a resistor.
+earthing resistor,接地电阻器,/ˈɝːθɪŋ rɪˈzɪstər/,The earthing resistor limits fault current.
+arc flash,电弧闪络,/ɑːrk flæʃ/,Proper PPE is required to protect workers from arc flash.
+lockout tagout,上锁挂牌,/ˈlɑːkaʊt ˈtæɡaʊt/,Lockout tagout prevents accidental energization.
+creepage distance,爬电距离,/ˈkriːpɪdʒ ˈdɪstəns/,Creepage distance must satisfy the safety standard.
+clearance,电气间隙,/ˈklɪrəns/,The PCB layout provides sufficient clearance.

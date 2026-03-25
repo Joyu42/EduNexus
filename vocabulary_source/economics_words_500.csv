@@ -1,501 +1,201 @@
-﻿word,definition,phonetic
-inflation,通货膨胀,/ɪnˈfleɪʃən/
-deflation,通货紧缩,/diːˈfleɪʃən/
-gdp,国内生产总值,
-gni,国民总收入,
-market,市场,/ˈmɑːrkɪt/
-demand,需求,/dɪˈmɑːnd/
-supply,供给,/səˈplaɪ/
-equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
-elasticity,弹性,/ˌiːlæˈstɪsəti/
-revenue,收入,/ˈrevənuː/
-profit,利润,/ˈprɒfɪt/
-loss,损失,/lɒs/
-cost,成本,/kɒst/
-fixed cost,固定成本,
-variable cost,变动成本,
-marginal cost,边际成本,
-opportunity cost,机会成本,
-utility,效用,/juːˈtɪləti/
-consumer,消费者,/kənˈsuːmər/
-producer,生产者,/prəˈduːsər/
-competition,竞争,/ˌkɒmpəˈtɪʃən/
-monopoly,垄断,/məˈnɒpəli/
-oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
-market structure,市场结构,
-capital,资本,/ˈkæpɪtl/
-labor,劳动力,/ˈleɪbər/
-investment,投资,/ɪnˈvestmənt/
-interest rate,利率,
-bank,银行,/bæŋk/
-central bank,中央银行,
-monetary policy,货币政策,
-fiscal policy,财政政策,
-tax,税收,/tæks/
-subsidy,补贴,/ˈsʌbsɪdi/
-budget,预算,/ˈbʌdʒɪt/
-debt,债务,/det/
-deficit,赤字,/ˈdefɪsɪt/
-surplus,盈余,/ˈsɜːrplʌs/
-trade,贸易,/treɪd/
-export,出口,/ˈekspɔːrt/
-import,进口,/ˈɪmpɔːrt/
-exchange rate,汇率,
-currency,货币,/ˈkɜːrənsi/
-inflation rate,通胀率,
-unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
-labor market,劳动力市场,
-productivity,生产率,/ˌprɒdʌkˈtɪvəti/
-growth,增长,/ɡroʊθ/
-economic cycle,经济周期,
-recession,衰退,/rɪˈseʃən/
-boom,繁荣,/buːm/
-inflation,通货膨胀,/ɪnˈfleɪʃən/
-deflation,通货紧缩,/diːˈfleɪʃən/
-gdp,国内生产总值,
-gni,国民总收入,
-market,市场,/ˈmɑːrkɪt/
-demand,需求,/dɪˈmɑːnd/
-supply,供给,/səˈplaɪ/
-equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
-elasticity,弹性,/ˌiːlæˈstɪsəti/
-revenue,收入,/ˈrevənuː/
-profit,利润,/ˈprɒfɪt/
-loss,损失,/lɒs/
-cost,成本,/kɒst/
-fixed cost,固定成本,
-variable cost,变动成本,
-marginal cost,边际成本,
-opportunity cost,机会成本,
-utility,效用,/juːˈtɪləti/
-consumer,消费者,/kənˈsuːmər/
-producer,生产者,/prəˈduːsər/
-competition,竞争,/ˌkɒmpəˈtɪʃən/
-monopoly,垄断,/məˈnɒpəli/
-oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
-market structure,市场结构,
-capital,资本,/ˈkæpɪtl/
-labor,劳动力,/ˈleɪbər/
-investment,投资,/ɪnˈvestmənt/
-interest rate,利率,
-bank,银行,/bæŋk/
-central bank,中央银行,
-monetary policy,货币政策,
-fiscal policy,财政政策,
-tax,税收,/tæks/
-subsidy,补贴,/ˈsʌbsɪdi/
-budget,预算,/ˈbʌdʒɪt/
-debt,债务,/det/
-deficit,赤字,/ˈdefɪsɪt/
-surplus,盈余,/ˈsɜːrplʌs/
-trade,贸易,/treɪd/
-export,出口,/ˈekspɔːrt/
-import,进口,/ˈɪmpɔːrt/
-exchange rate,汇率,
-currency,货币,/ˈkɜːrənsi/
-inflation rate,通胀率,
-unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
-labor market,劳动力市场,
-productivity,生产率,/ˌprɒdʌkˈtɪvəti/
-growth,增长,/ɡroʊθ/
-economic cycle,经济周期,
-recession,衰退,/rɪˈseʃən/
-boom,繁荣,/buːm/
-inflation,通货膨胀,/ɪnˈfleɪʃən/
-deflation,通货紧缩,/diːˈfleɪʃən/
-gdp,国内生产总值,
-gni,国民总收入,
-market,市场,/ˈmɑːrkɪt/
-demand,需求,/dɪˈmɑːnd/
-supply,供给,/səˈplaɪ/
-equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
-elasticity,弹性,/ˌiːlæˈstɪsəti/
-revenue,收入,/ˈrevənuː/
-profit,利润,/ˈprɒfɪt/
-loss,损失,/lɒs/
-cost,成本,/kɒst/
-fixed cost,固定成本,
-variable cost,变动成本,
-marginal cost,边际成本,
-opportunity cost,机会成本,
-utility,效用,/juːˈtɪləti/
-consumer,消费者,/kənˈsuːmər/
-producer,生产者,/prəˈduːsər/
-competition,竞争,/ˌkɒmpəˈtɪʃən/
-monopoly,垄断,/məˈnɒpəli/
-oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
-market structure,市场结构,
-capital,资本,/ˈkæpɪtl/
-labor,劳动力,/ˈleɪbər/
-investment,投资,/ɪnˈvestmənt/
-interest rate,利率,
-bank,银行,/bæŋk/
-central bank,中央银行,
-monetary policy,货币政策,
-fiscal policy,财政政策,
-tax,税收,/tæks/
-subsidy,补贴,/ˈsʌbsɪdi/
-budget,预算,/ˈbʌdʒɪt/
-debt,债务,/det/
-deficit,赤字,/ˈdefɪsɪt/
-surplus,盈余,/ˈsɜːrplʌs/
-trade,贸易,/treɪd/
-export,出口,/ˈekspɔːrt/
-import,进口,/ˈɪmpɔːrt/
-exchange rate,汇率,
-currency,货币,/ˈkɜːrənsi/
-inflation rate,通胀率,
-unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
-labor market,劳动力市场,
-productivity,生产率,/ˌprɒdʌkˈtɪvəti/
-growth,增长,/ɡroʊθ/
-economic cycle,经济周期,
-recession,衰退,/rɪˈseʃən/
-boom,繁荣,/buːm/
-inflation,通货膨胀,/ɪnˈfleɪʃən/
-deflation,通货紧缩,/diːˈfleɪʃən/
-gdp,国内生产总值,
-gni,国民总收入,
-market,市场,/ˈmɑːrkɪt/
-demand,需求,/dɪˈmɑːnd/
-supply,供给,/səˈplaɪ/
-equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
-elasticity,弹性,/ˌiːlæˈstɪsəti/
-revenue,收入,/ˈrevənuː/
-profit,利润,/ˈprɒfɪt/
-loss,损失,/lɒs/
-cost,成本,/kɒst/
-fixed cost,固定成本,
-variable cost,变动成本,
-marginal cost,边际成本,
-opportunity cost,机会成本,
-utility,效用,/juːˈtɪləti/
-consumer,消费者,/kənˈsuːmər/
-producer,生产者,/prəˈduːsər/
-competition,竞争,/ˌkɒmpəˈtɪʃən/
-monopoly,垄断,/məˈnɒpəli/
-oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
-market structure,市场结构,
-capital,资本,/ˈkæpɪtl/
-labor,劳动力,/ˈleɪbər/
-investment,投资,/ɪnˈvestmənt/
-interest rate,利率,
-bank,银行,/bæŋk/
-central bank,中央银行,
-monetary policy,货币政策,
-fiscal policy,财政政策,
-tax,税收,/tæks/
-subsidy,补贴,/ˈsʌbsɪdi/
-budget,预算,/ˈbʌdʒɪt/
-debt,债务,/det/
-deficit,赤字,/ˈdefɪsɪt/
-surplus,盈余,/ˈsɜːrplʌs/
-trade,贸易,/treɪd/
-export,出口,/ˈekspɔːrt/
-import,进口,/ˈɪmpɔːrt/
-exchange rate,汇率,
-currency,货币,/ˈkɜːrənsi/
-inflation rate,通胀率,
-unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
-labor market,劳动力市场,
-productivity,生产率,/ˌprɒdʌkˈtɪvəti/
-growth,增长,/ɡroʊθ/
-economic cycle,经济周期,
-recession,衰退,/rɪˈseʃən/
-boom,繁荣,/buːm/
-inflation,通货膨胀,/ɪnˈfleɪʃən/
-deflation,通货紧缩,/diːˈfleɪʃən/
-gdp,国内生产总值,
-gni,国民总收入,
-market,市场,/ˈmɑːrkɪt/
-demand,需求,/dɪˈmɑːnd/
-supply,供给,/səˈplaɪ/
-equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
-elasticity,弹性,/ˌiːlæˈstɪsəti/
-revenue,收入,/ˈrevənuː/
-profit,利润,/ˈprɒfɪt/
-loss,损失,/lɒs/
-cost,成本,/kɒst/
-fixed cost,固定成本,
-variable cost,变动成本,
-marginal cost,边际成本,
-opportunity cost,机会成本,
-utility,效用,/juːˈtɪləti/
-consumer,消费者,/kənˈsuːmər/
-producer,生产者,/prəˈduːsər/
-competition,竞争,/ˌkɒmpəˈtɪʃən/
-monopoly,垄断,/məˈnɒpəli/
-oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
-market structure,市场结构,
-capital,资本,/ˈkæpɪtl/
-labor,劳动力,/ˈleɪbər/
-investment,投资,/ɪnˈvestmənt/
-interest rate,利率,
-bank,银行,/bæŋk/
-central bank,中央银行,
-monetary policy,货币政策,
-fiscal policy,财政政策,
-tax,税收,/tæks/
-subsidy,补贴,/ˈsʌbsɪdi/
-budget,预算,/ˈbʌdʒɪt/
-debt,债务,/det/
-deficit,赤字,/ˈdefɪsɪt/
-surplus,盈余,/ˈsɜːrplʌs/
-trade,贸易,/treɪd/
-export,出口,/ˈekspɔːrt/
-import,进口,/ˈɪmpɔːrt/
-exchange rate,汇率,
-currency,货币,/ˈkɜːrənsi/
-inflation rate,通胀率,
-unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
-labor market,劳动力市场,
-productivity,生产率,/ˌprɒdʌkˈtɪvəti/
-growth,增长,/ɡroʊθ/
-economic cycle,经济周期,
-recession,衰退,/rɪˈseʃən/
-boom,繁荣,/buːm/
-inflation,通货膨胀,/ɪnˈfleɪʃən/
-deflation,通货紧缩,/diːˈfleɪʃən/
-gdp,国内生产总值,
-gni,国民总收入,
-market,市场,/ˈmɑːrkɪt/
-demand,需求,/dɪˈmɑːnd/
-supply,供给,/səˈplaɪ/
-equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
-elasticity,弹性,/ˌiːlæˈstɪsəti/
-revenue,收入,/ˈrevənuː/
-profit,利润,/ˈprɒfɪt/
-loss,损失,/lɒs/
-cost,成本,/kɒst/
-fixed cost,固定成本,
-variable cost,变动成本,
-marginal cost,边际成本,
-opportunity cost,机会成本,
-utility,效用,/juːˈtɪləti/
-consumer,消费者,/kənˈsuːmər/
-producer,生产者,/prəˈduːsər/
-competition,竞争,/ˌkɒmpəˈtɪʃən/
-monopoly,垄断,/məˈnɒpəli/
-oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
-market structure,市场结构,
-capital,资本,/ˈkæpɪtl/
-labor,劳动力,/ˈleɪbər/
-investment,投资,/ɪnˈvestmənt/
-interest rate,利率,
-bank,银行,/bæŋk/
-central bank,中央银行,
-monetary policy,货币政策,
-fiscal policy,财政政策,
-tax,税收,/tæks/
-subsidy,补贴,/ˈsʌbsɪdi/
-budget,预算,/ˈbʌdʒɪt/
-debt,债务,/det/
-deficit,赤字,/ˈdefɪsɪt/
-surplus,盈余,/ˈsɜːrplʌs/
-trade,贸易,/treɪd/
-export,出口,/ˈekspɔːrt/
-import,进口,/ˈɪmpɔːrt/
-exchange rate,汇率,
-currency,货币,/ˈkɜːrənsi/
-inflation rate,通胀率,
-unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
-labor market,劳动力市场,
-productivity,生产率,/ˌprɒdʌkˈtɪvəti/
-growth,增长,/ɡroʊθ/
-economic cycle,经济周期,
-recession,衰退,/rɪˈseʃən/
-boom,繁荣,/buːm/
-inflation,通货膨胀,/ɪnˈfleɪʃən/
-deflation,通货紧缩,/diːˈfleɪʃən/
-gdp,国内生产总值,
-gni,国民总收入,
-market,市场,/ˈmɑːrkɪt/
-demand,需求,/dɪˈmɑːnd/
-supply,供给,/səˈplaɪ/
-equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
-elasticity,弹性,/ˌiːlæˈstɪsəti/
-revenue,收入,/ˈrevənuː/
-profit,利润,/ˈprɒfɪt/
-loss,损失,/lɒs/
-cost,成本,/kɒst/
-fixed cost,固定成本,
-variable cost,变动成本,
-marginal cost,边际成本,
-opportunity cost,机会成本,
-utility,效用,/juːˈtɪləti/
-consumer,消费者,/kənˈsuːmər/
-producer,生产者,/prəˈduːsər/
-competition,竞争,/ˌkɒmpəˈtɪʃən/
-monopoly,垄断,/məˈnɒpəli/
-oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
-market structure,市场结构,
-capital,资本,/ˈkæpɪtl/
-labor,劳动力,/ˈleɪbər/
-investment,投资,/ɪnˈvestmənt/
-interest rate,利率,
-bank,银行,/bæŋk/
-central bank,中央银行,
-monetary policy,货币政策,
-fiscal policy,财政政策,
-tax,税收,/tæks/
-subsidy,补贴,/ˈsʌbsɪdi/
-budget,预算,/ˈbʌdʒɪt/
-debt,债务,/det/
-deficit,赤字,/ˈdefɪsɪt/
-surplus,盈余,/ˈsɜːrplʌs/
-trade,贸易,/treɪd/
-export,出口,/ˈekspɔːrt/
-import,进口,/ˈɪmpɔːrt/
-exchange rate,汇率,
-currency,货币,/ˈkɜːrənsi/
-inflation rate,通胀率,
-unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
-labor market,劳动力市场,
-productivity,生产率,/ˌprɒdʌkˈtɪvəti/
-growth,增长,/ɡroʊθ/
-economic cycle,经济周期,
-recession,衰退,/rɪˈseʃən/
-boom,繁荣,/buːm/
-inflation,通货膨胀,/ɪnˈfleɪʃən/
-deflation,通货紧缩,/diːˈfleɪʃən/
-gdp,国内生产总值,
-gni,国民总收入,
-market,市场,/ˈmɑːrkɪt/
-demand,需求,/dɪˈmɑːnd/
-supply,供给,/səˈplaɪ/
-equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
-elasticity,弹性,/ˌiːlæˈstɪsəti/
-revenue,收入,/ˈrevənuː/
-profit,利润,/ˈprɒfɪt/
-loss,损失,/lɒs/
-cost,成本,/kɒst/
-fixed cost,固定成本,
-variable cost,变动成本,
-marginal cost,边际成本,
-opportunity cost,机会成本,
-utility,效用,/juːˈtɪləti/
-consumer,消费者,/kənˈsuːmər/
-producer,生产者,/prəˈduːsər/
-competition,竞争,/ˌkɒmpəˈtɪʃən/
-monopoly,垄断,/məˈnɒpəli/
-oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
-market structure,市场结构,
-capital,资本,/ˈkæpɪtl/
-labor,劳动力,/ˈleɪbər/
-investment,投资,/ɪnˈvestmənt/
-interest rate,利率,
-bank,银行,/bæŋk/
-central bank,中央银行,
-monetary policy,货币政策,
-fiscal policy,财政政策,
-tax,税收,/tæks/
-subsidy,补贴,/ˈsʌbsɪdi/
-budget,预算,/ˈbʌdʒɪt/
-debt,债务,/det/
-deficit,赤字,/ˈdefɪsɪt/
-surplus,盈余,/ˈsɜːrplʌs/
-trade,贸易,/treɪd/
-export,出口,/ˈekspɔːrt/
-import,进口,/ˈɪmpɔːrt/
-exchange rate,汇率,
-currency,货币,/ˈkɜːrənsi/
-inflation rate,通胀率,
-unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
-labor market,劳动力市场,
-productivity,生产率,/ˌprɒdʌkˈtɪvəti/
-growth,增长,/ɡroʊθ/
-economic cycle,经济周期,
-recession,衰退,/rɪˈseʃən/
-boom,繁荣,/buːm/
-inflation,通货膨胀,/ɪnˈfleɪʃən/
-deflation,通货紧缩,/diːˈfleɪʃən/
-gdp,国内生产总值,
-gni,国民总收入,
-market,市场,/ˈmɑːrkɪt/
-demand,需求,/dɪˈmɑːnd/
-supply,供给,/səˈplaɪ/
-equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
-elasticity,弹性,/ˌiːlæˈstɪsəti/
-revenue,收入,/ˈrevənuː/
-profit,利润,/ˈprɒfɪt/
-loss,损失,/lɒs/
-cost,成本,/kɒst/
-fixed cost,固定成本,
-variable cost,变动成本,
-marginal cost,边际成本,
-opportunity cost,机会成本,
-utility,效用,/juːˈtɪləti/
-consumer,消费者,/kənˈsuːmər/
-producer,生产者,/prəˈduːsər/
-competition,竞争,/ˌkɒmpəˈtɪʃən/
-monopoly,垄断,/məˈnɒpəli/
-oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
-market structure,市场结构,
-capital,资本,/ˈkæpɪtl/
-labor,劳动力,/ˈleɪbər/
-investment,投资,/ɪnˈvestmənt/
-interest rate,利率,
-bank,银行,/bæŋk/
-central bank,中央银行,
-monetary policy,货币政策,
-fiscal policy,财政政策,
-tax,税收,/tæks/
-subsidy,补贴,/ˈsʌbsɪdi/
-budget,预算,/ˈbʌdʒɪt/
-debt,债务,/det/
-deficit,赤字,/ˈdefɪsɪt/
-surplus,盈余,/ˈsɜːrplʌs/
-trade,贸易,/treɪd/
-export,出口,/ˈekspɔːrt/
-import,进口,/ˈɪmpɔːrt/
-exchange rate,汇率,
-currency,货币,/ˈkɜːrənsi/
-inflation rate,通胀率,
-unemployment,失业,/ˌʌnɪmˈplɔɪmənt/
-labor market,劳动力市场,
-productivity,生产率,/ˌprɒdʌkˈtɪvəti/
-growth,增长,/ɡroʊθ/
-economic cycle,经济周期,
-recession,衰退,/rɪˈseʃən/
-boom,繁荣,/buːm/
-inflation,通货膨胀,/ɪnˈfleɪʃən/
-deflation,通货紧缩,/diːˈfleɪʃən/
-gdp,国内生产总值,
-gni,国民总收入,
-market,市场,/ˈmɑːrkɪt/
-demand,需求,/dɪˈmɑːnd/
-supply,供给,/səˈplaɪ/
-equilibrium,均衡,/ˌiːkwɪˈlɪbriəm/
-elasticity,弹性,/ˌiːlæˈstɪsəti/
-revenue,收入,/ˈrevənuː/
-profit,利润,/ˈprɒfɪt/
-loss,损失,/lɒs/
-cost,成本,/kɒst/
-fixed cost,固定成本,
-variable cost,变动成本,
-marginal cost,边际成本,
-opportunity cost,机会成本,
-utility,效用,/juːˈtɪləti/
-consumer,消费者,/kənˈsuːmər/
-producer,生产者,/prəˈduːsər/
-competition,竞争,/ˌkɒmpəˈtɪʃən/
-monopoly,垄断,/məˈnɒpəli/
-oligopoly,寡头垄断,/ˌɒlɪˈɡɒpəli/
-market structure,市场结构,
-capital,资本,/ˈkæpɪtl/
-labor,劳动力,/ˈleɪbər/
-investment,投资,/ɪnˈvestmənt/
-interest rate,利率,
-bank,银行,/bæŋk/
-central bank,中央银行,
-monetary policy,货币政策,
-fiscal policy,财政政策,
-tax,税收,/tæks/
-subsidy,补贴,/ˈsʌbsɪdi/
-budget,预算,/ˈbʌdʒɪt/
-debt,债务,/det/
-deficit,赤字,/ˈdefɪsɪt/
-surplus,盈余,/ˈsɜːrplʌs/
-trade,贸易,/treɪd/
-export,出口,/ˈekspɔːrt/
-import,进口,/ˈɪmpɔːrt/
+word,definition,phonetic,example
+scarcity,稀缺性,/ˈsker.sə.t̬i/,Scarcity forces households and firms to make choices.
+choice,选择,/tʃɔɪs/,Economic choice involves comparing costs and benefits.
+trade-off,权衡取舍,/ˈtreɪd ɔːf/,There is often a trade-off between equity and efficiency.
+opportunity cost,机会成本,/ˌɑː.pɚˈtuː.nə.t̬i kɔːst/,The opportunity cost of attending graduate school is the salary you give up.
+incentive,激励,/ɪnˈsen.tɪv/,Tax cuts may create incentives for firms to invest.
+efficiency,效率,/ɪˈfɪʃ.ən.si/,A competitive market can improve allocative efficiency.
+equity,公平,/ˈek.wə.t̬i/,Policymakers often balance efficiency with equity.
+allocation,配置,/ˌæl.əˈkeɪ.ʃən/,Prices help guide the allocation of scarce resources.
+resource,资源,/ˈriː.sɔːrs/,Labor is an important economic resource.
+utility,效用,/juːˈtɪl.ə.t̬i/,Consumers choose bundles that maximize utility.
+marginal utility,边际效用,/ˌmɑːr.dʒɪ.nəl juːˈtɪl.ə.t̬i/,Marginal utility usually declines as consumption rises.
+diminishing marginal utility,边际效用递减,/dɪˌmɪn.ɪ.ʃɪŋ ˈmɑːr.dʒɪ.nəl juːˈtɪl.ə.t̬i/,The law of diminishing marginal utility explains why demand curves slope downward.
+consumer surplus,消费者剩余,/kənˈsuː.mɚ ˈsɝː.plʌs/,A lower market price increases consumer surplus.
+producer surplus,生产者剩余,/prəˈduː.sɚ ˈsɝː.plʌs/,A subsidy can raise producer surplus.
+demand,需求,/dɪˈmænd/,Demand for electric vehicles has grown rapidly.
+quantity demanded,需求量,/ˈkwɑːn.t̬ə.t̬i dɪˈmænd/,Quantity demanded usually falls when price rises.
+law of demand,需求定律,/lɔː əv dɪˈmænd/,The law of demand describes an inverse relation between price and quantity demanded.
+demand curve,需求曲线,/dɪˈmænd kɝːv/,The demand curve shifts right when income rises for a normal good.
+supply,供给,/səˈplaɪ/,Higher input costs can reduce supply.
+quantity supplied,供给量,/ˈkwɑːn.t̬ə.t̬i səˈplaɪd/,Quantity supplied expands as the market price increases.
+law of supply,供给定律,/lɔː əv səˈplaɪ/,The law of supply links higher prices with larger output.
+supply curve,供给曲线,/səˈplaɪ kɝːv/,A fall in wages shifts the supply curve to the right.
+market equilibrium,市场均衡,/ˈmɑːr.kɪt ˌiː.kwəˈlɪb.ri.əm/,Market equilibrium occurs where demand equals supply.
+equilibrium price,均衡价格,/ˌiː.kwəˈlɪb.ri.əm praɪs/,The equilibrium price changes after a demand shock.
+equilibrium quantity,均衡数量,/ˌiː.kwəˈlɪb.ri.əm ˈkwɑːn.t̬ə.t̬i/,Equilibrium quantity rises when both demand and supply increase.
+excess demand,超额需求,/ˈek.ses dɪˈmænd/,A price ceiling may create excess demand.
+excess supply,超额供给,/ˈek.ses səˈplaɪ/,A price floor can lead to excess supply.
+shortage,短缺,/ˈʃɔːr.t̬ɪdʒ/,Rent control may cause a housing shortage.
+surplus,过剩,/ˈsɝː.plʌs/,The grain surplus pushed prices downward.
+price ceiling,价格上限,/ˈpraɪs ˌsiː.lɪŋ/,A binding price ceiling keeps prices below equilibrium.
+price floor,价格下限,/ˈpraɪs flɔːr/,A minimum wage is a type of price floor.
+tax incidence,税负归宿,/tæks ˈɪn.sɪ.dəns/,Tax incidence depends on the relative elasticities of demand and supply.
+subsidy,补贴,/ˈsʌb.sə.di/,The government offered a subsidy for solar panels.
+elasticity,弹性,/ˌiː.læˈstɪs.ə.t̬i/,Elasticity measures how responsive one variable is to another.
+price elasticity of demand,需求价格弹性,/ˈpraɪs iˌlæˈstɪs.ə.t̬i əv dɪˈmænd/,Luxury goods often have high price elasticity of demand.
+income elasticity of demand,需求收入弹性,/ˈɪn.kʌm iˌlæˈstɪs.ə.t̬i əv dɪˈmænd/,Income elasticity of demand is positive for normal goods.
+cross-price elasticity,交叉价格弹性,/ˈkrɔːs praɪs iˌlæˈstɪs.ə.t̬i/,Cross-price elasticity is positive for substitute goods.
+perfectly inelastic,完全无弹性的,/ˈpɝː.fekt.li ˌɪn.ɪˈlæs.tɪk/,Insulin demand is often described as perfectly inelastic in the short run.
+perfectly elastic,完全有弹性的,/ˈpɝː.fekt.li iˈlæs.tɪk/,A perfectly elastic demand curve is horizontal.
+substitute goods,替代品,/ˈsʌb.stə.tuːt ɡʊdz/,Tea and coffee can be substitute goods for many consumers.
+complementary goods,互补品,/ˌkɑːm.pləˈmen.t̬ɚ.i ɡʊdz/,Cars and gasoline are complementary goods.
+normal good,正常品,/ˈnɔːr.məl ɡʊd/,Restaurant meals are a normal good for many families.
+inferior good,低档品,/ɪnˈfɪr.i.ɚ ɡʊd/,Instant noodles may be an inferior good for some households.
+Giffen good,吉芬商品,/ˈɡɪf.ən ɡʊd/,A Giffen good is a rare case where demand rises with price.
+Veblen good,炫耀性商品,/ˈveb.lən ɡʊd/,Luxury handbags are often cited as Veblen goods.
+budget constraint,预算约束,/ˈbʌdʒ.ɪt kənˈstreɪnt/,A budget constraint limits the bundles a consumer can afford.
+indifference curve,无差异曲线,/ɪnˈdɪf.ɚ.əns kɝːv/,Each point on an indifference curve gives the same utility.
+marginal rate of substitution,边际替代率,/ˈmɑːr.dʒɪ.nəl reɪt əv ˌsʌb.stəˈtuː.ʃən/,The marginal rate of substitution falls as consumers move along a convex indifference curve.
+revealed preference,显示性偏好,/rɪˈviːld ˈpref.ɚ.əns/,Revealed preference theory infers tastes from observed choices.
+rational choice,理性选择,/ˈræʃ.ən.əl tʃɔɪs/,The model assumes rational choice under constraints.
+firm,厂商,/fɝːm/,A firm combines inputs to produce output.
+production,生产,/prəˈdʌk.ʃən/,Technology can increase production efficiency.
+productivity,生产率,/ˌproʊ.dʌkˈtɪv.ə.t̬i/,Higher productivity supports long-run growth.
+production function,生产函数,/prəˈdʌk.ʃən ˈfʌŋk.ʃən/,The production function links inputs to output.
+fixed cost,固定成本,/fɪkst kɔːst/,Rent is a fixed cost in the short run.
+variable cost,可变成本,/ˈver.i.ə.bəl kɔːst/,Raw materials are a variable cost.
+total cost,总成本,/ˈtoʊ.t̬əl kɔːst/,Total cost equals fixed cost plus variable cost.
+average cost,平均成本,/ˈæv.ɚ.ɪdʒ kɔːst/,Average cost declines when output rises at first.
+marginal cost,边际成本,/ˈmɑːr.dʒɪ.nəl kɔːst/,A firm produces more when price exceeds marginal cost.
+economies of scale,规模经济,/ɪˈkɑː.nə.miz əv skeɪl/,Large factories may benefit from economies of scale.
+diseconomies of scale,规模不经济,/dɪsˌiːˈkɑː.nə.miz əv skeɪl/,Communication problems can create diseconomies of scale.
+returns to scale,规模报酬,/rɪˈtɝːnz tə skeɪl/,The technology shows increasing returns to scale.
+short run,短期,/ʃɔːrt rʌn/,"In the short run, some inputs are fixed."
+long run,长期,/lɔːŋ rʌn/,"In the long run, all inputs are variable."
+profit,利润,/ˈprɑː.fɪt/,The firm earned a profit last quarter.
+economic profit,经济利润,/ˌiː.kəˈnɑː.mɪk ˈprɑː.fɪt/,Economic profit subtracts implicit costs as well as explicit costs.
+accounting profit,会计利润,/əˈkaʊn.t̬ɪŋ ˈprɑː.fɪt/,Accounting profit ignores opportunity costs.
+profit maximization,利润最大化,/ˈprɑː.fɪt ˌmæk.sə.məˈzeɪ.ʃən/,The standard model assumes profit maximization.
+perfect competition,完全竞争,/ˈpɝː.fekt ˌkɑːm.pəˈtɪʃ.ən/,Perfect competition requires many small firms and free entry.
+monopoly,垄断,/məˈnɑː.pə.li/,A monopoly can restrict output and raise prices.
+monopolistic competition,垄断竞争,/məˌnɑː.pəˈlɪs.tɪk ˌkɑːm.pəˈtɪʃ.ən/,Restaurants often operate under monopolistic competition.
+oligopoly,寡头垄断,/ˌoʊ.lɪˈɡɑː.pə.li/,The airline industry in some countries resembles an oligopoly.
+barrier to entry,进入壁垒,/ˈbær.i.ɚ tə ˈen.tri/,Patents can create a barrier to entry.
+market power,市场势力,/ˈmɑːr.kɪt paʊ.ɚ/,Brand loyalty can increase market power.
+price discrimination,价格歧视,/praɪs dɪˌskrɪm.əˈneɪ.ʃən/,Airlines use price discrimination across customer groups.
+game theory,博弈论,/ɡeɪm ˈθiː.ə.ri/,Game theory helps explain strategic behavior in oligopoly.
+Nash equilibrium,纳什均衡,/næʃ ˌiː.kwəˈlɪb.ri.əm/,"In Nash equilibrium, no player wants to deviate alone."
+dominant strategy,优势策略,/ˈdɑː.mə.nənt ˈstræt̬.ə.dʒi/,Confessing is the dominant strategy in the prisoner's dilemma.
+prisoner's dilemma,囚徒困境,/ˈprɪz.ən.ɚz dɪˈlem.ə/,The prisoner's dilemma shows why cooperation can break down.
+externality,外部性,/ˌek.stɚˈnæl.ə.t̬i/,Pollution is a negative externality.
+negative externality,负外部性,/ˈneɡ.ə.t̬ɪv ek.stɚˈnæl.ə.t̬i/,A carbon tax targets the negative externality from emissions.
+positive externality,正外部性,/ˈpɑː.zə.t̬ɪv ek.stɚˈnæl.ə.t̬i/,Vaccination creates a positive externality.
+public good,公共品,/ˈpʌb.lɪk ɡʊd/,National defense is a classic public good.
+common resource,公共资源,/ˈkɑː.mən ˈriː.sɔːrs/,Fish stocks are a common resource in many coastal areas.
+free rider,搭便车者,/friː ˈraɪ.dɚ/,Free riders benefit without paying for the good.
+tragedy of the commons,公地悲剧,/ˈtrædʒ.ə.di əv ðə ˈkɑː.mənz/,Overfishing is an example of the tragedy of the commons.
+property rights,产权,/ˈprɑː.pɚ.t̬i raɪts/,Clear property rights can reduce conflict over resources.
+asymmetric information,信息不对称,/ˌeɪ.səˈmet.rɪk ˌɪn.fɚˈmeɪ.ʃən/,Asymmetric information can make markets inefficient.
+adverse selection,逆向选择,/ˈæd.vɝːs səˈlek.ʃən/,Adverse selection is common in insurance markets.
+moral hazard,道德风险,/ˈmɔːr.əl ˈhæz.ɚd/,Generous coverage may increase moral hazard.
+principal-agent problem,委托—代理问题,/ˈprɪn.sə.pəl ˈeɪ.dʒənt ˈprɑː.bləm/,Bonuses are used to reduce the principal-agent problem.
+labor market,劳动力市场,/ˈleɪ.bɚ ˈmɑːr.kɪt/,The labor market tightened after the recovery.
+human capital,人力资本,/ˈhjuː.mən ˈkæp.ə.t̬əl/,Education raises human capital.
+labor force,劳动力,/ˈleɪ.bɚ fɔːrs/,More women entered the labor force over time.
+unemployment,失业,/ˌʌn.ɪmˈplɔɪ.mənt/,High unemployment reduces household income.
+unemployment rate,失业率,/ˌʌn.ɪmˈplɔɪ.mənt reɪt/,The unemployment rate fell to a multi-year low.
+frictional unemployment,摩擦性失业,/ˈfrɪk.ʃən.əl ˌʌn.ɪmˈplɔɪ.mənt/,Frictional unemployment occurs when workers search for new jobs.
+structural unemployment,结构性失业,/ˈstrʌk.tʃɚ.əl ˌʌn.ɪmˈplɔɪ.mənt/,Automation can contribute to structural unemployment.
+cyclical unemployment,周期性失业,/ˈsaɪ.klɪ.kəl ˌʌn.ɪmˈplɔɪ.mənt/,Cyclical unemployment rises during recessions.
+natural rate of unemployment,自然失业率,/ˈnætʃ.ɚ.əl reɪt əv ˌʌn.ɪmˈplɔɪ.mənt/,The natural rate of unemployment includes frictional and structural unemployment.
+minimum wage,最低工资,/ˈmɪn.ə.məm weɪdʒ/,The debate over the minimum wage remains active.
+wage differential,工资差异,/weɪdʒ ˌdɪf.ɚˈen.ʃəl/,Skill shortages can widen the wage differential.
+capital,资本,/ˈkæp.ə.t̬əl/,"Capital includes machines, tools, and buildings."
+physical capital,物质资本,/ˈfɪz.ɪ.kəl ˈkæp.ə.t̬əl/,Factories are a form of physical capital.
+financial capital,金融资本,/faɪˈnæn.ʃəl ˈkæp.ə.t̬əl/,Startups often need financial capital from investors.
+investment,投资,/ɪnˈvest.mənt/,Public investment in infrastructure can boost productivity.
+depreciation,折旧,/dɪˌpriː.ʃiˈeɪ.ʃən/,Depreciation reduces the value of old equipment.
+interest rate,利率,/ˈɪn.trəst reɪt/,A higher interest rate discourages borrowing.
+real interest rate,实际利率,/ˈriː.əl ˈɪn.trəst reɪt/,The real interest rate adjusts for inflation.
+nominal interest rate,名义利率,/ˈnɑː.mə.nəl ˈɪn.trəst reɪt/,Banks usually advertise the nominal interest rate.
+savings,储蓄,/ˈseɪ.vɪŋz/,Higher income often leads to more household savings.
+consumption,消费,/kənˈsʌmp.ʃən/,Consumption is the largest component of GDP in many economies.
+marginal propensity to consume,边际消费倾向,/ˈmɑːr.dʒɪ.nəl prəˈpen.sə.t̬i tə kənˈsuːm/,A higher marginal propensity to consume strengthens the multiplier effect.
+marginal propensity to save,边际储蓄倾向,/ˈmɑːr.dʒɪ.nəl prəˈpen.sə.t̬i tə seɪv/,The marginal propensity to save rises when households become cautious.
+business cycle,商业周期,/ˈbɪz.nəs ˈsaɪ.kəl/,The business cycle includes expansions and recessions.
+expansion,扩张,/ɪkˈspæn.ʃən/,Consumer spending increased during the expansion.
+recession,衰退,/rɪˈseʃ.ən/,The economy entered a recession after output fell for two quarters.
+depression,萧条,/dɪˈpreʃ.ən/,The Great Depression changed macroeconomic policy.
+recovery,复苏,/rɪˈkʌv.ɚ.i/,Job growth accelerated during the recovery.
+aggregate demand,总需求,/ˈæɡ.rə.ɡət dɪˈmænd/,Lower interest rates can increase aggregate demand.
+aggregate supply,总供给,/ˈæɡ.rə.ɡət səˈplaɪ/,A rise in oil prices can reduce aggregate supply.
+short-run aggregate supply,短期总供给,/ʃɔːrt rʌn ˈæɡ.rə.ɡət səˈplaɪ/,Sticky wages help explain the shape of short-run aggregate supply.
+long-run aggregate supply,长期总供给,/lɔːŋ rʌn ˈæɡ.rə.ɡət səˈplaɪ/,Long-run aggregate supply depends on productive capacity.
+output gap,产出缺口,/ˈaʊt.pʊt ɡæp/,A negative output gap signals weak demand.
+potential output,潜在产出,/pəˈten.ʃəl ˈaʊt.pʊt/,"Potential output grows with labor, capital, and technology."
+inflation,通货膨胀,/ɪnˈfleɪ.ʃən/,Inflation erodes the purchasing power of money.
+deflation,通货紧缩,/diːˈfleɪ.ʃən/,Persistent deflation may discourage spending.
+disinflation,通胀回落,/dɪs.ɪnˈfleɪ.ʃən/,"Disinflation means inflation is slowing, not turning negative."
+consumer price index,消费者价格指数,/kənˈsuː.mɚ praɪs ˈɪn.deks/,The consumer price index tracks changes in living costs.
+core inflation,核心通胀,/kɔːr ɪnˈfleɪ.ʃən/,Core inflation excludes volatile food and energy prices.
+stagflation,滞胀,/stæɡˈfleɪ.ʃən/,The economy faced stagflation after an adverse supply shock.
+Phillips curve,菲利普斯曲线,/ˈfɪl.ɪps kɝːv/,The Phillips curve suggests a short-run trade-off between inflation and unemployment.
+money,货币,/ˈmʌn.i/,Money serves as a medium of exchange.
+money supply,货币供应量,/ˈmʌn.i səˈplaɪ/,The central bank monitors money supply growth.
+liquidity,流动性,/lɪˈkwɪd.ə.t̬i/,Treasury bills have high liquidity.
+central bank,中央银行,/ˈsen.trəl bæŋk/,The central bank raised rates to fight inflation.
+monetary policy,货币政策,/ˈmɑː.nəˌter.i ˈpɑː.lə.si/,Monetary policy influences borrowing and spending.
+fiscal policy,财政政策,/ˈfɪs.kəl ˈpɑː.lə.si/,Fiscal policy can stabilize demand during downturns.
+open market operation,公开市场操作,/ˈoʊ.pən ˈmɑːr.kɪt ˌɑː.pəˈreɪ.ʃən/,The central bank used open market operations to inject reserves.
+reserve requirement,存款准备金率,/rɪˈzɝːv rɪˈkwaɪr.mənt/,A lower reserve requirement may expand lending.
+discount rate,贴现率,/ˈdɪs.kaʊnt reɪt/,The discount rate affects bank borrowing from the central bank.
+multiplier,乘数,/ˈmʌl.təˌplaɪ.ɚ/,Government spending can have a multiplier effect.
+crowding out,挤出效应,/ˈkraʊ.dɪŋ aʊt/,Large deficits may cause crowding out by raising interest rates.
+GDP,国内生产总值,/ˌdʒiː.diːˈpiː/,GDP measures the market value of final goods and services.
+real GDP,实际GDP,/ˈriː.əl ˌdʒiː.diːˈpiː/,Real GDP removes the effect of price changes.
+nominal GDP,名义GDP,/ˈnɑː.mə.nəl ˌdʒiː.diːˈpiː/,Nominal GDP can rise because of inflation.
+GDP deflator,GDP平减指数,/ˌdʒiː.diːˈpiː dɪˈfleɪ.t̬ɚ/,The GDP deflator compares nominal GDP with real GDP.
+per capita income,人均收入,/pɚ ˈkæp.ə.t̬ə ˈɪn.kʌm/,Per capita income is often used to compare living standards.
+economic growth,经济增长,/ˌiː.kəˈnɑː.mɪk ɡroʊθ/,Technological progress is a major source of economic growth.
+product market,产品市场,/ˈprɑː.dʌkt ˈmɑːr.kɪt/,Firms compete in the product market by adjusting prices and quality.
+factor market,要素市场,/ˈfæk.tɚ ˈmɑːr.kɪt/,Workers sell labor in the factor market.
+comparative advantage,比较优势,/kəmˈpær.ə.t̬ɪv ədˈvæn.t̬ɪdʒ/,Countries gain from trade by specializing according to comparative advantage.
+absolute advantage,绝对优势,/ˈæb.sə.luːt ədˈvæn.t̬ɪdʒ/,Absolute advantage means producing more with the same resources.
+specialization,专业化,/ˌspeʃ.ə.ləˈzeɪ.ʃən/,Specialization can raise total output.
+gains from trade,贸易收益,/ɡeɪnz frəm treɪd/,Both sides can enjoy gains from trade.
+tariff,关税,/ˈter.ɪf/,The tariff increased the domestic price of steel.
+quota,配额,/ˈkwoʊ.t̬ə/,The import quota limited foreign sugar sales.
+exchange rate,汇率,/ɪksˈtʃeɪndʒ reɪt/,The exchange rate affects export competitiveness.
+appreciation,升值,/əˌpriː.ʃiˈeɪ.ʃən/,Currency appreciation can make exports more expensive abroad.
+depreciation (currency),贬值,/dɪˌpriː.ʃiˈeɪ.ʃən/,Currency depreciation can stimulate net exports.
+balance of payments,国际收支,/ˈbæl.əns əv ˈpeɪ.mənts/,The balance of payments records transactions with the rest of the world.
+current account,经常账户,/ˈkɝː.ənt əˈkaʊnt/,A current account surplus means exports exceed imports and net transfers.
+capital account,资本账户,/ˈkæp.ɪ.t̬əl əˈkaʊnt/,The capital account reflects some cross-border asset transfers.
+foreign direct investment,外国直接投资,/ˈfɔːr.ən dəˈrekt ɪnˈvest.mənt/,Foreign direct investment can transfer technology to host countries.
+purchasing power parity,购买力平价,/ˈpɝː.tʃə.sɪŋ paʊ.ɚ ˈpær.ə.t̬i/,Purchasing power parity compares price levels across countries.
+development economics,发展经济学,/dɪˈvel.əp.mənt ˌek.əˈnɑː.mɪks/,Development economics studies poverty and long-run transformation.
+poverty trap,贫困陷阱,/ˈpɑː.vɚ.t̬i træp/,Low savings and poor health can create a poverty trap.
+income distribution,收入分配,/ˈɪn.kʌm ˌdɪs.trəˈbjuː.ʃən/,Income distribution became more unequal over the decade.
+inequality,不平等,/ˌɪn.ɪˈkwɑː.lə.t̬i/,Many economists study the causes of income inequality.
+Lorenz curve,洛伦兹曲线,/ˈlɔːr.ənts kɝːv/,The Lorenz curve illustrates the distribution of income.
+Gini coefficient,基尼系数,/ˈdʒiː.ni ˌkoʊ.ɪˈfɪʃ.ənt/,A higher Gini coefficient indicates greater inequality.
+welfare economics,福利经济学,/ˈwel.fer ˌek.əˈnɑː.mɪks/,Welfare economics evaluates policy using efficiency and equity criteria.
+deadweight loss,无谓损失,/ˈded.weɪt lɔːs/,A monopoly creates deadweight loss by restricting output.
+Pareto efficiency,帕累托效率,/pəˈreɪ.toʊ ɪˈfɪʃ.ən.si/,An allocation is Pareto efficient when no one can be made better off without harming someone else.
+social welfare,社会福利,/ˈsoʊ.ʃəl ˈwel.fer/,The reform aimed to improve social welfare.
+behavioral economics,行为经济学,/bɪˌheɪv.jɚ.əl ˌek.əˈnɑː.mɪks/,Behavioral economics studies how real decisions depart from strict rationality.
+bounded rationality,有限理性,/ˈbaʊn.dɪd ˌræʃ.əˈnæl.ə.t̬i/,Bounded rationality recognizes limits on information and computation.
+loss aversion,损失厌恶,/lɔːs əˈvɝː.ʒən/,Loss aversion makes people weigh losses more than gains.
+time preference,时间偏好,/taɪm ˈpref.ɚ.əns/,A strong time preference leads people to value present consumption more.
+present bias,当下偏误,/ˈprez.ənt ˈbaɪ.əs/,Present bias can reduce retirement saving.
+econometrics,计量经济学,/ɪˌkɑː.nəˈme.trɪks/,"Econometrics combines theory, data, and statistics."
+regression analysis,回归分析,/rɪˈɡreʃ.ən əˈnæl.ə.sɪs/,Regression analysis estimates the relationship between variables.
+dependent variable,因变量,/dɪˈpen.dənt ˈver.i.ə.bəl/,Income is the dependent variable in this equation.
+independent variable,自变量,/ˌɪn.dɪˈpen.dənt ˈver.i.ə.bəl/,Education is an independent variable in the wage regression.
+coefficient,系数,/ˌkoʊ.əˈfɪʃ.ənt/,The coefficient on experience is positive and significant.
+statistical significance,统计显著性,/stəˌtɪs.tɪ.kəl sɪɡˈnɪf.ə.kəns/,The estimate lacks statistical significance at the 5 percent level.
+endogeneity,内生性,/ˌen.doʊ.dʒəˈniː.ə.t̬i/,Endogeneity can bias ordinary least squares estimates.
+instrumental variable,工具变量,/ˌɪn.strəˈmen.t̬əl ˈver.i.ə.bəl/,Researchers used distance as an instrumental variable.
+panel data,面板数据,/ˈpæn.əl ˈdeɪ.t̬ə/,Panel data follow the same units across time.
+time series,时间序列,/taɪm ˈsɪr.iːz/,Time series data may display seasonal patterns.
+cross-sectional data,截面数据,/ˌkrɔːs ˈsek.ʃən.əl ˈdeɪ.t̬ə/,Cross-sectional data compare many households at one point in time.
+causality,因果关系,/kɑːˈzæl.ə.t̬i/,Correlation alone does not prove causality.
+microeconomics,微观经济学,/ˌmaɪ.kroʊˌek.əˈnɑː.mɪks/,"Microeconomics studies individual consumers, firms, and markets."
+macroeconomics,宏观经济学,/ˌmæk.roʊˌek.əˈnɑː.mɪks/,"Macroeconomics focuses on inflation, unemployment, and growth."
+general equilibrium,一般均衡,/ˈdʒen.ɚ.əl ˌiː.kwəˈlɪb.ri.əm/,General equilibrium examines how many markets interact at once.
+partial equilibrium,局部均衡,/ˈpɑːr.ʃəl ˌiː.kwəˈlɪb.ri.əm/,Partial equilibrium studies one market while holding others constant.
+risk aversion,风险厌恶,/rɪsk əˈvɝː.ʒən/,Risk aversion affects how households choose insurance.
+expected utility,期望效用,/ɪkˈspek.tɪd juːˈtɪl.ə.t̬i/,Expected utility theory models choices under uncertainty.
+intertemporal choice,跨期选择,/ˌɪn.t̬ɚˈtem.pə.rəl tʃɔɪs/,Intertemporal choice compares consumption today with consumption tomorrow.
+capital accumulation,资本积累,/ˈkæp.ə.t̬əl əˌkjuː.mjəˈleɪ.ʃən/,Capital accumulation supports long-run increases in output.
