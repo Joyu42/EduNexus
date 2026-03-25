@@ -4,6 +4,7 @@ const getCurrentUserId = vi.fn();
 const getDocument = vi.fn();
 const updateDocument = vi.fn();
 const deleteDocument = vi.fn();
+const detachDocumentFromLearningPacks = vi.fn();
 
 vi.mock("@/lib/server/auth-utils", () => ({
   getCurrentUserId,
@@ -13,6 +14,10 @@ vi.mock("@/lib/server/document-service", () => ({
   getDocument,
   updateDocument,
   deleteDocument,
+}));
+
+vi.mock("@/lib/server/learning-pack-store", () => ({
+  detachDocumentFromLearningPacks,
 }));
 
 const { GET, PUT, DELETE } = await import("./route");
@@ -125,10 +130,15 @@ describe("kb doc [id] api", () => {
     });
 
     expect(response.status).toBe(404);
+    expect(detachDocumentFromLearningPacks).not.toHaveBeenCalled();
   });
 
   it("deletes document successfully", async () => {
     deleteDocument.mockResolvedValueOnce(true);
+    detachDocumentFromLearningPacks.mockResolvedValueOnce({
+      updatedPackIds: ["lp_keep"],
+      removedPackIds: ["lp_removed"],
+    });
 
     const response = await DELETE(new Request("http://localhost/api/kb/doc/doc_1"), {
       params: Promise.resolve({ id: "doc_1" }),
@@ -136,6 +146,7 @@ describe("kb doc [id] api", () => {
 
     expect(response.status).toBe(200);
     expect(deleteDocument).toHaveBeenCalledWith("doc_1", "session-user");
+    expect(detachDocumentFromLearningPacks).toHaveBeenCalledWith("session-user", "doc_1");
     await expect(response.json()).resolves.toMatchObject({
       data: { deleted: true },
     });

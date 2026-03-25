@@ -227,22 +227,44 @@ export async function POST(request: Request) {
         });
       }
 
+      const kbContext = await buildLearningPackKbContext(userId, learningTopic);
+      const plannerApiKey =
+        typeof config.apiKey === "string" && config.apiKey.trim()
+          ? config.apiKey.trim()
+          : process.env.MODELSCOPE_API_KEY ?? "";
+      const plannerApiEndpoint =
+        typeof config.apiEndpoint === "string" && config.apiEndpoint.trim()
+          ? config.apiEndpoint.trim()
+          : process.env.MODELSCOPE_BASE_URL ?? "https://api-inference.modelscope.cn/v1";
+      const plannerModelName =
+        typeof config.modelName === "string" && config.modelName.trim()
+          ? config.modelName.trim()
+          : process.env.MODELSCOPE_CHAT_MODEL ?? "Qwen/Qwen3.5-122B-A10B";
+
       const plannerOutput = await planLearningPack({
         topic: learningTopic,
-        apiKey: process.env.MODELSCOPE_API_KEY ?? "",
-        apiEndpoint:
-          process.env.MODELSCOPE_BASE_URL ?? "https://api-inference.modelscope.cn/v1",
-        modelName: process.env.MODELSCOPE_CHAT_MODEL ?? "Qwen/Qwen3.5-122B-A10B",
-        kbContext: await buildLearningPackKbContext(userId, learningTopic),
+        apiKey: plannerApiKey,
+        apiEndpoint: plannerApiEndpoint,
+        modelName: plannerModelName,
+        kbContext,
       });
 
       const modules = plannerOutput.modules.map((m) => m.title);
       const pack = await createLearningPack(userId, plannerOutput.title, learningTopic, modules);
 
+      const reusableDocIds = new Set(
+        (kbContext?.existingDocs ?? []).map((doc) => doc.docId)
+      );
+
       for (const module of pack.modules) {
         const planned = plannerOutput.modules.find((pm) => pm.title === module.title);
-        if (planned?.existingDocId) {
-          await setPackKbDocument(pack.packId, module.moduleId, planned.existingDocId);
+        const existingDocId = planned?.existingDocId;
+        const canReuseExistingDoc =
+          typeof existingDocId === "string" &&
+          reusableDocIds.has(existingDocId);
+
+        if (canReuseExistingDoc) {
+          await setPackKbDocument(pack.packId, module.moduleId, existingDocId);
         } else {
           const doc = await createDocument({
             title: module.title,
@@ -257,12 +279,19 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         success: true,
-        response: `已为你创建「${pack.title}」。\n\n我已经规划了 ${pack.modules.length} 个学习阶段，你可以直接进入知识星图开始学习。`,
+        response: plannerOutput.fallbackUsed
+          ? `已为你创建「${pack.title}」。\n\n当前模型鉴权失败或不可用，已使用模板路径兜底生成 ${pack.modules.length} 个学习阶段。请在设置中更新可用的 ModelScope Key 后重试，以获得 AI 智能规划。`
+          : `已为你创建「${pack.title}」。\n\n我已经规划了 ${pack.modules.length} 个学习阶段，你可以直接进入知识星图开始学习。`,
         learningPack: {
           packId: pack.packId,
           title: pack.title,
           topic: pack.topic,
           graphUrl: `/graph?view=path&packId=${encodeURIComponent(pack.packId)}`,
+        },
+        planner: {
+          fallbackUsed: plannerOutput.fallbackUsed,
+          confidence: plannerOutput.confidence,
+          usedExistingDocs: plannerOutput.usedExistingDocs,
         },
         steps: [
           {

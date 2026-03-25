@@ -5,6 +5,7 @@ import {
   getDocument,
   updateDocument,
 } from "@/lib/server/document-service";
+import { detachDocumentFromLearningPacks } from "@/lib/server/learning-pack-store";
 
 export const runtime = "nodejs";
 
@@ -181,6 +182,8 @@ export async function DELETE(
         404
       );
     }
+
+    await detachDocumentFromLearningPacks(userId, id);
 
     return ok({ deleted: true });
   } catch (error) {

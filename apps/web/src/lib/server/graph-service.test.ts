@@ -233,4 +233,118 @@ describe("graph service demo projection", () => {
 
     await fs.rm(dataDir, { recursive: true, force: true });
   });
+
+  it("builds explore edges from synced path stages", async () => {
+    const dataDir = await createDataDir();
+    process.env.EDUNEXUS_DATA_DIR = dataDir;
+
+    const db = await loadDb();
+    const now = new Date().toISOString();
+
+    db.syncedPaths.push({
+      userId: "user-path",
+      pathId: "path_frontend_1",
+      title: "前端路径",
+      description: "",
+      status: "in_progress",
+      progress: 20,
+      tags: ["frontend"],
+      tasks: [],
+      updatedAt: now,
+      stages: [
+        {
+          stageId: "stage_1",
+          nodeIds: ["doc_html", "doc_css", "doc_js"],
+        },
+      ],
+    } as (typeof db.syncedPaths)[number] & {
+      stages: Array<{ stageId: string; nodeIds: string[] }>;
+    });
+    await saveDb(db);
+
+    findMany.mockResolvedValueOnce([
+      {
+        id: "doc_html",
+        title: "HTML",
+        updatedAt: new Date(now),
+      },
+      {
+        id: "doc_css",
+        title: "CSS",
+        updatedAt: new Date(now),
+      },
+      {
+        id: "doc_js",
+        title: "JavaScript",
+        updatedAt: new Date(now),
+      },
+    ]);
+
+    const graph = await getGraphView("user-path");
+
+    expect(graph.nodes).toHaveLength(3);
+    expect(graph.edges).toEqual([
+      { source: "doc_html", target: "doc_css", weight: 0.7 },
+      { source: "doc_css", target: "doc_js", weight: 0.7 },
+    ]);
+
+    await fs.rm(dataDir, { recursive: true, force: true });
+  });
+
+  it("builds explore edges from all learning packs", async () => {
+    const dataDir = await createDataDir();
+    process.env.EDUNEXUS_DATA_DIR = dataDir;
+
+    const db = await loadDb();
+    const now = new Date().toISOString();
+    db.learningPacks.push({
+      packId: "lp_java_1",
+      userId: "user-pack",
+      title: "Java 路径",
+      topic: "java",
+      activeModuleId: "m1",
+      stage: "seen",
+      totalStudyMinutes: 0,
+      createdAt: now,
+      updatedAt: now,
+      modules: [
+        { moduleId: "m1", title: "Java 基础", kbDocumentId: "doc_j1", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "m2", title: "Java OOP", kbDocumentId: "doc_j2", stage: "seen", order: 1, studyMinutes: 0, lastStudiedAt: null },
+      ],
+    });
+    db.learningPacks.push({
+      packId: "lp_go_1",
+      userId: "user-pack",
+      title: "Go 路径",
+      topic: "go",
+      activeModuleId: "g1",
+      stage: "seen",
+      totalStudyMinutes: 0,
+      createdAt: now,
+      updatedAt: now,
+      modules: [
+        { moduleId: "g1", title: "Go 基础", kbDocumentId: "doc_g1", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+        { moduleId: "g2", title: "Go 并发", kbDocumentId: "doc_g2", stage: "seen", order: 1, studyMinutes: 0, lastStudiedAt: null },
+      ],
+    });
+    await saveDb(db);
+
+    findMany.mockResolvedValueOnce([
+      { id: "doc_j1", title: "Java 基础", updatedAt: new Date(now) },
+      { id: "doc_j2", title: "Java OOP", updatedAt: new Date(now) },
+      { id: "doc_g1", title: "Go 基础", updatedAt: new Date(now) },
+      { id: "doc_g2", title: "Go 并发", updatedAt: new Date(now) },
+    ]);
+
+    const graph = await getGraphView("user-pack");
+
+    expect(graph.edges).toEqual(
+      expect.arrayContaining([
+        { source: "doc_j1", target: "doc_j2", weight: 0.9 },
+        { source: "doc_g1", target: "doc_g2", weight: 0.9 },
+      ])
+    );
+
+    await fs.rm(dataDir, { recursive: true, force: true });
+  });
 });

@@ -103,7 +103,12 @@ describe("learning-pack quick creation", () => {
       fallbackUsed: false,
     });
 
-    buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
+    buildLearningPackKbContextMock.mockResolvedValueOnce({
+      existingDocs: [
+        { docId: "doc_java_env", title: "Java 环境搭建", snippet: "已有文档" },
+      ],
+      topicMatches: 1,
+    });
     findPacksByTopicMock.mockResolvedValueOnce([]);
 
     createLearningPackMock.mockResolvedValueOnce({
@@ -161,7 +166,12 @@ describe("learning-pack quick creation", () => {
       fallbackUsed: false,
     });
 
-    buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
+    buildLearningPackKbContextMock.mockResolvedValueOnce({
+      existingDocs: [
+        { docId: "doc_java_env", title: "Java 环境搭建", snippet: "已有文档" },
+      ],
+      topicMatches: 1,
+    });
     findPacksByTopicMock.mockResolvedValueOnce([]);
 
     createLearningPackMock.mockResolvedValueOnce({
@@ -232,7 +242,12 @@ describe("learning-pack quick creation", () => {
       fallbackUsed: true,
     });
 
-    buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
+    buildLearningPackKbContextMock.mockResolvedValueOnce({
+      existingDocs: [
+        { docId: "doc_java_env", title: "Java 环境搭建", snippet: "已有文档" },
+      ],
+      topicMatches: 1,
+    });
     findPacksByTopicMock.mockResolvedValueOnce([]);
 
     createLearningPackMock.mockResolvedValueOnce({
@@ -338,7 +353,12 @@ describe("learning-pack quick creation", () => {
       fallbackUsed: false,
     });
 
-    buildLearningPackKbContextMock.mockResolvedValueOnce({ existingDocs: [], topicMatches: 0 });
+    buildLearningPackKbContextMock.mockResolvedValueOnce({
+      existingDocs: [
+        { docId: "doc_java_env", title: "Java 环境搭建", snippet: "已有文档" },
+      ],
+      topicMatches: 1,
+    });
     findPacksByTopicMock.mockResolvedValueOnce([]);
 
     createLearningPackMock.mockResolvedValueOnce({
@@ -374,5 +394,62 @@ describe("learning-pack quick creation", () => {
     expect(setPackKbDocumentMock).toHaveBeenCalledTimes(2);
     expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_ai_reuse_1", "m1", "doc_java_env");
     expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_ai_reuse_1", "m2", "doc_new");
+  });
+
+  it("creates new docs when planner returns unknown existingDocId", async () => {
+    const { auth } = await import("@/auth");
+
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "u1", isDemo: false },
+    } as never);
+
+    planLearningPackMock.mockResolvedValueOnce({
+      title: "Python 学习路线",
+      modules: [
+        { title: "Python 基础", order: 0, existingDocId: "doc_hallucinated" },
+      ],
+      confidence: "medium",
+      usedExistingDocs: true,
+      fallbackUsed: false,
+    });
+
+    buildLearningPackKbContextMock.mockResolvedValueOnce({
+      existingDocs: [
+        { docId: "doc_real_1", title: "Python 语法", snippet: "真实存在" },
+      ],
+      topicMatches: 1,
+    });
+    findPacksByTopicMock.mockResolvedValueOnce([]);
+
+    createLearningPackMock.mockResolvedValueOnce({
+      packId: "lp_py_1",
+      userId: "u1",
+      title: "Python 学习路线",
+      topic: "python",
+      stage: "seen",
+      active: false,
+      modules: [
+        { moduleId: "m1", title: "Python 基础", kbDocumentId: "", stage: "seen", order: 0, studyMinutes: 0, lastStudiedAt: null },
+      ],
+      currentModuleId: "m1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    createDocumentMock.mockResolvedValueOnce({ id: "doc_created_py" });
+
+    const request = new Request("http://localhost/api/workspace/agent/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "我想学习 python" }),
+    });
+
+    const response = await POST(request);
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(createDocumentMock).toHaveBeenCalledTimes(1);
+    expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_py_1", "m1", "doc_created_py");
   });
 });

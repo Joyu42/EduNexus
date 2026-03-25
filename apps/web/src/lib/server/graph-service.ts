@@ -1,7 +1,7 @@
 import { prisma } from './prisma';
 import { loadDb } from './store';
 import { DEMO_GRAPH_BOOTSTRAP } from './demo-content';
-import { getPackById } from './learning-pack-store';
+import { getPackById, getPacksByUser } from './learning-pack-store';
 
 const MAX_NODES_PER_USER = 200;
 
@@ -154,6 +154,104 @@ function resolveNodeCategory(input: {
   }
 
   return input.defaultDomain;
+}
+
+function collectPathNodeSequence(path: Record<string, unknown>, existingNodeIds: Set<string>): string[] {
+  const result: string[] = [];
+  const seen = new Set<string>();
+
+  const stages = Array.isArray(path.stages) ? path.stages : [];
+  if (stages.length > 0) {
+    for (const stageItem of stages) {
+      if (!isRecord(stageItem)) continue;
+      const nodeIds = Array.isArray(stageItem.nodeIds)
+        ? stageItem.nodeIds.filter((nodeId): nodeId is string => typeof nodeId === "string")
+        : [];
+
+      for (const nodeId of nodeIds) {
+        if (!existingNodeIds.has(nodeId) || seen.has(nodeId)) {
+          continue;
+        }
+        seen.add(nodeId);
+        result.push(nodeId);
+      }
+    }
+  }
+
+  if (result.length > 0) {
+    return result;
+  }
+
+  const tasks = Array.isArray(path.tasks) ? path.tasks : [];
+  for (const task of tasks) {
+    if (!isRecord(task) || typeof task.taskId !== "string") {
+      continue;
+    }
+    const nodeId = task.taskId.trim();
+    if (!nodeId || !existingNodeIds.has(nodeId) || seen.has(nodeId)) {
+      continue;
+    }
+    seen.add(nodeId);
+    result.push(nodeId);
+  }
+
+  return result;
+}
+
+function buildPathEdges(userPaths: unknown[], existingNodeIds: Set<string>): GraphEdge[] {
+  const edgeMap = new Map<string, GraphEdge>();
+
+  for (const path of userPaths) {
+    if (!isRecord(path)) {
+      continue;
+    }
+
+    const sequence = collectPathNodeSequence(path, existingNodeIds);
+    for (let i = 0; i < sequence.length - 1; i += 1) {
+      const source = sequence[i];
+      const target = sequence[i + 1];
+      if (!source || !target || source === target) {
+        continue;
+      }
+
+      const key = `${source}->${target}`;
+      if (!edgeMap.has(key)) {
+        edgeMap.set(key, { source, target, weight: 0.7 });
+      }
+    }
+  }
+
+  return Array.from(edgeMap.values());
+}
+
+function buildLearningPackEdges(
+  packs: Array<{ modules: Array<{ kbDocumentId: string; order: number }> }>,
+  existingNodeIds: Set<string>
+): GraphEdge[] {
+  const edgeMap = new Map<string, GraphEdge>();
+
+  for (const pack of packs) {
+    const orderedNodeIds = pack.modules
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((module) => module.kbDocumentId.trim())
+      .filter((nodeId) => nodeId.length > 0 && existingNodeIds.has(nodeId));
+
+    for (let index = 0; index < orderedNodeIds.length - 1; index += 1) {
+      const source = orderedNodeIds[index];
+      const target = orderedNodeIds[index + 1];
+      if (!source || !target || source === target) {
+        continue;
+      }
+
+      const key = `${source}->${target}`;
+      if (!edgeMap.has(key)) {
+        edgeMap.set(key, { source, target, weight: 0.9 });
+      }
+    }
+  }
+
+  return Array.from(edgeMap.values());
 }
 
 export async function getGraphView(userId: string, input?: { domain?: string; packId?: string }): Promise<WorkspaceGraphView>;
@@ -350,7 +448,19 @@ export async function getGraphView(
     };
   });
 
-  const edges: GraphEdge[] = [];
+  const existingNodeIds = new Set(nodes.map((node) => node.id));
+  const pathEdges = buildPathEdges(userPaths, existingNodeIds);
+  const learningPackEdges = buildLearningPackEdges(await getPacksByUser(userId), existingNodeIds);
+
+  const mergedEdgesByKey = new Map<string, GraphEdge>();
+  for (const edge of [...pathEdges, ...learningPackEdges]) {
+    const key = `${edge.source}->${edge.target}`;
+    const existing = mergedEdgesByKey.get(key);
+    if (!existing || edge.weight > existing.weight) {
+      mergedEdgesByKey.set(key, edge);
+    }
+  }
+  const edges = Array.from(mergedEdgesByKey.values());
 
   return {
     nodes: domain ? nodes.filter((node) => node.domain === domain) : nodes,

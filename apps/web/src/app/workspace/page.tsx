@@ -73,6 +73,15 @@ type WorkspaceTaskContext = {
   taskProgress?: number;
 };
 
+type GraphViewProbeResponse = {
+  packMissing?: boolean;
+  nodes?: Array<{ kbDocumentId?: string }>;
+  data?: {
+    packMissing?: boolean;
+    nodes?: Array<{ kbDocumentId?: string }>;
+  };
+};
+
 const teachingStyleLabels = {
   socratic: '苏格拉底式',
   direct: '直接教学',
@@ -440,6 +449,47 @@ function WorkspacePageContent() {
     }
   };
 
+  const handleOpenLearningPack = useCallback(async (graphUrl: string, packTitle: string) => {
+    try {
+      const parsedUrl = new URL(graphUrl, window.location.origin);
+      const packId = parsedUrl.searchParams.get("packId");
+      if (!packId) {
+        window.location.href = graphUrl;
+        return;
+      }
+
+      const response = await fetch(`/api/graph/view?packId=${encodeURIComponent(packId)}`, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        toast.error(`无法打开「${packTitle}」，请稍后重试。`);
+        return;
+      }
+
+      const payload = (await response.json()) as GraphViewProbeResponse;
+      const data = payload.data ?? payload;
+      if (data.packMissing) {
+        toast.error(`「${packTitle}」已失效（关联文档已删除），请重新生成学习路径。`);
+        return;
+      }
+
+      const nodes = Array.isArray(data.nodes) ? data.nodes : [];
+      const hasLinkedKbDoc = nodes.some(
+        (node) => typeof node.kbDocumentId === "string" && node.kbDocumentId.trim().length > 0
+      );
+
+      if (!hasLinkedKbDoc) {
+        toast.error(`「${packTitle}」没有可用知识文档，请重新生成学习路径。`);
+        return;
+      }
+
+      window.location.href = graphUrl;
+    } catch {
+      toast.error(`打开「${packTitle}」失败，请稍后重试。`);
+    }
+  }, []);
+
   const quickActions = [
     { icon: Brain, label: "解释概念", prompt: "请解释一下" },
     { icon: Lightbulb, label: "生成练习", prompt: "我想练习" },
@@ -742,7 +792,12 @@ function WorkspacePageContent() {
                           size="sm"
                           variant="outline"
                           className="w-full text-xs h-8 bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200 hover:border-orange-300 hover:bg-orange-100"
-                          onClick={() => { window.location.href = message.learningPack!.graphUrl; }}
+                          onClick={() => {
+                            void handleOpenLearningPack(
+                              message.learningPack!.graphUrl,
+                              message.learningPack!.title
+                            );
+                          }}
                         >
                           <Route className="h-3 w-3 mr-1.5" />
                           进入 {message.learningPack!.title}

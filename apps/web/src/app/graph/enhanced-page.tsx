@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -24,22 +24,14 @@ import {
 import {
   Network,
   Search,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
   Filter,
-  Download,
-  Share2,
   Settings,
   Route,
-  AlertCircle,
   Sparkles,
-  BarChart3,
   PlusCircle,
   Link2,
 } from "lucide-react";
 import { InteractiveGraph } from "@/components/graph/interactive-graph";
-import { NodeDetailPanel } from "@/components/graph/node-detail-panel";
 import { LearningPathOverlay } from "@/components/graph/learning-path-overlay";
 import { JourneyShell } from "@/components/graph/journey-shell";
 import { ProgressLegend } from "@/components/graph/progress-legend";
@@ -122,14 +114,14 @@ function GraphPageContent() {
     packMissing?: boolean;
   }>({ nodes: [], edges: [] });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
-  const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [, setHoveredNode] = useState<GraphNode | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [layout, setLayout] = useState<LayoutType>("force");
   const [theme, setTheme] = useState<ThemeType>("tech");
   const [activeTypeFilters, setActiveTypeFilters] = useState<Set<NodeType>>(
     new Set(["concept", "topic", "resource", "skill"])
   );
-  const [activeStatusFilters, setActiveStatusFilters] = useState<Set<NodeStatus>>(
+  const [activeStatusFilters] = useState<Set<NodeStatus>>(
     new Set(["unlearned", "learning", "mastered", "review"])
   );
   const [showLearningPath, setShowLearningPath] = useState(false);
@@ -159,8 +151,8 @@ function GraphPageContent() {
   }, [view]);
 
   useEffect(() => {
-    if (activeMode === "path") {
-      setShowLearningPath(true);
+    if (activeMode !== "explore") {
+      setShowLearningPath(false);
     }
   }, [activeMode]);
 
@@ -381,16 +373,6 @@ function GraphPageContent() {
   const handleClearPath = () => {
     setCurrentPath(null);
     setShowLearningPath(false);
-  };
-
-  // 导出图谱
-  const handleExport = () => {
-    toast("导出功能开发中，敬请期待", "info");
-  };
-
-  // 分享图谱
-  const handleShare = () => {
-    toast("分享功能开发中，敬请期待", "info");
   };
 
   const refreshGraphData = useCallback(async (nodeId?: string) => {
@@ -794,31 +776,35 @@ function GraphPageContent() {
                 </button>
               </div>
 
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                className="relative w-64"
-              >
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="搜索节点..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-              </motion.div>
+              {activeMode !== "path" ? (
+                <>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="relative w-64"
+                  >
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="搜索节点..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </motion.div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setShowCreatePlanetDialog(true);
-                  setNewPlanetBindDocId("__create_new__");
-                  setNewPlanetTitle("");
-                }}
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                新建星球
-              </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowCreatePlanetDialog(true);
+                      setNewPlanetBindDocId("__create_new__");
+                      setNewPlanetTitle("");
+                    }}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    新建星球
+                  </Button>
+                </>
+              ) : null}
             </motion.div>
           </div>
         </div>
@@ -892,73 +878,82 @@ function GraphPageContent() {
         <div className="flex-1 flex min-h-0 gap-4">
           {/* Left Filters */}
           <div className="w-64 shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto">
-            {activeMode === "path" && <JourneyShell />}
+            {activeMode === "path" ? (
+              <>
+                <JourneyShell />
+                <p className="text-xs leading-5 text-muted-foreground">
+                  路径模式下仅展示学习路径列表与星图本体，已隐藏节点类型、布局与主题等通用控制。
+                </p>
+              </>
+            ) : (
+              <>
+                <div>
+                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <Filter className="h-4 w-4" /> 节点类型
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(NODE_TYPE_CONFIG).map(([type, config]) => {
+                      const isActive = activeTypeFilters.has(type as NodeType);
+                      return (
+                        <Button
+                          key={type}
+                          variant={isActive ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleTypeFilter(type as NodeType)}
+                          className={cn("justify-start", isActive && "bg-primary/10 text-primary hover:bg-primary/20")}
+                        >
+                          <div className={cn("w-2 h-2 rounded-full mr-2", config.color)} />
+                          {config.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-            <div>
-              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-                <Filter className="h-4 w-4" /> 节点类型
-              </h3>
-              <div className="flex flex-col gap-2">
-                {Object.entries(NODE_TYPE_CONFIG).map(([type, config]) => {
-                  const isActive = activeTypeFilters.has(type as NodeType);
-                  return (
-                    <Button
-                      key={type}
-                      variant={isActive ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => toggleTypeFilter(type as NodeType)}
-                      className={cn("justify-start", isActive && "bg-primary/10 text-primary hover:bg-primary/20")}
-                    >
-                      <div className={cn("w-2 h-2 rounded-full mr-2", config.color)} />
-                      {config.label}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
+                <div>
+                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <Settings className="h-4 w-4" /> 布局与主题
+                  </h3>
+                  <div className="flex flex-col gap-3">
+                    <Select value={layout} onValueChange={(v) => setLayout(v as LayoutType)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择布局" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="force">力导向布局</SelectItem>
+                        <SelectItem value="hierarchical">层次布局</SelectItem>
+                        <SelectItem value="radial">径向布局</SelectItem>
+                        <SelectItem value="timeline">时间轴布局</SelectItem>
+                      </SelectContent>
+                    </Select>
 
-            <div>
-              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-                <Settings className="h-4 w-4" /> 布局与主题
-              </h3>
-              <div className="flex flex-col gap-3">
-                <Select value={layout} onValueChange={(v) => setLayout(v as LayoutType)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择布局" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="force">力导向布局</SelectItem>
-                    <SelectItem value="hierarchical">层次布局</SelectItem>
-                    <SelectItem value="radial">径向布局</SelectItem>
-                    <SelectItem value="timeline">时间轴布局</SelectItem>
-                  </SelectContent>
-                </Select>
+                    <Select value={theme} onValueChange={(v) => setTheme(v as ThemeType)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择主题" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="tech">科技风</SelectItem>
+                        <SelectItem value="nature">自然风</SelectItem>
+                        <SelectItem value="minimal">简约风</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-                <Select value={theme} onValueChange={(v) => setTheme(v as ThemeType)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择主题" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tech">科技风</SelectItem>
-                    <SelectItem value="nature">自然风</SelectItem>
-                    <SelectItem value="minimal">简约风</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-                <Route className="h-4 w-4" /> 学习路径
-              </h3>
-              <Button
-                variant={showLearningPath ? "default" : "outline"}
-                className="w-full justify-start"
-                onClick={() => setShowLearningPath(!showLearningPath)}
-              >
-                {showLearningPath ? "隐藏推荐路径" : "显示推荐路径"}
-              </Button>
-            </div>
+                <div>
+                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <Route className="h-4 w-4" /> 学习路径
+                  </h3>
+                  <Button
+                    variant={showLearningPath ? "default" : "outline"}
+                    className="w-full justify-start"
+                    onClick={() => setShowLearningPath(!showLearningPath)}
+                  >
+                    {showLearningPath ? "隐藏推荐路径" : "显示推荐路径"}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Center Canvas */}

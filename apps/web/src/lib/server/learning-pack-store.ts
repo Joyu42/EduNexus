@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { loadDb, saveDb } from "./store";
 import type { LearningPackRecord, LearningPackModuleRecord } from "../learning-pack/schema";
-import { deriveModuleStage, derivePackStage, isTerminalStage, stageOrder } from "../learning-pack/schema";
+import { deriveModuleStage, derivePackStage } from "../learning-pack/schema";
 
 export type { LearningPackRecord, LearningPackModuleRecord, MasteryStage } from "../learning-pack/schema";
 export { MASTERY_STAGES } from "../learning-pack/schema";
@@ -176,6 +176,63 @@ export async function updatePackStage(packId: string, userId: string): Promise<v
 export async function deleteLearningPack(packId: string, userId: string): Promise<void> {
   const packs = await getAllPacks();
   await putAllPacks(packs.filter((p) => !(p.packId === packId && p.userId === userId)));
+}
+
+export async function detachDocumentFromLearningPacks(
+  userId: string,
+  docId: string
+): Promise<{ updatedPackIds: string[]; removedPackIds: string[] }> {
+  const packs = await getAllPacks();
+  const now = new Date().toISOString();
+  const updatedPackIds: string[] = [];
+  const removedPackIds: string[] = [];
+  let changed = false;
+
+  const nextPacks = packs.flatMap((pack) => {
+    if (pack.userId !== userId) {
+      return [pack];
+    }
+
+    let touched = false;
+    const modules = pack.modules.map((module) => {
+      if (module.kbDocumentId !== docId) {
+        return module;
+      }
+      touched = true;
+      return { ...module, kbDocumentId: "" };
+    });
+
+    if (!touched) {
+      return [pack];
+    }
+
+    changed = true;
+    const hasBoundDocument = modules.some((module) => module.kbDocumentId.trim().length > 0);
+
+    if (!hasBoundDocument) {
+      removedPackIds.push(pack.packId);
+      return [];
+    }
+
+    updatedPackIds.push(pack.packId);
+    return [
+      {
+        ...pack,
+        modules,
+        activeModuleId:
+          modules.find((module) => module.moduleId === pack.activeModuleId)?.moduleId ??
+          modules[0]?.moduleId ??
+          null,
+        updatedAt: now,
+      },
+    ];
+  });
+
+  if (changed) {
+    await putAllPacks(nextPacks);
+  }
+
+  return { updatedPackIds, removedPackIds };
 }
 
 export async function setActiveModule(packId: string, moduleId: string, userId: string): Promise<void> {
