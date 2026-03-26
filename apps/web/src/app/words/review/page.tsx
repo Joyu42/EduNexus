@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Timer } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ import type { Word, WordAnswerGrade } from "@/lib/words/types";
 
 export default function ReviewWordsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const bookId = searchParams.get("bookId") ?? undefined;
   const { status } = useSession();
   const [today, setToday] = useState(getWordsToday());
   const [sessionQueue, setSessionQueue] = useState<Word[]>([]);
@@ -50,7 +52,7 @@ export default function ReviewWordsPage() {
         wordsStorage.getAllLearningRecords(),
       ]);
       if (!active) return;
-      const dueWordIds = selectReviewWordIds(words, records, today, 50);
+      const dueWordIds = selectReviewWordIds(words, records, today, 50, bookId);
       const byId = new Map(words.map((word) => [word.id, word]));
       const queue = dueWordIds
         .map((id) => byId.get(id))
