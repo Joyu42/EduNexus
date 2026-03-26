@@ -337,14 +337,55 @@ export async function getGraphView(
   }
 
   const db = await loadDb();
-  const hasDemoPaths = db.syncedPaths.some(
-    (path) => path.userId === userId && path.pathId.startsWith("demo_path_")
-  );
+  const userPaths = db.syncedPaths.filter((path) => path.userId === userId);
+  const pathMembershipMap = buildPathMembershipMap(userPaths);
+  const needsReviewSet = new Set(db.needsReviewNodes ?? []);
+  const hasDemoPaths = userPaths.some((path) => path.pathId.startsWith("demo_path_"));
 
+  const documents = await prisma.document.findMany({
+    where: { authorId: userId },
+    take: MAX_NODES_PER_USER,
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  const contentNodes: WorkspaceGraphNode[] = documents.map((doc) => {
+    const mastery = db.masteryByNode[doc.id] ?? 0;
+    const domainValue = "general";
+    const pathMemberships = pathMembershipMap.get(doc.id) ?? [];
+    const category = resolveNodeCategory({
+      defaultDomain: domainValue,
+      pathMemberships,
+      userPaths,
+    });
+
+    return {
+      id: doc.id,
+      label: doc.title,
+      mastery,
+      risk: 0.5,
+      domain: domainValue,
+      masteryStage: deriveMasteryStage(mastery),
+      needsReview: needsReviewSet.has(doc.id),
+      pathMemberships,
+      category,
+      kbDocumentId: doc.id,
+      documentIds: [doc.id],
+    };
+  });
+
+  const existingNodeIds = new Set(contentNodes.map((node) => node.id));
+  const pathEdges = buildPathEdges(userPaths, existingNodeIds);
+  const learningPackEdges = buildLearningPackEdges(await getPacksByUser(userId), existingNodeIds);
+
+  const mergedEdgesByKey = new Map<string, GraphEdge>();
+  for (const edge of [...pathEdges, ...learningPackEdges]) {
+    const key = `${edge.source}->${edge.target}`;
+    const existing = mergedEdgesByKey.get(key);
+    if (!existing || edge.weight > existing.weight) {
+      mergedEdgesByKey.set(key, edge);
+    }
+  }
   if (hasDemoPaths) {
-    const userPaths = db.syncedPaths.filter((path) => path.userId === userId);
-    const pathMembershipMap = buildPathMembershipMap(userPaths);
-    const needsReviewSet = new Set(db.needsReviewNodes ?? []);
     const demoNodeMeta = new Map(
       DEMO_GRAPH_BOOTSTRAP.nodes.map((node) => [node.id, node])
     );
@@ -363,6 +404,9 @@ export async function getGraphView(
         ])
     );
 
+    const contentNodeMap = new Map(contentNodes.map((node) => [node.id, node]));
+    const demoNodeCanonicalMap = new Map<string, string>();
+
     const demoNodes = Object.entries(db.masteryByNode)
       .filter(([nodeId]) => nodeId.startsWith("demo_node_"))
       .map(([nodeId, mastery]) => {
@@ -376,9 +420,12 @@ export async function getGraphView(
         });
         const kbDocumentId = documentMeta?.kbDocumentId ?? "";
         const documentIds = kbDocumentId ? [kbDocumentId] : [];
+        const canonicalId =
+          kbDocumentId && contentNodeMap.has(kbDocumentId) ? kbDocumentId : nodeId;
+        demoNodeCanonicalMap.set(nodeId, canonicalId);
 
         return {
-          id: nodeId,
+          id: canonicalId,
           label: documentMeta?.label || meta?.label || nodeId,
           mastery,
           risk: meta?.risk ?? 0.5,
@@ -407,63 +454,77 @@ export async function getGraphView(
       weight: edge.weight,
     }));
 
-    return {
-      nodes: domain ? demoNodes.filter((node) => node.domain === domain) : demoNodes,
-      edges: demoEdges.length > 0 ? demoEdges : fallbackEdges,
-    };
-  }
+    const resolveCanonicalNodeId = (rawId: string): string =>
+      demoNodeCanonicalMap.get(rawId) ?? rawId;
 
-  const documents = await prisma.document.findMany({
-    where: { authorId: userId },
-    take: MAX_NODES_PER_USER,
-    orderBy: { updatedAt: 'desc' },
-  });
+    const demoEdgesToMerge = demoEdges.length > 0 ? demoEdges : fallbackEdges;
+    for (const edge of demoEdgesToMerge) {
+      const source = resolveCanonicalNodeId(edge.source);
+      const target = resolveCanonicalNodeId(edge.target);
+      if (!source || !target || source === target) {
+        continue;
+      }
 
-  const userPaths = db.syncedPaths.filter((path) => path.userId === userId);
-  const pathMembershipMap = buildPathMembershipMap(userPaths);
-  const needsReviewSet = new Set(db.needsReviewNodes ?? []);
-
-  const nodes: WorkspaceGraphNode[] = documents.map((doc) => {
-    const mastery = db.masteryByNode[doc.id] ?? 0;
-    const domainValue = "general";
-    const pathMemberships = pathMembershipMap.get(doc.id) ?? [];
-    const category = resolveNodeCategory({
-      defaultDomain: domainValue,
-      pathMemberships,
-      userPaths,
-    });
-
-    return {
-      id: doc.id,
-      label: doc.title,
-      mastery,
-      risk: 0.5,
-      domain: domainValue,
-      masteryStage: deriveMasteryStage(mastery),
-      needsReview: needsReviewSet.has(doc.id),
-      pathMemberships,
-      category,
-      kbDocumentId: doc.id,
-      documentIds: [doc.id],
-    };
-  });
-
-  const existingNodeIds = new Set(nodes.map((node) => node.id));
-  const pathEdges = buildPathEdges(userPaths, existingNodeIds);
-  const learningPackEdges = buildLearningPackEdges(await getPacksByUser(userId), existingNodeIds);
-
-  const mergedEdgesByKey = new Map<string, GraphEdge>();
-  for (const edge of [...pathEdges, ...learningPackEdges]) {
-    const key = `${edge.source}->${edge.target}`;
-    const existing = mergedEdgesByKey.get(key);
-    if (!existing || edge.weight > existing.weight) {
-      mergedEdgesByKey.set(key, edge);
+      const normalizedEdge = { source, target, weight: edge.weight };
+      const key = `${source}->${target}`;
+      const existing = mergedEdgesByKey.get(key);
+      if (!existing || normalizedEdge.weight > existing.weight) {
+        mergedEdgesByKey.set(key, normalizedEdge);
+      }
     }
+
+    const mergedNodeMap = new Map<string, WorkspaceGraphNode>();
+    for (const node of contentNodes) {
+      mergedNodeMap.set(node.id, node);
+    }
+    for (const node of demoNodes) {
+      const existing = mergedNodeMap.get(node.id);
+      if (!existing) {
+        mergedNodeMap.set(node.id, node);
+        continue;
+      }
+
+      const mergedMembershipsByKey = new Map<string, PathMembership>();
+      for (const membership of [...existing.pathMemberships, ...node.pathMemberships]) {
+        const membershipKey = `${membership.pathId}::${membership.stage}::${membership.orderWithinStage}`;
+        if (!mergedMembershipsByKey.has(membershipKey)) {
+          mergedMembershipsByKey.set(membershipKey, membership);
+        }
+      }
+
+      const mergedDocIds = Array.from(
+        new Set([...existing.documentIds, ...node.documentIds].filter((docId) => docId.trim().length > 0))
+      );
+      const mergedMastery = Math.max(existing.mastery, node.mastery);
+
+      mergedNodeMap.set(node.id, {
+        ...existing,
+        label: existing.label || node.label,
+        mastery: mergedMastery,
+        masteryStage: deriveMasteryStage(mergedMastery),
+        risk: Math.max(existing.risk, node.risk),
+        domain: existing.domain !== "general" ? existing.domain : node.domain,
+        needsReview: existing.needsReview || node.needsReview,
+        pathMemberships: Array.from(mergedMembershipsByKey.values()),
+        category: existing.category !== "general" ? existing.category : node.category,
+        kbDocumentId: existing.kbDocumentId || node.kbDocumentId,
+        documentIds: mergedDocIds,
+      });
+    }
+
+    const mergedNodes = Array.from(mergedNodeMap.values());
+    const mergedEdges = Array.from(mergedEdgesByKey.values());
+
+    return {
+      nodes: domain ? mergedNodes.filter((node) => node.domain === domain) : mergedNodes,
+      edges: mergedEdges,
+    };
   }
+
   const edges = Array.from(mergedEdgesByKey.values());
 
   return {
-    nodes: domain ? nodes.filter((node) => node.domain === domain) : nodes,
+    nodes: domain ? contentNodes.filter((node) => node.domain === domain) : contentNodes,
     edges,
   };
 }

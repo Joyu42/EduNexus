@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { GraphNode, GraphEdge, LayoutType, ThemeType } from "@/lib/graph/types";
 import { LayoutAlgorithms } from "@/lib/graph/layout-algorithms";
@@ -36,6 +36,96 @@ const MASTERY_SIZE_MAP = {
   applied: 1.0,
   mastered: 1.3,
 } as const;
+
+const RELATION_BASE_COLOR: Record<GraphEdge["type"], [number, number, number]> = {
+  prerequisite: [167, 139, 250],
+  related: [148, 163, 184],
+  contains: [56, 189, 248],
+  applies: [251, 191, 36],
+};
+
+function resolveEdgeNodeId(node: string | GraphNode): string {
+  return typeof node === "string" ? node : node.id;
+}
+
+function clampStrength(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0.5;
+  }
+  if (value < 0) {
+    return 0;
+  }
+  if (value > 1) {
+    return 1;
+  }
+  return value;
+}
+
+function isLearningPathEdge(
+  edge: GraphEdge,
+  showLearningPath: boolean,
+  pathNodes: string[]
+): boolean {
+  if (!showLearningPath) {
+    return false;
+  }
+  const sourceId = resolveEdgeNodeId(edge.source);
+  const targetId = resolveEdgeNodeId(edge.target);
+  return pathNodes.includes(sourceId) && pathNodes.includes(targetId);
+}
+
+export function buildGraphTopologyKey(
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+  layout: LayoutType
+): string {
+  const nodeIds = nodes
+    .map((node) => node.id)
+    .sort()
+    .join("|");
+  const edgeKeys = edges
+    .map((edge) => `${resolveEdgeNodeId(edge.source)}->${resolveEdgeNodeId(edge.target)}:${edge.type}`)
+    .sort()
+    .join("|");
+
+  return `${layout}::${nodeIds}::${edgeKeys}`;
+}
+
+export function mergeNodePositions(nextNodes: GraphNode[], previousNodes: GraphNode[]): GraphNode[] {
+  const previousById = new Map(previousNodes.map((node) => [node.id, node]));
+  return nextNodes.map((node) => {
+    const previous = previousById.get(node.id);
+    if (!previous) {
+      return node;
+    }
+
+    return {
+      ...node,
+      x: previous.x,
+      y: previous.y,
+      vx: previous.vx,
+      vy: previous.vy,
+      fx: previous.fx,
+      fy: previous.fy,
+    };
+  });
+}
+
+function pinNodePosition(node: GraphNode): void {
+  if (typeof node.x === "number" && typeof node.y === "number") {
+    node.fx = node.x;
+    node.fy = node.y;
+  }
+}
+
+function getNodeSize(node: GraphNode): number {
+  const masteryStage = node.masteryStage ?? "seen";
+  const baseSize = 5;
+  const importanceSize = node.importance * 6;
+  const connectionSize = Math.min(node.connections * 0.5, 3);
+  const masteryMultiplier = MASTERY_SIZE_MAP[masteryStage] ?? 0.8;
+  return (baseSize + importanceSize + connectionSize) * masteryMultiplier;
+}
 
 function hexToRgb(hex: string): [number, number, number] | null {
   const normalized = hex.replace("#", "").trim();
@@ -114,15 +204,21 @@ export function InteractiveGraph({
   const [layoutedNodes, setLayoutedNodes] = useState<GraphNode[]>(nodes);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const previousTopologyKeyRef = useRef<string>("");
+  const previousHoverNodeIdRef = useRef<string | null>(null);
+  const activeDragNodeIdRef = useRef<string | null>(null);
 
   // 应用布局算法
   useEffect(() => {
-    const newNodes = LayoutAlgorithms.applyLayout(
-      nodes,
-      edges,
-      layout,
-      undefined
-    );
+    const topologyKey = buildGraphTopologyKey(nodes, edges, layout);
+
+    if (topologyKey === previousTopologyKeyRef.current) {
+      setLayoutedNodes((previousNodes) => mergeNodePositions(nodes, previousNodes));
+      return;
+    }
+
+    const newNodes = LayoutAlgorithms.applyLayout(nodes, edges, layout, undefined);
+    previousTopologyKeyRef.current = topologyKey;
     setLayoutedNodes(newNodes);
   }, [nodes, edges, layout]);
 
@@ -155,11 +251,43 @@ export function InteractiveGraph({
   const handleNodeHover = useCallback(
     (node: any) => {
       const graphNode = node as GraphNode | null;
+      const nextHoverId = graphNode?.id ?? null;
+      if (nextHoverId === previousHoverNodeIdRef.current) {
+        return;
+      }
+      previousHoverNodeIdRef.current = nextHoverId;
       setHoveredNode(graphNode);
       onNodeHover(graphNode);
     },
     [onNodeHover]
   );
+
+  const handleNodeDrag = useCallback((node: any) => {
+    const draggedNode = node as GraphNode;
+
+    if (activeDragNodeIdRef.current !== draggedNode.id) {
+      activeDragNodeIdRef.current = draggedNode.id;
+      for (const item of layoutedNodes) {
+        if (item.id !== draggedNode.id) {
+          pinNodePosition(item);
+        }
+      }
+    }
+
+    pinNodePosition(draggedNode);
+  }, [layoutedNodes]);
+
+  const handleNodeDragEnd = useCallback((node: any) => {
+    const draggedNode = node as GraphNode;
+    pinNodePosition(draggedNode);
+    activeDragNodeIdRef.current = null;
+  }, []);
+
+  const handleEngineStop = useCallback(() => {
+    for (const node of layoutedNodes) {
+      pinNodePosition(node);
+    }
+  }, [layoutedNodes]);
 
   // 绘制节点
   const nodeCanvasObject = useCallback(
@@ -174,13 +302,7 @@ export function InteractiveGraph({
       const nodeColor = categoryHue
         ? mixCategoryWithMastery(categoryHue, masteryColor)
         : masteryColor;
-
-      // Obsidian 风格 - 节点大小更小更精致
-      const baseSize = 5;
-      const importanceSize = graphNode.importance * 6;
-      const connectionSize = Math.min(graphNode.connections * 0.5, 3);
-      const masteryMultiplier = MASTERY_SIZE_MAP[masteryStage] ?? 0.8;
-      const nodeSize = (baseSize + importanceSize + connectionSize) * masteryMultiplier;
+      const nodeSize = getNodeSize(graphNode);
 
       // 绘制外层光晕 - 更柔和
       const gradient = ctx.createRadialGradient(
@@ -281,26 +403,15 @@ export function InteractiveGraph({
   const linkColor = useCallback(
     (link: any) => {
       const graphLink = link as GraphEdge;
-      const sourceId =
-        typeof graphLink.source === "string"
-          ? graphLink.source
-          : graphLink.source.id;
-      const targetId =
-        typeof graphLink.target === "string"
-          ? graphLink.target
-          : graphLink.target.id;
 
       // 学习路径高亮
-      if (
-        showLearningPath &&
-        pathNodes.includes(sourceId) &&
-        pathNodes.includes(targetId)
-      ) {
+      if (isLearningPathEdge(graphLink, showLearningPath, pathNodes)) {
         return "#60a5fa";
       }
 
-      // Obsidian 风格 - 非常细的半透明线
-      return "rgba(148, 163, 184, 0.25)";
+      const [r, g, b] = RELATION_BASE_COLOR[graphLink.type] ?? RELATION_BASE_COLOR.related;
+      const alpha = 0.22 + clampStrength(graphLink.strength) * 0.45;
+      return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
     },
     [showLearningPath, pathNodes]
   );
@@ -308,34 +419,63 @@ export function InteractiveGraph({
   // 连接线宽度 - Obsidian 风格更细
   const linkWidth = useCallback((link: any) => {
     const graphLink = link as GraphEdge;
-    const sourceId = typeof graphLink.source === "string" ? graphLink.source : graphLink.source.id;
-    const targetId = typeof graphLink.target === "string" ? graphLink.target : graphLink.target.id;
-
-    if (showLearningPath && pathNodes.includes(sourceId) && pathNodes.includes(targetId)) {
+    if (isLearningPathEdge(graphLink, showLearningPath, pathNodes)) {
       return 2;
     }
-    return 0.8;
+    return 0.7 + clampStrength(graphLink.strength) * 1.1;
   }, [showLearningPath, pathNodes]);
 
   const linkDirectionalParticles = useCallback((link: any) => {
     const graphLink = link as GraphEdge;
-    const sourceId = typeof graphLink.source === "string" ? graphLink.source : graphLink.source.id;
-    const targetId = typeof graphLink.target === "string" ? graphLink.target : graphLink.target.id;
-    if (showLearningPath && pathNodes.includes(sourceId) && pathNodes.includes(targetId)) {
-      return 3;
+    if (isLearningPathEdge(graphLink, showLearningPath, pathNodes)) {
+      return 4;
     }
-    return 0;
+    return Math.max(1, Math.round(1 + clampStrength(graphLink.strength) * 2));
+  }, [showLearningPath, pathNodes]);
+
+  const linkDirectionalParticleWidth = useCallback((link: any) => {
+    const graphLink = link as GraphEdge;
+    if (isLearningPathEdge(graphLink, showLearningPath, pathNodes)) {
+      return 2;
+    }
+    return 1 + clampStrength(graphLink.strength) * 0.8;
+  }, [showLearningPath, pathNodes]);
+
+  const linkDirectionalParticleSpeed = useCallback((link: any) => {
+    const graphLink = link as GraphEdge;
+    if (isLearningPathEdge(graphLink, showLearningPath, pathNodes)) {
+      return 0.0032;
+    }
+    return 0.0012 + clampStrength(graphLink.strength) * 0.0012;
   }, [showLearningPath, pathNodes]);
 
   const linkDirectionalParticleColor = useCallback((link: any) => {
     const graphLink = link as GraphEdge;
-    const sourceId = typeof graphLink.source === "string" ? graphLink.source : graphLink.source.id;
-    const targetId = typeof graphLink.target === "string" ? graphLink.target : graphLink.target.id;
-    if (showLearningPath && pathNodes.includes(sourceId) && pathNodes.includes(targetId)) {
+    if (isLearningPathEdge(graphLink, showLearningPath, pathNodes)) {
       return "#60a5fa";
     }
-    return "rgba(148, 163, 184, 0.55)";
+
+    const [r, g, b] = RELATION_BASE_COLOR[graphLink.type] ?? RELATION_BASE_COLOR.related;
+    const alpha = 0.45 + clampStrength(graphLink.strength) * 0.35;
+    return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
   }, [showLearningPath, pathNodes]);
+
+  const graphData = useMemo(
+    () => ({ nodes: layoutedNodes, links: edges }),
+    [layoutedNodes, edges]
+  );
+
+  const nodePointerAreaPaint = useCallback(
+    (node: unknown, color: string, ctx: CanvasRenderingContext2D) => {
+      const graphNode = node as GraphNode;
+      const hitRadius = Math.max(getNodeSize(graphNode) * 1.25, 8);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(graphNode.x || 0, graphNode.y || 0, hitRadius, 0, 2 * Math.PI, false);
+      ctx.fill();
+    },
+    []
+  );
 
   return (
     <div
@@ -350,24 +490,28 @@ export function InteractiveGraph({
 
       <ForceGraph2D
         ref={graphRef}
-        graphData={{ nodes: layoutedNodes, links: edges }}
+        graphData={graphData}
         nodeLabel="name"
         nodeCanvasObject={nodeCanvasObject}
+        nodePointerAreaPaint={nodePointerAreaPaint}
         linkColor={linkColor}
         linkWidth={linkWidth}
         linkDirectionalParticles={linkDirectionalParticles}
-        linkDirectionalParticleWidth={2}
-        linkDirectionalParticleSpeed={0.003}
+        linkDirectionalParticleWidth={linkDirectionalParticleWidth}
+        linkDirectionalParticleSpeed={linkDirectionalParticleSpeed}
         linkDirectionalParticleColor={linkDirectionalParticleColor}
         onNodeClick={handleNodeClick}
         onNodeHover={handleNodeHover}
-        cooldownTicks={layout === "force" ? 200 : 0}
-        warmupTicks={50}
+        onNodeDrag={handleNodeDrag}
+        onNodeDragEnd={handleNodeDragEnd}
+        onEngineStop={handleEngineStop}
+        cooldownTicks={layout === "force" ? 60 : 0}
+        warmupTicks={120}
         enableNodeDrag={layout === "force"}
         enableZoomInteraction={true}
         enablePanInteraction={true}
-        d3AlphaDecay={0.03}
-        d3VelocityDecay={0.35}
+        d3AlphaDecay={0.06}
+        d3VelocityDecay={0.55}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -276,29 +276,33 @@ function GraphPageContent() {
   }, [status, urlPackId]);
 
   // 筛选节点
-  const filteredNodes = graphData.nodes.filter((node) => {
-    // 类型筛选
-    if (!activeTypeFilters.has(node.type)) return false;
-    // 状态筛选
-    if (!activeStatusFilters.has(node.status)) return false;
-    // 搜索筛选
-    if (
-      searchQuery &&
-      !node.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ) {
-      return false;
-    }
-    return true;
-  });
+  const filteredNodes = useMemo(() => {
+    return graphData.nodes.filter((node) => {
+      // 类型筛选
+      if (!activeTypeFilters.has(node.type)) return false;
+      // 状态筛选
+      if (!activeStatusFilters.has(node.status)) return false;
+      // 搜索筛选
+      if (
+        searchQuery &&
+        !node.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [graphData.nodes, activeTypeFilters, activeStatusFilters, searchQuery]);
 
-  const filteredEdges = graphData.edges.filter((edge) => {
-    const sourceId = typeof edge.source === "string" ? edge.source : edge.source.id;
-    const targetId = typeof edge.target === "string" ? edge.target : edge.target.id;
-    return (
-      filteredNodes.some((n) => n.id === sourceId) &&
-      filteredNodes.some((n) => n.id === targetId)
-    );
-  });
+  const filteredEdges = useMemo(() => {
+    return graphData.edges.filter((edge) => {
+      const sourceId = typeof edge.source === "string" ? edge.source : edge.source.id;
+      const targetId = typeof edge.target === "string" ? edge.target : edge.target.id;
+      return (
+        filteredNodes.some((n) => n.id === sourceId) &&
+        filteredNodes.some((n) => n.id === targetId)
+      );
+    });
+  }, [graphData.edges, filteredNodes]);
 
   // 计算进度统计
   const stats = ProgressTracker.calculateStats(graphData.nodes);
@@ -874,14 +878,15 @@ function GraphPageContent() {
           </div>
         </div>
 
-        {/* 3-Column Layout */}
         <div className="flex-1 flex min-h-0 gap-4">
-          {/* Left Filters */}
-          <div className="w-64 shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto">
+          <div
+            className={cn(
+              "shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto",
+              activeMode === "path" ? "w-[24rem]" : "w-64"
+            )}
+          >
             {activeMode === "path" ? (
-              <>
-                <JourneyShell className="flex-1 min-h-0" />
-              </>
+              <JourneyShell className="h-full min-h-0" />
             ) : (
               <>
                 <div>
@@ -953,7 +958,6 @@ function GraphPageContent() {
             )}
           </div>
 
-          {/* Center Canvas */}
           <div className="flex-1 relative bg-card/20 rounded-lg border overflow-hidden">
             <InteractiveGraph
               nodes={filteredNodes}
@@ -966,12 +970,10 @@ function GraphPageContent() {
               showLearningPath={showLearningPath}
               pathNodes={currentPath?.nodes || []}
             />
-            {/* 进度图例 */}
             <div className="absolute bottom-4 left-4 z-10 pointer-events-none">
               <ProgressLegend stats={stats} />
             </div>
 
-            {/* 学习路径叠加层 */}
             {showLearningPath && (
               <div className="absolute top-4 right-4 z-10 w-80">
                 <LearningPathOverlay
@@ -986,7 +988,7 @@ function GraphPageContent() {
           </div>
 
           {/* Right Sidebar (Conditional) */}
-          {selectedNode && (
+          {activeMode !== "path" && selectedNode && (
             <div data-testid="graph-planet-sidebar" className="w-80 shrink-0 border bg-card rounded-lg overflow-y-auto flex flex-col">
               {/* Section 1: Summary */}
               <div data-testid="graph-sidebar-summary" className="p-4 border-b">
