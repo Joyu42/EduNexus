@@ -21,21 +21,30 @@ export function useSpeechSynthesis(): UseSpeechSynthesisReturn {
   useEffect(() => {
     if (!isSupported) return;
 
+    let timeoutId: ReturnType<typeof setTimeout>;
+
     const loadVoices = () => {
       voicesRef.current = window.speechSynthesis.getVoices();
-      voicesLoadedRef.current = true;
+      if (voicesRef.current.length > 0) {
+        voicesLoadedRef.current = true;
+        clearTimeout(timeoutId);
+      }
     };
 
+    window.speechSynthesis.addEventListener("voiceschanged", loadVoices, {
+      once: true,
+    });
     loadVoices();
 
     if (voicesRef.current.length === 0) {
-      window.speechSynthesis.addEventListener("voiceschanged", loadVoices, {
-        once: true,
-      });
+      timeoutId = setTimeout(() => {
+        voicesLoadedRef.current = true;
+      }, 5000);
     }
 
     return () => {
       window.speechSynthesis.removeEventListener("voiceschanged", loadVoices);
+      clearTimeout(timeoutId);
     };
   }, [isSupported]);
 
@@ -46,6 +55,12 @@ export function useSpeechSynthesis(): UseSpeechSynthesisReturn {
       window.speechSynthesis.cancel();
     };
   }, [isSupported]);
+
+  useEffect(() => {
+    if (!speakingKind) return;
+    const timeoutId = setTimeout(() => setSpeakingKind(null), 15000);
+    return () => clearTimeout(timeoutId);
+  }, [speakingKind]);
 
   const getEnglishVoice = useCallback((): SpeechSynthesisVoice | null => {
     const voices = voicesRef.current;
@@ -58,6 +73,7 @@ export function useSpeechSynthesis(): UseSpeechSynthesisReturn {
   const speak = useCallback(
     (text: string, kind: "word" | "example") => {
       if (!isSupported) return;
+      if (!text || text.trim() === "") return;
 
       window.speechSynthesis.cancel();
 
