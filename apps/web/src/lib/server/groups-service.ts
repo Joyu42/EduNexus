@@ -335,3 +335,35 @@ export async function deleteGroupSharedResource(sharedResourceId: string) {
   await saveDb(db);
   return true;
 }
+
+/**
+ * Returns the active membership record for a user in a group, or null if none exists.
+ * Only returns records where status is "active".
+ */
+export async function getActiveMembership(
+  groupId: string,
+  userId: string
+): Promise<GroupMemberRecord | null> {
+  const db = await loadDb();
+  const membership = db.groupMembers.find(
+    (member) => member.groupId === groupId && member.userId === userId && member.status === "active"
+  );
+  return membership ?? null;
+}
+
+/**
+ * Returns true if the user is an active member of the group (owner, admin, or member).
+ * Use getActiveMembership() if you need the full record.
+ */
+export async function isActiveMember(groupId: string, userId: string): Promise<boolean> {
+  const membership = await getActiveMembership(groupId, userId);
+  return membership !== null;
+}
+
+/**
+ * Returns true only if the user is the active owner of the group.
+ */
+export async function isActiveOwner(groupId: string, userId: string): Promise<boolean> {
+  const membership = await getActiveMembership(groupId, userId);
+  return membership?.role === "owner";
+}

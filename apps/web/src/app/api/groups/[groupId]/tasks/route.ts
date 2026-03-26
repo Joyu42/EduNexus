@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { fail, ok } from "@/lib/server/response";
 import { getCurrentUserId } from "@/lib/server/auth-utils";
-import { createGroupTask, listGroupTasks } from "@/lib/server/groups-service";
+import { createGroupTask, isActiveOwner, listGroupTasks } from "@/lib/server/groups-service";
 import { loadDb } from "@/lib/server/store";
 
 export const runtime = "nodejs";
@@ -88,6 +88,17 @@ export async function POST(request: Request, context: { params: Promise<{ groupI
           message: "未找到对应小组。"
         },
         404
+      );
+    }
+
+    const owned = await isActiveOwner(id, userId);
+    if (!owned) {
+      return fail(
+        {
+          code: "FORBIDDEN",
+          message: "只有组长才能创建任务。"
+        },
+        403
       );
     }
 
