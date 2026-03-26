@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { fail, ok } from "@/lib/server/response";
 import { getCurrentUserId } from "@/lib/server/auth-utils";
 import { loadDb } from "@/lib/server/store";
-import { createGroupSharedResource, listGroupSharedResources } from "@/lib/server/groups-service";
+import { createGroupSharedResource, isActiveMember, listGroupSharedResources } from "@/lib/server/groups-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -93,6 +93,17 @@ export async function POST(request: Request, context: { params: Promise<{ groupI
           message: "未找到对应小组。"
         },
         404
+      );
+    }
+
+    const membership = await isActiveMember(id, userId);
+    if (!membership) {
+      return fail(
+        {
+          code: "FORBIDDEN",
+          message: "需要小组成员才能分享资源。"
+        },
+        403
       );
     }
 
