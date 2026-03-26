@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Target, Calendar, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncDemoClientData } from '@/lib/client/demo-client-sync';
+import { shouldSyncDemoDataInGoalsPage } from '@/lib/client/demo-bootstrap-policy';
 import { getGoalsPageState } from '@/lib/client/path-goal-view-state';
 
 export default function GoalsPage() {
@@ -47,7 +48,12 @@ export default function GoalsPage() {
       isDemoUser: session?.user?.isDemo === true,
     });
 
-    if (session?.user?.isDemo === true && (state.kind === 'bootstrap_demo' || state.kind === 'content')) {
+    if (
+      shouldSyncDemoDataInGoalsPage({
+        isDemoUser: session?.user?.isDemo === true,
+        goalsPageStateKind: state.kind,
+      })
+    ) {
       await syncDemoClientData(session?.user?.id ?? 'demo-user');
       goals = goalStorage.getGoals();
     }
