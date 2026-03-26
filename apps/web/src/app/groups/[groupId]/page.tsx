@@ -239,6 +239,10 @@ export default function GroupDetailsPage({
 
   const members = membersQuery.data ?? [];
   const isJoined = Boolean(currentUserId && members.some((item) => item.userId === currentUserId && item.status === "active"));
+  const isOwner = Boolean(
+    currentUserId &&
+    members.some((item) => item.userId === currentUserId && item.status === "active" && item.role === "owner")
+  );
 
   if (groupQuery.isLoading) {
     return (
@@ -317,17 +321,19 @@ export default function GroupDetailsPage({
           <Card>
             <CardHeader><CardTitle>共享资源</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <form
-                className="flex gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  createResourceMutation.mutate(new FormData(e.currentTarget));
-                  e.currentTarget.reset();
-                }}
-              >
-                <Input name="resourceId" placeholder="输入资源 ID" required />
-                <Button type="submit" size="sm">分享</Button>
-              </form>
+              {isJoined && (
+                <form
+                  className="flex gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    createResourceMutation.mutate(new FormData(e.currentTarget));
+                    e.currentTarget.reset();
+                  }}
+                >
+                  <Input name="resourceId" placeholder="输入资源 ID" required />
+                  <Button type="submit" size="sm">分享</Button>
+                </form>
+              )}
               <div className="space-y-2">
                 {(resourcesQuery.data ?? []).map((item) => (
                   <Link key={item.id} href={`/resources/${item.resourceId}`} className="block rounded-md border px-3 py-2 text-sm hover:bg-muted/50">
@@ -369,19 +375,25 @@ export default function GroupDetailsPage({
           <Card>
             <CardHeader><CardTitle>小组任务</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <form
-                className="space-y-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  createTaskMutation.mutate(new FormData(e.currentTarget));
-                  e.currentTarget.reset();
-                }}
-              >
-                <Input name="title" placeholder="任务标题" required />
-                <Textarea name="description" placeholder="任务描述（可选）" />
-                <Input name="dueDate" placeholder="截止日期（可选）" />
-                <Button type="submit" size="sm">创建任务</Button>
-              </form>
+              {isOwner ? (
+                <form
+                  className="space-y-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    createTaskMutation.mutate(new FormData(e.currentTarget));
+                    e.currentTarget.reset();
+                  }}
+                >
+                  <Input name="title" placeholder="任务标题" required />
+                  <Textarea name="description" placeholder="任务描述（可选）" />
+                  <Input name="dueDate" placeholder="截止日期（可选）" />
+                  <Button type="submit" size="sm">创建任务</Button>
+                </form>
+              ) : (
+                <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground text-center">
+                  仅小组所有者可以发布任务
+                </div>
+              )}
               <div className="space-y-2">
                 {(tasksQuery.data ?? []).map((task) => (
                   <div key={task.id} className="rounded-md border px-3 py-2">
