@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,6 @@ import {
   Route,
   Sparkles,
   PlusCircle,
-  Link2,
 } from "lucide-react";
 import { InteractiveGraph } from "@/components/graph/interactive-graph";
 import { LearningPathOverlay } from "@/components/graph/learning-path-overlay";
@@ -62,7 +62,7 @@ const NODE_TYPE_CONFIG = {
   skill: { label: "技能", color: "bg-orange-500" },
 };
 
-type GraphMode = "explore" | "path" | "today" | "incomplete";
+type GraphMode = "explore" | "path";
 
 type SidebarKBDoc = {
   id: string;
@@ -93,7 +93,7 @@ function buildKbIdentityExcerpt(kbDoc: SidebarKBDoc | null, fallbackExcerpt?: st
 }
 
 function normalizeMode(view: string | null): GraphMode {
-  if (view === "path" || view === "today" || view === "incomplete") {
+  if (view === "path") {
     return view;
   }
   return "explore";
@@ -142,7 +142,6 @@ function GraphPageContent() {
   const [showCreatePlanetDialog, setShowCreatePlanetDialog] = useState(false);
   const [newPlanetTitle, setNewPlanetTitle] = useState("");
   const [newPlanetBindDocId, setNewPlanetBindDocId] = useState("__create_new__");
-  const [bindExistingDocId, setBindExistingDocId] = useState("");
   const [isPlanetSubmitting, setIsPlanetSubmitting] = useState(false);
   const [userKbDocs, setUserKbDocs] = useState<UserKBDocOption[]>([]);
 
@@ -417,11 +416,8 @@ function GraphPageContent() {
   useEffect(() => {
     if (!selectedNode || status !== "authenticated") {
       setUserPaths([]);
-      setBindExistingDocId("");
       return;
     }
-
-    setBindExistingDocId("");
     void loadUserPaths();
   }, [loadUserPaths, selectedNode, status]);
 
@@ -507,7 +503,7 @@ function GraphPageContent() {
       return;
     }
 
-    if (!showCreatePlanetDialog && !(selectedNode && selectedNode.id.startsWith("demo_node_"))) {
+    if (!showCreatePlanetDialog) {
       return;
     }
 
@@ -552,37 +548,6 @@ function GraphPageContent() {
     }
   }, [isPlanetSubmitting, newPlanetBindDocId, newPlanetTitle, refreshGraphData]);
 
-  const handleBindPlanetDocument = useCallback(async () => {
-    if (!selectedNode || !bindExistingDocId || isPlanetSubmitting) {
-      return;
-    }
-
-    setIsPlanetSubmitting(true);
-    try {
-      const response = await fetch("/api/graph/planet", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          nodeId: selectedNode.id,
-          kbDocumentId: bindExistingDocId,
-          label: selectedNode.name,
-        }),
-      });
-      const result = await response.json();
-
-      if (!response.ok || !result?.success) {
-        throw new Error(result?.error?.message ?? "绑定失败");
-      }
-
-      await refreshGraphData(selectedNode.id);
-      toast("已绑定知识文档", "success");
-    } catch {
-      toast("绑定知识文档失败", "error");
-    } finally {
-      setIsPlanetSubmitting(false);
-    }
-  }, [bindExistingDocId, isPlanetSubmitting, refreshGraphData, selectedNode]);
 
   const handleRemoveNodeFromPath = useCallback(
     async (pathId: string) => {
@@ -759,24 +724,6 @@ function GraphPageContent() {
                   )}
                 >
                   学习路径
-                </button>
-                <button
-                  onClick={() => router.push("/graph?view=today")}
-                  className={cn(
-                    "rounded px-3 py-1 text-sm transition-colors",
-                    activeMode === "today" ? "bg-background shadow" : "hover:bg-background/60"
-                  )}
-                >
-                  今日
-                </button>
-                <button
-                  onClick={() => router.push("/graph?view=incomplete")}
-                  className={cn(
-                    "rounded px-3 py-1 text-sm transition-colors",
-                    activeMode === "incomplete" ? "bg-background shadow" : "hover:bg-background/60"
-                  )}
-                >
-                  未完
                 </button>
               </div>
 
@@ -958,7 +905,14 @@ function GraphPageContent() {
             )}
           </div>
 
-          <div className="flex-1 relative bg-card/20 rounded-lg border overflow-hidden">
+          <div
+            className={cn(
+              "flex-1 relative rounded-lg border overflow-hidden",
+              activeMode === "path"
+                ? "bg-card/30 [background-image:radial-gradient(rgba(15,23,42,0.08)_1px,transparent_1px)] [background-size:18px_18px]"
+                : "bg-card/20"
+            )}
+          >
             <InteractiveGraph
               nodes={filteredNodes}
               edges={filteredEdges}
@@ -1145,34 +1099,6 @@ function GraphPageContent() {
                         <p className="text-xs text-muted-foreground">
                           该星球缺少 kbDocumentId，暂时无法确认其唯一主文档。请先在知识宝库建立关联。
                         </p>
-                        {selectedNode.id.startsWith("demo_node_") ? (
-                          <div className="space-y-2">
-                            <Select value={bindExistingDocId} onValueChange={setBindExistingDocId}>
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue placeholder="选择要绑定的知识文档" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {userKbDocs.map((doc) => (
-                                  <SelectItem key={doc.id} value={doc.id}>
-                                    {doc.title}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="w-full"
-                              disabled={!bindExistingDocId || isPlanetSubmitting}
-                              onClick={() => {
-                                void handleBindPlanetDocument();
-                              }}
-                            >
-                              <Link2 className="h-4 w-4 mr-2" />
-                              绑定知识文档
-                            </Button>
-                          </div>
-                        ) : null}
                       </CardContent>
                     </Card>
                   ) : isKbDocLoading ? (
@@ -1398,6 +1324,82 @@ function GraphPageContent() {
                 >
                   生成总结
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {activeMode === "path" && (
+            <div
+              data-testid="graph-path-detail-rail"
+              className="w-80 shrink-0 border bg-card rounded-lg overflow-y-auto flex flex-col"
+            >
+              <div className="p-4 border-b">
+                <h3 className="text-sm font-medium mb-3">当前节点</h3>
+                {selectedNode ? (
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-base font-semibold leading-snug truncate">
+                          {selectedNode.name}
+                        </div>
+                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                          <Badge variant="secondary" className="text-xs">
+                            {NODE_TYPE_CONFIG[selectedNode.type]?.label || selectedNode.type}
+                          </Badge>
+                          <span>
+                            掌握度 {(Math.round((selectedNode.mastery ?? 0) * 100) || 0).toString()}%
+                          </span>
+                        </div>
+                      </div>
+                      {selectedNode.needsReview ? (
+                        <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
+                          复习
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">点击画布上的节点查看详情</p>
+                )}
+              </div>
+
+              <div className="p-4 border-b">
+                <h3 className="text-sm font-medium mb-3">路径进度</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      已掌握 {filteredNodes.filter((n) => n.masteryStage === "mastered").length}/{filteredNodes.length}
+                    </span>
+                    <span>
+                      {filteredNodes.length > 0
+                        ? Math.round(
+                            (filteredNodes.filter((n) => n.masteryStage === "mastered").length / filteredNodes.length) *
+                              100
+                          )
+                        : 0}
+                      %
+                    </span>
+                  </div>
+                  <Progress
+                    value={
+                      filteredNodes.length > 0
+                        ? (filteredNodes.filter((n) => n.masteryStage === "mastered").length / filteredNodes.length) * 100
+                        : 0
+                    }
+                    className="h-1.5"
+                  />
+                </div>
+              </div>
+
+              <div className="p-4">
+                <h3 className="text-sm font-medium mb-3">节点说明</h3>
+                <p className="text-sm text-muted-foreground leading-6">
+                  {selectedNode
+                    ? selectedNode.keywords && selectedNode.keywords.length > 0
+                      ? selectedNode.keywords.join("、")
+                      : "暂无说明"
+                    : "选择一个节点后在此查看说明。"}
+                </p>
               </div>
             </div>
           )}

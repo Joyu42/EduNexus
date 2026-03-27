@@ -111,7 +111,7 @@ describe("goals analyze route", () => {
     });
 
     const prompt = createMessage.mock.calls[0]?.[0]?.messages?.[0]?.content;
-    expect(prompt).toContain("已完成里程碑：0 / 0");
+    expect(prompt).toContain("里程碑/关联路径进度：当前目标契约未包含独立里程碑字段");
     expect(prompt).toContain("连续2天，完成率67%");
     expect(prompt).not.toContain("undefined");
   });

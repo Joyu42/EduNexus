@@ -4,6 +4,7 @@
  */
 
 import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
+import { normalizeApiKey } from '@/lib/model-api-key';
 
 export interface ModelConfig {
   model: string;
@@ -43,20 +44,30 @@ export function getModelConfig(): ModelConfig {
 
   try {
     const scopedKey = getScopedConfigKey();
-    const saved = localStorage.getItem(scopedKey);
-    if (saved) {
-      const config = JSON.parse(saved);
-      return { ...DEFAULT_CONFIG, ...config };
-    }
-
-    if (scopedKey !== CONFIG_KEY) {
-      const legacy = localStorage.getItem(CONFIG_KEY);
-      if (legacy) {
-        const config = JSON.parse(legacy);
-        localStorage.setItem(scopedKey, JSON.stringify({ ...DEFAULT_CONFIG, ...config }));
-        return { ...DEFAULT_CONFIG, ...config };
+      const saved = localStorage.getItem(scopedKey);
+      if (saved) {
+        const config = JSON.parse(saved);
+        return {
+          ...DEFAULT_CONFIG,
+          ...config,
+          apiKey: normalizeApiKey(config?.apiKey),
+        };
       }
-    }
+
+      if (scopedKey !== CONFIG_KEY) {
+        const legacy = localStorage.getItem(CONFIG_KEY);
+        if (legacy) {
+          const config = JSON.parse(legacy);
+          const merged = {
+            ...DEFAULT_CONFIG,
+            ...config,
+            apiKey: normalizeApiKey(config?.apiKey),
+          };
+          localStorage.setItem(scopedKey, JSON.stringify(merged));
+          localStorage.removeItem(CONFIG_KEY);
+          return merged;
+        }
+      }
   } catch (error) {
     console.error("Failed to load model config:", error);
   }
@@ -74,7 +85,11 @@ export function saveModelConfig(config: Partial<ModelConfig>): void {
 
   try {
     const current = getModelConfig();
-    const updated = { ...current, ...config };
+    const updated = {
+      ...current,
+      ...config,
+      apiKey: normalizeApiKey(config.apiKey ?? current.apiKey),
+    };
     localStorage.setItem(getScopedConfigKey(), JSON.stringify(updated));
   } catch (error) {
     console.error("Failed to save model config:", error);

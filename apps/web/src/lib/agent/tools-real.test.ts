@@ -4,7 +4,6 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { getAllTools } from "./tools-real";
-import { DEMO_PATH_SEEDS } from "@/lib/server/demo-content";
 import { loadDb, saveDb } from "@/lib/server/store";
 
 const originalDataDir = process.env.EDUNEXUS_DATA_DIR;
@@ -22,7 +21,7 @@ describe("query_learning_progress tool", () => {
     }
   });
 
-  it("seeds demo synced paths on demand for demo users", async () => {
+  it("does not seed synced paths for demo users", async () => {
     const dataDir = await createDataDir();
     process.env.EDUNEXUS_DATA_DIR = dataDir;
 
@@ -50,13 +49,14 @@ describe("query_learning_progress tool", () => {
     const raw = await tool!.invoke({ pathId: "" });
     const result = JSON.parse(typeof raw === "string" ? raw : JSON.stringify(raw));
 
-    expect(result.count).toBe(DEMO_PATH_SEEDS.length);
-    expect(result.reason).toBeUndefined();
+    expect(result.count).toBe(1);
+    expect(result.paths).toHaveLength(1);
+    expect(result.paths[0]?.pathId).toBe("demo_path_exam_focus");
 
     const latest = await loadDb();
-    const seeded = latest.syncedPaths.filter((item) => item.userId === "demo-user");
-    expect(seeded.length).toBe(DEMO_PATH_SEEDS.length);
-    expect(seeded.some((item) => item.pathId === "demo_path_exam_focus")).toBe(false);
+    const scoped = latest.syncedPaths.filter((item) => item.userId === "demo-user");
+    expect(scoped).toHaveLength(1);
+    expect(scoped[0]?.pathId).toBe("demo_path_exam_focus");
 
     await fs.rm(dataDir, { recursive: true, force: true });
   });

@@ -3,12 +3,12 @@ import { runAgentConversation, createChatHistory } from "@/lib/agent/learning-ag
 import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
 import { getWordsProgressSummary } from "@/lib/server/words-service";
 import { createLearningPack, setActivePack, setPackKbDocument, findPacksByTopic } from "@/lib/server/learning-pack-store";
-import { createDocument, deleteDocument, listDocuments } from "@/lib/server/document-service";
-import { loadDb, saveDb } from "@/lib/server/store";
-import { DEMO_KB_DOCUMENTS } from "@/lib/server/demo-content";
+import { createDocument } from "@/lib/server/document-service";
 import { auth } from "@/auth";
 import { planLearningPack } from "@/lib/server/learning-pack-planner";
 import { buildLearningPackKbContext } from "@/lib/server/learning-pack-kb-context";
+import { normalizeApiKey } from "@/lib/model-api-key";
+import { getStoredModelConfig } from "@/lib/server/model-config-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -117,23 +117,6 @@ function hasReplanIntent(message: string): boolean {
 
 
 
-async function cleanupDemoScaffold(userId: string): Promise<void> {
-  const demoTitles = new Set(DEMO_KB_DOCUMENTS.map((doc) => doc.title));
-  const existingDocs = await listDocuments(userId);
-
-  for (const doc of existingDocs) {
-    if (demoTitles.has(doc.title)) {
-      await deleteDocument(doc.id, userId);
-    }
-  }
-
-  const db = await loadDb();
-  db.syncedPaths = db.syncedPaths.filter(
-    (path) => !(path.userId === userId && path.pathId.startsWith("demo_path_"))
-  );
-  await saveDb(db);
-}
-
 function buildWordsProgressReport(summary: Awaited<ReturnType<typeof getWordsProgressSummary>>) {
   const avg = summary.recentProgress.averageDailyLearnedWords.toFixed(1);
   return [
@@ -201,10 +184,6 @@ export async function POST(request: Request) {
 
     const learningTopic = extractLearningTopic(message);
     if (learningTopic) {
-      if (isDemo) {
-        await cleanupDemoScaffold(userId);
-      }
-
       const existingPacks = await findPacksByTopic(userId, learningTopic);
       const wantsReplan = hasReplanIntent(message);
 
@@ -406,19 +385,25 @@ export async function POST(request: Request) {
       });
     }
 
+    const storedModelConfig = await getStoredModelConfig(userId).catch(() => null);
+    const requestApiKey = normalizeApiKey(config.apiKey);
+    const storedApiKey = normalizeApiKey(storedModelConfig?.apiKey ?? "");
+    const envApiKey = normalizeApiKey(process.env.MODELSCOPE_API_KEY ?? "");
+
     const mergedConfig = {
       ...config,
-      apiKey:
-        typeof config.apiKey === "string" && config.apiKey.trim()
-          ? config.apiKey.trim()
-          : process.env.MODELSCOPE_API_KEY ?? "",
+      apiKey: requestApiKey || storedApiKey || envApiKey,
       apiEndpoint:
         typeof config.apiEndpoint === "string" && config.apiEndpoint.trim()
           ? config.apiEndpoint.trim()
+          : typeof storedModelConfig?.apiEndpoint === "string" && storedModelConfig.apiEndpoint.trim()
+            ? storedModelConfig.apiEndpoint.trim()
           : process.env.MODELSCOPE_BASE_URL ?? "https://api-inference.modelscope.cn/v1",
       modelName:
         typeof config.modelName === "string" && config.modelName.trim()
           ? config.modelName.trim()
+          : typeof storedModelConfig?.modelName === "string" && storedModelConfig.modelName.trim()
+            ? storedModelConfig.modelName.trim()
           : process.env.MODELSCOPE_CHAT_MODEL ?? "Qwen/Qwen3.5-122B-A10B",
       userId,
       isDemo,

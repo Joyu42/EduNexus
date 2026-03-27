@@ -1,40 +1,82 @@
 import { NextResponse } from "next/server";
+import { fail } from "@/lib/server/response";
+import { getCurrentUserId } from "@/lib/server/auth-utils";
+import { getStoredModelConfig, saveStoredModelConfig } from "@/lib/server/model-config-store";
+import { normalizeApiKey } from "@/lib/model-api-key";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * 保存配置到服务器
- * POST /api/config/save
- *
- * 注意：这个 API 仅用于演示，实际生产环境中应该：
- * 1. 添加身份验证
- * 2. 使用数据库存储配置
- * 3. 不要直接修改环境变量
- */
+export async function GET() {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return fail({ code: "UNAUTHORIZED", message: "请先登录" }, 401);
+    }
+
+    const config = await getStoredModelConfig(userId);
+    return NextResponse.json({
+      success: true,
+      data: config
+        ? {
+            model: config.modelName,
+            apiEndpoint: config.apiEndpoint,
+            apiKey: config.apiKey,
+            updatedAt: config.updatedAt,
+          }
+        : null,
+    });
+  } catch (error) {
+    return fail(
+      {
+        code: "CONFIG_GET_FAILED",
+        message: "读取配置失败",
+        details: error instanceof Error ? error.message : error,
+      },
+      500
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
-    const config = await request.json();
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return fail({ code: "UNAUTHORIZED", message: "请先登录" }, 401);
+    }
 
-    // 在实际应用中，这里应该保存到数据库
-    // 目前只返回成功响应，配置实际保存在客户端 localStorage
-    console.log("Config save requested:", {
-      ...config,
-      MODELSCOPE_API_KEY: config.MODELSCOPE_API_KEY ? "***" : undefined,
+    const config = await request.json();
+    const apiKey = normalizeApiKey(config.MODELSCOPE_API_KEY);
+    const apiEndpoint = typeof config.MODELSCOPE_BASE_URL === "string"
+      ? config.MODELSCOPE_BASE_URL.trim()
+      : "https://api-inference.modelscope.cn/v1";
+    const modelName = typeof config.MODELSCOPE_CHAT_MODEL === "string"
+      ? config.MODELSCOPE_CHAT_MODEL.trim()
+      : "Qwen/Qwen3.5-122B-A10B";
+
+    if (!apiKey) {
+      return fail({ code: "INVALID_API_KEY", message: "API Key 格式非法，请重新填写。" }, 400);
+    }
+
+    await saveStoredModelConfig({
+      userId,
+      apiKey,
+      apiEndpoint,
+      modelName,
     });
 
     return NextResponse.json({
       success: true,
-      message: "配置已保存到客户端",
+      message: "配置已保存到服务器",
     });
   } catch (error) {
-    console.error("Failed to save config:", error);
-    return NextResponse.json(
+    return fail(
       {
-        success: false,
-        error: "保存配置失败",
+        code: "CONFIG_SAVE_FAILED",
+        message: "保存配置失败",
+        details: error instanceof Error ? error.message : error,
       },
-      { status: 500 }
+      500
     );
   }
 }

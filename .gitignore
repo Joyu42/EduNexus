@@ -49,3 +49,8 @@ apps/web/package-lock.json
 
 # AI config
 .worktrees/
+
+
+ecosystem.config.js
+deploy.sh
+deploy.log

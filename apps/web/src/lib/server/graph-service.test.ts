@@ -17,6 +17,7 @@ vi.mock("./prisma", () => ({
 
 const { loadDb, saveDb } = await import("./store");
 const { getGraphView } = await import("./graph-service");
+const { upsertSyncedPath } = await import("./path-sync-service");
 
 const originalDataDir = process.env.EDUNEXUS_DATA_DIR;
 
@@ -24,7 +25,7 @@ async function createDataDir() {
   return fs.mkdtemp(path.join(os.tmpdir(), "edunexus-graph-service-test-"));
 }
 
-describe("graph service demo projection", () => {
+describe("graph service projection", () => {
   beforeEach(() => {
     findMany.mockReset();
     findMany.mockResolvedValue([]);
@@ -36,205 +37,6 @@ describe("graph service demo projection", () => {
     } else {
       delete process.env.EDUNEXUS_DATA_DIR;
     }
-  });
-
-  it("projects demo node memberships and kb links from seeded metadata", async () => {
-    const dataDir = await createDataDir();
-    process.env.EDUNEXUS_DATA_DIR = dataDir;
-
-    const db = await loadDb();
-    const now = new Date().toISOString();
-    db.syncedPaths.push({
-      userId: "demo-user",
-      pathId: "demo_path_frontend_foundations",
-      title: "前端基础打底",
-      description: "demo",
-      status: "in_progress",
-      progress: 40,
-      tags: ["演示", "前端"],
-      tasks: [],
-      updatedAt: now,
-      stages: [
-        {
-          stageId: "foundation",
-          nodeIds: ["demo_node_html_basics"]
-        }
-      ]
-    } as (typeof db.syncedPaths)[number] & {
-      stages: Array<{ stageId: string; nodeIds: string[] }>;
-    });
-    db.masteryByNode.demo_node_html_basics = 0.92;
-    db.plans.push({
-      planId: "demo_graph_node::demo_node_html_basics",
-      goalType: "project",
-      goal: "HTML 基础",
-      focusNodeId: "demo_node_html_basics",
-      focusNodeLabel: "kb_doc_html",
-      tasks: [],
-      createdAt: now,
-      updatedAt: now
-    });
-    db.plans.push({
-      planId: "demo_graph_edge::demo_edge_html_css",
-      goalType: "project",
-      goal: "edge",
-      focusNodeId: "demo_node_html_basics",
-      focusNodeLabel: "demo_node_css_basics",
-      focusNodeRisk: 0.9,
-      tasks: [],
-      createdAt: now,
-      updatedAt: now
-    });
-    await saveDb(db);
-
-    const graph = await getGraphView("demo-user");
-    const htmlNode = graph.nodes.find((node) => node.id === "demo_node_html_basics");
-
-    expect(htmlNode).toBeDefined();
-    expect(htmlNode?.kbDocumentId).toBe("kb_doc_html");
-    expect(htmlNode?.documentIds).toEqual(["kb_doc_html"]);
-    expect(htmlNode?.pathMemberships).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          pathId: "demo_path_frontend_foundations",
-          stage: "foundation"
-        })
-      ])
-    );
-
-    await fs.rm(dataDir, { recursive: true, force: true });
-  });
-
-  it("keeps AI/user document nodes visible when demo paths exist", async () => {
-    const dataDir = await createDataDir();
-    process.env.EDUNEXUS_DATA_DIR = dataDir;
-
-    const db = await loadDb();
-    const now = new Date().toISOString();
-    db.syncedPaths.push({
-      userId: "demo-mixed-user",
-      pathId: "demo_path_frontend_foundations",
-      title: "前端基础打底",
-      description: "demo",
-      status: "in_progress",
-      progress: 40,
-      tags: ["演示", "前端"],
-      tasks: [],
-      updatedAt: now,
-      stages: [
-        {
-          stageId: "foundation",
-          nodeIds: ["demo_node_html_basics"],
-        },
-      ],
-    } as (typeof db.syncedPaths)[number] & {
-      stages: Array<{ stageId: string; nodeIds: string[] }>;
-    });
-    db.masteryByNode.demo_node_html_basics = 0.92;
-    db.plans.push({
-      planId: "demo_graph_node::demo_node_html_basics",
-      goalType: "project",
-      goal: "HTML 基础",
-      focusNodeId: "demo_node_html_basics",
-      focusNodeLabel: "kb_doc_html",
-      tasks: [],
-      createdAt: now,
-      updatedAt: now,
-    });
-    await saveDb(db);
-
-    findMany.mockResolvedValueOnce([
-      { id: "doc_ai_1", title: "我让AI新加的星图节点", updatedAt: new Date(now) },
-    ]);
-
-    const graph = await getGraphView("demo-mixed-user");
-
-    expect(graph.nodes.some((node) => node.id === "demo_node_html_basics")).toBe(true);
-    expect(graph.nodes.some((node) => node.id === "doc_ai_1")).toBe(true);
-
-    await fs.rm(dataDir, { recursive: true, force: true });
-  });
-
-  it("deduplicates demo planet and document planet when both point to same kb doc", async () => {
-    const dataDir = await createDataDir();
-    process.env.EDUNEXUS_DATA_DIR = dataDir;
-
-    const db = await loadDb();
-    const now = new Date().toISOString();
-    db.syncedPaths.push({
-      userId: "demo-dedup-user",
-      pathId: "demo_path_frontend_foundations",
-      title: "前端基础打底",
-      description: "demo",
-      status: "in_progress",
-      progress: 40,
-      tags: ["演示", "前端"],
-      tasks: [],
-      updatedAt: now,
-      stages: [
-        {
-          stageId: "foundation",
-          nodeIds: ["demo_node_html_basics", "demo_node_css_basics"],
-        },
-      ],
-    } as (typeof db.syncedPaths)[number] & {
-      stages: Array<{ stageId: string; nodeIds: string[] }>;
-    });
-
-    db.masteryByNode.demo_node_html_basics = 0.92;
-    db.masteryByNode.demo_node_css_basics = 0.68;
-
-    db.plans.push({
-      planId: "demo_graph_node::demo_node_html_basics",
-      goalType: "project",
-      goal: "HTML 基础",
-      focusNodeId: "demo_node_html_basics",
-      focusNodeLabel: "doc_html",
-      tasks: [],
-      createdAt: now,
-      updatedAt: now,
-    });
-    db.plans.push({
-      planId: "demo_graph_node::demo_node_css_basics",
-      goalType: "project",
-      goal: "CSS 基础",
-      focusNodeId: "demo_node_css_basics",
-      focusNodeLabel: "doc_css",
-      tasks: [],
-      createdAt: now,
-      updatedAt: now,
-    });
-    db.plans.push({
-      planId: "demo_graph_edge::demo_edge_html_css",
-      goalType: "project",
-      goal: "edge",
-      focusNodeId: "demo_node_html_basics",
-      focusNodeLabel: "demo_node_css_basics",
-      focusNodeRisk: 0.9,
-      tasks: [],
-      createdAt: now,
-      updatedAt: now,
-    });
-    await saveDb(db);
-
-    findMany.mockResolvedValueOnce([
-      { id: "doc_html", title: "HTML 基础", updatedAt: new Date(now) },
-      { id: "doc_css", title: "CSS 基础", updatedAt: new Date(now) },
-    ]);
-
-    const graph = await getGraphView("demo-dedup-user");
-
-    expect(graph.nodes.filter((node) => node.label === "HTML 基础")).toHaveLength(1);
-    expect(graph.nodes.filter((node) => node.label === "CSS 基础")).toHaveLength(1);
-    expect(graph.nodes.some((node) => node.id === "demo_node_html_basics")).toBe(false);
-    expect(graph.nodes.some((node) => node.id === "demo_node_css_basics")).toBe(false);
-    expect(graph.nodes.some((node) => node.id === "doc_html")).toBe(true);
-    expect(graph.nodes.some((node) => node.id === "doc_css")).toBe(true);
-    expect(graph.edges).toEqual(
-      expect.arrayContaining([{ source: "doc_html", target: "doc_css", weight: 0.9 }])
-    );
-
-    await fs.rm(dataDir, { recursive: true, force: true });
   });
 
   it("builds sequential edges for learning-pack modules", async () => {
@@ -484,4 +286,5 @@ describe("graph service demo projection", () => {
 
     await fs.rm(dataDir, { recursive: true, force: true });
   });
+
 });

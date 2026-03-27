@@ -11,8 +11,10 @@ import OpenAI from "openai";
 
 export const LearningPackPlannerModuleSchema = z.object({
   title: z.string().min(1),
-  /** If set, the AI chose to reuse this existing KB document instead of creating a new one */
-  existingDocId: z.string().optional(),
+  existingDocId: z.preprocess(
+    (value) => (value === null ? undefined : value),
+    z.string().optional()
+  ),
   order: z.number().int().min(0),
 });
 
@@ -205,7 +207,11 @@ function extractFirstJsonObject(raw: string): string | null {
   return raw.slice(start, end + 1);
 }
 
-function parsePlannerOutput(raw: string): LearningPackPlannerOutput | null {
+type PlannerParseResult =
+  | { ok: true; data: LearningPackPlannerOutput }
+  | { ok: false; reason: "json_parse_failed" | "schema_validation_failed" };
+
+function parsePlannerOutput(raw: string): PlannerParseResult {
   const direct = (() => {
     try {
       return JSON.parse(raw) as unknown;
@@ -227,11 +233,14 @@ function parsePlannerOutput(raw: string): LearningPackPlannerOutput | null {
   })();
 
   if (!candidate) {
-    return null;
+    return { ok: false, reason: "json_parse_failed" };
   }
 
   const parsed = LearningPackPlannerOutputSchema.safeParse(candidate);
-  return parsed.success ? parsed.data : null;
+  if (parsed.success) {
+    return { ok: true, data: parsed.data };
+  }
+  return { ok: false, reason: "schema_validation_failed" };
 }
 
 /**
@@ -297,11 +306,16 @@ export async function planLearningPack(
     }
 
     const parsed = parsePlannerOutput(raw);
-    if (parsed) {
-      return parsed;
+    if (parsed.ok) {
+      return parsed.data;
     }
 
-    console.warn("[learning-pack-planner] LLM output invalid, using fallback", raw);
+    if (parsed.reason === "schema_validation_failed") {
+      console.warn("[learning-pack-planner] LLM output failed schema validation, using fallback", raw);
+      return buildFallbackPlan(input.topic, "invalid_response");
+    }
+
+    console.warn("[learning-pack-planner] LLM output was not parseable JSON, using fallback", raw);
     return buildFallbackPlan(input.topic, "invalid_response");
   } catch (err) {
     console.warn("[learning-pack-planner] AI planning threw, using fallback", err);

@@ -19,9 +19,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Target, Calendar, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { syncDemoClientData } from '@/lib/client/demo-client-sync';
-import { shouldSyncDemoDataInGoalsPage } from '@/lib/client/demo-bootstrap-policy';
-import { getGoalsPageState } from '@/lib/client/path-goal-view-state';
 
 export default function GoalsPage() {
   const router = useRouter();
@@ -59,23 +56,7 @@ export default function GoalsPage() {
   }, [status]);
 
   const loadData = async () => {
-    let storedGoals = goalStorage.getGoals();
-
-    const state = getGoalsPageState({
-      isLoading: false,
-      goalCount: storedGoals.length,
-      isDemoUser: session?.user?.isDemo === true,
-    });
-
-    if (
-      shouldSyncDemoDataInGoalsPage({
-        isDemoUser: session?.user?.isDemo === true,
-        goalsPageStateKind: state.kind,
-      })
-    ) {
-      await syncDemoClientData(session?.user?.id ?? 'demo-user');
-      storedGoals = goalStorage.getGoals();
-    }
+    const storedGoals = goalStorage.getGoals();
 
     setGoals(storedGoals);
     setHabits(habitStorage.getHabits());

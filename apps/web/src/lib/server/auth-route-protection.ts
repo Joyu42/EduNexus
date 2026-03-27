@@ -31,25 +31,12 @@ export function requireUser(auth: RouteProtectionInput["auth"]): GuardResult {
   return getSessionUser(auth) ? { ok: true, status: 200 } : { ok: false, status: 401 };
 }
 
-export function requireDemoUser(auth: RouteProtectionInput["auth"]): GuardResult {
-  const user = getSessionUser(auth);
-  if (!user) {
-    return { ok: false, status: 401 };
-  }
-
-  return user.isDemo === true ? { ok: true, status: 200 } : { ok: false, status: 403 };
-}
-
 export function isAuthorizedRouteRequest({ auth, request }: RouteProtectionInput): boolean {
   const pathname = request.nextUrl.pathname;
   const scope = getRouteAccessScope(pathname);
 
   if (scope === ACCESS_SCOPES.PUBLIC_READ) {
     return true;
-  }
-
-  if (scope === ACCESS_SCOPES.DEMO_ONLY) {
-    return requireDemoUser(auth).ok;
   }
 
   return requireUser(auth).ok;

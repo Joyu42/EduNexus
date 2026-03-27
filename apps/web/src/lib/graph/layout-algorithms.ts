@@ -2,6 +2,65 @@
 
 import type { GraphNode, GraphEdge, LayoutType } from "./types";
 
+function stableUnitHash(input: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 1_000_000) / 1_000_000;
+}
+
+type HexCoord = { q: number; r: number };
+
+function hexRing(radius: number): HexCoord[] {
+  if (radius <= 0) {
+    return [{ q: 0, r: 0 }];
+  }
+
+  const directions = [
+    { q: 1, r: 0 },
+    { q: 1, r: -1 },
+    { q: 0, r: -1 },
+    { q: -1, r: 0 },
+    { q: -1, r: 1 },
+    { q: 0, r: 1 },
+  ];
+
+  let q = directions[4].q * radius;
+  let r = directions[4].r * radius;
+  const results: HexCoord[] = [];
+
+  for (let side = 0; side < 6; side += 1) {
+    const dir = directions[side];
+    for (let step = 0; step < radius; step += 1) {
+      results.push({ q, r });
+      q += dir.q;
+      r += dir.r;
+    }
+  }
+
+  return results;
+}
+
+function hexSpiral(count: number): HexCoord[] {
+  if (count <= 0) {
+    return [];
+  }
+
+  const coords: HexCoord[] = [{ q: 0, r: 0 }];
+  for (let radius = 1; coords.length < count; radius += 1) {
+    coords.push(...hexRing(radius));
+  }
+  return coords.slice(0, count);
+}
+
+function axialToXY(coord: HexCoord, spacing: number): { x: number; y: number } {
+  const x = spacing * (Math.sqrt(3) * coord.q + (Math.sqrt(3) / 2) * coord.r);
+  const y = spacing * ((3 / 2) * coord.r);
+  return { x, y };
+}
+
 export class LayoutAlgorithms {
   /**
    * 力导向布局（默认）
@@ -10,6 +69,13 @@ export class LayoutAlgorithms {
     nodes: GraphNode[],
     edges: GraphEdge[]
   ): GraphNode[] {
+    const hasPathMemberships = nodes.some(
+      (node) => Array.isArray(node.pathMemberships) && node.pathMemberships.length > 0
+    );
+    if (hasPathMemberships) {
+      return this.radial(nodes, edges);
+    }
+
     // react-force-graph 会自动处理力导向布局
     // 这里只需要返回节点，不需要手动计算位置
     return nodes;
@@ -99,6 +165,119 @@ export class LayoutAlgorithms {
     edges: GraphEdge[],
     centerNodeId?: string
   ): GraphNode[] {
+    const nodesWithPaths = nodes.filter(
+      (node) => Array.isArray(node.pathMemberships) && node.pathMemberships.length > 0
+    );
+    if (nodesWithPaths.length > 0) {
+      const pathIdSet = new Set<string>();
+      for (const node of nodesWithPaths) {
+        for (const membership of node.pathMemberships ?? []) {
+          if (membership && typeof membership.pathId === "string" && membership.pathId.trim()) {
+            pathIdSet.add(membership.pathId.trim());
+          }
+        }
+      }
+
+      const pathIds = Array.from(pathIdSet).sort((a, b) => a.localeCompare(b));
+      const regionCount = pathIds.length;
+      const regionRadius = Math.min(520, 220 + regionCount * 18);
+
+      const regionCenters = new Map<string, { x: number; y: number }>();
+      for (const [index, pathId] of pathIds.entries()) {
+        const angle = (2 * Math.PI * index) / Math.max(1, regionCount);
+        regionCenters.set(pathId, {
+          x: Math.cos(angle) * regionRadius,
+          y: Math.sin(angle) * regionRadius,
+        });
+      }
+
+      const primaryRegionByNodeId = new Map<string, string>();
+      const sharedRegionIdsByNodeId = new Map<string, string[]>();
+      for (const node of nodes) {
+        const memberships = Array.isArray(node.pathMemberships) ? node.pathMemberships : [];
+        const distinct = Array.from(
+          new Set(
+            memberships
+              .map((m) => (m && typeof m.pathId === "string" ? m.pathId.trim() : ""))
+              .filter((id) => id.length > 0)
+          )
+        ).sort((a, b) => a.localeCompare(b));
+
+        if (distinct.length === 0) {
+          continue;
+        }
+
+        primaryRegionByNodeId.set(node.id, distinct[0]);
+        if (distinct.length > 1) {
+          sharedRegionIdsByNodeId.set(node.id, distinct);
+        }
+      }
+
+      const nodesByRegion = new Map<string, GraphNode[]>();
+      for (const node of nodes) {
+        const regionId = primaryRegionByNodeId.get(node.id);
+        if (!regionId) {
+          continue;
+        }
+        if (!nodesByRegion.has(regionId)) {
+          nodesByRegion.set(regionId, []);
+        }
+        nodesByRegion.get(regionId)?.push(node);
+      }
+
+      const spacing = 44;
+      const positionsById = new Map<string, { fx: number; fy: number }>();
+
+      for (const [pathId, regionNodes] of nodesByRegion.entries()) {
+        const center = regionCenters.get(pathId) ?? { x: 0, y: 0 };
+        const sortedNodes = regionNodes.slice().sort((a, b) => a.id.localeCompare(b.id));
+        const coords = hexSpiral(sortedNodes.length);
+        for (const [idx, node] of sortedNodes.entries()) {
+          const local = axialToXY(coords[idx] ?? { q: 0, r: 0 }, spacing);
+          positionsById.set(node.id, { fx: center.x + local.x, fy: center.y + local.y });
+        }
+      }
+
+      for (const [nodeId, regionIds] of sharedRegionIdsByNodeId.entries()) {
+        const a = regionCenters.get(regionIds[0] ?? "");
+        const b = regionCenters.get(regionIds[1] ?? "");
+        if (!a || !b) {
+          continue;
+        }
+        const midX = (a.x + b.x) / 2;
+        const midY = (a.y + b.y) / 2;
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const len = Math.hypot(dx, dy) || 1;
+        const nx = -dy / len;
+        const ny = dx / len;
+        const jitter = (stableUnitHash(nodeId) - 0.5) * spacing * 1.2;
+        positionsById.set(nodeId, { fx: midX + nx * jitter, fy: midY + ny * jitter });
+      }
+
+      const unassigned = nodes
+        .filter((node) => !primaryRegionByNodeId.has(node.id))
+        .slice()
+        .sort((a, b) => a.id.localeCompare(b.id));
+      const unassignedCoords = hexSpiral(unassigned.length);
+      for (const [idx, node] of unassigned.entries()) {
+        const local = axialToXY(unassignedCoords[idx] ?? { q: 0, r: 0 }, spacing);
+        positionsById.set(node.id, { fx: local.x * 0.9, fy: local.y * 0.9 });
+      }
+
+      return nodes.map((node) => {
+        const pos = positionsById.get(node.id);
+        if (!pos) {
+          return node;
+        }
+        return {
+          ...node,
+          fx: pos.fx,
+          fy: pos.fy,
+        };
+      });
+    }
+
     // 找到中心节点（最重要的节点或指定节点）
     const centerNode = centerNodeId
       ? nodes.find((n) => n.id === centerNodeId)
@@ -188,7 +367,7 @@ export class LayoutAlgorithms {
     return sorted.map((node, index) => ({
       ...node,
       fx: (index + 1) * xStep - width / 2,
-      fy: (Math.random() - 0.5) * height * 0.6, // 添加一些随机性
+      fy: (stableUnitHash(node.id) - 0.5) * height * 0.6,
     }));
   }
 

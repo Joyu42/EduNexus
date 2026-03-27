@@ -141,3 +141,95 @@ export async function DELETE(_request: Request, context: { params: Promise<{ pos
     );
   }
 }
+
+export async function PATCH(request: Request, context: { params: Promise<{ postId: string }> }) {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return fail(
+        {
+          code: "UNAUTHORIZED",
+          message: "请先登录后再修改帖子。"
+        },
+        401
+      );
+    }
+
+    const { postId } = await context.params;
+    const id = normalizeId(postId);
+    if (!id) {
+      return fail(
+        {
+          code: "INVALID_REQUEST",
+          message: "postId 不能为空。"
+        },
+        400
+      );
+    }
+
+    const post = await getPostById(id);
+    if (!post) {
+      return fail(
+        {
+          code: "COMMUNITY_POST_NOT_FOUND",
+          message: "未找到对应帖子。"
+        },
+        404
+      );
+    }
+
+    if (post.authorId !== userId) {
+      return fail(
+        {
+          code: "FORBIDDEN",
+          message: "只有帖子创建者可以修改该帖子。"
+        },
+        403
+      );
+    }
+
+    const json = await request.json().catch(() => ({}));
+    const updateData: any = {};
+    if (typeof json.title === "string" && json.title.trim() !== "") {
+      updateData.title = json.title.trim();
+    }
+    if (typeof json.content === "string" && json.content.trim() !== "") {
+      updateData.content = json.content.trim();
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return fail(
+        {
+          code: "INVALID_REQUEST",
+          message: "没有提供需要更新的内容或内容为空。"
+        },
+        400
+      );
+    }
+
+    const { updateCommunityPost } = await import("@/lib/server/community-service");
+    const updatedPost = await updateCommunityPost(id, updateData);
+
+    if (!updatedPost) {
+      return fail(
+        {
+          code: "COMMUNITY_POST_UPDATE_FAILED",
+          message: "更新帖子失败。"
+        },
+        500
+      );
+    }
+
+    return ok({ post: updatedPost });
+  } catch (error) {
+    return fail(
+      {
+        code: "COMMUNITY_POST_UPDATE_FAILED",
+        message: "更新帖子失败。",
+        details: error instanceof Error ? error.message : error
+      },
+      500
+    );
+  }
+}
+

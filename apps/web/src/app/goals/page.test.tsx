@@ -64,18 +64,6 @@ vi.mock("sonner", () => ({
   },
 }));
 
-vi.mock("@/lib/client/demo-bootstrap-policy", () => ({
-  shouldSyncDemoDataInGoalsPage: () => false,
-}));
-
-vi.mock("@/lib/client/demo-client-sync", () => ({
-  syncDemoClientData: vi.fn(),
-}));
-
-vi.mock("@/lib/client/path-goal-view-state", () => ({
-  getGoalsPageState: () => ({ kind: "ready" }),
-}));
-
 vi.mock("@/lib/client/path-storage", () => ({
   pathStorage: {
     getAllPaths: vi.fn().mockResolvedValue([]),

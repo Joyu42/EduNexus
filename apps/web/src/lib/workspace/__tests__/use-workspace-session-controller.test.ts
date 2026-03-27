@@ -67,7 +67,6 @@ describe("useWorkspaceSessionController", () => {
     const { result } = renderHook(() =>
       useWorkspaceSessionController({
         enabled: true,
-        isDemoUser: false,
         dependencies: deps,
       })
     );
@@ -136,7 +135,6 @@ describe("useWorkspaceSessionController", () => {
     const { result } = renderHook(() =>
       useWorkspaceSessionController({
         enabled: true,
-        isDemoUser: false,
         dependencies: deps,
       })
     );
@@ -198,7 +196,6 @@ describe("useWorkspaceSessionController", () => {
     const { result } = renderHook(() =>
       useWorkspaceSessionController({
         enabled: true,
-        isDemoUser: false,
         dependencies: deps,
       })
     );
@@ -230,7 +227,6 @@ describe("useWorkspaceSessionController", () => {
     const { result } = renderHook(() =>
       useWorkspaceSessionController({
         enabled: true,
-        isDemoUser: false,
         dependencies: deps,
       })
     );
@@ -303,7 +299,6 @@ describe("useWorkspaceSessionController", () => {
     const { result } = renderHook(() =>
       useWorkspaceSessionController({
         enabled: true,
-        isDemoUser: true,
         dependencies: deps,
       })
     );

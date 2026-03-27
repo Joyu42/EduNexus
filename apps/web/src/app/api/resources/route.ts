@@ -1,6 +1,5 @@
 import { fail, ok } from "@/lib/server/response";
-import { createResource } from "@/lib/server/resources-service";
-import { loadDb } from "@/lib/server/store";
+import { createResource, listResources } from "@/lib/server/resources-service";
 import { getCurrentUserId } from "@/lib/server/auth-utils";
 
 export const runtime = "nodejs";
@@ -8,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
-    const db = await loadDb();
+    const allResources = await listResources();
 
     const { searchParams } = new URL(req.url);
     const q = (searchParams.get("q") ?? "").trim();
@@ -20,12 +19,12 @@ export async function GET(req: Request) {
 
     const keyword = q ? q.toLowerCase() : "";
     const filtered = keyword
-      ? db.publicResources.filter((resource) => {
+      ? allResources.filter((resource) => {
           const title = resource.title?.toLowerCase?.() ?? "";
           const description = resource.description?.toLowerCase?.() ?? "";
           return title.includes(keyword) || description.includes(keyword);
         })
-      : db.publicResources;
+      : allResources;
 
     const sorted = filtered.slice();
     if (sort === "oldest") {

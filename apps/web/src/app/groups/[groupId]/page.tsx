@@ -1,14 +1,23 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { GroupDetailLayout } from "@/components/groups/group-detail-layout";
@@ -82,6 +91,8 @@ export default function GroupDetailsPage({
   const { data: session } = useSession();
   const { groupId } = use(params);
   const currentUserId = session?.user?.id ?? null;
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
 
   const groupQuery = useQuery({
     queryKey: ["group", groupId],
@@ -140,6 +151,27 @@ export default function GroupDetailsPage({
     queryClient.invalidateQueries({ queryKey: ["group-tasks", groupId] });
     queryClient.invalidateQueries({ queryKey: ["group-shared-resources", groupId] });
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/groups/${groupId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload?.error?.message ?? "删除小组失败");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("小组已删除");
+      setDeleteDialogOpen(false);
+      setDeleteConfirmInput("");
+      invalidateAll();
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      router.push("/groups");
+      router.refresh();
+    },
+    onError: (error: Error) => toast.error(error.message)
+  });
 
   const joinMutation = useMutation({
     mutationFn: async () => {
@@ -287,18 +319,68 @@ export default function GroupDetailsPage({
   }
 
   const group = groupQuery.data;
+  const shouldShowDelete = isOwner;
+  const deleteConfirmExpected = group.name;
+  const deleteConfirmed = deleteConfirmInput.trim() === deleteConfirmExpected;
 
   return (
     <GroupDetailLayout
       group={group}
       onBack={() => router.back()}
       headerAction={
-        <JoinButton
-          isJoined={isJoined}
-          isLoading={joinMutation.isPending || leaveMutation.isPending}
-          onJoin={() => joinMutation.mutate()}
-          onLeave={() => leaveMutation.mutate()}
-        />
+        <div className="flex gap-2">
+          <JoinButton
+            isJoined={isJoined}
+            isLoading={joinMutation.isPending || leaveMutation.isPending}
+            onJoin={() => joinMutation.mutate()}
+            onLeave={() => leaveMutation.mutate()}
+          />
+          {shouldShowDelete ? (
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="destructive" className="gap-2">
+                  <Trash2 className="h-4 w-4" />
+                  删除小组
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>确认删除小组</DialogTitle>
+                  <DialogDescription>
+                    此操作不可撤销。请输入小组名称以确认删除。
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground">
+                    需要输入：<span className="font-medium text-foreground">{deleteConfirmExpected}</span>
+                  </div>
+                  <Input
+                    value={deleteConfirmInput}
+                    onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                    placeholder="输入小组名称"
+                    autoComplete="off"
+                  />
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setDeleteDialogOpen(false)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => deleteMutation.mutate()}
+                    disabled={!deleteConfirmed || deleteMutation.isPending}
+                  >
+                    确认删除
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          ) : null}
+        </div>
       }
     >
       <div className="grid md:grid-cols-2 gap-4">

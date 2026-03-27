@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { KBLayout } from "@/components/kb/kb-layout";
 import { LoginPrompt } from "@/components/ui/login-prompt";
+import { Button } from "@/components/ui/button";
 import {
   type KBDocument,
   type KBVault,
@@ -284,6 +285,14 @@ export default function KnowledgeBasePage() {
               {handoffNotice}
             </p>
           ) : null}
+          <div className="mt-6">
+            <Button
+              data-testid="kb-empty-create-first-document"
+              onClick={() => void handleCreateDocument("我的第一篇文档")}
+            >
+              创建第一篇文档
+            </Button>
+          </div>
         </div>
       </div>
     );

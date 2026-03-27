@@ -104,7 +104,6 @@ export type WorkspaceSessionControllerDependencies = {
 
 type UseWorkspaceSessionControllerInput = {
   enabled: boolean;
-  isDemoUser?: boolean;
   dependencies?: Partial<WorkspaceSessionControllerDependencies>;
 };
 
@@ -270,7 +269,6 @@ async function runWorkspaceAgentChat(input: SendWorkspaceMessageInput): Promise<
 
 export function useWorkspaceSessionController({
   enabled,
-  isDemoUser = false,
   dependencies,
 }: UseWorkspaceSessionControllerInput) {
   const deps = useMemo(
@@ -464,7 +462,7 @@ export function useWorkspaceSessionController({
     }
 
     void refreshSessions();
-  }, [enabled, isDemoUser, refreshSessions]);
+  }, [enabled, refreshSessions]);
 
   return {
     currentSessionId,

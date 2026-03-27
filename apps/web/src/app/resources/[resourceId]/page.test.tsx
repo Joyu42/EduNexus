@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   fetchResourceFromServer: vi.fn(),
   fetchResourceNotesFromServer: vi.fn(),
   createResourceNoteOnServer: vi.fn(),
+  updateResourceNoteOnServer: vi.fn(),
+  deleteResourceNoteOnServer: vi.fn(),
   getResourceRatingFromServer: vi.fn(),
   upsertResourceRatingOnServer: vi.fn(),
 }));
@@ -48,6 +50,8 @@ vi.mock("@/lib/resources/resource-storage", () => ({
   fetchResourceFromServer: mocks.fetchResourceFromServer,
   fetchResourceNotesFromServer: mocks.fetchResourceNotesFromServer,
   createResourceNoteOnServer: mocks.createResourceNoteOnServer,
+  updateResourceNoteOnServer: mocks.updateResourceNoteOnServer,
+  deleteResourceNoteOnServer: mocks.deleteResourceNoteOnServer,
   getResourceRatingFromServer: mocks.getResourceRatingFromServer,
   upsertResourceRatingOnServer: mocks.upsertResourceRatingOnServer,
 }));
@@ -85,6 +89,15 @@ describe("ResourceDetailsPage", () => {
       createdAt: "2026-03-27T00:00:00.000Z",
       updatedAt: "2026-03-27T00:00:00.000Z",
     });
+    mocks.updateResourceNoteOnServer.mockResolvedValue({
+      id: "note_1",
+      resourceId: "resource_1",
+      userId: "session-user",
+      content: "Reading set 3 updated",
+      createdAt: "2026-03-27T00:00:00.000Z",
+      updatedAt: "2026-03-27T00:01:00.000Z",
+    });
+    mocks.deleteResourceNoteOnServer.mockResolvedValue(undefined);
     mocks.getResourceRatingFromServer.mockResolvedValue(null);
     mocks.upsertResourceRatingOnServer.mockResolvedValue({
       id: "rating_1",

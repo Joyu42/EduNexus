@@ -764,6 +764,25 @@ export async function createResourceNoteOnServer(input: { resourceId: string; co
   return data.note;
 }
 
+export async function updateResourceNoteOnServer(noteId: string, input: { content: string }) {
+  const response = await fetch(`/api/resources/notes?noteId=${encodeURIComponent(noteId)}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+  const data = await readApiEnvelope<{ note: ServerResourceNoteRecord }>(response, "更新笔记失败");
+  return data.note;
+}
+
+export async function deleteResourceNoteOnServer(noteId: string) {
+  const response = await fetch(`/api/resources/notes?noteId=${encodeURIComponent(noteId)}`, {
+    method: "DELETE",
+  });
+  await readApiEnvelope<{ deleted: boolean }>(response, "删除笔记失败");
+}
+
 export async function getResourceRatingFromServer(resourceId: string) {
   const response = await fetch(`/api/resources/${resourceId}/rating`, undefined);
   const data = await readApiEnvelope<{ rating: ServerResourceRatingRecord | null }>(response, "获取评分失败");

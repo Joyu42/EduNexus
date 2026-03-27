@@ -1,11 +1,11 @@
 import { fail, ok } from "@/lib/server/response";
 import { getCurrentUserId } from "@/lib/server/auth-utils";
-import { loadDb } from "@/lib/server/store";
 import {
   deleteResource,
   deleteResourceBookmark,
   deleteResourceNote,
   deleteResourceRating,
+  listResources,
   listResourceBookmarks,
   listResourceNotes,
   listResourceRatings,
@@ -33,8 +33,8 @@ export async function GET(_request: Request, context: { params: Promise<{ resour
       );
     }
 
-    const db = await loadDb();
-    const resource = db.publicResources.find((item) => item.id === id);
+    const resources = await listResources();
+    const resource = resources.find((item) => item.id === id);
     if (!resource) {
       return fail(
         {
@@ -83,8 +83,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ resou
       );
     }
 
-    const db = await loadDb();
-    const existing = db.publicResources.find((item) => item.id === id);
+    const resources = await listResources();
+    const existing = resources.find((item) => item.id === id);
     if (!existing) {
       return fail(
         {
@@ -200,8 +200,8 @@ export async function DELETE(_request: Request, context: { params: Promise<{ res
       );
     }
 
-    const db = await loadDb();
-    const existing = db.publicResources.find((item) => item.id === id);
+    const resources = await listResources();
+    const existing = resources.find((item) => item.id === id);
     if (!existing) {
       return fail(
         {

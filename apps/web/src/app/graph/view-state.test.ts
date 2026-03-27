@@ -112,5 +112,10 @@ describe("graph view state", () => {
     expect(content.match(/router\.push\("\/graph\?view=path"\)/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
     expect(content).toContain("知识星图 · 学习路径模式");
     expect(content).toContain("返回探索");
+
+    expect(content).toContain('data-testid="graph-path-detail-rail"');
+    expect(content).toContain("当前节点");
+    expect(content).toContain("路径进度");
+    expect(content).toContain("节点说明");
   });
 });

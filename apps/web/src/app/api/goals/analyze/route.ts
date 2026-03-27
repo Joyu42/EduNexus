@@ -48,6 +48,10 @@ export async function POST(request: NextRequest) {
     const milestone = deriveMilestoneSummary(safeGoal);
     const safeHabits = Array.isArray(habits) ? habits : [];
     const progress = safeNumber(safeGoal.progress, 0);
+    const milestoneSummary =
+      milestone.total > 0
+        ? `${milestone.completed} / ${milestone.total}`
+        : '当前目标契约未包含独立里程碑字段，请基于进度与时间信息评估';
 
     const prompt = `作为一个学习进度分析专家，请分析用户的目标进展情况。
 
@@ -57,7 +61,7 @@ export async function POST(request: NextRequest) {
 - 当前进度：${progress}%
 - 开始日期：${String(safeGoal.startDate ?? '未设置')}
 - 目标日期：${String(safeGoal.endDate ?? '未设置')}
-- 已完成里程碑：${milestone.completed} / ${milestone.total}
+- 里程碑/关联路径进度：${milestoneSummary}
 
 ${safeHabits.length > 0 ? `相关习惯：
 ${safeHabits

@@ -59,10 +59,10 @@ function PackCard({
   return (
     <div
       className={cn(
-        "rounded-lg border p-3 space-y-2 transition-colors",
+        "rounded-xl border p-3 space-y-2 transition-colors",
         isActive
-          ? "border-primary/40 bg-primary/5"
-          : "border-transparent bg-muted/30 hover:border-muted"
+          ? "border-primary/40 bg-primary/5 shadow-sm"
+          : "border-transparent bg-muted/30 hover:border-muted hover:bg-muted/40"
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -174,9 +174,14 @@ export function JourneyShell({ className }: JourneyShellProps) {
   return (
     <Card className={cn("h-full", className)}>
       <CardContent className="p-4 h-full min-h-0 flex flex-col gap-3">
-        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-          <List className="h-3.5 w-3.5" />
-          <span>当前学习包</span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <List className="h-3.5 w-3.5" />
+            <span>当前学习包</span>
+          </div>
+          <Badge variant="secondary" className="text-[11px]">
+            Path
+          </Badge>
         </div>
 
         <PackCard

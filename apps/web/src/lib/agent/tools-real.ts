@@ -9,8 +9,7 @@ import { z } from "zod";
 import { getModelscopeClient } from "@/lib/server/modelscope";
 import { searchDocuments, getDocument } from "@/lib/server/document-service";
 import { getGraphView } from "@/lib/server/graph-service";
-import { DEMO_PATH_SEEDS } from "@/lib/server/demo-content";
-import { loadDb, saveDb } from "@/lib/server/store";
+import { loadDb } from "@/lib/server/store";
 import { getWordsProgressSummary, listWords, listWordsLearningRecords, listWordsLearningRecordsByWord, saveWordsLearningRecord } from "@/lib/server/words-service";
 import { updateWordStatus } from "@/lib/words/scheduler";
 import type { WordAnswerGrade } from "@/lib/words/types";
@@ -21,71 +20,6 @@ function requireUserId(userId?: string) {
     throw new Error("缺少 userId：请先登录后再使用该工具。");
   }
   return normalized;
-}
-
-async function ensureDemoPathsSynced(userId: string) {
-  const db = await loadDb();
-  const now = new Date().toISOString();
-  let changed = false;
-  const demoPathIds = new Set(DEMO_PATH_SEEDS.map((path) => path.id));
-
-  const beforeCleanupCount = db.syncedPaths.length;
-  db.syncedPaths = db.syncedPaths.filter(
-    (path) => !(path.userId === userId && path.pathId.startsWith("demo_path_") && !demoPathIds.has(path.pathId))
-  );
-  if (db.syncedPaths.length !== beforeCleanupCount) {
-    changed = true;
-  }
-
-  for (const pathSeed of DEMO_PATH_SEEDS) {
-    const index = db.syncedPaths.findIndex(
-      (path) => path.userId === userId && path.pathId === pathSeed.id
-    );
-
-    const record = {
-      userId,
-      pathId: pathSeed.id,
-      title: pathSeed.title,
-      description: pathSeed.description,
-      status: pathSeed.status,
-      progress: pathSeed.progress,
-      tags: pathSeed.tags,
-      tasks: pathSeed.tasks.map((task) => ({
-        taskId: task.id,
-        title: task.title,
-        description: task.description,
-        estimatedTime: task.estimatedTime,
-        status: task.status,
-        progress: task.progress,
-        dependencies: task.dependencies,
-      })),
-      updatedAt: now,
-    };
-
-    if (index >= 0) {
-      const previous = db.syncedPaths[index];
-      const isSame =
-        previous.title === record.title &&
-        previous.description === record.description &&
-        previous.status === record.status &&
-        previous.progress === record.progress &&
-        JSON.stringify(previous.tags) === JSON.stringify(record.tags) &&
-        JSON.stringify(previous.tasks) === JSON.stringify(record.tasks);
-
-      if (!isSame) {
-        db.syncedPaths[index] = record;
-        changed = true;
-      }
-      continue;
-    }
-
-    db.syncedPaths.push(record);
-    changed = true;
-  }
-
-  if (changed) {
-    await saveDb(db);
-  }
 }
 
 function createSearchKnowledgeBaseTool(userId?: string) {
@@ -580,9 +514,6 @@ function createQueryLearningProgressTool(userId?: string, isDemoUser?: boolean) 
     func: async ({ pathId }) => {
       try {
         const effectiveUserId = requireUserId(userId);
-        if (isDemoUser === true) {
-          await ensureDemoPathsSynced(effectiveUserId);
-        }
         const normalizedPathId = typeof pathId === "string" ? pathId.trim() : "";
         const shouldFilterByPathId = normalizedPathId.length > 0 && normalizedPathId !== "default";
         const db = await loadDb();

@@ -7,8 +7,7 @@ type SurfaceStateInput = {
 type SurfaceState =
   | { kind: "loading" }
   | { kind: "content" }
-  | { kind: "empty" }
-  | { kind: "bootstrap_demo" };
+  | { kind: "empty" };
 
 function resolveSurfaceState(input: SurfaceStateInput): SurfaceState {
   if (input.isLoading) {
@@ -17,10 +16,6 @@ function resolveSurfaceState(input: SurfaceStateInput): SurfaceState {
 
   if (input.itemCount > 0) {
     return { kind: "content" };
-  }
-
-  if (input.isDemoUser) {
-    return { kind: "bootstrap_demo" };
   }
 
   return { kind: "empty" };

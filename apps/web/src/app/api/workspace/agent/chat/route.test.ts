@@ -21,8 +21,6 @@ const createLearningPackMock = vi.fn();
 const setActivePackMock = vi.fn();
 const setPackKbDocumentMock = vi.fn();
 const createDocumentMock = vi.fn();
-const listDocumentsMock = vi.fn();
-const deleteDocumentMock = vi.fn();
 const planLearningPackMock = vi.fn();
 const buildLearningPackKbContextMock = vi.fn();
 const findPacksByTopicMock = vi.fn();
@@ -44,17 +42,6 @@ vi.mock("@/lib/server/learning-pack-kb-context", () => ({
 
 vi.mock("@/lib/server/document-service", () => ({
   createDocument: createDocumentMock,
-  listDocuments: listDocumentsMock,
-  deleteDocument: deleteDocumentMock,
-}));
-
-vi.mock("@/lib/server/store", () => ({
-  loadDb: vi.fn().mockResolvedValue({ syncedPaths: [] }),
-  saveDb: vi.fn().mockResolvedValue(undefined),
-}));
-
-vi.mock("@/lib/server/demo-content", () => ({
-  DEMO_KB_DOCUMENTS: [],
 }));
 
 const { isWordsProgressQuery, POST } = await import("./route");
@@ -93,8 +80,6 @@ describe("learning-pack quick creation", () => {
     setActivePackMock.mockReset();
     setPackKbDocumentMock.mockReset();
     createDocumentMock.mockReset();
-    listDocumentsMock.mockReset();
-    deleteDocumentMock.mockReset();
     planLearningPackMock.mockReset();
     buildLearningPackKbContextMock.mockReset();
     findPacksByTopicMock.mockReset();

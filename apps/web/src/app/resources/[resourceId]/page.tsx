@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,9 +20,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   createResourceNoteOnServer,
+  deleteResourceNoteOnServer,
   fetchResourceFromServer,
   fetchResourceNotesFromServer,
   getResourceRatingFromServer,
+  updateResourceNoteOnServer,
   upsertResourceRatingOnServer,
 } from "@/lib/resources/resource-storage";
 
@@ -35,6 +37,9 @@ export default function ResourceDetailsPage({
   const queryClient = useQueryClient();
   const { status } = useSession();
   const { resourceId } = use(params);
+  const [newNote, setNewNote] = useState("");
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteContent, setEditingNoteContent] = useState("");
 
   const resourceQuery = useQuery({
     queryKey: ["resource", resourceId],
@@ -53,10 +58,32 @@ export default function ResourceDetailsPage({
     enabled: status === "authenticated" && Boolean(resourceQuery.data),
   });
 
-  const noteMutation = useMutation({
+  const createNoteMutation = useMutation({
     mutationFn: (content: string) => createResourceNoteOnServer({ resourceId, content }),
     onSuccess: () => {
       toast.success("已添加笔记");
+      setNewNote("");
+      queryClient.invalidateQueries({ queryKey: ["resource-notes", resourceId] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const updateNoteMutation = useMutation({
+    mutationFn: ({ noteId, content }: { noteId: string; content: string }) =>
+      updateResourceNoteOnServer(noteId, { content }),
+    onSuccess: () => {
+      toast.success("笔记已更新");
+      setEditingNoteId(null);
+      setEditingNoteContent("");
+      queryClient.invalidateQueries({ queryKey: ["resource-notes", resourceId] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const deleteNoteMutation = useMutation({
+    mutationFn: deleteResourceNoteOnServer,
+    onSuccess: () => {
+      toast.success("笔记已删除");
       queryClient.invalidateQueries({ queryKey: ["resource-notes", resourceId] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -72,6 +99,7 @@ export default function ResourceDetailsPage({
   });
 
   const resource = resourceQuery.data;
+  const notes = notesQuery.data?.notes ?? [];
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "未知时间";
@@ -189,25 +217,82 @@ export default function ResourceDetailsPage({
                       className="flex gap-2"
                       onSubmit={(event) => {
                         event.preventDefault();
-                        const formData = new FormData(event.currentTarget);
-                        const content = String(formData.get("note") ?? "").trim();
+                        const content = newNote.trim();
                         if (!content) {
                           return;
                         }
-                        noteMutation.mutate(content);
-                        event.currentTarget.reset();
+                        createNoteMutation.mutate(content);
                       }}
                     >
-                      <Input name="note" placeholder="添加你的学习笔记" />
+                      <Input
+                        name="note"
+                        placeholder="添加你的学习笔记"
+                        value={newNote}
+                        onChange={(event) => setNewNote(event.target.value)}
+                      />
                       <Button type="submit" size="sm">
                         保存笔记
                       </Button>
                     </form>
 
                     <div className="space-y-2">
-                      {(notesQuery.data?.notes ?? []).map((note) => (
-                        <div key={note.id} className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
-                          {note.content}
+                      {notes.map((note) => (
+                        <div key={note.id} className="rounded-md border px-3 py-2 text-sm text-muted-foreground space-y-2">
+                          <div>{note.content}</div>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setEditingNoteId(note.id);
+                                setEditingNoteContent(note.content);
+                              }}
+                            >
+                              编辑笔记
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => deleteNoteMutation.mutate(note.id)}
+                            >
+                              删除笔记
+                            </Button>
+                          </div>
+                          {editingNoteId === note.id ? (
+                            <div className="flex gap-2">
+                              <Input
+                                aria-label="编辑笔记内容"
+                                value={editingNoteContent}
+                                onChange={(event) => setEditingNoteContent(event.target.value)}
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  const content = editingNoteContent.trim();
+                                  if (!content) {
+                                    return;
+                                  }
+                                  updateNoteMutation.mutate({ noteId: note.id, content });
+                                }}
+                              >
+                                保存编辑
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingNoteId(null);
+                                  setEditingNoteContent("");
+                                }}
+                              >
+                                取消
+                              </Button>
+                            </div>
+                          ) : null}
                         </div>
                       ))}
                     </div>

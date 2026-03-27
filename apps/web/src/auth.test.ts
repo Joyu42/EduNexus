@@ -5,7 +5,6 @@ const {
   canAnonymousRead,
   isAuthorizedRouteRequest,
   isPublicRoute,
-  requireDemoUser,
   requireUser
 } = await import(
   "./lib/server/auth-route-protection"
@@ -70,31 +69,13 @@ describe("auth route protection", () => {
     expect(requireUser(null)).toEqual({ ok: false, status: 401 });
   });
 
-  it("returns 403 when a normal user requests demo-only access", () => {
-    expect(
-      requireDemoUser({
-        user: {
-          id: "user_123",
-          email: "user@example.com",
-          isDemo: false
-        }
-      })
-    ).toEqual({ ok: false, status: 403 });
-  });
-
-  it("allows demo-only route only for demo users", () => {
-    const demoOnlyRequest = new NextRequest("http://localhost/demo");
+  it("treats /demo as a protected route (requires authentication)", () => {
+    const request = new NextRequest("http://localhost/demo");
 
     expect(
       isAuthorizedRouteRequest({
-        auth: {
-          user: {
-            id: "user_123",
-            email: "user@example.com",
-            isDemo: false
-          }
-        },
-        request: demoOnlyRequest
+        auth: null,
+        request,
       })
     ).toBe(false);
 
@@ -102,12 +83,12 @@ describe("auth route protection", () => {
       isAuthorizedRouteRequest({
         auth: {
           user: {
-            id: "demo_123",
-            email: "demo@edunexus.com",
-            isDemo: true
-          }
+            id: "user_123",
+            email: "user@example.com",
+            isDemo: false,
+          },
         },
-        request: demoOnlyRequest
+        request,
       })
     ).toBe(true);
   });

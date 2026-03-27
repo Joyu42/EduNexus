@@ -366,7 +366,7 @@ export function InteractiveGraph({
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 2.5 / globalScale;
         ctx.shadowColor = nodeColor;
-        ctx.shadowBlur = 12;
+        ctx.shadowBlur = 6;
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
@@ -410,7 +410,7 @@ export function InteractiveGraph({
       }
 
       const [r, g, b] = RELATION_BASE_COLOR[graphLink.type] ?? RELATION_BASE_COLOR.related;
-      const alpha = 0.22 + clampStrength(graphLink.strength) * 0.45;
+      const alpha = 0.16 + clampStrength(graphLink.strength) * 0.28;
       return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
     },
     [showLearningPath, pathNodes]
@@ -420,9 +420,9 @@ export function InteractiveGraph({
   const linkWidth = useCallback((link: any) => {
     const graphLink = link as GraphEdge;
     if (isLearningPathEdge(graphLink, showLearningPath, pathNodes)) {
-      return 2;
+      return 1.4;
     }
-    return 0.7 + clampStrength(graphLink.strength) * 1.1;
+    return 0.55 + clampStrength(graphLink.strength) * 0.85;
   }, [showLearningPath, pathNodes]);
 
   const linkDirectionalParticles = useCallback((link: any) => {
@@ -444,7 +444,7 @@ export function InteractiveGraph({
   const linkDirectionalParticleSpeed = useCallback((link: any) => {
     const graphLink = link as GraphEdge;
     if (isLearningPathEdge(graphLink, showLearningPath, pathNodes)) {
-      return 0.0032;
+      return 0.0024;
     }
     return 0.0012 + clampStrength(graphLink.strength) * 0.0012;
   }, [showLearningPath, pathNodes]);
@@ -456,7 +456,7 @@ export function InteractiveGraph({
     }
 
     const [r, g, b] = RELATION_BASE_COLOR[graphLink.type] ?? RELATION_BASE_COLOR.related;
-    const alpha = 0.45 + clampStrength(graphLink.strength) * 0.35;
+    const alpha = 0.28 + clampStrength(graphLink.strength) * 0.22;
     return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
   }, [showLearningPath, pathNodes]);
 
@@ -483,7 +483,7 @@ export function InteractiveGraph({
       style={{ background: THEMES[theme].background, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
     >
       {/* 背景装饰 - 添加一些动态光点 */}
-      <div className="absolute inset-0 opacity-30">
+      <div className="absolute inset-0 opacity-12">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>

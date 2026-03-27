@@ -21,17 +21,17 @@ describe("path and goals empty states", () => {
     });
   });
 
-  it("requests demo bootstrap state for demo users with empty datasets", () => {
+  it("keeps demo users on empty states when no records exist", () => {
     expect(getPathPageState({ isLoading: false, pathCount: 0, isDemoUser: true })).toEqual({
-      kind: "bootstrap_demo",
+      kind: "empty",
     });
 
     expect(
       getLearningPathsPageState({ isLoading: false, pathCount: 0, isDemoUser: true })
-    ).toEqual({ kind: "bootstrap_demo" });
+    ).toEqual({ kind: "empty" });
 
     expect(getGoalsPageState({ isLoading: false, goalCount: 0, isDemoUser: true })).toEqual({
-      kind: "bootstrap_demo",
+      kind: "empty",
     });
   });
 
