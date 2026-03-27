@@ -91,9 +91,7 @@ function normalizeRecords(records: LearningRecord[]): LearningRecord[] {
 function createEvents(records: LearningRecord[], today: string): StudyEvent[] {
   return records.flatMap((record) => {
     if (record.lastReviewedAt === today) {
-      const type =
-        record.lastStudyType ??
-        (record.learnDate === today ? "learn" : record.lastStudyType === undefined ? "learn" : "review");
+      const type = record.lastStudyType ?? (record.learnDate === today ? "learn" : "review");
       return [
         {
           date: today,

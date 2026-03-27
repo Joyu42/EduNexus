@@ -227,8 +227,8 @@ describe("words storage", () => {
 
     const stats = await memory.getLearningStats(today);
 
-    expect(stats.todaySummary.learned).toBe(20);
-    expect(stats.todaySummary.reviewed).toBe(0);
+    expect(stats.todaySummary.learned).toBe(19);
+    expect(stats.todaySummary.reviewed).toBe(1);
     expect(stats.todaySummary.relearned).toBe(0);
   });
 
