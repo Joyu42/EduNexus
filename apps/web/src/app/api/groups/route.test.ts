@@ -1,4 +1,8 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { QA_GROUP_ID } from "@/lib/server/cleanup-demo-manifest";
+import { applyDemoCleanup } from "@/lib/server/cleanup-demo";
 
 const getCurrentUserId = vi.fn();
 const loadDb = vi.fn();
@@ -22,7 +26,16 @@ vi.mock("@/lib/server/groups-service", () => ({
   syncGroupMemberCount
 }));
 
-const { POST: createGroupRoute } = await import("./route");
+const { GET: listGroupsRoute, POST: createGroupRoute } = await import("./route");
+
+const pollutedFixturePath = path.resolve(process.cwd(), "scripts/fixtures/cleanup-demo-polluted-db.json");
+
+type CleanupInputDb = Parameters<typeof applyDemoCleanup>[0];
+
+async function loadPollutedFixtureDb(): Promise<CleanupInputDb> {
+  const raw = await fs.readFile(pollutedFixturePath, "utf8");
+  return JSON.parse(raw) as CleanupInputDb;
+}
 
 describe("groups api", () => {
   beforeEach(() => {
@@ -190,5 +203,30 @@ describe("groups api", () => {
         status: "active"
       })
     );
+  });
+
+  it("shows QA group before cleanup and excludes it after cleanup in list surface", async () => {
+    const pollutedDb = await loadPollutedFixtureDb();
+    const cleanedDb = applyDemoCleanup(pollutedDb, { includeSeededArtifacts: true }).db;
+
+    loadDb.mockResolvedValueOnce(pollutedDb).mockResolvedValueOnce(cleanedDb);
+
+    const beforeCleanupResponse = await listGroupsRoute();
+    expect(beforeCleanupResponse.status).toBe(200);
+    const beforeCleanupPayload = (await beforeCleanupResponse.json()) as {
+      success: boolean;
+      data: { groups: Array<{ id: string }> };
+    };
+    expect(beforeCleanupPayload.success).toBe(true);
+    expect(beforeCleanupPayload.data.groups.some((group) => group.id === QA_GROUP_ID)).toBe(true);
+
+    const afterCleanupResponse = await listGroupsRoute();
+    expect(afterCleanupResponse.status).toBe(200);
+    const afterCleanupPayload = (await afterCleanupResponse.json()) as {
+      success: boolean;
+      data: { groups: Array<{ id: string }> };
+    };
+    expect(afterCleanupPayload.success).toBe(true);
+    expect(afterCleanupPayload.data.groups.some((group) => group.id === QA_GROUP_ID)).toBe(false);
   });
 });

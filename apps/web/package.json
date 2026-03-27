@@ -13,6 +13,7 @@
     "test:smoke": "node ./scripts/api-smoke.mjs",
     "test:unit": "vitest run",
     "test:all": "pnpm test:unit && pnpm test:smoke",
+    "cleanup:demo": "node ./scripts/cleanup-demo.mjs",
     "perf:audit": "lighthouse http://localhost:3000 --view --output html --output-path ./lighthouse-report.html",
     "perf:test": "vitest run --config vitest.perf.config.ts",
     "perf:monitor": "node ./scripts/performance-monitor.mjs"

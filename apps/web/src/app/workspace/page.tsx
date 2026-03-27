@@ -24,6 +24,8 @@ import {
   Trash2,
   Plus,
   Route,
+  PanelLeftClose,
+  PanelRightClose,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoginPrompt } from "@/components/ui/login-prompt";
@@ -46,6 +48,7 @@ import { LearningNotes } from "@/components/workspace/learning-notes";
 import { LearningPlanner } from "@/components/kb/learning-planner";
 import { KBQAAssistant } from "@/components/kb/kb-qa-assistant";
 import { TeacherManager } from "@/components/workspace/teacher-manager";
+import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { getKBStorage, type KBDocument } from "@/lib/client/kb-storage";
 import { getModelConfig } from "@/lib/client/model-config";
 import { exportChatSessionAsMarkdown, type ChatSession } from "@/lib/workspace/chat-history-storage";
@@ -57,6 +60,7 @@ import {
   useWorkspaceSessionController,
 } from "@/lib/workspace/use-workspace-session-controller";
 import { toast } from "sonner";
+import { WorkspaceRailsLayout } from "./rails-layout";
 
 type WorkspaceTaskContext = {
   source: string;
@@ -94,6 +98,12 @@ function WorkspacePageContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const storage = getKBStorage();
+  const {
+    workspaceLeftCollapsed,
+    workspaceRightCollapsed,
+    setWorkspaceLeftCollapsed,
+    setWorkspaceRightCollapsed,
+  } = useSidebarStore();
   const [kbDocuments, setKbDocuments] = useState<KBDocument[]>([]);
   const [currentTeacher, setCurrentTeacher] = useState<AITeacher | null>(null);
   const [kbQAMode, setKbQAMode] = useState(false); // 知识库问答模式开关
@@ -128,7 +138,6 @@ function WorkspacePageContent() {
     sendMessage,
   } = useWorkspaceSessionController({
     enabled: status === "authenticated",
-    isDemoUser: (session?.user as { isDemo?: boolean } | undefined)?.isDemo === true,
   });
   const socraticMode = currentTeacher?.teachingStyle === "socratic";
 
@@ -513,82 +522,99 @@ function WorkspacePageContent() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30">
-      {/* Left Sidebar - History Sessions */}
-      <motion.div
-        initial={{ x: -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-        className="w-[280px] border-r bg-white/50 backdrop-blur-sm flex flex-col flex-shrink-0"
-      >
-        <div className="p-4 border-b bg-white/80 flex items-center justify-between">
-          <h2 className="font-semibold text-sm flex items-center gap-2 text-foreground">
-            <History className="h-4 w-4" />
-            历史会话
-          </h2>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 hover:bg-orange-50 hover:text-orange-600 transition-colors" 
-            onClick={() => void handleStartNewConversation()}
-            disabled={isSessionActionPending}
-            title="新对话"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-3 scrollbar-thin space-y-2">
-          {recentSessions.length === 0 ? (
-            <div className="text-center p-6 text-muted-foreground flex flex-col items-center">
-              <MessageSquare className="h-8 w-8 mb-2 opacity-20" />
-              <p className="text-sm">暂无历史记录</p>
-            </div>
-          ) : (
-            recentSessions.slice(0, 10).map((session) => (
-              <div
-                key={session.id}
-                onClick={() => void handleSelectSession(session.id)}
-                className={cn(
-                  "group p-3 rounded-xl cursor-pointer transition-all border",
-                  currentSessionId === session.id
-                    ? "bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 shadow-sm"
-                    : "bg-white/60 border-transparent hover:border-orange-100 hover:bg-white hover:shadow-sm"
-                )}
+    <WorkspaceRailsLayout
+      leftCollapsed={workspaceLeftCollapsed}
+      rightCollapsed={workspaceRightCollapsed}
+      onExpandLeft={() => setWorkspaceLeftCollapsed(false)}
+      onExpandRight={() => setWorkspaceRightCollapsed(false)}
+      left={
+        <motion.div
+          data-testid="workspace-left-rail"
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="w-[280px] border-r bg-white/50 backdrop-blur-sm flex flex-col flex-shrink-0"
+        >
+          <div className="p-4 border-b bg-white/80 flex items-center justify-between">
+            <h2 className="font-semibold text-sm flex items-center gap-2 text-foreground">
+              <History className="h-4 w-4" />
+              历史会话
+            </h2>
+            <div className="flex items-center gap-1">
+              <Button
+                data-testid="workspace-left-rail-collapse"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                onClick={() => setWorkspaceLeftCollapsed(true)}
+                title="收起"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-foreground truncate">{session.title}</h4>
-                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
-                      <span className="truncate">{session.messageCount} 条消息</span>
-                      <span>•</span>
-                      <span className="truncate" suppressHydrationWarning>
-                        {isMounted ? new Date(session.updatedAt).toLocaleDateString() : ""}
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-muted-foreground hover:text-red-500 hover:bg-red-50 -mr-1 -mt-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      requestDeleteSession(session.id, session.title);
-                    }}
-                    disabled={isSessionActionPending}
-                    title="删除"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </motion.div>
+                <PanelLeftClose className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                onClick={() => void handleStartNewConversation()}
+                disabled={isSessionActionPending}
+                title="新对话"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col w-0">
+          <div className="flex-1 overflow-y-auto p-3 scrollbar-thin space-y-2">
+            {recentSessions.length === 0 ? (
+              <div className="text-center p-6 text-muted-foreground flex flex-col items-center">
+                <MessageSquare className="h-8 w-8 mb-2 opacity-20" />
+                <p className="text-sm">暂无历史记录</p>
+              </div>
+            ) : (
+              recentSessions.slice(0, 10).map((session) => (
+                <div
+                  key={session.id}
+                  onClick={() => void handleSelectSession(session.id)}
+                  className={cn(
+                    "group p-3 rounded-xl cursor-pointer transition-all border",
+                    currentSessionId === session.id
+                      ? "bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 shadow-sm"
+                      : "bg-white/60 border-transparent hover:border-orange-100 hover:bg-white hover:shadow-sm"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium text-foreground truncate">{session.title}</h4>
+                      <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
+                        <span className="truncate">{session.messageCount} 条消息</span>
+                        <span>•</span>
+                        <span className="truncate" suppressHydrationWarning>
+                          {isMounted ? new Date(session.updatedAt).toLocaleDateString() : ""}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 text-muted-foreground hover:text-red-500 hover:bg-red-50 -mr-1 -mt-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        requestDeleteSession(session.id, session.title);
+                      }}
+                      disabled={isSessionActionPending}
+                      title="删除"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </motion.div>
+      }
+      center={
+        <div data-testid="workspace-main" className="flex-1 flex flex-col min-w-0 w-full">
         {/* Header */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -1071,31 +1097,80 @@ function WorkspacePageContent() {
             </motion.div>
           </div>
         </motion.div>
+
+        <Dialog
+          open={pendingDeleteSession !== null}
+          onOpenChange={(open) => {
+            if (!open && !isSessionActionPending) {
+              setPendingDeleteSession(null);
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>删除对话</DialogTitle>
+              <DialogDescription>
+                {`确定要删除「${pendingDeleteSession?.title ?? "当前对话"}」吗？该操作不可撤销。`}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setPendingDeleteSession(null)}
+                disabled={isSessionActionPending}
+              >
+                取消
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => void handleConfirmDeleteSession()}
+                disabled={isSessionActionPending}
+              >
+                {isSessionActionPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                删除
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Right Sidebar - Info Panel */}
-      <motion.div
-        initial={{ x: 20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-        className="w-80 border-l bg-white/50 backdrop-blur-sm overflow-hidden flex flex-col"
-      >
-        {/* Tabs */}
-        <div className="border-b bg-white/80 p-2 flex gap-1 overflow-x-auto scrollbar-thin">
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+      }
+      right={
+        <motion.div
+          data-testid="workspace-right-rail"
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="w-80 border-l bg-white/50 backdrop-blur-sm overflow-hidden flex flex-col shrink-0"
+        >
+          {/* Tabs */}
+          <div className="border-b bg-white/80 p-2 flex items-center gap-1 overflow-x-auto scrollbar-thin">
             <Button
-              variant={activeTab === "status" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setActiveTab("status")}
-              className={cn(
-                "flex-shrink-0 text-xs transition-all",
-                activeTab === "status" && "bg-gradient-to-r from-orange-500 to-rose-500 text-white"
-              )}
+              data-testid="workspace-right-rail-collapse"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 flex-shrink-0"
+              onClick={() => setWorkspaceRightCollapsed(true)}
+              title="收起"
             >
-              <Settings className="h-3 w-3 mr-1" />
-              状态
+              <PanelRightClose className="h-4 w-4" />
             </Button>
-          </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                variant={activeTab === "status" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveTab("status")}
+                className={cn(
+                  "flex-shrink-0 text-xs transition-all",
+                  activeTab === "status" && "bg-gradient-to-r from-orange-500 to-rose-500 text-white"
+                )}
+              >
+                <Settings className="h-3 w-3 mr-1" />
+                状态
+              </Button>
+            </motion.div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               variant={activeTab === "teachers" ? "default" : "ghost"}
@@ -1439,41 +1514,8 @@ function WorkspacePageContent() {
         </AnimatePresence>
       </motion.div>
 
-      <Dialog
-        open={pendingDeleteSession !== null}
-        onOpenChange={(open) => {
-          if (!open && !isSessionActionPending) {
-            setPendingDeleteSession(null);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>删除对话</DialogTitle>
-            <DialogDescription>
-              {`确定要删除「${pendingDeleteSession?.title ?? "当前对话"}」吗？该操作不可撤销。`}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setPendingDeleteSession(null)}
-              disabled={isSessionActionPending}
-            >
-              取消
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => void handleConfirmDeleteSession()}
-              disabled={isSessionActionPending}
-            >
-              {isSessionActionPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              删除
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+      }
+    />
   );
 }
 
