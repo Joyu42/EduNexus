@@ -8,6 +8,7 @@ import WorkspacePage from "./page";
 import { useSession } from "next-auth/react";
 import { useWorkspaceSessionController } from "@/lib/workspace/use-workspace-session-controller";
 import { saveReplyAsKBDocument } from "@/lib/client/workspace-kb-adapter";
+import { toast } from "sonner";
 
 vi.mock("next/navigation", () => ({
   useSearchParams: () => ({
@@ -123,7 +124,10 @@ vi.mock("@/lib/client/kb-storage", () => ({
   getKBStorage: () => ({
     initialize: vi.fn().mockResolvedValue(undefined),
     getCurrentVaultId: vi.fn().mockReturnValue(null),
+    setCurrentVault: vi.fn(),
+    createVault: vi.fn().mockResolvedValue({ id: "vault_new", name: "工作区保存", path: "workspace://saved-replies" }),
     getDocumentsByVault: vi.fn().mockResolvedValue([]),
+    createDocument: vi.fn().mockResolvedValue({ id: "doc_new", title: "Test", content: "", tags: [], vaultId: "vault_new", createdAt: new Date(), updatedAt: new Date() }),
   }),
 }));
 
@@ -258,5 +262,26 @@ describe("WorkspacePage KB save button behavior", () => {
     });
 
     await new Promise((resolve) => setTimeout(resolve, 2100));
+  });
+
+  it("first save auto-creates vault when no current vault exists and shows success toast", async () => {
+    (saveReplyAsKBDocument as any).mockResolvedValue({ ok: true, documentId: "doc_new" });
+
+    render(<WorkspacePage />);
+
+    fireEvent.click(screen.getByLabelText("save-to-kb"));
+
+    await waitFor(() => {
+      expect(screen.getByText("保存到知识库")).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText("保存到知识库"));
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith("已保存到知识宝库");
+    });
+
+    expect(saveReplyAsKBDocument).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("已保存")).toBeDefined();
   });
 });
