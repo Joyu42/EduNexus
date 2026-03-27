@@ -18,11 +18,14 @@ import type {
   StudyEvent,
   WordsPlanSettings,
 } from "@/lib/words/types";
+import type { WordsMajor } from "@/lib/words/major-gating";
 
 const DEFAULT_PLAN_SETTINGS: WordsPlanSettings = {
   dailyNewLimit: 20,
   reviewFirst: true,
   defaultRevealMode: "hidden",
+  selectedMajor: "",
+  lastSelectedBookId: "",
 };
 
 type LegacyLearningRecord = Partial<LearningRecord> & {
@@ -174,7 +177,7 @@ function toStudyEvent(record: LearningRecord, today: string): StudyEvent | null 
     return null;
   }
 
-  const type = record.lastStudyType ?? (record.learnDate === today ? "learn" : "review");
+  const type = record.learnDate === today ? "learn" : (record.lastStudyType ?? "review");
   const grade = record.lastGrade ?? (record.retentionScore === 1 ? "good" : "again");
   return {
     date: today,
@@ -403,6 +406,8 @@ export async function getWordsPlanSettings(userId: string): Promise<WordsPlanSet
     reviewFirst: setting.reviewFirst,
     defaultRevealMode:
       setting.defaultRevealMode === "definition" ? "definition" : "hidden",
+    selectedMajor: (setting.selectedMajor ?? "") as "" | WordsMajor,
+    lastSelectedBookId: setting.lastSelectedBookId ?? "",
   };
 }
 
@@ -416,12 +421,16 @@ export async function saveWordsPlanSettings(
       dailyNewLimit: settings.dailyNewLimit,
       reviewFirst: settings.reviewFirst,
       defaultRevealMode: settings.defaultRevealMode,
+      selectedMajor: settings.selectedMajor,
+      lastSelectedBookId: settings.lastSelectedBookId,
     },
     create: {
       userId,
       dailyNewLimit: settings.dailyNewLimit,
       reviewFirst: settings.reviewFirst,
       defaultRevealMode: settings.defaultRevealMode,
+      selectedMajor: settings.selectedMajor,
+      lastSelectedBookId: settings.lastSelectedBookId,
     },
   });
 }

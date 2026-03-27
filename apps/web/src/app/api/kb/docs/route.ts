@@ -47,9 +47,13 @@ export async function POST(request: Request) {
     }
 
     const json = await request.json();
-    const { title, content } = json;
+    const { title, content, tags } = json as {
+      title?: unknown;
+      content?: unknown;
+      tags?: unknown;
+    };
 
-    if (!title || !content) {
+    if (typeof title !== "string" || typeof content !== "string" || !title || !content) {
       return fail(
         {
           code: "INVALID_REQUEST",
@@ -59,9 +63,23 @@ export async function POST(request: Request) {
       );
     }
 
+    if (
+      typeof tags !== "undefined" &&
+      (!Array.isArray(tags) || tags.some(tag => typeof tag !== "string"))
+    ) {
+      return fail(
+        {
+          code: "INVALID_REQUEST",
+          message: "标签必须为字符串数组。"
+        },
+        400
+      );
+    }
+
     const doc = await createDocument({
       title,
       content,
+      tags: tags as string[] | undefined,
       authorId: userId
     });
 

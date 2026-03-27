@@ -6,6 +6,7 @@ import { Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { Word } from "@/lib/words/types";
+import { useSpeechSynthesis } from "@/lib/hooks/use-speech-synthesis";
 
 type WordCardProps = {
   word: Word;
@@ -38,14 +39,7 @@ export function WordCard({
     return "Medium";
   }, [word.difficulty]);
 
-  const pronounce = () => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      return;
-    }
-    const utterance = new SpeechSynthesisUtterance(word.word);
-    utterance.lang = "en-US";
-    window.speechSynthesis.speak(utterance);
-  };
+  const { speak, isSupported, speakingKind } = useSpeechSynthesis();
 
   return (
     <motion.div
@@ -60,7 +54,13 @@ export function WordCard({
             <span className="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-medium text-white">
               {difficultyLabel}
             </span>
-            <Button size="icon" variant="ghost" onClick={pronounce} aria-label="pronounce word">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => speak(word.word, "word")}
+              aria-label="pronounce word"
+              disabled={!isSupported || speakingKind !== null}
+            >
               <Volume2 className="h-4 w-4" />
             </Button>
           </div>
@@ -119,8 +119,24 @@ export function WordCard({
             </button>
             {exampleVisible ? (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
-                <p className="text-sm leading-6 text-slate-700">{word.example}</p>
-                {word.exampleZh ? <p className="mt-2 text-xs text-slate-500">{word.exampleZh}</p> : null}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-2">
+                    <p className="text-sm leading-6 text-slate-700">{word.example}</p>
+                    {word.exampleZh ? <p className="mt-2 text-xs text-slate-500">{word.exampleZh}</p> : null}
+                  </div>
+                  {word.example ? (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 shrink-0 text-slate-500 hover:text-slate-700"
+                      onClick={() => speak(word.example, "example")}
+                      aria-label="pronounce example"
+                      disabled={!isSupported || speakingKind !== null}
+                    >
+                      <Volume2 className="h-4 w-4" />
+                    </Button>
+                  ) : null}
+                </div>
               </motion.div>
             ) : null}
           </div>

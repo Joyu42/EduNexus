@@ -67,12 +67,14 @@ export function selectReviewWordIds(
   words: Word[],
   records: LearningRecord[],
   today: string,
-  size = 20
+  size = 20,
+  bookId?: string
 ): string[] {
   const recordByWord = new Map(records.map((record) => [record.wordId, record]));
 
   return words
     .filter((word) => {
+      if (bookId && word.bookId !== bookId) return false;
       const record = recordByWord.get(word.id);
       return Boolean(record && record.nextReviewDate <= today);
     })

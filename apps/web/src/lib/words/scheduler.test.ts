@@ -164,4 +164,127 @@ describe("words scheduler", () => {
     expect((saved[0] as any).lastStudyType).toBe("relearn");
     expect((saved[0] as any).lastGrade).toBe("again");
   });
+
+  it("hard first exposure schedules next day (day+1), not day+2", async () => {
+    const saved: LearningRecord[] = [];
+
+    await updateWordStatus(
+      {
+        getLearningRecords: async () => [],
+        saveLearningRecord: async (record: LearningRecord) => {
+          saved.push(record);
+        },
+      },
+      "cet4",
+      "w1",
+      "hard" as any,
+      "2026-03-19"
+    );
+
+    // hard should behave like good/again (day+1), NOT like easy (day+2)
+    expect(saved[0].nextReviewDate).toBe("2026-03-20");
+  });
+
+  it("contract: first exposure good/hard/again = day+1, easy = day+2", async () => {
+    const saved: LearningRecord[] = [];
+    const storage = {
+      getLearningRecords: async () => [],
+      saveLearningRecord: async (record: LearningRecord) => {
+        saved.push(record);
+      },
+    };
+
+    await updateWordStatus(storage, "cet4", "w1", "good" as any, "2026-03-25");
+    await updateWordStatus(storage, "cet4", "w2", "hard" as any, "2026-03-25");
+    await updateWordStatus(storage, "cet4", "w3", "again" as any, "2026-03-25");
+    await updateWordStatus(storage, "cet4", "w4", "easy" as any, "2026-03-25");
+
+    // good, hard, again → day+1
+    expect(saved[0].nextReviewDate).toBe("2026-03-26"); // good
+    expect(saved[1].nextReviewDate).toBe("2026-03-26"); // hard
+    expect(saved[2].nextReviewDate).toBe("2026-03-26"); // again
+    // easy → day+2
+    expect(saved[3].nextReviewDate).toBe("2026-03-27"); // easy
+  });
+
+  it("same-day repeated touch does not make word due again today", async () => {
+    // Simulate: w1 has nextReviewDate = today, so it appears in today's review queue
+    const existingRecord: LearningRecord = {
+      wordId: "w1",
+      bookId: "cet4",
+      learnDate: "2026-03-20",
+      status: "reviewing",
+      nextReviewDate: "2026-03-26",
+      interval: 3,
+      easeFactor: 2.5,
+      reviewCount: 2,
+      successCount: 2,
+      failureCount: 0,
+      lastReviewedAt: "2026-03-23",
+      retentionScore: 1,
+    };
+
+    let currentRecord = { ...existingRecord };
+    const storage = {
+      getLearningRecords: async () => [currentRecord],
+      saveLearningRecord: async (record: LearningRecord) => {
+        currentRecord = record;
+      },
+    };
+
+    await updateWordStatus(storage, "cet4", "w1", "good" as any, "2026-03-26");
+    expect(currentRecord.nextReviewDate).toBe("2026-04-01");
+
+    // Simulate second same-day touch by resetting the "due" filter
+    // The word's nextReviewDate is now 2026-03-29 (tomorrow is 2026-03-27)
+    // It should NOT appear in today's schedule because nextReviewDate > today
+    const schedule = await generateDailySchedule(
+      {
+        getAllWords: async () => words.filter((w) => w.id === "w1"),
+        getAllLearningRecords: async () => [currentRecord],
+      },
+      "2026-03-26", // today
+      20
+    );
+
+    // w1 should NOT be in the schedule for today because nextReviewDate is 2026-03-29
+    expect(schedule.wordIds).not.toContain("w1");
+  });
+
+  it("word due today remains due even after same-day repeated touch does not reschedule backward", async () => {
+    // Edge case: a word is due today (nextReviewDate = today)
+    // After reviewing with "again", it should reschedule to tomorrow, not stay today
+    const existingRecord: LearningRecord = {
+      wordId: "w1",
+      bookId: "cet4",
+      learnDate: "2026-03-20",
+      status: "learning",
+      nextReviewDate: "2026-03-26",
+      interval: 1,
+      easeFactor: 2.5,
+      reviewCount: 1,
+      successCount: 0,
+      failureCount: 1,
+      lastReviewedAt: "2026-03-25",
+      retentionScore: 0,
+    };
+
+    let currentRecord = { ...existingRecord };
+    const storage = {
+      getLearningRecords: async () => [currentRecord],
+      saveLearningRecord: async (record: LearningRecord) => {
+        currentRecord = record;
+      },
+    };
+
+    // Review with "again" on the due date
+    await updateWordStatus(storage, "cet4", "w1", "again" as any, "2026-03-26");
+
+    // nextReviewDate must be AFTER today (2026-03-26), not today or before
+    expect(currentRecord.nextReviewDate > "2026-03-26").toBe(true);
+    // For "again" on first exposure, it's actually a relearn so uses interval=1 → next day
+    // But since this is not first exposure (has existing record), it uses spaced repetition
+    // Quality 1 (again) < 3, so interval = 1 → addDays(today, 1) = tomorrow
+    expect(currentRecord.nextReviewDate).toBe("2026-03-27");
+  });
 });

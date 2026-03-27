@@ -165,7 +165,71 @@ describe("words storage", () => {
       dailyNewLimit: 20,
       reviewFirst: true,
       defaultRevealMode: "hidden",
+      selectedMajor: "",
+      lastSelectedBookId: "",
     });
+  });
+
+  it("repro: same-day second touch misclassifies original learn as review, undercounting todaySummary.learned", async () => {
+    const memory = createWordsStorage({ mode: "memory" });
+    const today = "2026-03-27";
+
+    await memory.saveWordBook({
+      id: "cet4",
+      name: "CET4",
+      description: "",
+      wordCount: 20,
+      category: "cet",
+    });
+
+    const words: Word[] = Array.from({ length: 20 }, (_, i) => ({
+      id: `w${i + 1}`,
+      word: `word${i + 1}`,
+      phonetic: "",
+      definition: "",
+      example: "",
+      bookId: "cet4",
+      difficulty: "easy",
+    }));
+    await memory.saveWords(words);
+
+    for (const word of words) {
+      await memory.saveLearningRecord({
+        wordId: word.id,
+        bookId: "cet4",
+        learnDate: today,
+        status: "learning",
+        nextReviewDate: today,
+        interval: 1,
+        easeFactor: 2.5,
+        reviewCount: 0,
+        successCount: 0,
+        failureCount: 0,
+        lastReviewedAt: today,
+        retentionScore: 1,
+      });
+    }
+
+    await memory.saveLearningRecord({
+      wordId: "w1",
+      bookId: "cet4",
+      learnDate: "2026-03-26",
+      status: "reviewing",
+      nextReviewDate: "2026-03-28",
+      interval: 1,
+      easeFactor: 2.5,
+      reviewCount: 1,
+      successCount: 1,
+      failureCount: 0,
+      lastReviewedAt: today,
+      retentionScore: 1,
+    });
+
+    const stats = await memory.getLearningStats(today);
+
+    expect(stats.todaySummary.learned).toBe(19);
+    expect(stats.todaySummary.reviewed).toBe(1);
+    expect(stats.todaySummary.relearned).toBe(0);
   });
 
   it("normalizes legacy records missing review metadata", async () => {

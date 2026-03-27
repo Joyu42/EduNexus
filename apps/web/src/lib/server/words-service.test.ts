@@ -194,6 +194,72 @@ describe("words service progress summary", () => {
     expect(summary.recentProgress.learnedWordsInRange).toBe(1);
   });
 
+  // REGRESSION TEST: first-day phantom review bug
+  // Bug: brand-new user's dashboard shows reviewedToday > 0 without any true review action
+  // Expected: fresh learns on day 1 should count as learnedToday, NOT reviewedToday
+  it("fresh first-day learns must NOT increment reviewedToday", async () => {
+    // Scenario A: Fresh learns with null lastStudyType (typical new user)
+    findMany.mockResolvedValueOnce([
+      {
+        wordId: "w1",
+        bookId: "cet4",
+        learnDate: "2026-03-19",
+        status: "learning",
+        nextReviewDate: "2026-03-20",
+        interval: 1,
+        easeFactor: 2.5,
+        reviewCount: 0,
+        successCount: 0,
+        failureCount: 0,
+        lastReviewedAt: "",
+        retentionScore: null,
+        lastStudyType: null,
+        lastGrade: null,
+      },
+    ]);
+
+    const summary = await getWordsProgressSummary("brand-new-user", "2026-03-19", 7);
+
+    expect(summary.learnedToday).toBe(1);
+    expect(summary.reviewedToday).toBe(0);
+    expect(summary.relearnedToday).toBe(0);
+    expect(summary.accuracyToday).toBe(0);
+  });
+
+  // REGRESSION TEST: phantom review when lastStudyType incorrectly set to "review"
+  // Bug: if learn flow incorrectly sets lastStudyType="review" for fresh learns,
+  // reviewedToday will show phantom > 0
+  it("lastStudyType=review on same-day learn must NOT count as reviewedToday", async () => {
+    // Simulate the bug scenario: learn flow incorrectly marking fresh learns as "review"
+    findMany.mockResolvedValueOnce([
+      {
+        wordId: "w1",
+        bookId: "cet4",
+        learnDate: "2026-03-19", // learned today
+        status: "learning",
+        nextReviewDate: "2026-03-20",
+        interval: 1,
+        easeFactor: 2.5,
+        reviewCount: 0,
+        successCount: 0,
+        failureCount: 0,
+        lastReviewedAt: "", // never reviewed
+        retentionScore: null,
+        lastStudyType: "review", // BUG: incorrectly set to "review" for fresh learn
+        lastGrade: null,
+      },
+    ]);
+
+    const summary = await getWordsProgressSummary("bug-user", "2026-03-19", 7);
+
+    // This test documents the bug: when lastStudyType="review" on same-day learn,
+    // the code counts it as a review even though no actual review happened
+    // Expected correct behavior: learnedToday=1, reviewedToday=0
+    // Current buggy behavior: learnedToday=0, reviewedToday=1
+    expect(summary.learnedToday).toBe(1); // should be learn, not review
+    expect(summary.reviewedToday).toBe(0); // should be 0 - no true review
+  });
+
   it("keeps progress query scoped by user id", async () => {
     findMany.mockResolvedValue([]);
 

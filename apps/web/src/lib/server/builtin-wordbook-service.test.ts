@@ -50,9 +50,9 @@ describe("listBuiltinWordBooks", () => {
     mockFindMany.mockResolvedValueOnce([
       {
         id: "medical",
-        name: "医学词汇 500",
+        name: "医学词汇",
         description: "医学词汇",
-        wordCount: 500,
+        wordCount: 200,
         category: "general",
       },
     ]);
@@ -62,9 +62,9 @@ describe("listBuiltinWordBooks", () => {
     expect(books).toHaveLength(1);
     expect(books[0]).toMatchObject({
       id: "builtin_book_medical",
-      name: "医学词汇 500",
+      name: "医学词汇",
       description: "医学词汇",
-      wordCount: 500,
+      wordCount: 200,
       category: "general",
     });
   });

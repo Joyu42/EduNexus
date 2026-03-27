@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { LoginPrompt } from "@/components/ui/login-prompt";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -33,8 +34,17 @@ import type {
   WordsTodaySummary,
 } from "@/lib/words/types";
 import { getCompletedCountFromSummary, syncWordsProgressToGoal } from "@/lib/words/integration";
+import {
+  filterBooksByMajor,
+  nextSelectedBookIdAfterVisibilityChange,
+  normalizePersistedSelection,
+  PROFESSIONAL_BOOK_IDS,
+  MAJOR_TO_PRO_BOOK_ID,
+  type WordsMajor,
+} from "@/lib/words/major-gating";
 
 const SELECTED_BOOK_STORAGE_KEY = "edunexus_words_selected_book";
+const SELECTED_MAJOR_STORAGE_KEY = "edunexus_words_selected_major";
 
 function pickFallbackBookId(availableBooks: WordBook[]): string {
   if (availableBooks.length === 0) return "";
@@ -69,6 +79,10 @@ export default function WordsDashboardPage() {
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
 
   const [deletingBookId, setDeletingBookId] = useState<string | null>(null);
+
+  const [selectedMajor, setSelectedMajor] = useState<WordsMajor | "">("");
+  const [selectionHydrated, setSelectionHydrated] = useState(false);
+  const hasHydratedOnceRef = useRef(false);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -124,64 +138,136 @@ export default function WordsDashboardPage() {
     return cleanup;
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    if (books.length === 0) {
-      if (!selectedBookId) return;
-      setSelectedBookId("");
-      try {
-        localStorage.removeItem(SELECTED_BOOK_STORAGE_KEY);
-      } catch {
-        // ignore storage errors
-      }
-      return;
-    }
-
-    const selectedExists = selectedBookId && books.some((book) => book.id === selectedBookId);
-    if (selectedExists) return;
-
-    let nextSelected = "";
-    if (!selectedBookId) {
-      try {
-        const stored = localStorage.getItem(SELECTED_BOOK_STORAGE_KEY);
-        if (stored && books.some((book) => book.id === stored)) {
-          nextSelected = stored;
-        }
-      } catch {
-        // ignore storage errors
-      }
-    }
-
-    if (!nextSelected) {
-      nextSelected = pickFallbackBookId(books);
-    }
-
-    setSelectedBookId(nextSelected);
+  const persistSelection = useCallback(async (major: string, bookId: string) => {
     try {
-      if (nextSelected) {
-        localStorage.setItem(SELECTED_BOOK_STORAGE_KEY, nextSelected);
-      } else {
-        localStorage.removeItem(SELECTED_BOOK_STORAGE_KEY);
+      if (typeof window !== "undefined") {
+        if (major) localStorage.setItem(SELECTED_MAJOR_STORAGE_KEY, major);
+        else localStorage.removeItem(SELECTED_MAJOR_STORAGE_KEY);
+        if (bookId) localStorage.setItem(SELECTED_BOOK_STORAGE_KEY, bookId);
+        else localStorage.removeItem(SELECTED_BOOK_STORAGE_KEY);
       }
     } catch {
       // ignore storage errors
     }
-  }, [books, selectedBookId]);
 
-  const handleSelectBook = (bookId: string) => {
-    setSelectedBookId(bookId);
-    if (typeof window !== "undefined") {
+    if (status === "authenticated") {
       try {
-        if (bookId) {
-          localStorage.setItem(SELECTED_BOOK_STORAGE_KEY, bookId);
-        } else {
-          localStorage.removeItem(SELECTED_BOOK_STORAGE_KEY);
-        }
+        const current = await wordsStorage.getWordsPlanSettings();
+        await wordsStorage.saveWordsPlanSettings({
+          ...current,
+          selectedMajor: major as WordsMajor | "",
+          lastSelectedBookId: bookId,
+        });
       } catch {
         // ignore storage errors
       }
     }
+  }, [status]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (books.length === 0) return;
+
+    setSelectionHydrated(false);
+
+    const doHydrate = async () => {
+      let localMajor = "";
+      let localBookId = "";
+
+      try {
+        localMajor = localStorage.getItem(SELECTED_MAJOR_STORAGE_KEY) ?? "";
+        localBookId = localStorage.getItem(SELECTED_BOOK_STORAGE_KEY) ?? "";
+      } catch {
+        // ignore storage errors
+      }
+
+      let serverMajor = "";
+      let serverBookId = "";
+
+      if (status === "authenticated") {
+        try {
+          const settings = await wordsStorage.getWordsPlanSettings();
+          serverMajor = settings.selectedMajor;
+          serverBookId = settings.lastSelectedBookId;
+        } catch {}
+      }
+
+      const hasServerPair = Boolean(serverMajor || serverBookId);
+      const sourceMajor = hasServerPair ? serverMajor : localMajor;
+      const sourceBookId = hasServerPair ? serverBookId : localBookId;
+
+      const normalized = normalizePersistedSelection(
+        sourceMajor as WordsMajor | "",
+        sourceBookId,
+        books
+      );
+      const needsRepair =
+        normalized.selectedMajor !== sourceMajor ||
+        normalized.selectedBookId !== sourceBookId;
+      const needsServerMigration =
+        status === "authenticated" &&
+        !hasServerPair &&
+        Boolean(localMajor || localBookId);
+
+      setSelectedMajor(normalized.selectedMajor);
+      setSelectedBookId(normalized.selectedBookId);
+
+      if (needsRepair || needsServerMigration) {
+        await persistSelection(normalized.selectedMajor, normalized.selectedBookId);
+      }
+
+      setSelectionHydrated(true);
+    };
+
+    void doHydrate();
+  }, [books, persistSelection, status]);
+
+  const visibleBooks = useMemo(
+    () => filterBooksByMajor(books, selectedMajor),
+    [books, selectedMajor]
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!selectionHydrated) return;
+    if (!hasHydratedOnceRef.current) {
+      hasHydratedOnceRef.current = true;
+      return;
+    }
+
+    const syncVisibilityFallback = async () => {
+      const next = nextSelectedBookIdAfterVisibilityChange({
+        visibleBooks,
+        selectedBookId,
+        storedSelectedBookId: (() => {
+          if (typeof window === "undefined") return undefined;
+          try { return localStorage.getItem(SELECTED_BOOK_STORAGE_KEY) ?? undefined; }
+          catch { return undefined; }
+        })(),
+      });
+
+      if (next && next !== selectedBookId) {
+        setSelectedBookId(next);
+        await persistSelection(selectedMajor, next);
+      }
+
+      setSelectionHydrated(true);
+    };
+
+    void syncVisibilityFallback();
+  }, [books, persistSelection, selectedMajor, selectedBookId, selectionHydrated, visibleBooks]);
+
+  const handleSelectBook = (bookId: string) => {
+    setSelectedBookId(bookId);
+    void persistSelection(selectedMajor, bookId);
+  };
+
+  const handleMajorChange = (major: WordsMajor) => {
+    // Major-sticky: always select the professional book for this major immediately
+    const newBookId = MAJOR_TO_PRO_BOOK_ID[major];
+    setSelectedMajor(major);
+    setSelectedBookId(newBookId);
+    void persistSelection(major, newBookId);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -253,7 +339,7 @@ export default function WordsDashboardPage() {
       await deleteCustomBook(deletingBookId);
       toast.success("词库已删除");
       if (selectedBookId === deletingBookId) {
-        const remainingBooks = books.filter((b) => b.id !== deletingBookId);
+        const remainingBooks = visibleBooks.filter((b) => b.id !== deletingBookId);
         handleSelectBook(pickFallbackBookId(remainingBooks));
       }
       setDeletingBookId(null);
@@ -334,12 +420,12 @@ export default function WordsDashboardPage() {
             <Button
               className="bg-cyan-600 hover:bg-cyan-700"
               onClick={() =>
-                router.push(`/words/learn/${selectedBookId || books[0]?.id || "cet4"}`)
+                router.push(`/words/learn/${selectedBookId || visibleBooks[0]?.id || "cet4"}`)
               }
             >
               学习新词
             </Button>
-            <Button variant="outline" onClick={() => router.push("/words/review")}>
+            <Button variant="outline" onClick={() => router.push(`/words/review?bookId=${selectedBookId || visibleBooks[0]?.id || "cet4"}`)}>
               复习旧词
             </Button>
           </div>
@@ -413,13 +499,40 @@ export default function WordsDashboardPage() {
           </div>
         </section>
 
+        <section className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-slate-700">选择你的专业</p>
+              <p className="text-xs text-slate-500">
+                {selectedMajor === ""
+                  ? "选择专业以解锁对应的专业词书"
+                  : `当前专业：${{ computer: "计算机", electrical: "电气", economics: "经济", medical: "医学" }[selectedMajor]}`}
+              </p>
+            </div>
+            <Select
+              value={selectedMajor}
+              onValueChange={(v) => handleMajorChange(v as WordsMajor)}
+            >
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="选择专业" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="computer">计算机</SelectItem>
+                <SelectItem value="electrical">电气</SelectItem>
+                <SelectItem value="economics">经济</SelectItem>
+                <SelectItem value="medical">医学</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </section>
+
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">词库选择</h2>
             <p className="text-xs text-slate-500">选择后将用于“快速开始学习”</p>
           </div>
           <BookSelector
-            books={books}
+            books={visibleBooks}
             selectedBookId={selectedBookId}
             progressByBook={progressByBook}
             dueByBook={dueByBook}

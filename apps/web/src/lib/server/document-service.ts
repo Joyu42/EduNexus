@@ -19,12 +19,14 @@ export async function getDocument(id: string, userId: string): Promise<Document 
 export async function createDocument(data: {
   title: string;
   content: string;
+  tags?: string[];
   authorId: string;
 }): Promise<Document> {
   return prisma.document.create({
     data: {
       title: data.title,
       content: data.content,
+      tags: data.tags ?? [],
       authorId: data.authorId,
     },
   });

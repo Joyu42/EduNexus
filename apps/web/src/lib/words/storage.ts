@@ -39,6 +39,8 @@ const DEFAULT_PLAN_SETTINGS: WordsPlanSettings = {
   dailyNewLimit: 20,
   reviewFirst: true,
   defaultRevealMode: "hidden",
+  selectedMajor: "",
+  lastSelectedBookId: "",
 };
 
 function toIsoDate(value: Date): string {
@@ -89,10 +91,11 @@ function normalizeRecords(records: LearningRecord[]): LearningRecord[] {
 function createEvents(records: LearningRecord[], today: string): StudyEvent[] {
   return records.flatMap((record) => {
     if (record.lastReviewedAt === today) {
+      const type = record.lastStudyType ?? (record.learnDate === today ? "learn" : "review");
       return [
         {
           date: today,
-          type: record.lastStudyType ?? (record.learnDate === today ? "learn" : "review"),
+          type,
           grade: record.lastGrade ?? (record.retentionScore === 1 ? "good" : "again"),
           success: record.retentionScore === 1,
         },

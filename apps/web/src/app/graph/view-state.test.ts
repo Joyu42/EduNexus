@@ -61,7 +61,7 @@ describe("graph view state", () => {
     });
   });
 
-  it("normalizes graph api nodes with KB identity and path memberships", async () => {
+it("normalizes graph api nodes with KB identity and path memberships", async () => {
     const fetcher = vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({
@@ -109,7 +109,7 @@ describe("graph view state", () => {
     expect(content).toContain('data-testid="graph-mode-switcher"');
     expect(content).toContain("学习路径工作流");
     expect(content).toContain("在学习路径中规划");
-    expect(content.match(/router\.push\("\/graph\?view=path"\)/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(content).toMatch(/router\.push\("\/graph\?view=path"\)/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
     expect(content).toContain("知识星图 · 学习路径模式");
     expect(content).toContain("返回探索");
 
@@ -117,5 +117,43 @@ describe("graph view state", () => {
     expect(content).toContain("当前节点");
     expect(content).toContain("路径进度");
     expect(content).toContain("节点说明");
+  });
+
+  it("returns empty graph for 401 unauthorized response", async () => {
+    const fetcher = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+    });
+
+    await expect(loadPrivateGraphView(fetcher)).resolves.toEqual({
+      nodes: [],
+      edges: [],
+    });
+    expect(fetcher).toHaveBeenCalledWith("/api/graph/view", {
+      credentials: "include",
+    });
+  });
+
+  it("throws with status message on non-OK non-401 responses", async () => {
+    const fetcher = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+    });
+
+    await expect(loadPrivateGraphView(fetcher)).rejects.toThrow(
+      "Failed to fetch graph view: 500"
+    );
+  });
+
+  it("throws with status message on 503 service unavailable", async () => {
+    const fetcher = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+    });
+
+    await expect(loadPrivateGraphView(fetcher)).rejects.toThrow(
+      "Failed to fetch graph view: 503"
+    );
+  });
   });
 });

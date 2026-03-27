@@ -32,3 +32,6 @@ export { useDraggable } from './use-draggable';
 
 // 可调整大小
 export { useResizable } from './use-resizable';
+
+// 语音合成
+export { useSpeechSynthesis } from './use-speech-synthesis';

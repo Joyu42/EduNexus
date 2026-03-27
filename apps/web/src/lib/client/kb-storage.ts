@@ -479,7 +479,8 @@ export async function fetchDocumentsFromServer(): Promise<ServerDocument[]> {
  */
 export async function createDocumentOnServer(
   title: string, 
-  content: string
+  content: string,
+  tags?: string[]
 ): Promise<ServerDocument> {
   const response = await fetch('/api/kb/docs', {
     method: 'POST',
@@ -487,7 +488,7 @@ export async function createDocumentOnServer(
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify({ title, content })
+    body: JSON.stringify({ title, content, ...(tags !== undefined && { tags }) })
   });
   
   if (!response.ok) {
