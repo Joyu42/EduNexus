@@ -4,7 +4,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Question, QuestionType } from "@/lib/client/practice-storage";
+import { Question, QuestionType } from "@/lib/practice";
 
 interface QuestionRendererProps {
   question: Question;

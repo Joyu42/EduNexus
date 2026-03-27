@@ -26,7 +26,7 @@ import {
   QuestionType,
   QuestionDifficulty,
   QuestionStatus,
-} from "@/lib/client/practice-storage";
+} from "@/lib/practice";
 
 interface QuestionEditorProps {
   bankId: string;

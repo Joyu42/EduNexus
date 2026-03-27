@@ -286,6 +286,17 @@ async function main() {
       return fetch(`${baseUrl}${path}`, { ...init, headers });
     };
 
+    const readSuccessPayload = async (response, label, expectedStatuses = [200]) => {
+      assert.ok(
+        expectedStatuses.includes(response.status),
+        `${label} 状态异常: ${response.status}`
+      );
+      const payload = await response.json();
+      assert.equal(payload?.success, true, `${label} success 字段异常`);
+      assert.ok(payload?.data !== undefined, `${label} 缺少 data 字段`);
+      return payload;
+    };
+
     const createRes = await authRequest("/api/workspace/session", {
       method: "POST",
       body: JSON.stringify({ title: "冒烟测试会话" })
@@ -347,6 +358,158 @@ async function main() {
     // Just verify the endpoint is reachable
     assert.ok([200, 400].includes(pathGenerateRes.status), "路径生成接口失败");
     evidenceLines.push(`[PATH] 路径生成接口状态: ${pathGenerateRes.status}`);
+
+    // ===== MODULE CLOSURE SMOKE (SERVER-BACKED MODULES ONLY) =====
+    const smokeMarker = Date.now();
+
+    // Analytics
+    const analyticsWeekly = await readSuccessPayload(
+      await authRequest("/api/analytics/reports?range=weekly"),
+      "analytics weekly report"
+    );
+    assert.ok(analyticsWeekly.data?.report, "weekly report 缺少 report 数据");
+
+    const analyticsMonthly = await readSuccessPayload(
+      await authRequest("/api/analytics/reports?range=monthly"),
+      "analytics monthly report"
+    );
+    assert.ok(analyticsMonthly.data?.report, "monthly report 缺少 report 数据");
+
+    const analyticsInsights = await readSuccessPayload(
+      await authRequest("/api/analytics/insights?range=weekly"),
+      "analytics insights"
+    );
+    assert.ok(Array.isArray(analyticsInsights.data?.insights), "analytics insights 数据格式异常");
+    evidenceLines.push("[MODULE_ANALYTICS] reports/insights 接口通过");
+
+    // Community
+    const communityTitle = `smoke-community-${smokeMarker}`;
+    const communityPost = await readSuccessPayload(
+      await authRequest("/api/community/posts", {
+        method: "POST",
+        body: JSON.stringify({
+          title: communityTitle,
+          content: "smoke community content",
+        }),
+      }),
+      "community create post",
+      [201]
+    );
+    const communityPostId = communityPost.data?.post?.id;
+    assert.ok(communityPostId, "community post id 为空");
+
+    const communityPosts = await readSuccessPayload(
+      await authRequest("/api/community/posts"),
+      "community list posts"
+    );
+    assert.ok(
+      (communityPosts.data?.posts ?? []).some((post) => post.id === communityPostId),
+      "community list 未包含新建帖子"
+    );
+
+    const communityComment = await readSuccessPayload(
+      await authRequest(`/api/community/posts/${communityPostId}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ content: "smoke community comment" }),
+      }),
+      "community create comment",
+      [201]
+    );
+    assert.ok(communityComment.data?.comment?.id, "community comment id 为空");
+    evidenceLines.push(`[MODULE_COMMUNITY] post=${communityPostId} comment=${communityComment.data.comment.id}`);
+
+    // Groups
+    const groupName = `smoke-group-${smokeMarker}`;
+    const groupCreate = await readSuccessPayload(
+      await authRequest("/api/groups", {
+        method: "POST",
+        body: JSON.stringify({
+          name: groupName,
+          description: "smoke group description",
+        }),
+      }),
+      "groups create",
+      [201]
+    );
+    const groupId = groupCreate.data?.group?.id;
+    assert.ok(groupId, "group id 为空");
+
+    const groupMembers = await readSuccessPayload(
+      await authRequest(`/api/groups/${groupId}/members`),
+      "groups members"
+    );
+    assert.ok(Array.isArray(groupMembers.data?.members), "groups members 格式异常");
+    assert.ok(groupMembers.data.members.length >= 1, "groups members 为空");
+
+    const groupPost = await readSuccessPayload(
+      await authRequest(`/api/groups/${groupId}/posts`, {
+        method: "POST",
+        body: JSON.stringify({
+          title: `smoke-group-post-${smokeMarker}`,
+          content: "smoke group post content",
+        }),
+      }),
+      "groups create post",
+      [201]
+    );
+    assert.ok(groupPost.data?.post?.id, "group post id 为空");
+
+    // Resources
+    const resourceTitle = `smoke-resource-${smokeMarker}`;
+    const resourceCreate = await readSuccessPayload(
+      await authRequest("/api/resources", {
+        method: "POST",
+        body: JSON.stringify({
+          title: resourceTitle,
+          description: "smoke resource description",
+          url: "https://example.com/smoke-resource",
+        }),
+      }),
+      "resources create"
+    );
+    const resourceId = resourceCreate.data?.resource?.id;
+    assert.ok(resourceId, "resource id 为空");
+
+    const resourceList = await readSuccessPayload(
+      await authRequest(`/api/resources?q=${encodeURIComponent(resourceTitle)}`),
+      "resources list"
+    );
+    assert.ok(
+      (resourceList.data?.resources ?? []).some((resource) => resource.id === resourceId),
+      "resources list 未包含新建资源"
+    );
+
+    const resourceNote = await readSuccessPayload(
+      await authRequest("/api/resources/notes", {
+        method: "POST",
+        body: JSON.stringify({
+          resourceId,
+          content: "smoke resource note",
+        }),
+      }),
+      "resources note create"
+    );
+    assert.ok(resourceNote.data?.note?.id, "resource note id 为空");
+
+    const resourceRating = await readSuccessPayload(
+      await authRequest(`/api/resources/${resourceId}/rating`, {
+        method: "PATCH",
+        body: JSON.stringify({ rating: 5 }),
+      }),
+      "resources rating upsert"
+    );
+    assert.equal(resourceRating.data?.rating?.rating, 5, "resource rating 写入失败");
+
+    const sharedResource = await readSuccessPayload(
+      await authRequest(`/api/groups/${groupId}/resources`, {
+        method: "POST",
+        body: JSON.stringify({ resourceId }),
+      }),
+      "groups share resource",
+      [201]
+    );
+    assert.ok(sharedResource.data?.sharedResource?.id, "group shared resource id 为空");
+    evidenceLines.push(`[MODULE_GROUPS_RESOURCES] group=${groupId} resource=${resourceId}`);
 
     // ===== BUILTIN-WORDBOOK SMOKE =====
     console.log("\n[smoke] 开始内置专业词书测试...");
@@ -482,7 +645,10 @@ async function main() {
       body: replaceFormData,
     });
     assert.equal(replaceRes.status, 200, `词书替换失败: ${replaceRes.status}`);
-    const replaceJson = replaceRes.json();
+    const replaceJson = await replaceRes.json();
+    assert.equal(replaceJson?.success, true, `词书替换 success 字段异常`);
+    assert.equal(replaceJson?.data?.book?.id, bookId, `替换后词书 ID 不匹配`);
+    assert.ok(replaceJson?.data?.book, `替换后词书数据缺失`);
     evidenceLines.push(`[REPLACE] 词书内容替换成功`);
 
     // 6. DELETE: Delete the wordbook

@@ -33,6 +33,25 @@ export default function GoalsPage() {
   const [newHabit, setNewHabit] = useState({ name: '', description: '' });
   const [linkedPathsData, setLinkedPathsData] = useState<Record<string, { count: number; progress: number }>>({});
 
+  const buildLinkedPathsData = async (nextGoals: Goal[]) => {
+    const paths = await pathStorage.getAllPaths();
+    const pathsData: Record<string, { count: number; progress: number }> = {};
+
+    for (const goal of nextGoals) {
+      const linkedPaths = paths.filter(p => p.goalId === goal.id);
+      const avgProgress = linkedPaths.length > 0
+        ? Math.round(linkedPaths.reduce((sum, p) => sum + p.progress, 0) / linkedPaths.length)
+        : 0;
+
+      pathsData[goal.id] = {
+        count: linkedPaths.length,
+        progress: avgProgress,
+      };
+    }
+
+    setLinkedPathsData(pathsData);
+  };
+
   useEffect(() => {
     if (status === 'authenticated') {
       loadData();
@@ -40,11 +59,11 @@ export default function GoalsPage() {
   }, [status]);
 
   const loadData = async () => {
-    let goals = goalStorage.getGoals();
+    let storedGoals = goalStorage.getGoals();
 
     const state = getGoalsPageState({
       isLoading: false,
-      goalCount: goals.length,
+      goalCount: storedGoals.length,
       isDemoUser: session?.user?.isDemo === true,
     });
 
@@ -55,49 +74,87 @@ export default function GoalsPage() {
       })
     ) {
       await syncDemoClientData(session?.user?.id ?? 'demo-user');
-      goals = goalStorage.getGoals();
+      storedGoals = goalStorage.getGoals();
     }
 
-    setGoals(goals);
+    setGoals(storedGoals);
     setHabits(habitStorage.getHabits());
-
-    // 加载关联路径数据
-    const pathsData: Record<string, { count: number; progress: number }> = {};
-
-    for (const goal of goals) {
-      const paths = await pathStorage.getAllPaths();
-      const linkedPaths = paths.filter(p => p.goalId === goal.id);
-      const avgProgress = linkedPaths.length > 0
-        ? Math.round(linkedPaths.reduce((sum, p) => sum + p.progress, 0) / linkedPaths.length)
-        : 0;
-
-      pathsData[goal.id] = {
-        count: linkedPaths.length,
-        progress: avgProgress
-      };
-    }
-
-    setLinkedPathsData(pathsData);
+    await buildLinkedPathsData(storedGoals);
   };
 
   const handleCreateGoal = (goal: Goal) => {
     goalStorage.saveGoal(goal);
-    loadData();
+    setGoals(prev => [goal, ...prev]);
+    setLinkedPathsData(prev => ({
+      ...prev,
+      [goal.id]: prev[goal.id] ?? { count: 0, progress: 0 },
+    }));
     setShowWizard(false);
     toast.success('目标创建成功！');
   };
 
   const handleUpdateProgress = (id: string, progress: number) => {
-    goalStorage.updateProgress(id, progress);
-    loadData();
+    const safeProgress = Math.max(0, Math.min(100, progress));
+    goalStorage.updateProgress(id, safeProgress);
+    setGoals(prev => prev.map(goal => {
+      if (goal.id !== id) {
+        return goal;
+      }
+
+      return {
+        ...goal,
+        progress: safeProgress,
+        status: safeProgress >= 100 ? 'completed' : goal.status,
+        updatedAt: new Date().toISOString(),
+      };
+    }));
     toast.success('进度已更新');
+  };
+
+  const handleEditGoal = (id: string, updates: Partial<Goal>) => {
+    const currentGoal = goals.find(goal => goal.id === id);
+    if (!currentGoal) {
+      return;
+    }
+
+    const updatedGoal: Goal = {
+      ...currentGoal,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    goalStorage.saveGoal(updatedGoal);
+    setGoals(prev => prev.map(goal => goal.id === id ? updatedGoal : goal));
+    toast.success('目标已更新');
+  };
+
+  const handleArchiveGoal = (id: string) => {
+    const currentGoal = goals.find(goal => goal.id === id);
+    if (!currentGoal) {
+      return;
+    }
+
+    const archivedGoal: Goal = {
+      ...currentGoal,
+      status: 'paused',
+      updatedAt: new Date().toISOString(),
+    };
+
+    goalStorage.saveGoal(archivedGoal);
+    setGoals(prev => prev.map(goal => goal.id === id ? archivedGoal : goal));
+    toast.success('目标已归档');
   };
 
 
   const handleDeleteGoal = (id: string) => {
     if (confirm('确定要删除这个目标吗？')) {
       goalStorage.deleteGoal(id);
-      loadData();
+      setGoals(prev => prev.filter(goal => goal.id !== id));
+      setLinkedPathsData(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       toast.success('目标已删除');
     }
   };
@@ -245,6 +302,8 @@ export default function GoalsPage() {
                 key={goal.id}
                 goal={goal}
                 onUpdateProgress={handleUpdateProgress}
+                onEdit={handleEditGoal}
+                onArchive={handleArchiveGoal}
                 onDelete={handleDeleteGoal}
                 linkedPathsCount={linkedPathsData[goal.id]?.count || 0}
                 linkedPathsProgress={linkedPathsData[goal.id]?.progress || 0}

@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "pnpm test:smoke",
     "test:smoke": "node ./scripts/api-smoke.mjs",
+    "test:e2e": "playwright test",
     "test:unit": "vitest run",
     "test:all": "pnpm test:unit && pnpm test:smoke",
     "cleanup:demo": "node ./scripts/cleanup-demo.mjs",

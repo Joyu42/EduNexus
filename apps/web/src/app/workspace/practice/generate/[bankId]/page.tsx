@@ -21,7 +21,7 @@ import {
   QuestionType,
   QuestionDifficulty,
   QuestionStatus,
-} from "@/lib/client/practice-storage";
+} from "@/lib/practice";
 import { toast } from "@/lib/toast";
 
 export default function GenerateQuestionsPage() {

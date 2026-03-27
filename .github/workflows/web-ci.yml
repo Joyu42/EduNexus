@@ -63,3 +63,11 @@ jobs:
 
       - name: Smoke tests
         run: pnpm test:smoke
+
+      - name: Install Playwright browsers
+        working-directory: apps/web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser tests (Playwright)
+        working-directory: apps/web
+        run: pnpm exec playwright test

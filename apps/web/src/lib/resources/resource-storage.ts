@@ -585,3 +585,199 @@ function getResourceTypeLabel(type: ResourceType): string {
   };
   return labels[type];
 }
+
+export type ServerResourceRecord = {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  createdBy: string;
+  createdAt: string;
+};
+
+export type ServerResourceFolderRecord = {
+  id: string;
+  userId: string;
+  name: string;
+  description: string;
+  resourceIds: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ServerResourceNoteRecord = {
+  id: string;
+  userId: string;
+  resourceId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ServerResourceRatingRecord = {
+  id: string;
+  userId: string;
+  resourceId: string;
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ApiEnvelope<T> = {
+  success?: boolean;
+  data?: T;
+  error?: {
+    message?: string;
+  };
+};
+
+async function readApiEnvelope<T>(response: Response, fallbackMessage: string) {
+  const payload = (await response.json().catch(() => ({}))) as ApiEnvelope<T>;
+  if (!response.ok || !payload.success || !payload.data) {
+    const message = payload.error?.message || fallbackMessage;
+    throw new Error(message);
+  }
+  return payload.data;
+}
+
+export async function fetchResourcesFromServer(params: {
+  q?: string;
+  sort?: "newest" | "oldest" | "title";
+  limit?: number;
+} = {}) {
+  const searchParams = new URLSearchParams();
+  if (params.q) searchParams.set("q", params.q);
+  if (params.sort) searchParams.set("sort", params.sort);
+  if (typeof params.limit === "number") searchParams.set("limit", String(params.limit));
+  const query = searchParams.toString();
+  const url = query ? `/api/resources?${query}` : "/api/resources";
+  const response = await fetch(url, undefined);
+  return readApiEnvelope<{ resources: ServerResourceRecord[]; total: number }>(response, "获取资源失败");
+}
+
+export async function fetchResourceFromServer(resourceId: string) {
+  const response = await fetch(`/api/resources/${resourceId}`, undefined);
+  if (response.status === 404) {
+    return null;
+  }
+  const data = await readApiEnvelope<{ resource: ServerResourceRecord }>(response, "获取资源详情失败");
+  return data.resource;
+}
+
+export async function createResourceOnServer(input: {
+  title: string;
+  description?: string;
+  url?: string;
+}) {
+  const response = await fetch("/api/resources", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+  const data = await readApiEnvelope<{ resource: ServerResourceRecord }>(response, "创建资源失败");
+  return data.resource;
+}
+
+export async function updateResourceOnServer(
+  resourceId: string,
+  input: {
+    title?: string;
+    description?: string;
+    url?: string;
+  },
+) {
+  const response = await fetch(`/api/resources/${resourceId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+  const data = await readApiEnvelope<{ resource: ServerResourceRecord }>(response, "更新资源失败");
+  return data.resource;
+}
+
+export async function deleteResourceOnServer(resourceId: string) {
+  const response = await fetch(`/api/resources/${resourceId}`, {
+    method: "DELETE",
+  });
+  const data = await readApiEnvelope<{ deleted: boolean }>(response, "删除资源失败");
+  return data.deleted;
+}
+
+export async function fetchResourceFoldersFromServer() {
+  const response = await fetch("/api/resources/folders", undefined);
+  return readApiEnvelope<{ folders: ServerResourceFolderRecord[] }>(response, "获取文件夹失败");
+}
+
+export async function createResourceFolderOnServer(input: {
+  name: string;
+  description?: string;
+  resourceIds?: string[];
+}) {
+  const response = await fetch("/api/resources/folders", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+  const data = await readApiEnvelope<{ folder: ServerResourceFolderRecord }>(response, "创建文件夹失败");
+  return data.folder;
+}
+
+export async function updateResourceFolderOnServer(
+  folderId: string,
+  input: {
+    name?: string;
+    description?: string;
+    resourceIds?: string[];
+  },
+) {
+  const response = await fetch(`/api/resources/folders?folderId=${encodeURIComponent(folderId)}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+  const data = await readApiEnvelope<{ folder: ServerResourceFolderRecord }>(response, "更新文件夹失败");
+  return data.folder;
+}
+
+export async function fetchResourceNotesFromServer(resourceId: string) {
+  const response = await fetch(`/api/resources/notes?resourceId=${encodeURIComponent(resourceId)}`, undefined);
+  return readApiEnvelope<{ notes: ServerResourceNoteRecord[] }>(response, "获取笔记失败");
+}
+
+export async function createResourceNoteOnServer(input: { resourceId: string; content: string }) {
+  const response = await fetch("/api/resources/notes", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+  const data = await readApiEnvelope<{ note: ServerResourceNoteRecord }>(response, "创建笔记失败");
+  return data.note;
+}
+
+export async function getResourceRatingFromServer(resourceId: string) {
+  const response = await fetch(`/api/resources/${resourceId}/rating`, undefined);
+  const data = await readApiEnvelope<{ rating: ServerResourceRatingRecord | null }>(response, "获取评分失败");
+  return data.rating;
+}
+
+export async function upsertResourceRatingOnServer(resourceId: string, rating: number) {
+  const response = await fetch(`/api/resources/${resourceId}/rating`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ rating }),
+  });
+  const data = await readApiEnvelope<{ rating: ServerResourceRatingRecord }>(response, "评分失败");
+  return data.rating;
+}

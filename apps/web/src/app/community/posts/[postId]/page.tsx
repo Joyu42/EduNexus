@@ -6,28 +6,14 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-
-type Post = {
-  id: string;
-  title: string;
-  content: string;
-  authorName: string;
-  createdAt: string;
-};
-
-type Comment = {
-  id: string;
-  authorId: string;
-  content: string;
-  parentCommentId: string | null;
-  createdAt: string;
-};
+import { CommentThread } from "@/components/community/comment-thread";
+import { PublicPostRecord, CommunityCommentRecord } from "@/lib/server/store";
 
 export default function CommunityPostDetailPage({ params }: { params: Promise<{ postId: string }> }) {
   const { postId } = use(params);
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const queryClient = useQueryClient();
+  const currentUserId = session?.user?.id;
 
   const postQuery = useQuery({
     queryKey: ["community-post", postId],
@@ -35,7 +21,7 @@ export default function CommunityPostDetailPage({ params }: { params: Promise<{ 
       const res = await fetch(`/api/community/posts/${postId}`);
       if (!res.ok) throw new Error("获取帖子详情失败");
       const json = await res.json();
-      return json.data?.post as Post;
+      return json.data?.post as PublicPostRecord;
     }
   });
 
@@ -45,7 +31,7 @@ export default function CommunityPostDetailPage({ params }: { params: Promise<{ 
       const res = await fetch(`/api/community/posts/${postId}/comments`);
       if (!res.ok) throw new Error("获取评论失败");
       const json = await res.json();
-      return (json.data?.comments ?? []) as Comment[];
+      return (json.data?.comments ?? []) as CommunityCommentRecord[];
     }
   });
 
@@ -60,8 +46,8 @@ export default function CommunityPostDetailPage({ params }: { params: Promise<{ 
   });
 
   const createComment = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const content = String(formData.get("content") ?? "").trim();
+    mutationFn: async (content: string) => {
+      if (!content.trim()) return;
       const response = await fetch(`/api/community/posts/${postId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,6 +61,42 @@ export default function CommunityPostDetailPage({ params }: { params: Promise<{ 
     },
     onSuccess: () => {
       toast.success("评论已发布");
+      queryClient.invalidateQueries({ queryKey: ["community-post-comments", postId] });
+    },
+    onError: (error: Error) => toast.error(error.message)
+  });
+
+  const updateComment = useMutation({
+    mutationFn: async ({ commentId, content }: { commentId: string, content: string }) => {
+      const response = await fetch(`/api/community/comments/${commentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content })
+      });
+      if (!response.ok) {
+        throw new Error("更新评论失败");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("评论已更新");
+      queryClient.invalidateQueries({ queryKey: ["community-post-comments", postId] });
+    },
+    onError: (error: Error) => toast.error(error.message)
+  });
+
+  const deleteComment = useMutation({
+    mutationFn: async (commentId: string) => {
+      const response = await fetch(`/api/community/comments/${commentId}`, {
+        method: "DELETE"
+      });
+      if (!response.ok) {
+        throw new Error("删除评论失败");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("评论已删除");
       queryClient.invalidateQueries({ queryKey: ["community-post-comments", postId] });
     },
     onError: (error: Error) => toast.error(error.message)
@@ -111,6 +133,14 @@ export default function CommunityPostDetailPage({ params }: { params: Promise<{ 
   const comments = commentsQuery.data ?? [];
   const reactions = reactionsQuery.data ?? { total: 0, byType: {} };
 
+  const handleSubmitComment = (content: string) => {
+    if (status !== "authenticated") {
+      toast.error("请先登录后再评论");
+      return;
+    }
+    createComment.mutate(content);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50/40 via-orange-50/20 to-red-50/30">
       <div className="container mx-auto px-4 py-8 max-w-4xl space-y-4">
@@ -137,32 +167,15 @@ export default function CommunityPostDetailPage({ params }: { params: Promise<{ 
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>评论 ({comments.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <form
-              className="flex gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                createComment.mutate(new FormData(e.currentTarget));
-                e.currentTarget.reset();
-              }}
-            >
-              <Input name="content" placeholder={status === "authenticated" ? "写下你的评论" : "登录后可评论"} disabled={status !== "authenticated"} required />
-              <Button type="submit" disabled={status !== "authenticated" || createComment.isPending}>发布</Button>
-            </form>
-            <div className="space-y-2">
-              {comments.map((comment) => (
-                <div key={comment.id} className="rounded-md border px-3 py-2">
-                  <div className="text-xs text-muted-foreground">{comment.authorId} · {new Date(comment.createdAt).toLocaleString("zh-CN")}</div>
-                  <div className="text-sm mt-1 whitespace-pre-wrap">{comment.content}</div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <CommentThread 
+          comments={comments} 
+          postId={postId} 
+          currentUserId={currentUserId}
+          onSubmitComment={handleSubmitComment}
+          isSubmitting={createComment.isPending}
+          onEditComment={(commentId, content) => updateComment.mutate({ commentId, content })}
+          onDeleteComment={(commentId) => deleteComment.mutate(commentId)}
+        />
       </div>
     </div>
   );

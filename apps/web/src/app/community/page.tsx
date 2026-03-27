@@ -2,34 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { MessageSquareQuote, Plus, Search, Loader2, User } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { MessageSquareQuote, Search, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
-type CommunityPost = {
-  id: string;
-  title: string;
-  content: string;
-  authorName: string;
-  createdAt: string;
-};
+import { PostList } from "@/components/community/post-list";
+import { CreatePostDialog } from "@/components/community/create-post-dialog";
+import { PublicPostRecord } from "@/lib/server/store";
 
 type CommunityTopic = {
   id: string;
@@ -41,10 +22,12 @@ export default function CommunityPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [topicFilter, setTopicFilter] = useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<PublicPostRecord | null>(null);
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: session, status } = useSession();
   const displayName = session?.user?.name || session?.user?.email || "用户";
+  const currentUserId = session?.user?.id;
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["community-posts"],
@@ -54,7 +37,7 @@ export default function CommunityPage() {
         throw new Error("获取帖子失败");
       }
       const payload = await response.json();
-      return (payload.data?.posts ?? []) as CommunityPost[];
+      return (payload.data?.posts ?? []) as PublicPostRecord[];
     },
   });
 
@@ -71,19 +54,13 @@ export default function CommunityPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const title = formData.get("title") as string;
-      const content = formData.get("content") as string;
-
+    mutationFn: async (data: { title: string; content: string }) => {
       const response = await fetch("/api/community/posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          title,
-          content,
-        }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -107,15 +84,55 @@ export default function CommunityPage() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const updateMutation = useMutation({
+    mutationFn: async (data: { id: string; title: string; content: string }) => {
+      const response = await fetch(`/api/community/posts/${data.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title: data.title, content: data.content }),
+      });
+
+      if (!response.ok) {
+        throw new Error("更新帖子失败");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("更新成功");
+      setIsDialogOpen(false);
+      setEditingPost(null);
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const handleSubmit = (data: { title: string; content: string }) => {
     if (status === "unauthenticated") {
-      toast.error("请先登录后再发布");
+      toast.error("请先登录后再操作");
       router.push(`/login?callbackUrl=${encodeURIComponent("/community")}`);
       return;
     }
-    const formData = new FormData(e.currentTarget);
-    createMutation.mutate(formData);
+    if (editingPost) {
+      updateMutation.mutate({ id: editingPost.id, title: data.title, content: data.content });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const handleEdit = (post: PublicPostRecord) => {
+    setEditingPost(post);
+    setIsDialogOpen(true);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      setEditingPost(null);
+    }
   };
 
   const filteredPosts = posts.filter((post) => {
@@ -147,65 +164,14 @@ export default function CommunityPage() {
             </div>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="shrink-0 gap-2">
-                <Plus className="h-4 w-4" />
-                发布动态
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>发布新动态</DialogTitle>
-                <DialogDescription>
-                  在社区分享你的问题、经验或学习心得。
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">标题 <span className="text-destructive">*</span></Label>
-                  <Input 
-                    id="title" 
-                    name="title" 
-                    placeholder="例如: Next.js 14 的新特性体验..." 
-                    required 
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="content">内容 <span className="text-destructive">*</span></Label>
-                  <Textarea 
-                    id="content" 
-                    name="content" 
-                    placeholder="详细描述你的问题或分享..." 
-                    rows={5}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>发布为</Label>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    <span className="font-medium text-foreground">{displayName}</span>
-                  </div>
-                </div>
-                <DialogFooter className="pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsDialogOpen(false)}
-                    disabled={createMutation.isPending}
-                  >
-                    取消
-                  </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    发布
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <CreatePostDialog 
+            open={isDialogOpen} 
+            onOpenChange={handleOpenChange}
+            onSubmit={handleSubmit}
+            displayName={displayName}
+            isPending={createMutation.isPending || updateMutation.isPending}
+            editPost={editingPost}
+          />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border shadow-sm">
@@ -242,51 +208,13 @@ export default function CommunityPage() {
               <Loader2 className="h-8 w-8 animate-spin text-orange-500/50" />
               <p>加载动态中...</p>
             </div>
-          ) : filteredPosts.length === 0 ? (
-            <Card className="p-12 text-center border-dashed">
-              <div className="mx-auto w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                <MessageSquareQuote className="h-6 w-6 text-muted-foreground/50" />
-              </div>
-              <h3 className="text-lg font-medium">没有找到帖子</h3>
-              <p className="text-muted-foreground mt-1">
-                {searchQuery ? "尝试换个搜索词试试" : "目前还没有人发布动态，成为第一个发布者吧！"}
-              </p>
-            </Card>
           ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {filteredPosts.map((post) => (
-                <Card key={post.id} className="p-5 flex flex-col transition-shadow hover:shadow-md border-border/50">
-                  <div className="flex justify-between items-start gap-4 mb-3">
-                    <Link href={`/community/posts/${post.id}`} className="text-xl font-semibold leading-tight hover:text-orange-600 transition-colors">
-                      {post.title}
-                    </Link>
-                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums bg-muted px-2 py-1 rounded-md">
-                      {new Date(post.createdAt).toLocaleDateString("zh-CN", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
-                    </span>
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap mb-4">
-                    {post.content}
-                  </p>
-                  
-                  <div className="flex items-center mt-auto pt-4 border-t border-border/50 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1.5 bg-secondary/50 px-2 py-1 rounded-full">
-                      <User className="h-3 w-3" />
-                      <span className="font-medium text-foreground">{post.authorName || "匿名用户"}</span>
-                    </div>
-                    <Link href={`/community/posts/${post.id}`} className="ml-auto text-orange-600 hover:underline">
-                      查看详情
-                    </Link>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <PostList 
+              posts={filteredPosts} 
+              currentUserId={currentUserId} 
+              searchQuery={searchQuery}
+              onEdit={handleEdit}
+            />
           )}
         </div>
       </div>

@@ -12,7 +12,7 @@ import {
   Question,
   QuestionType,
   QuestionDifficulty,
-} from "@/lib/client/practice-storage";
+} from "@/lib/practice";
 import { QuestionRenderer } from "@/components/practice/question-renderer";
 
 function DrillContent() {

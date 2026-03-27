@@ -1,118 +1,171 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { BookOpenText, Plus, Search, ExternalLink, Loader2 } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { BookOpenText, Plus } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useSession } from "next-auth/react";
+import { FolderTree } from "@/components/resources/folder-tree";
+import { ResourceEditorDialog } from "@/components/resources/resource-editor-dialog";
+import { ResourceList } from "@/components/resources/resource-list";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
-type PublicResource = {
-  id: string;
-  title: string;
-  description?: string;
-  url?: string;
-  createdBy: string;
-};
+  createResourceFolderOnServer,
+  createResourceOnServer,
+  deleteResourceOnServer,
+  fetchResourceFoldersFromServer,
+  fetchResourcesFromServer,
+  type ServerResourceFolderRecord,
+  type ServerResourceRecord,
+  updateResourceFolderOnServer,
+  updateResourceOnServer,
+} from "@/lib/resources/resource-storage";
 
 export default function ResourcesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "title">("newest");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingResource, setEditingResource] = useState<ServerResourceRecord | null>(null);
+
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: session, status } = useSession();
+
   const displayName = session?.user?.name || session?.user?.email || "用户";
 
-  const { data, isLoading } = useQuery({
+  const resourcesQuery = useQuery({
     queryKey: ["resources", { q: searchQuery, sort }],
-    queryFn: async () => {
-      const params = new URLSearchParams({ q: searchQuery, sort, limit: "100" });
-      const response = await fetch(`/api/resources?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error("获取资源失败");
-      }
-      const payload = await response.json();
-      return {
-        resources: (payload.data?.resources ?? []) as PublicResource[],
-        total: typeof payload.data?.total === "number" ? payload.data.total : 0
-      };
-    },
+    queryFn: () => fetchResourcesFromServer({ q: searchQuery, sort, limit: 100 }),
   });
 
-  const resources = data?.resources ?? [];
-  const total = data?.total ?? 0;
+  const foldersQuery = useQuery({
+    queryKey: ["resource-folders"],
+    queryFn: () => fetchResourceFoldersFromServer(),
+    enabled: status === "authenticated",
+  });
+
+  const resources = resourcesQuery.data?.resources ?? [];
+  const total = resourcesQuery.data?.total ?? 0;
+  const folders = foldersQuery.data?.folders ?? [];
+
+  const resourceFolderMap = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    folders.forEach((folder) => {
+      folder.resourceIds.forEach((resourceId) => {
+        map[resourceId] = folder.id;
+      });
+    });
+    return map;
+  }, [folders]);
+
+  const filteredResources = useMemo(() => {
+    if (!selectedFolderId) {
+      return resources;
+    }
+    const folder = folders.find((item) => item.id === selectedFolderId);
+    if (!folder) {
+      return [];
+    }
+    const folderResourceIds = new Set(folder.resourceIds);
+    return resources.filter((resource) => folderResourceIds.has(resource.id));
+  }, [folders, resources, selectedFolderId]);
+
+  const requireAuthenticated = () => {
+    if (status !== "unauthenticated") {
+      return true;
+    }
+    toast.error("请先登录后再管理资源");
+    router.push(`/login?callbackUrl=${encodeURIComponent("/resources")}`);
+    return false;
+  };
 
   const createMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const title = formData.get("title") as string;
-      const description = formData.get("description") as string;
-      const url = formData.get("url") as string;
-
-      const response = await fetch("/api/resources", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          description: description || undefined,
-          url: url || undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const message =
-          typeof errorData?.error?.message === "string"
-            ? errorData.error.message
-            : "创建资源失败";
-        throw new Error(message);
-      }
-
-      return response.json();
-    },
+    mutationFn: createResourceOnServer,
     onSuccess: () => {
       toast.success("资源创建成功");
-      setIsDialogOpen(false);
+      setEditorOpen(false);
+      setEditingResource(null);
       queryClient.invalidateQueries({ queryKey: ["resources"] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(error.message);
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (status === "unauthenticated") {
-      toast.error("请先登录后再分享资源");
-      router.push(`/login?callbackUrl=${encodeURIComponent("/resources")}`);
-      return;
-    }
-    const formData = new FormData(e.currentTarget);
-    createMutation.mutate(formData);
-  };
+  const updateMutation = useMutation({
+    mutationFn: ({ resourceId, input }: { resourceId: string; input: { title?: string; description?: string; url?: string } }) =>
+      updateResourceOnServer(resourceId, input),
+    onSuccess: () => {
+      toast.success("资源更新成功");
+      setEditorOpen(false);
+      setEditingResource(null);
+      queryClient.invalidateQueries({ queryKey: ["resources"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteResourceOnServer,
+    onSuccess: () => {
+      toast.success("资源已删除");
+      queryClient.invalidateQueries({ queryKey: ["resources"] });
+      queryClient.invalidateQueries({ queryKey: ["resource-folders"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const createFolderMutation = useMutation({
+    mutationFn: createResourceFolderOnServer,
+    onSuccess: () => {
+      toast.success("文件夹创建成功");
+      queryClient.invalidateQueries({ queryKey: ["resource-folders"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const assignFolderMutation = useMutation({
+    mutationFn: async ({ resourceId, folderId }: { resourceId: string; folderId: string | null }) => {
+      const updates: Array<Promise<ServerResourceFolderRecord>> = [];
+
+      folders.forEach((folder) => {
+        const hasResource = folder.resourceIds.includes(resourceId);
+        const shouldContain = folder.id === folderId;
+
+        if (hasResource === shouldContain) {
+          return;
+        }
+
+        const resourceIds = shouldContain
+          ? [...folder.resourceIds, resourceId]
+          : folder.resourceIds.filter((id) => id !== resourceId);
+
+        updates.push(updateResourceFolderOnServer(folder.id, { resourceIds }));
+      });
+
+      await Promise.all(updates);
+    },
+    onSuccess: () => {
+      toast.success("文件夹归类已更新");
+      queryClient.invalidateQueries({ queryKey: ["resource-folders"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50/40 via-lime-50/20 to-teal-50/30">
-      <div className="container mx-auto px-4 py-8 max-w-5xl space-y-8">
-        {/* Header Section */}
+      <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-emerald-500 text-white shadow-sm">
@@ -120,168 +173,120 @@ export default function ResourcesPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight">资源中心</h1>
-              <p className="text-muted-foreground mt-1">公共资源可直接浏览，持续由社区补充。</p>
+              <p className="text-muted-foreground mt-1">使用服务端数据统一管理资源、文件夹、笔记与评分。</p>
             </div>
           </div>
-          
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="shrink-0 gap-2">
-                <Plus className="h-4 w-4" />
-                分享资源
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle>分享公共资源</DialogTitle>
-                <DialogDescription>
-                  添加一个对社区有用的学习资源，所有用户均可查看。
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">资源名称 <span className="text-destructive">*</span></Label>
-                  <Input 
-                    id="title" 
-                    name="title" 
-                    placeholder="例如: Next.js 官方文档" 
-                    required 
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="url">链接地址</Label>
-                  <Input 
-                    id="url" 
-                    name="url" 
-                    type="url" 
-                    placeholder="https://" 
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">资源描述</Label>
-                  <Textarea 
-                    id="description" 
-                    name="description" 
-                    placeholder="简单介绍一下这个资源的作用..." 
-                    rows={3}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>分享为</Label>
-                  <div className="text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{displayName}</span>
-                  </div>
-                </div>
-                <DialogFooter className="pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsDialogOpen(false)}
-                    disabled={createMutation.isPending}
-                  >
-                    取消
-                  </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    发布资源
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+
+          <Button
+            className="shrink-0 gap-2"
+            onClick={() => {
+              if (!requireAuthenticated()) return;
+              setEditingResource(null);
+              setEditorOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            分享资源
+          </Button>
         </div>
 
-        {/* Filters and Stats */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border shadow-sm">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-card p-4 rounded-xl border shadow-sm">
+          <div className="w-full lg:max-w-md">
             <Input
               placeholder="搜索资源名称、描述或分享者..."
-              className="pl-9 w-full bg-background"
+              className="w-full bg-background"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(event) => setSearchQuery(event.target.value)}
             />
           </div>
           <select
             className="h-10 rounded-md border bg-background px-3 text-sm"
             value={sort}
-            onChange={(e) => setSort(e.target.value as "newest" | "oldest" | "title")}
+            onChange={(event) => setSort(event.target.value as "newest" | "oldest" | "title")}
           >
             <option value="newest">按最新</option>
             <option value="oldest">按最早</option>
             <option value="title">按标题</option>
           </select>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap shrink-0">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
             <span>公共资源总数</span>
-            <Badge variant="secondary" className="px-2 py-0.5">{total}</Badge>
+            <Badge variant="secondary" className="px-2 py-0.5">
+              {total}
+            </Badge>
+            {status === "authenticated" ? (
+              <span className="ml-2 text-xs text-muted-foreground">当前用户：{displayName}</span>
+            ) : null}
           </div>
         </div>
 
-        {/* Resources List */}
-        <div className="space-y-4">
-          {isLoading ? (
-            <div className="py-12 flex flex-col items-center justify-center text-muted-foreground space-y-3">
-              <Loader2 className="h-8 w-8 animate-spin text-emerald-500/50" />
-              <p>加载资源中...</p>
-            </div>
-          ) : resources.length === 0 ? (
-            <Card className="p-12 text-center border-dashed">
-              <div className="mx-auto w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                <BookOpenText className="h-6 w-6 text-muted-foreground/50" />
-              </div>
-              <h3 className="text-lg font-medium">没有找到资源</h3>
-              <p className="text-muted-foreground mt-1">
-                {searchQuery ? "尝试换个搜索词试试" : "目前还没有公开资源，成为第一个分享者吧！"}
-              </p>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {resources.map((resource) => (
-                <Card key={resource.id} className="p-5 flex flex-col transition-shadow hover:shadow-md border-border/50">
-                  <div className="flex justify-between items-start gap-4 mb-3">
-                    <Link href={`/resources/${resource.id}`} className="text-lg font-semibold leading-tight hover:text-emerald-600 transition-colors line-clamp-2">
-                      {resource.title}
-                    </Link>
-                    {resource.url && (
-                      <Link 
-                        href={resource.url} 
-                        target="_blank" 
-                        rel="noreferrer noopener"
-                        className="shrink-0 text-muted-foreground hover:text-emerald-500 transition-colors p-1"
-                        title="在新标签页中打开"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Link>
-                    )}
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground leading-relaxed flex-grow line-clamp-3 mb-4">
-                    {resource.description || <span className="italic opacity-50">该资源暂未提供描述。</span>}
-                  </p>
-                  
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/50 text-xs">
-                    <div className="flex items-center text-muted-foreground">
-                      分享者: <span className="font-medium text-foreground ml-1">{resource.createdBy}</span>
-                    </div>
-                    {resource.url && (
-                      <Link 
-                        href={resource.url}
-                        target="_blank" 
-                        rel="noreferrer noopener"
-                        className="text-emerald-600 font-medium hover:underline"
-                      >
-                        访问资源
-                      </Link>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+          <FolderTree
+            folders={folders.map((folder) => ({
+              id: folder.id,
+              name: folder.name,
+              description: folder.description,
+              resourceIds: folder.resourceIds,
+            }))}
+            selectedFolderId={selectedFolderId}
+            pending={createFolderMutation.isPending || assignFolderMutation.isPending}
+            onSelectFolder={setSelectedFolderId}
+            onCreateFolder={(input) => {
+              if (!requireAuthenticated()) return;
+              createFolderMutation.mutate(input);
+            }}
+          />
+
+          <div className="space-y-4">
+            <ResourceList
+              resources={filteredResources}
+              folders={folders.map((folder) => ({ id: folder.id, name: folder.name }))}
+              resourceFolderMap={resourceFolderMap}
+              onEdit={(resource) => {
+                if (!requireAuthenticated()) return;
+                setEditingResource(resource);
+                setEditorOpen(true);
+              }}
+              onDelete={(resource) => {
+                if (!requireAuthenticated()) return;
+                deleteMutation.mutate(resource.id);
+              }}
+              onAssignFolder={(resourceId, folderId) => {
+                if (!requireAuthenticated()) return;
+                assignFolderMutation.mutate({ resourceId, folderId });
+              }}
+            />
+            {resourcesQuery.isLoading ? <p className="text-sm text-muted-foreground">加载资源中...</p> : null}
+          </div>
         </div>
       </div>
+
+      <ResourceEditorDialog
+        open={editorOpen}
+        mode={editingResource ? "edit" : "create"}
+        initialValue={
+          editingResource
+            ? {
+                title: editingResource.title,
+                description: editingResource.description,
+                url: editingResource.url,
+              }
+            : null
+        }
+        pending={createMutation.isPending || updateMutation.isPending}
+        onOpenChange={(open) => {
+          setEditorOpen(open);
+          if (!open) {
+            setEditingResource(null);
+          }
+        }}
+        onSubmit={(value) => {
+          if (editingResource) {
+            updateMutation.mutate({ resourceId: editingResource.id, input: value });
+            return;
+          }
+          createMutation.mutate(value);
+        }}
+      />
     </div>
   );
 }

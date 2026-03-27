@@ -32,7 +32,7 @@ import {
 import {
   getPracticeStorage,
   QuestionBank,
-} from "@/lib/client/practice-storage";
+} from "@/lib/practice";
 import { toast } from "@/lib/toast";
 
 export default function QuestionBanksPage() {

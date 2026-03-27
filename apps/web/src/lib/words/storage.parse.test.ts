@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { ApiRequestError } from "@/lib/client/api";
+import { createWordsStorage } from "./storage";
 
 describe("words storage api parsing safety", () => {
   beforeEach(() => {
@@ -25,10 +26,18 @@ describe("words storage api parsing safety", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const { wordsStorage } = await import("./storage");
+    const wordsStorage = createWordsStorage({ mode: "api" });
+    const result = await wordsStorage.getWordBooks().then(
+      () => ({ ok: true as const, error: null }),
+      (error) => ({ ok: false as const, error })
+    );
 
-    await expect(wordsStorage.getWordBooks()).rejects.toThrow(ApiRequestError);
-    await expect(wordsStorage.getWordBooks()).rejects.toThrow(expect.not.objectContaining({ name: "SyntaxError" }));
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected getWordBooks to reject");
+    }
+    expect(result.error).toBeInstanceOf(ApiRequestError);
+    expect(result.error).not.toBeInstanceOf(SyntaxError);
     expect(jsonMock).not.toHaveBeenCalled();
   });
 
@@ -47,9 +56,17 @@ describe("words storage api parsing safety", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const { wordsStorage } = await import("./storage");
+    const wordsStorage = createWordsStorage({ mode: "api" });
+    const result = await wordsStorage.getWordBooks().then(
+      () => ({ ok: true as const, error: null }),
+      (error) => ({ ok: false as const, error })
+    );
 
-    await expect(wordsStorage.getWordBooks()).rejects.toThrow(ApiRequestError);
-    await expect(wordsStorage.getWordBooks()).rejects.toThrow(expect.not.objectContaining({ name: "SyntaxError" }));
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected getWordBooks to reject");
+    }
+    expect(result.error).toBeInstanceOf(ApiRequestError);
+    expect(result.error).not.toBeInstanceOf(SyntaxError);
   });
 });

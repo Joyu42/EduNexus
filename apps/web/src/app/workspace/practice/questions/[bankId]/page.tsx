@@ -9,7 +9,7 @@ import {
   getPracticeStorage,
   QuestionBank,
   Question,
-} from "@/lib/client/practice-storage";
+} from "@/lib/practice";
 import { QuestionList } from "@/components/practice/question-list";
 import { QuestionEditor } from "@/components/practice/question-editor";
 

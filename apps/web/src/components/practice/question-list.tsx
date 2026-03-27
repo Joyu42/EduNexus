@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Question, QuestionType, QuestionDifficulty } from "@/lib/client/practice-storage";
+import { Question, QuestionType, QuestionDifficulty } from "@/lib/practice";
 
 interface QuestionListProps {
   questions: Question[];

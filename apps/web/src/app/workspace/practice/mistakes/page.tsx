@@ -12,7 +12,7 @@ import {
   getPracticeStorage,
   WrongQuestion,
   Question,
-} from "@/lib/client/practice-storage";
+} from "@/lib/practice";
 
 function MistakesContent() {
   const router = useRouter();

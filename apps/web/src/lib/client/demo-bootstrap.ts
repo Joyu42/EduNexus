@@ -5,7 +5,6 @@ import {
   QuestionDifficulty,
   QuestionStatus,
   QuestionType,
-  type PracticeStorageManager,
   type Question,
   type QuestionBank
 } from "@/lib/client/practice-storage";
@@ -119,6 +118,11 @@ export type DemoPracticeBootstrapBank = {
       isCorrect: boolean;
     }>;
   }>;
+};
+
+type PracticeSeedStorage = {
+  createBank(name: string, description?: string, tags?: string[]): Promise<QuestionBank>;
+  createQuestion(question: Omit<Question, "id" | "createdAt" | "updatedAt">): Promise<Question>;
 };
 
 export type DemoBootstrapPayload = {
@@ -431,7 +435,7 @@ function mapQuestionStatus(
 }
 
 export async function seedDemoPracticeContent(
-  storage: PracticeStorageManager,
+  storage: PracticeSeedStorage,
   banks: DemoPracticeBootstrapBank[]
 ): Promise<QuestionBank[]> {
   const createdBanks: QuestionBank[] = [];
