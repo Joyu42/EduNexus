@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import {
-  X,
+  PanelRightClose,
   Clock,
   Zap,
   BookOpen,
@@ -98,7 +98,7 @@ export default function SkillDetailPanel({
   };
 
   return (
-    <div className="w-96 h-full bg-white border-l shadow-2xl overflow-hidden flex flex-col">
+    <div className="relative w-96 h-full bg-white border-l shadow-2xl overflow-hidden flex flex-col">
       {/* 头部 */}
       <div className="p-6 bg-gradient-to-br from-orange-500 to-amber-500 text-white">
         <div className="flex items-start justify-between mb-4">
@@ -109,13 +109,15 @@ export default function SkillDetailPanel({
             </Badge>
           </div>
           <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-white/20"
-            onClick={onClose}
-          >
-            <X className="w-5 h-5" />
-          </Button>
+        variant="ghost"
+        size="icon"
+        onClick={onClose}
+        className={cn("absolute top-4 right-4 z-10 h-8 w-8 bg-white/70 hover:bg-white text-slate-700 shadow-sm rounded-lg transition-all duration-300")}
+        aria-label="关闭面板"
+        aria-expanded={true}
+      >
+        <PanelRightClose className="h-4 w-4" />
+      </Button>
         </div>
 
         <h2 className="text-2xl font-bold mb-2">{node.title}</h2>

@@ -31,6 +31,7 @@ import {
   Sparkles,
   PlusCircle,
   PanelRightClose,
+  PanelLeftClose,
 } from "lucide-react";
 import { InteractiveGraph } from "@/components/graph/interactive-graph";
 import { LearningPathOverlay } from "@/components/graph/learning-path-overlay";
@@ -39,7 +40,6 @@ import { ProgressLegend } from "@/components/graph/progress-legend";
 import { LoginPrompt } from "@/components/ui/login-prompt";
 import { RecommendationEngine } from "@/lib/graph/recommendation-engine";
 import { ProgressTracker } from "@/lib/graph/progress-tracker";
-import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { cn } from "@/lib/utils";
 import { getGraphViewState, loadPrivateGraphView } from "./view-state";
 import { toast } from "@/lib/toast";
@@ -107,8 +107,7 @@ function GraphPageContent() {
   const searchParams = useSearchParams();
   const view = searchParams.get("view") || "explore";
   const urlPackId = searchParams.get("packId") || undefined;
-  const isCollapsed = useSidebarStore((state) => state.isCollapsed);
-  const toggleCollapse = useSidebarStore((state) => state.toggleCollapse);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // 状态管理
   const [graphData, setGraphData] = useState<{
@@ -831,23 +830,41 @@ function GraphPageContent() {
         </div>
 
         <div className="flex-1 flex min-h-0 gap-4 relative">
-          {!isCollapsed && (
+          {isSidebarCollapsed ? (
+            <div className="absolute top-4 left-4 z-10">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsSidebarCollapsed(false)}
+                className="h-8 w-8 bg-white/70 hover:bg-white shadow-sm rounded-lg transition-all duration-300"
+                aria-label="展开侧边栏"
+                aria-expanded={false}
+              >
+                <PanelLeftClose className="h-4 w-4 rotate-180" />
+              </Button>
+            </div>
+          ) : (
             <div
               className={cn(
-                "shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto",
+                "shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto relative",
                 activeMode === "path" ? "w-[24rem]" : "w-64"
               )}
             >
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsSidebarCollapsed(true)}
+                className="absolute top-4 right-4 z-10 h-8 w-8 bg-white/70 hover:bg-white shadow-sm rounded-lg transition-all duration-300 text-slate-700"
+                aria-label="收起侧边栏"
+                aria-expanded={true}
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </Button>
               {activeMode === "path" ? (
                 <div className="flex flex-col h-full min-h-0">
                   <div className="flex items-center justify-between mb-3 pb-2 border-b">
                     <h3 className="text-sm font-medium">学习路径</h3>
-                    <button
-                      onClick={toggleCollapse}
-                      className="p-1 hover:bg-muted rounded text-xs"
-                    >
-                      收起
-                    </button>
+                    
                   </div>
                   <JourneyShell className="flex-1 min-h-0" />
                 </div>
@@ -856,12 +873,7 @@ function GraphPageContent() {
                 <div>
                   <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
                     <Filter className="h-4 w-4" /> 节点类型
-                    <button
-                      onClick={toggleCollapse}
-                      className="ml-auto p-1 hover:bg-muted rounded text-xs"
-                    >
-                      {isCollapsed ? "展开" : "收起"}
-                    </button>
+                    
                   </h3>
                   <div className="flex flex-col gap-2">
                     {Object.entries(NODE_TYPE_CONFIG).map(([type, config]) => {
@@ -972,7 +984,7 @@ function GraphPageContent() {
                 data-testid="graph-right-rail-collapse"
                 variant="ghost"
                 size="icon"
-                className="absolute top-4 right-4 z-10 h-8 w-8 bg-white/70 hover:bg-white shadow-sm"
+                className="absolute top-4 right-4 z-10 h-8 w-8 bg-white/70 hover:bg-white shadow-sm rounded-lg transition-all duration-300 text-slate-700"
                 onClick={() => setIsRightRailCollapsed(true)}
                 title="收起"
               >
@@ -1376,7 +1388,7 @@ function GraphPageContent() {
                 data-testid="graph-right-rail-collapse"
                 variant="ghost"
                 size="icon"
-                className="absolute top-4 right-4 z-10 h-8 w-8 bg-white/70 hover:bg-white shadow-sm"
+                className="absolute top-4 right-4 z-10 h-8 w-8 bg-white/70 hover:bg-white shadow-sm rounded-lg transition-all duration-300 text-slate-700"
                 onClick={() => setIsRightRailCollapsed(true)}
                 title="收起"
               >
@@ -1467,7 +1479,7 @@ function GraphPageContent() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsRightRailCollapsed(false)}
-                className="h-8 w-8 bg-white/70 hover:bg-white shadow-sm"
+                className="h-8 w-8 bg-white/70 hover:bg-white shadow-sm rounded-lg transition-all duration-300 text-slate-700"
               >
                 <PanelRightClose className="h-4 w-4 rotate-180" />
               </Button>

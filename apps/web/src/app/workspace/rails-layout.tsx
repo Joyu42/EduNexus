@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { PanelLeftClose, PanelRightClose } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type WorkspaceRailsLayoutProps = {
   leftCollapsed: boolean;
@@ -33,9 +34,11 @@ export function WorkspaceRailsLayout({
             variant="ghost"
             size="icon"
             onClick={onExpandLeft}
-            className="h-8 w-8 bg-white/70 hover:bg-white shadow-sm"
+            className={cn("h-8 w-8 bg-white/70 hover:bg-white shadow-sm rounded-lg transition-all duration-300 text-slate-700")}
+            aria-label="展开左侧边栏"
+            aria-expanded={false}
           >
-            <PanelLeftClose className="h-4 w-4 rotate-180" />
+            <PanelLeftClose className="h-4 w-4 rotate-180 transition-transform duration-300" />
           </Button>
         </div>
       ) : (
@@ -53,9 +56,11 @@ export function WorkspaceRailsLayout({
             variant="ghost"
             size="icon"
             onClick={onExpandRight}
-            className="h-8 w-8 bg-white/70 hover:bg-white shadow-sm"
+            className={cn("h-8 w-8 bg-white/70 hover:bg-white shadow-sm rounded-lg transition-all duration-300 text-slate-700")}
+            aria-label="展开右侧边栏"
+            aria-expanded={false}
           >
-            <PanelRightClose className="h-4 w-4 rotate-180" />
+            <PanelRightClose className="h-4 w-4 rotate-180 transition-transform duration-300" />
           </Button>
         </div>
       ) : (

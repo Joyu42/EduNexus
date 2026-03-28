@@ -461,7 +461,14 @@ export function InteractiveGraph({
   }, [showLearningPath, pathNodes]);
 
   const graphData = useMemo(
-    () => ({ nodes: layoutedNodes, links: edges }),
+    () => ({
+      nodes: layoutedNodes,
+      links: edges.map((edge) => ({
+        ...edge,
+        source: resolveEdgeNodeId(edge.source),
+        target: resolveEdgeNodeId(edge.target),
+      })),
+    }),
     [layoutedNodes, edges]
   );
 
