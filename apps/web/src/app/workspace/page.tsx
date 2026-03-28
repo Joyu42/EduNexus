@@ -1032,7 +1032,7 @@ function WorkspacePageContent() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="sticky bottom-0 border-t bg-white/95 backdrop-blur-sm p-4 shadow-lg z-10"
+          className="sticky bottom-0 border-t bg-white/95 backdrop-blur-sm p-4 shadow-lg z-30"
         >
           <div className="max-w-4xl mx-auto">
             <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-thin">

@@ -26,7 +26,7 @@ export function WorkspaceRailsLayout({
   right,
 }: WorkspaceRailsLayoutProps) {
   return (
-    <div className="relative flex h-screen overflow-hidden bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30">
+    <div className="relative flex h-full overflow-hidden bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30">
       {leftCollapsed ? (
         <div className="absolute top-4 left-4 z-10">
           <Button
