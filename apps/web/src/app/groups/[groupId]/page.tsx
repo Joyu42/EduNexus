@@ -93,6 +93,7 @@ export default function GroupDetailsPage({
   const currentUserId = session?.user?.id ?? null;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
+  const [selectedPost, setSelectedPost] = useState<GroupPost | null>(null);
 
   const groupQuery = useQuery({
     queryKey: ["group", groupId],
@@ -436,7 +437,11 @@ export default function GroupDetailsPage({
             </form>
             <div className="space-y-2">
               {(postsQuery.data ?? []).map((post) => (
-                <div key={post.id} className="rounded-md border px-3 py-2">
+                <div 
+                  key={post.id} 
+                  className="rounded-md border px-3 py-2 cursor-pointer hover:bg-muted/50"
+                  onClick={() => setSelectedPost(post)}
+                >
                   <div className="font-medium text-sm">{post.title}</div>
                   <div className="text-xs text-muted-foreground mt-1">{post.content}</div>
                 </div>
@@ -444,6 +449,15 @@ export default function GroupDetailsPage({
             </div>
           </CardContent>
         </Card>
+
+        <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{selectedPost?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="whitespace-pre-wrap text-sm">{selectedPost?.content}</div>
+          </DialogContent>
+        </Dialog>
 
         <Card>
           <CardHeader><CardTitle>小组任务</CardTitle></CardHeader>

@@ -38,6 +38,7 @@ import { ProgressLegend } from "@/components/graph/progress-legend";
 import { LoginPrompt } from "@/components/ui/login-prompt";
 import { RecommendationEngine } from "@/lib/graph/recommendation-engine";
 import { ProgressTracker } from "@/lib/graph/progress-tracker";
+import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { cn } from "@/lib/utils";
 import { getGraphViewState, loadPrivateGraphView } from "./view-state";
 import { toast } from "@/lib/toast";
@@ -826,19 +827,26 @@ function GraphPageContent() {
         </div>
 
         <div className="flex-1 flex min-h-0 gap-4">
-          <div
-            className={cn(
-              "shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto",
-              activeMode === "path" ? "w-[24rem]" : "w-64"
-            )}
-          >
-            {activeMode === "path" ? (
-              <JourneyShell className="h-full min-h-0" />
-            ) : (
+          {!useSidebarStore.getState().isCollapsed && (
+            <div
+              className={cn(
+                "shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto",
+                activeMode === "path" ? "w-[24rem]" : "w-64"
+              )}
+            >
+              {activeMode === "path" ? (
+                <JourneyShell className="h-full min-h-0" />
+              ) : (
               <>
                 <div>
                   <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
                     <Filter className="h-4 w-4" /> 节点类型
+                    <button
+                      onClick={() => useSidebarStore.getState().toggleCollapse()}
+                      className="ml-auto p-1 hover:bg-muted rounded text-xs"
+                    >
+                      {useSidebarStore.getState().isCollapsed ? "展开" : "收起"}
+                    </button>
                   </h3>
                   <div className="flex flex-col gap-2">
                     {Object.entries(NODE_TYPE_CONFIG).map(([type, config]) => {
@@ -904,6 +912,7 @@ function GraphPageContent() {
               </>
             )}
           </div>
+          )}
 
           <div
             className={cn(
@@ -942,7 +951,7 @@ function GraphPageContent() {
           </div>
 
           {/* Right Sidebar (Conditional) */}
-          {activeMode !== "path" && selectedNode && (
+          {!useSidebarStore.getState().isCollapsed && activeMode !== "path" && selectedNode && (
             <div data-testid="graph-planet-sidebar" className="w-80 shrink-0 border bg-card rounded-lg overflow-y-auto flex flex-col">
               {/* Section 1: Summary */}
               <div data-testid="graph-sidebar-summary" className="p-4 border-b">
