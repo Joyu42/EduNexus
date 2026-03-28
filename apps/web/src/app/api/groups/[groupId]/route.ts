@@ -1,6 +1,7 @@
 import { fail, ok } from "@/lib/server/response";
 import { getCurrentUserId } from "@/lib/server/auth-utils";
 import { loadDb } from "@/lib/server/store";
+import { getUserById } from "@/lib/server/user-service";
 import {
   deleteGroup,
   deleteGroupMember,
@@ -52,7 +53,10 @@ export async function GET(_request: Request, context: { params: Promise<{ groupI
       (member) => member.groupId === id && member.status === "active"
     ).length;
 
-    return ok({ group: { ...group, memberCount: activeMemberCount } });
+    const owner = await getUserById(group.createdBy);
+    const ownerName = owner?.name ?? owner?.email ?? "未知用户";
+
+    return ok({ group: { ...group, memberCount: activeMemberCount, ownerName } });
   } catch (error) {
     return fail(
       {

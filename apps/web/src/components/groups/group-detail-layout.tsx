@@ -24,6 +24,7 @@ export type DetailGroupProps = {
   memberCount: number;
   createdBy: string;
   createdAt: string;
+  ownerName?: string;
 };
 
 export function GroupDetailLayout({
@@ -50,7 +51,7 @@ export function GroupDetailLayout({
               <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
                 <span className="inline-flex items-center gap-1">
                   <User className="h-3.5 w-3.5" />
-                  创建者 {group.createdBy}
+                  创建者 {group.ownerName ?? group.createdBy}
                 </span>
                 <span className="inline-flex items-center gap-1">
                   <Users className="h-3.5 w-3.5" />

@@ -31,6 +31,7 @@ type PublicGroup = {
   memberCount: number;
   createdBy: string;
   createdAt: string;
+  ownerName?: string;
 };
 
 type GroupMember = {
