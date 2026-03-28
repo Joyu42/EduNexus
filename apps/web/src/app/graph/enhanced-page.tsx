@@ -36,6 +36,7 @@ import {
 import { InteractiveGraph } from "@/components/graph/interactive-graph";
 import { LearningPathOverlay } from "@/components/graph/learning-path-overlay";
 import { JourneyShell } from "@/components/graph/journey-shell";
+import { PathWorkspace } from "@/components/path/path-workspace";
 import { ProgressLegend } from "@/components/graph/progress-legend";
 import { LoginPrompt } from "@/components/ui/login-prompt";
 import { RecommendationEngine } from "@/lib/graph/recommendation-engine";
@@ -724,14 +725,14 @@ function GraphPageContent() {
                   onClick={() => router.push("/graph?view=path")}
                   className={cn(
                     "rounded px-3 py-1 text-sm transition-colors",
-                    activeMode === "path" ? "bg-background shadow" : "hover:bg-background/60"
+                    (activeMode as string) === "path" ? "bg-background shadow" : "hover:bg-background/60"
                   )}
                 >
                   学习路径
                 </button>
               </div>
 
-              {activeMode !== "path" ? (
+              {(activeMode as string) !== "path" ? (
                 <>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -804,7 +805,7 @@ function GraphPageContent() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {activeMode === "path" ? (
+            {(activeMode as string) === "path" ? (
               <>
                 <Badge variant="secondary" className="hidden sm:inline-flex">
                   知识星图 · 学习路径模式
@@ -830,6 +831,7 @@ function GraphPageContent() {
         </div>
 
         <div className="flex-1 flex min-h-0 gap-4 relative">
+          {(activeMode as string) === "path" ? <PathWorkspace /> : <>
           {isSidebarCollapsed ? (
             <div className="absolute top-4 left-4 z-10">
               <Button
@@ -847,7 +849,7 @@ function GraphPageContent() {
             <div
               className={cn(
                 "shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto relative",
-                activeMode === "path" ? "w-[24rem]" : "w-64"
+                (activeMode as string) === "path" ? "w-[24rem]" : "w-64"
               )}
             >
               <Button
@@ -860,7 +862,7 @@ function GraphPageContent() {
               >
                 <PanelLeftClose className="h-4 w-4" />
               </Button>
-              {activeMode === "path" ? (
+              {(activeMode as string) === "path" ? (
                 <div className="flex flex-col h-full min-h-0">
                   <div className="flex items-center justify-between mb-3 pb-2 border-b">
                     <h3 className="text-sm font-medium">学习路径</h3>
@@ -944,7 +946,7 @@ function GraphPageContent() {
           <div
             className={cn(
               "flex-1 relative rounded-lg border overflow-hidden",
-              activeMode === "path"
+              (activeMode as string) === "path"
                 ? "bg-card/30 [background-image:radial-gradient(rgba(15,23,42,0.08)_1px,transparent_1px)] [background-size:18px_18px]"
                 : "bg-card/20"
             )}
@@ -978,7 +980,7 @@ function GraphPageContent() {
           </div>
 
           {/* Right Sidebar (Conditional) */}
-          {!isRightRailCollapsed && selectedNode && activeMode !== "path" && (
+          {!isRightRailCollapsed && selectedNode && (activeMode as string) !== "path" && (
             <div data-testid="graph-planet-sidebar" className="w-80 shrink-0 border bg-card rounded-lg overflow-hidden flex flex-col relative">
               <Button
                 data-testid="graph-right-rail-collapse"
@@ -1379,7 +1381,7 @@ function GraphPageContent() {
             </div>
           )}
 
-          {activeMode === "path" && !isRightRailCollapsed && (
+          {(activeMode as string) === "path" && !isRightRailCollapsed && (
             <div
               data-testid="graph-path-detail-rail"
               className="w-80 shrink-0 border bg-card rounded-lg overflow-hidden flex flex-col relative"
@@ -1472,7 +1474,7 @@ function GraphPageContent() {
           )}
 
           {/* Right Rail Expand Button */}
-          {isRightRailCollapsed && ((selectedNode && activeMode !== "path") || activeMode === "path") && (
+          {isRightRailCollapsed && ((selectedNode && (activeMode as string) !== "path") || (activeMode as string) === "path") && (
             <div className={cn("absolute top-4 z-10 transition-all", showLearningPath ? "right-[340px]" : "right-4")}>
               <Button
                 data-testid="graph-right-rail-expand"
@@ -1485,6 +1487,7 @@ function GraphPageContent() {
               </Button>
             </div>
           )}
+          </>}
         </div>
 
         <Dialog open={showCreatePlanetDialog} onOpenChange={setShowCreatePlanetDialog}>

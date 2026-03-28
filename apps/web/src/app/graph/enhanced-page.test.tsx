@@ -162,22 +162,15 @@ describe("Graph Enhanced Page", () => {
     expect(mockRouterPush).not.toHaveBeenCalledWith("/path/new-editor");
   });
   
-  it("renders correct copy in path mode", async () => {
+  it("renders path workspace in path mode", async () => {
     mockSearchParams.set("view", "path");
     render(<GraphPage />);
     
-    // Path mode right rail should be immediately visible
-    const pathRail = await screen.findByTestId("graph-path-detail-rail");
-    expect(pathRail).toBeTruthy();
+    // Path workspace should be visible instead of explore mode content
+    const workspace = await screen.findByTestId(/path-workspace-(loading|loaded|error)/);
+    expect(workspace).toBeTruthy();
     
-    expect(pathRail.textContent).toContain("学习路径 (Learning Path) 进度");
-    expect(pathRail.textContent).toContain("路径由相互关联的星群（Constellation Groups）组成");
-    
-    // Path mode can also collapse
-    const collapseBtn = screen.getByTestId("graph-right-rail-collapse");
-    fireEvent.click(collapseBtn);
-    
-    expect(screen.queryByTestId("graph-path-detail-rail")).toBeNull();
-    expect(screen.getByTestId("graph-right-rail-expand")).toBeTruthy();
+    // Star group overview should NOT be visible in path mode
+    expect(screen.queryByTestId("graph-star-group-overview")).toBeNull();
   });
 });
