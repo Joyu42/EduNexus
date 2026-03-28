@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { BookOpen, Flame, ListTodo, PlayCircle, UploadCloud } from "lucide-react";
+import { BookOpen, Flame, ListTodo, PlayCircle, UploadCloud, Loader2, Sparkles, BookmarkPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { toast } from "sonner";
 import {
   BookSelector,
@@ -21,6 +23,8 @@ import {
 import { ensureWordsBootstrap } from "@/lib/words/bootstrap";
 import { getWordsToday, listenForWordsTodayChange } from "@/lib/words/date";
 import { wordsStorage } from "@/lib/words/storage";
+import { callAI } from "@/lib/ai-service";
+import { createDocumentOnServer } from "@/lib/client/kb-storage";
 import {
   uploadCustomBook,
   updateCustomBookMetadata,
@@ -83,6 +87,11 @@ export default function WordsDashboardPage() {
   const [selectedMajor, setSelectedMajor] = useState<WordsMajor | "">("");
   const [selectionHydrated, setSelectionHydrated] = useState(false);
   const hasHydratedOnceRef = useRef(false);
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [articleContent, setArticleContent] = useState<string | null>(null);
+  const [generatedTitle, setGeneratedTitle] = useState<string>("");
+  const [showPreview, setShowPreview] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     try {
