@@ -17,7 +17,9 @@ export function MemberList({ members }: { members: GroupMemberProps[] }) {
     <div className="space-y-2">
       {members.map((member) => (
         <div key={member.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-          <span>{member.userId}</span>
+          <span className="truncate max-w-[150px]" title={member.userId}>
+            {member.userId.slice(0, 8)}...
+          </span>
           <Badge variant="secondary">{member.role}</Badge>
         </div>
       ))}
