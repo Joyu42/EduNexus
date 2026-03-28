@@ -716,6 +716,40 @@ ${forgottenText ? `遗忘的单词（需要加粗）：${forgottenText}` : ""}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-orange-500" />
+              {generatedTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {articleContent && (
+              <div className="prose prose-sm max-w-none">
+                <MarkdownRenderer content={articleContent} />
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowPreview(false)}
+            >
+              关闭
+            </Button>
+            <Button
+              onClick={handleSaveArticle}
+              disabled={!articleContent}
+              className="bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
+            >
+              <BookmarkPlus className="h-4 w-4 mr-2" />
+              保存到知识宝库
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
