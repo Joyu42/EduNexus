@@ -442,6 +442,29 @@ export default function WordsDashboardPage() {
 
         <StreakCalendar activeDates={activeDates} today={today} />
 
+        {/* 生成今日文章 */}
+        <div className="mt-4">
+          <Button
+            onClick={handleGenerateArticle}
+            disabled={isGenerating || todaySummary.learned === 0}
+            className="w-full bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white shadow-md hover:shadow-lg transition-all"
+            title={todaySummary.learned === 0 ? "今日暂无学习记录" : undefined}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                生成中...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 mr-2" />
+                ✨ 生成今日文章
+              </>
+            )}
+          </Button>
+          {isGenerating && <Progress value={66} className="mt-2" indeterminate />}
+        </div>
+
         <section className="space-y-4 rounded-xl border border-slate-200 bg-white/80 p-5 shadow-sm sm:p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
