@@ -374,6 +374,20 @@ ${forgottenText ? `遗忘的单词（需要加粗）：${forgottenText}` : ""}
     }
   };
 
+  const handleSaveArticle = async () => {
+    if (!articleContent) return;
+
+    try {
+      await createDocumentOnServer(generatedTitle, articleContent);
+      toast.success("已保存到知识宝库");
+      setShowPreview(false);
+      setArticleContent(null);
+    } catch (error) {
+      console.error("保存失败:", error);
+      toast.error("保存失败，请重试");
+    }
+  };
+
   const handleManage = (bookId: string) => {
     const book = books.find((b) => b.id === bookId);
     if (book) {
@@ -537,7 +551,7 @@ ${forgottenText ? `遗忘的单词（需要加粗）：${forgottenText}` : ""}
               </>
             )}
           </Button>
-          {isGenerating && <Progress value={66} className="mt-2" indeterminate />}
+          {isGenerating && <Progress className="mt-2" />}
         </div>
 
         <section className="space-y-4 rounded-xl border border-slate-200 bg-white/80 p-5 shadow-sm sm:p-6">
