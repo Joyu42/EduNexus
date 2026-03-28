@@ -1,0 +1,28 @@
+import { defineConfig } from "@playwright/test";
+
+const PORT = Number(process.env.PLAYWRIGHT_PORT ?? "3215");
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${PORT}`;
+
+export default defineConfig({
+  testDir: "./tests/e2e",
+  fullyParallel: false,
+  workers: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 1 : 0,
+  timeout: 90_000,
+  expect: {
+    timeout: 15_000,
+  },
+  reporter: process.env.CI ? [["github"], ["list"]] : [["list"]],
+  use: {
+    baseURL: BASE_URL,
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
+  },
+  webServer: {
+    command: `pnpm dev --webpack --port ${PORT}`,
+    url: BASE_URL,
+    reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
+  },
+});

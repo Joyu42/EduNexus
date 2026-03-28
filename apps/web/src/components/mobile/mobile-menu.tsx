@@ -14,11 +14,9 @@ import {
   Route,
   Briefcase,
   Settings,
-  BarChart3,
   Target,
-  FolderOpen,
   GitBranch,
-  Users,
+  Languages,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -29,19 +27,14 @@ const navigation = [
       { name: "总览", href: "/", icon: Home },
       { name: "知识星图", href: "/graph", icon: Network },
       { name: "知识宝库", href: "/kb", icon: BookOpen },
-      { name: "成长地图", href: "/path", icon: Route },
-      { name: "学习路径", href: "/learning-paths", icon: GitBranch },
+      { name: "单词学习", href: "/words", icon: Languages },
       { name: "目标管理", href: "/goals", icon: Target },
-      { name: "资源中心", href: "/resources", icon: FolderOpen },
-      { name: "学习小组", href: "/groups", icon: Users },
-      { name: "学习社区", href: "/community", icon: Users },
     ],
   },
   {
     title: "工作区",
     items: [
       { name: "学习工作区", href: "/workspace", icon: Briefcase },
-      { name: "学习分析", href: "/workspace/analytics", icon: BarChart3 },
     ],
   },
   {

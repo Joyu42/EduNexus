@@ -227,11 +227,6 @@ export const seoPresets = {
     description: '用双链与检索组织长期知识资产，形成个人学习语境',
     keywords: ['知识库', '笔记管理', '双向链接'],
   },
-  dashboard: {
-    title: '生态看板',
-    description: '统一追踪学习增益、提示依赖和风险干预结果',
-    keywords: ['数据分析', '学习统计', '进度追踪'],
-  },
   settings: {
     title: '配置中心',
     description: '统一管理策略模板、导入审计与系统参数',
@@ -277,11 +272,6 @@ export function generateSitemapEntries(): SitemapEntry[] {
       url: `${baseUrl}/kb`,
       changeFrequency: 'daily',
       priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/dashboard`,
-      changeFrequency: 'weekly',
-      priority: 0.7,
     },
     {
       url: `${baseUrl}/settings`,

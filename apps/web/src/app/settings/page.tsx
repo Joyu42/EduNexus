@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   Settings,
   Cpu,
@@ -15,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { LoginPrompt } from "@/components/ui/login-prompt";
 import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { ModelConfigPanel } from "@/components/settings/model-config-panel";
 import { JsonImportPanel } from "@/components/settings/json-import-panel";
@@ -68,6 +71,8 @@ const navigationItems = [
 ];
 
 export default function SettingsPage() {
+  const { status } = useSession();
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState<SettingsSection>("general");
 
   // Settings state
@@ -77,11 +82,85 @@ export default function SettingsPage() {
   const [topP, setTopP] = useState(0.9);
   const [maxTokens, setMaxTokens] = useState(2000);
   const [apiKey, setApiKey] = useState("");
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      return;
+    }
+
+    let cancelled = false;
+    const loadProfile = async () => {
+      try {
+        const res = await fetch("/api/user/profile");
+        if (!res.ok) {
+          return;
+        }
+        const json = await res.json();
+        const data = json?.data as { email?: string; name?: string } | undefined;
+        if (cancelled) {
+          return;
+        }
+        if (data?.email) {
+          setEmail(data.email);
+        }
+        if (typeof data?.name === "string") {
+          setUsername(data.name);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    void loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [status]);
 
   // 保存设置
-  const handleSaveSettings = useCallback(() => {
-    alert('设置已保存');
-  }, []);
+  const handleSaveSettings = useCallback(async () => {
+    const trimmed = username.trim();
+    if (!trimmed) {
+      alert("用户名不能为空");
+      return;
+    }
+
+    setSavingProfile(true);
+    try {
+      const res = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed }),
+      });
+
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        const message =
+          typeof json?.error?.message === "string"
+            ? json.error.message
+            : "保存失败";
+        alert(message);
+        return;
+      }
+
+      const json = await res.json().catch(() => ({}));
+      const data = json?.data as { email?: string; name?: string } | undefined;
+      if (data?.email) {
+        setEmail(data.email);
+      }
+      if (typeof data?.name === "string") {
+        setUsername(data.name);
+      }
+
+      router.refresh();
+      alert("设置已保存");
+    } finally {
+      setSavingProfile(false);
+    }
+  }, [username]);
 
   // 导出配置
   const handleExportConfig = useCallback(() => {
@@ -131,6 +210,21 @@ export default function SettingsPage() {
     input.click();
   }, []);
 
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return <LoginPrompt title="配置中心" />;
+  }
+
   const renderContent = () => {
     switch (activeSection) {
       case "general":
@@ -138,8 +232,13 @@ export default function SettingsPage() {
           <GeneralSettingsPanel
             theme={theme}
             language={language}
+            username={username}
+            email={email}
             onThemeChange={setTheme}
             onLanguageChange={setLanguage}
+            onUsernameChange={setUsername}
+            onSave={handleSaveSettings}
+            saving={savingProfile}
           />
         );
       case "model":
@@ -287,4 +386,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-

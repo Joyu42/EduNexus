@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Plus,
   Search,
@@ -27,10 +28,12 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   getPracticeStorage,
   QuestionBank,
-} from "@/lib/client/practice-storage";
+} from "@/lib/practice";
+import { toast } from "@/lib/toast";
 
 export default function QuestionBanksPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [banks, setBanks] = useState<QuestionBank[]>([]);
   const [filteredBanks, setFilteredBanks] = useState<QuestionBank[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,6 +41,8 @@ export default function QuestionBanksPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingBank, setEditingBank] = useState<QuestionBank | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // 表单状态
   const [formData, setFormData] = useState({
@@ -48,7 +53,7 @@ export default function QuestionBanksPage() {
 
   useEffect(() => {
     loadBanks();
-  }, []);
+  }, [session?.user]);
 
   useEffect(() => {
     // 搜索过滤
@@ -95,7 +100,7 @@ export default function QuestionBanksPage() {
       setFormData({ name: "", description: "", tags: "" });
     } catch (error) {
       console.error("Failed to create bank:", error);
-      alert("创建题库失败");
+      toast("创建题库失败", "error");
     }
   };
 
@@ -121,22 +126,24 @@ export default function QuestionBanksPage() {
       setFormData({ name: "", description: "", tags: "" });
     } catch (error) {
       console.error("Failed to update bank:", error);
-      alert("更新题库失败");
+      toast("更新题库失败", "error");
     }
   };
 
   const handleDeleteBank = async (bankId: string) => {
-    if (!confirm("确定要删除这个题库吗？这将删除所有相关题目和记录。")) {
-      return;
-    }
+    setPendingDeleteId(bankId);
+    setDeleteConfirmOpen(true);
+  };
 
+  const confirmDeleteBank = async () => {
+    if (!pendingDeleteId) return;
     try {
       const storage = getPracticeStorage();
-      await storage.deleteBank(bankId);
+      await storage.deleteBank(pendingDeleteId);
       await loadBanks();
     } catch (error) {
       console.error("Failed to delete bank:", error);
-      alert("删除题库失败");
+      toast("删除题库失败", "error");
     }
   };
 
@@ -394,8 +401,29 @@ export default function QuestionBanksPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>确认删除</DialogTitle>
+            </DialogHeader>
+            <p>确定要删除这个题库吗？这将删除所有相关题目和记录。</p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+                取消
+              </Button>
+              <Button variant="destructive" onClick={async () => {
+                setDeleteConfirmOpen(false);
+                if (pendingDeleteId) {
+                  await confirmDeleteBank();
+                }
+              }}>
+                删除
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
 }
-

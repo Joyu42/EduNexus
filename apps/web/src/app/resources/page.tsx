@@ -1,280 +1,291 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Sparkles, TrendingUp, Bookmark, BarChart3 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { BookOpenText, Plus } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ResourceUpload } from "@/components/resources/resource-upload";
+import { Input } from "@/components/ui/input";
+import { FolderTree } from "@/components/resources/folder-tree";
+import { ResourceEditorDialog } from "@/components/resources/resource-editor-dialog";
 import { ResourceList } from "@/components/resources/resource-list";
-import { ResourceFilters } from "@/components/resources/resource-filters";
-import { BookmarkManager } from "@/components/resources/bookmark-manager";
-import { ResourceStats } from "@/components/resources/resource-stats";
 import {
-  getAllResources,
-  searchResources,
-  getAllBookmarks,
+  createResourceFolderOnServer,
+  createResourceOnServer,
+  deleteResourceOnServer,
+  fetchResourceFoldersFromServer,
+  fetchResourcesFromServer,
+  type ServerResourceFolderRecord,
+  type ServerResourceRecord,
+  updateResourceFolderOnServer,
+  updateResourceOnServer,
 } from "@/lib/resources/resource-storage";
-import {
-  recommendPopular,
-  recommendPersonalized,
-  recommendByUserHistory,
-} from "@/lib/resources/resource-recommender";
-import { generateSampleResources } from "@/lib/resources/sample-data";
-import type { Resource, ResourceType } from "@/lib/resources/resource-types";
 
 export default function ResourcesPage() {
-  const [showUpload, setShowUpload] = useState(false);
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
-  const [popularResources, setPopularResources] = useState<Resource[]>([]);
-  const [recommendedResources, setRecommendedResources] = useState<Resource[]>([]);
-  const [bookmarkedResources, setBookmarkedResources] = useState<Resource[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest" | "title">("newest");
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingResource, setEditingResource] = useState<ServerResourceRecord | null>(null);
 
-  const userId = "demo_user";
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const { data: session, status } = useSession();
 
-  const loadResources = () => {
-    const allResources = getAllResources();
-    setResources(allResources);
-    setFilteredResources(allResources);
+  const displayName = session?.user?.name || session?.user?.email || "用户";
 
-    // 提取所有标签
-    const tags = new Set<string>();
-    allResources.forEach((r) => r.tags.forEach((t) => tags.add(t)));
-    setAvailableTags(Array.from(tags).sort());
+  const resourcesQuery = useQuery({
+    queryKey: ["resources", { q: searchQuery, sort }],
+    queryFn: () => fetchResourcesFromServer({ q: searchQuery, sort, limit: 100 }),
+  });
 
-    // 加载热门资源
-    const popular = recommendPopular(6);
-    setPopularResources(popular.map((r) => r.resource));
+  const foldersQuery = useQuery({
+    queryKey: ["resource-folders"],
+    queryFn: () => fetchResourceFoldersFromServer(),
+    enabled: status === "authenticated",
+  });
 
-    // 加载个性化推荐
-    const personalized = recommendPersonalized(userId, undefined, 6);
-    setRecommendedResources(personalized.map((r) => r.resource));
+  const resources = resourcesQuery.data?.resources ?? [];
+  const total = resourcesQuery.data?.total ?? 0;
+  const folders = foldersQuery.data?.folders ?? [];
 
-    // 加载收藏的资源
-    loadBookmarkedResources();
-  };
-
-  const loadBookmarkedResources = () => {
-    const bookmarks = getAllBookmarks(userId);
-    const allResources = getAllResources();
-
-    let filtered = bookmarks
-      .map((b) => allResources.find((r) => r.id === b.resourceId))
-      .filter((r): r is Resource => r !== undefined);
-
-    // 如果选择了收藏夹，进行筛选
-    if (selectedFolder) {
-      filtered = filtered.filter((r) => {
-        const bookmark = bookmarks.find((b) => b.resourceId === r.id);
-        return bookmark?.folderId === selectedFolder;
+  const resourceFolderMap = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    folders.forEach((folder) => {
+      folder.resourceIds.forEach((resourceId) => {
+        map[resourceId] = folder.id;
       });
+    });
+    return map;
+  }, [folders]);
+
+  const filteredResources = useMemo(() => {
+    if (!selectedFolderId) {
+      return resources;
     }
+    const folder = folders.find((item) => item.id === selectedFolderId);
+    if (!folder) {
+      return [];
+    }
+    const folderResourceIds = new Set(folder.resourceIds);
+    return resources.filter((resource) => folderResourceIds.has(resource.id));
+  }, [folders, resources, selectedFolderId]);
 
-    setBookmarkedResources(filtered);
+  const requireAuthenticated = () => {
+    if (status !== "unauthenticated") {
+      return true;
+    }
+    toast.error("请先登录后再管理资源");
+    router.push(`/login?callbackUrl=${encodeURIComponent("/resources")}`);
+    return false;
   };
 
-  useEffect(() => {
-    // 生成示例数据（仅首次）
-    generateSampleResources();
-    loadResources();
-  }, []);
+  const createMutation = useMutation({
+    mutationFn: createResourceOnServer,
+    onSuccess: () => {
+      toast.success("资源创建成功");
+      setEditorOpen(false);
+      setEditingResource(null);
+      queryClient.invalidateQueries({ queryKey: ["resources"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
-  useEffect(() => {
-    loadBookmarkedResources();
-  }, [selectedFolder]);
+  const updateMutation = useMutation({
+    mutationFn: ({ resourceId, input }: { resourceId: string; input: { title?: string; description?: string; url?: string } }) =>
+      updateResourceOnServer(resourceId, input),
+    onSuccess: () => {
+      toast.success("资源更新成功");
+      setEditorOpen(false);
+      setEditingResource(null);
+      queryClient.invalidateQueries({ queryKey: ["resources"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
-  const handleSearch = (filters: {
-    keyword?: string;
-    type?: ResourceType;
-    tags?: string[];
-    sortBy?: "createdAt" | "viewCount" | "bookmarkCount" | "rating";
-    sortOrder?: "asc" | "desc";
-  }) => {
-    const results = searchResources(filters);
-    setFilteredResources(results);
-  };
+  const deleteMutation = useMutation({
+    mutationFn: deleteResourceOnServer,
+    onSuccess: () => {
+      toast.success("资源已删除");
+      queryClient.invalidateQueries({ queryKey: ["resources"] });
+      queryClient.invalidateQueries({ queryKey: ["resource-folders"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const createFolderMutation = useMutation({
+    mutationFn: createResourceFolderOnServer,
+    onSuccess: () => {
+      toast.success("文件夹创建成功");
+      queryClient.invalidateQueries({ queryKey: ["resource-folders"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const assignFolderMutation = useMutation({
+    mutationFn: async ({ resourceId, folderId }: { resourceId: string; folderId: string | null }) => {
+      const updates: Array<Promise<ServerResourceFolderRecord>> = [];
+
+      folders.forEach((folder) => {
+        const hasResource = folder.resourceIds.includes(resourceId);
+        const shouldContain = folder.id === folderId;
+
+        if (hasResource === shouldContain) {
+          return;
+        }
+
+        const resourceIds = shouldContain
+          ? [...folder.resourceIds, resourceId]
+          : folder.resourceIds.filter((id) => id !== resourceId);
+
+        updates.push(updateResourceFolderOnServer(folder.id, { resourceIds }));
+      });
+
+      await Promise.all(updates);
+    },
+    onSuccess: () => {
+      toast.success("文件夹归类已更新");
+      queryClient.invalidateQueries({ queryKey: ["resource-folders"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30">
-      <div className="page-container">
-        {/* 页面标题 */}
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-rose-500">
-                <Sparkles className="h-6 w-6 text-white" />
-              </div>
-              资源中心
-            </h1>
-            <p className="text-muted-foreground">
-              管理和分享你的学习资源，构建个人知识库，智能推荐优质内容
-            </p>
-          </div>
-          <Button
-            onClick={() => setShowUpload(true)}
-            size="lg"
-            className="bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            添加资源
-          </Button>
-        </div>
-
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="card-hover border-l-4 border-l-orange-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">全部资源</p>
-                  <p className="text-3xl font-bold">{resources.length}</p>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-orange-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-hover border-l-4 border-l-blue-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">我的收藏</p>
-                  <p className="text-3xl font-bold">
-                    {getAllBookmarks(userId).length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <Bookmark className="w-6 h-6 text-blue-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="card-hover border-l-4 border-l-green-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">资源标签</p>
-                  <p className="text-3xl font-bold">{availableTags.length}</p>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-green-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* 主内容区 */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* 左侧：收藏夹管理 */}
-          <div className="lg:col-span-1">
-            <div className="panel sticky top-6">
-              <BookmarkManager
-                userId={userId}
-                onFolderSelect={setSelectedFolder}
-              />
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50/40 via-lime-50/20 to-teal-50/30">
+      <div className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500 text-white shadow-sm">
+              <BookOpenText className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">资源中心</h1>
+              <p className="text-muted-foreground mt-1">使用服务端数据统一管理资源、文件夹、笔记与评分。</p>
             </div>
           </div>
 
-          {/* 右侧：资源列表 */}
-          <div className="lg:col-span-3 space-y-8">
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 max-w-3xl">
-                <TabsTrigger value="all">全部资源</TabsTrigger>
-                <TabsTrigger value="bookmarked">我的收藏</TabsTrigger>
-                <TabsTrigger value="recommended">推荐</TabsTrigger>
-                <TabsTrigger value="stats">统计分析</TabsTrigger>
-              </TabsList>
+          <Button
+            className="shrink-0 gap-2"
+            onClick={() => {
+              if (!requireAuthenticated()) return;
+              setEditingResource(null);
+              setEditorOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            分享资源
+          </Button>
+        </div>
 
-              {/* 全部资源 */}
-              <TabsContent value="all" className="space-y-6">
-                <div className="panel">
-                  <ResourceFilters
-                    onSearch={handleSearch}
-                    availableTags={availableTags}
-                  />
-                </div>
-                <ResourceList resources={filteredResources} onRefresh={loadResources} />
-              </TabsContent>
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-card p-4 rounded-xl border shadow-sm">
+          <div className="w-full lg:max-w-md">
+            <Input
+              placeholder="搜索资源名称、描述或分享者..."
+              className="w-full bg-background"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
+          </div>
+          <select
+            className="h-10 rounded-md border bg-background px-3 text-sm"
+            value={sort}
+            onChange={(event) => setSort(event.target.value as "newest" | "oldest" | "title")}
+          >
+            <option value="newest">按最新</option>
+            <option value="oldest">按最早</option>
+            <option value="title">按标题</option>
+          </select>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
+            <span>公共资源总数</span>
+            <Badge variant="secondary" className="px-2 py-0.5">
+              {total}
+            </Badge>
+            {status === "authenticated" ? (
+              <span className="ml-2 text-xs text-muted-foreground">当前用户：{displayName}</span>
+            ) : null}
+          </div>
+        </div>
 
-              {/* 我的收藏 */}
-              <TabsContent value="bookmarked" className="space-y-6">
-                <div className="panel">
-                  <h3 className="text-lg font-semibold mb-2">
-                    {selectedFolder ? "收藏夹资源" : "全部收藏"}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {bookmarkedResources.length} 个资源
-                  </p>
-                </div>
-                <ResourceList
-                  resources={bookmarkedResources}
-                  onRefresh={loadResources}
-                />
-              </TabsContent>
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+          <FolderTree
+            folders={folders.map((folder) => ({
+              id: folder.id,
+              name: folder.name,
+              description: folder.description,
+              resourceIds: folder.resourceIds,
+            }))}
+            selectedFolderId={selectedFolderId}
+            pending={createFolderMutation.isPending || assignFolderMutation.isPending}
+            onSelectFolder={setSelectedFolderId}
+            onCreateFolder={(input) => {
+              if (!requireAuthenticated()) return;
+              createFolderMutation.mutate(input);
+            }}
+          />
 
-              {/* 推荐资源 */}
-              <TabsContent value="recommended" className="space-y-8">
-                {/* AI 个性化推荐 */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-semibold">为你推荐</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    基于你的收藏和学习偏好，智能推荐相关资源
-                  </p>
-                  <ResourceList
-                    resources={recommendedResources}
-                    onRefresh={loadResources}
-                  />
-                </div>
-
-                {/* 热门资源 */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-orange-500" />
-                    <h3 className="text-lg font-semibold">社区热门</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    最受欢迎的学习资源，由社区用户共同推荐
-                  </p>
-                  <ResourceList
-                    resources={popularResources}
-                    onRefresh={loadResources}
-                  />
-                </div>
-              </TabsContent>
-
-              {/* 统计分析 */}
-              <TabsContent value="stats" className="space-y-6">
-                <div className="panel">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-semibold">资源统计分析</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    深入了解你的资源库使用情况和热门趋势
-                  </p>
-                </div>
-                <ResourceStats resources={resources} />
-              </TabsContent>
-            </Tabs>
+          <div className="space-y-4">
+            <ResourceList
+              resources={filteredResources}
+              folders={folders.map((folder) => ({ id: folder.id, name: folder.name }))}
+              resourceFolderMap={resourceFolderMap}
+              onEdit={(resource) => {
+                if (!requireAuthenticated()) return;
+                setEditingResource(resource);
+                setEditorOpen(true);
+              }}
+              onDelete={(resource) => {
+                if (!requireAuthenticated()) return;
+                deleteMutation.mutate(resource.id);
+              }}
+              onAssignFolder={(resourceId, folderId) => {
+                if (!requireAuthenticated()) return;
+                assignFolderMutation.mutate({ resourceId, folderId });
+              }}
+            />
+            {resourcesQuery.isLoading ? <p className="text-sm text-muted-foreground">加载资源中...</p> : null}
           </div>
         </div>
       </div>
 
-      {/* 上传对话框 */}
-      <ResourceUpload
-        open={showUpload}
-        onOpenChange={setShowUpload}
-        onSuccess={loadResources}
+      <ResourceEditorDialog
+        open={editorOpen}
+        mode={editingResource ? "edit" : "create"}
+        initialValue={
+          editingResource
+            ? {
+                title: editingResource.title,
+                description: editingResource.description,
+                url: editingResource.url,
+              }
+            : null
+        }
+        pending={createMutation.isPending || updateMutation.isPending}
+        onOpenChange={(open) => {
+          setEditorOpen(open);
+          if (!open) {
+            setEditingResource(null);
+          }
+        }}
+        onSubmit={(value) => {
+          if (editingResource) {
+            updateMutation.mutate({ resourceId: editingResource.id, input: value });
+            return;
+          }
+          createMutation.mutate(value);
+        }}
       />
     </div>
   );

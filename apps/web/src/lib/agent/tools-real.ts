@@ -7,76 +7,85 @@
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { getModelscopeClient } from "@/lib/server/modelscope";
-import { searchVault, getVaultDocById } from "@/lib/server/kb-lite";
+import { searchDocuments, getDocument } from "@/lib/server/document-service";
 import { getGraphView } from "@/lib/server/graph-service";
 import { loadDb } from "@/lib/server/store";
+import { getWordsProgressSummary, listWords, listWordsLearningRecords, listWordsLearningRecordsByWord, saveWordsLearningRecord } from "@/lib/server/words-service";
+import { updateWordStatus } from "@/lib/words/scheduler";
+import type { WordAnswerGrade } from "@/lib/words/types";
+import { saveDb } from "@/lib/server/store";
 
-/**
- * 搜索知识库工具（真实实现）
- */
-export const searchKnowledgeBaseTool = new DynamicStructuredTool({
-  name: "search_knowledge_base",
-  description: "搜索知识库中的文档和笔记。当用户询问某个概念或需要查找相关资料时使用。",
-  schema: z.object({
-    query: z.string().describe("搜索查询词"),
-    limit: z.number().optional().describe("返回结果数量限制，默认5"),
-  }),
-  func: async ({ query, limit = 5 }) => {
-    try {
-      const normalizedLimit = Math.max(1, Math.min(20, Math.floor(Number(limit) || 5)));
-      const searchResult = await searchVault(query, {});
+function requireUserId(userId?: string) {
+  const normalized = typeof userId === "string" ? userId.trim() : "";
+  if (!normalized) {
+    throw new Error("缺少 userId：请先登录后再使用该工具。");
+  }
+  return normalized;
+}
 
-      const ranked = searchResult.candidates.slice(0, normalizedLimit);
-      const docs = await Promise.all(
-        ranked.map(async (candidate) => {
-          const doc = await getVaultDocById(candidate.docId);
-          return {
-            id: candidate.docId,
-            title: doc?.title || candidate.docId,
-            content: doc?.content ? doc.content.slice(0, 500) : candidate.snippet,
-            relevance: candidate.score,
-            tags: doc?.tags || [],
-            domain: doc?.domain,
-            type: doc?.type,
-            reason: candidate.reason,
-            sourcePath: doc?.path,
-            updatedAt: doc?.updatedAt,
-          };
-        })
-      );
+function createSearchKnowledgeBaseTool(userId?: string) {
+  return new DynamicStructuredTool({
+    name: "search_knowledge_base",
+    description: "搜索知识库中的文档和笔记。当用户询问某个概念或需要查找相关资料时使用。",
+    schema: z.object({
+      query: z.string().describe("搜索查询词"),
+      limit: z.number().optional().describe("返回结果数量限制，默认5"),
+    }),
+    func: async ({ query, limit = 5 }) => {
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const normalizedLimit = Math.max(1, Math.min(20, Math.floor(Number(limit) || 5)));
+        const candidates = await searchDocuments(query, effectiveUserId);
 
-      return JSON.stringify(
-        {
-          query,
-          count: docs.length,
-          results: docs,
-        },
-        null,
-        2
-      );
-    } catch (error) {
-      return JSON.stringify({
-        error: "搜索失败",
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  },
-});
+        const selected = candidates.slice(0, normalizedLimit);
+        const docs = await Promise.all(
+          selected.map(async (candidate, index) => {
+            const doc = await getDocument(candidate.docId, effectiveUserId);
+            return {
+              id: candidate.docId,
+              title: doc?.title || candidate.docId,
+              content: doc?.content ? doc.content.slice(0, 500) : candidate.snippet,
+              relevance: Math.max(0, 1 - index * 0.05),
+              updatedAt: doc?.updatedAt,
+            };
+          })
+        );
+
+        return JSON.stringify(
+          {
+            query,
+            count: docs.length,
+            results: docs,
+          },
+          null,
+          2
+        );
+      } catch (error) {
+        return JSON.stringify({
+          error: "搜索失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
 
 /**
  * 查询知识图谱工具（真实实现）
  */
-export const queryKnowledgeGraphTool = new DynamicStructuredTool({
-  name: "query_knowledge_graph",
-  description: "查询知识图谱，获取概念之间的关系。当需要了解知识点之间的联系时使用。",
-  schema: z.object({
-    concept: z.string().describe("要查询的概念"),
-    depth: z.number().optional().describe("查询深度，默认2"),
-  }),
-  func: async ({ concept, depth = 2 }) => {
-    try {
-      const normalizedDepth = Math.max(1, Math.min(4, Math.floor(Number(depth) || 2)));
-      const graphView = await getGraphView({});
+function createQueryKnowledgeGraphTool(userId?: string) {
+  return new DynamicStructuredTool({
+    name: "query_knowledge_graph",
+    description: "查询知识图谱，获取概念之间的关系。当需要了解知识点之间的联系时使用。",
+    schema: z.object({
+      concept: z.string().describe("要查询的概念"),
+      depth: z.number().optional().describe("查询深度，默认2"),
+    }),
+    func: async ({ concept, depth = 2 }) => {
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const normalizedDepth = Math.max(1, Math.min(4, Math.floor(Number(depth) || 2)));
+        const graphView = await getGraphView(effectiveUserId);
 
       const lowerConcept = concept.trim().toLowerCase();
       const allNodes = graphView.nodes;
@@ -159,29 +168,30 @@ export const queryKnowledgeGraphTool = new DynamicStructuredTool({
         .map((node) => node.label)
         .slice(0, 12);
 
-      return JSON.stringify(
-        {
-          concept,
-          depth: normalizedDepth,
-          matched: true,
-          seeds: seedNodes.map((node) => ({ id: node.id, label: node.label })),
-          nodes,
-          edges,
-          prerequisites,
-          applications,
-          relatedConcepts,
-        },
-        null,
-        2
-      );
-    } catch (error) {
-      return JSON.stringify({
-        error: "图谱查询失败",
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  },
-});
+        return JSON.stringify(
+          {
+            concept,
+            depth: normalizedDepth,
+            matched: true,
+            seeds: seedNodes.map((node) => ({ id: node.id, label: node.label })),
+            nodes,
+            edges,
+            prerequisites,
+            applications,
+            relatedConcepts,
+          },
+          null,
+          2
+        );
+      } catch (error) {
+        return JSON.stringify({
+          error: "图谱查询失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
 
 /**
  * 生成练习题工具（使用 AI 生成）
@@ -495,57 +505,276 @@ export const checkUnderstandingTool = new DynamicStructuredTool({
 /**
  * 查询学习进度工具
  */
-export const queryLearningProgressTool = new DynamicStructuredTool({
-  name: "query_learning_progress",
-  description: "查询学习进度和学习路径信息。当用户询问学习进度、学习路径、任务完成情况时使用。",
-  schema: z.object({
-    pathId: z.string().optional().describe("学习路径ID，不提供则返回所有路径"),
-  }),
-  func: async ({ pathId }) => {
-    try {
-      const db = await loadDb();
-      const paths = pathId
-        ? db.syncedPaths.filter(p => p.pathId === pathId)
-        : db.syncedPaths;
+function createQueryLearningProgressTool(userId?: string, isDemoUser?: boolean) {
+  return new DynamicStructuredTool({
+    name: "query_learning_progress",
+    description: "查询学习进度和学习路径信息。当用户询问学习进度、学习路径、任务完成情况时使用。",
+    schema: z.object({
+      pathId: z.string().optional().describe("学习路径ID，不提供则返回所有路径"),
+    }),
+    func: async ({ pathId }) => {
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const normalizedPathId = typeof pathId === "string" ? pathId.trim() : "";
+        const shouldFilterByPathId = normalizedPathId.length > 0 && normalizedPathId !== "default";
+        const db = await loadDb();
+        const scopedPaths = db.syncedPaths.filter((path) => path.userId === effectiveUserId);
+        const paths = shouldFilterByPathId
+          ? scopedPaths.filter((path) => path.pathId === normalizedPathId)
+          : scopedPaths;
 
-      const result = paths.map(path => ({
-        pathId: path.pathId,
-        title: path.title,
-        description: path.description,
-        status: path.status,
-        progress: path.progress,
-        tags: path.tags,
-        totalTasks: path.tasks.length,
-        completedTasks: path.tasks.filter(t => t.status === 'completed').length,
-        tasks: path.tasks.map(task => ({
-          taskId: task.taskId,
-          title: task.title,
-          description: task.description,
-          status: task.status,
-          progress: task.progress,
-          estimatedTime: task.estimatedTime,
-          dependencies: task.dependencies,
-        })),
-      }));
+        const result = paths.map((path) => ({
+          pathId: path.pathId,
+          title: path.title,
+          description: path.description,
+          status: path.status,
+          progress: path.progress,
+          tags: path.tags,
+          totalTasks: path.tasks.length,
+          completedTasks: path.tasks.filter((task) => task.status === "completed").length,
+          tasks: path.tasks.map((task) => ({
+            taskId: task.taskId,
+            title: task.title,
+            description: task.description,
+            status: task.status,
+            progress: task.progress,
+            estimatedTime: task.estimatedTime,
+            dependencies: task.dependencies,
+          })),
+        }));
 
-      return JSON.stringify({ count: result.length, paths: result }, null, 2);
-    } catch (error) {
-      return JSON.stringify({
-        error: "查询学习进度失败",
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  },
-});
+        if (result.length === 0) {
+          return JSON.stringify(
+            {
+              count: 0,
+              paths: [],
+              reason: "NO_SYNCED_PATHS",
+              message: "当前用户还没有可用的服务端学习路径同步记录。",
+              nextAction: "先在学习路径页面创建/编辑路径，等待自动同步后再查询学习进度。",
+            },
+            null,
+            2
+          );
+        }
+
+        return JSON.stringify({ count: result.length, paths: result }, null, 2);
+      } catch (error) {
+        return JSON.stringify({
+          error: "查询学习进度失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
+
+function createQueryWordsProgressTool(userId?: string) {
+  return new DynamicStructuredTool({
+    name: "query_words_progress",
+    description:
+      "查询当前登录用户的英语单词学习进度，包括连续学习天数、今日待复习、今日学习/复习情况和词库进度。",
+    schema: z.object({
+      date: z.string().optional().describe("可选日期，格式 YYYY-MM-DD，不传则使用今天"),
+      rangeDays: z.number().optional().describe("最近统计区间天数，默认 7 天，最大 30 天"),
+    }),
+    func: async ({ date, rangeDays }) => {
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const normalizedDate = typeof date === "string" && date.trim() ? date.trim() : undefined;
+        const normalizedRangeDays =
+          typeof rangeDays === "number" && Number.isFinite(rangeDays)
+            ? Math.max(1, Math.min(30, Math.floor(rangeDays)))
+            : undefined;
+        const summary = await getWordsProgressSummary(
+          effectiveUserId,
+          normalizedDate,
+          normalizedRangeDays
+        );
+        const topBooks = summary.bookProgress.slice(0, 3);
+
+        return JSON.stringify(
+          {
+            date: summary.date,
+            streakDays: summary.streakDays,
+            dueToday: summary.dueToday,
+            hasDueReview: summary.hasDueReview,
+            learnedToday: summary.learnedToday,
+            reviewedToday: summary.reviewedToday,
+            relearnedToday: summary.relearnedToday,
+            accuracyToday: summary.accuracyToday,
+            learnedWords: summary.learnedWords,
+            masteredWords: summary.masteredWords,
+            totalWords: summary.totalWords,
+            suggestedBookId: summary.suggestedBookId,
+            recentProgress: summary.recentProgress,
+            report: {
+              rangeDays: summary.recentProgress.rangeDays,
+              startDate: summary.recentProgress.startDate,
+              endDate: summary.recentProgress.endDate,
+              learnedWordsInRange: summary.recentProgress.learnedWordsInRange,
+              reviewedCountInRange: summary.recentProgress.reviewedCountInRange,
+              relearnedCountInRange: summary.recentProgress.relearnedCountInRange,
+              averageDailyLearnedWords: summary.recentProgress.averageDailyLearnedWords,
+              activeDays: summary.recentProgress.activeDays,
+              learnedWords: summary.learnedWords,
+              masteredWords: summary.masteredWords,
+              dueToday: summary.dueToday,
+              streakDays: summary.streakDays,
+            },
+            topBooks,
+          },
+          null,
+          2
+        );
+      } catch (error) {
+        return JSON.stringify({
+          error: "查询英语单词进度失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
+
+function resolveWordsIntent(intent: string, userMessage?: string) {
+  if (intent !== "auto") {
+    return intent;
+  }
+  const text = (userMessage || "").toLowerCase();
+  if (!text) {
+    return "dashboard" as const;
+  }
+  if (text.includes("复习") || text.includes("review")) {
+    return "review" as const;
+  }
+  if (
+    text.includes("学习") ||
+    text.includes("背单词") ||
+    text.includes("学单词") ||
+    text.includes("单词") ||
+    text.includes("学 ") ||
+    text.includes("learn")
+  ) {
+    return "learn" as const;
+  }
+  return "dashboard" as const;
+}
+
+function detectPreferredBookId(userMessage?: string): "cet4" | "cet6" | null {
+  const text = (userMessage || "").toLowerCase();
+  if (!text) {
+    return null;
+  }
+
+  if (text.includes("cet-6") || text.includes("cet6") || text.includes("六级")) {
+    return "cet6";
+  }
+
+  if (text.includes("cet-4") || text.includes("cet4") || text.includes("四级")) {
+    return "cet4";
+  }
+
+  return null;
+}
+
+function createRecommendWordsActionTool(userId?: string) {
+  return new DynamicStructuredTool({
+    name: "recommend_words_action",
+    description:
+      "根据用户意图推荐英语单词学习页面路由，返回可直接跳转的 route。用于“我想学单词/复习单词/查看进度”等请求。",
+    schema: z.object({
+      intent: z.enum(["learn", "review", "dashboard", "auto"]).describe("意图类型"),
+      userMessage: z.string().optional().describe("用户原始输入，intent=auto 时用于推断"),
+    }),
+    func: async ({ intent, userMessage }) => {
+      try {
+        const effectiveUserId = requireUserId(userId);
+        const resolvedIntent = resolveWordsIntent(intent, userMessage);
+        const summary = await getWordsProgressSummary(effectiveUserId);
+
+        if (resolvedIntent === "review") {
+          const route = summary.hasDueReview ? "/words/review" : "/words";
+          return JSON.stringify(
+            {
+              action: "navigate",
+              route,
+              intent: resolvedIntent,
+              reason: summary.hasDueReview
+                ? `今天有 ${summary.dueToday} 个待复习单词，优先进入复习。`
+                : "今天没有到期复习项，先前往单词首页查看任务。",
+              fallbackRoute: "/words",
+            },
+            null,
+            2
+          );
+        }
+
+        if (resolvedIntent === "learn") {
+          const preferredBookId = detectPreferredBookId(userMessage);
+          if (preferredBookId) {
+            return JSON.stringify(
+              {
+                action: "navigate",
+                route: `/words/learn/${preferredBookId}`,
+                intent: resolvedIntent,
+                reason: preferredBookId === "cet6"
+                  ? "已识别到六级学习需求，直接进入 CET-6 词库。"
+                  : "已识别到四级学习需求，直接进入 CET-4 词库。",
+                fallbackRoute: "/words",
+              },
+              null,
+              2
+            );
+          }
+
+          return JSON.stringify(
+            {
+              action: "navigate",
+              route: "/words",
+              intent: resolvedIntent,
+              reason: "进入单词仪表盘后，请在 CET-4 和 CET-6 中选择想学习的词库。",
+              fallbackRoute: "/words",
+              choices: [
+                { label: "直接开始 CET-4", route: "/words/learn/cet4" },
+                { label: "直接开始 CET-6", route: "/words/learn/cet6" },
+              ],
+            },
+            null,
+            2
+          );
+        }
+
+        return JSON.stringify(
+          {
+            action: "navigate",
+            route: "/words",
+            intent: resolvedIntent,
+            reason: "进入单词仪表盘查看进度、词库和今日任务。",
+            fallbackRoute: "/words",
+          },
+          null,
+          2
+        );
+      } catch (error) {
+        return JSON.stringify({
+          error: "推荐英语单词学习动作失败",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+  });
+}
 
 /**
  * 获取所有工具
  */
-export function getAllTools() {
+export function getAllTools(input?: { userId?: string; isDemo?: boolean }) {
   return [
-    searchKnowledgeBaseTool,
-    queryKnowledgeGraphTool,
-    queryLearningProgressTool,
+    createSearchKnowledgeBaseTool(input?.userId),
+    createQueryKnowledgeGraphTool(input?.userId),
+    createQueryLearningProgressTool(input?.userId, input?.isDemo),
+    createQueryWordsProgressTool(input?.userId),
+    createRecommendWordsActionTool(input?.userId),
     generateExerciseTool,
     recommendLearningPathTool,
     explainConceptTool,

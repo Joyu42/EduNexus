@@ -5,6 +5,14 @@ export type NodeType = "concept" | "topic" | "resource" | "skill";
 export type EdgeType = "prerequisite" | "related" | "contains" | "applies";
 export type LayoutType = "force" | "hierarchical" | "radial" | "timeline";
 export type ThemeType = "tech" | "nature" | "minimal";
+export type MasteryStage = "seen" | "understood" | "applied" | "mastered";
+
+export type PathMembership = {
+  pathId: string;
+  pathName: string;
+  stage: string;
+  orderWithinStage: number;
+};
 
 export interface GraphNode {
   id: string;
@@ -24,6 +32,11 @@ export interface GraphNode {
   documentIds: string[];     // 关联的文档
   skillNodeId?: string;      // 关联的技能
   keywords?: string[];       // 关键词
+  masteryStage?: MasteryStage; // 掌握阶段
+  needsReview?: boolean;
+  pathMemberships?: PathMembership[];
+  category?: string;
+  kbDocumentId?: string;
   // 可视化相关
   x?: number;
   y?: number;

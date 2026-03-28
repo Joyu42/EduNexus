@@ -21,7 +21,8 @@ import {
   QuestionType,
   QuestionDifficulty,
   QuestionStatus,
-} from "@/lib/client/practice-storage";
+} from "@/lib/practice";
+import { toast } from "@/lib/toast";
 
 export default function GenerateQuestionsPage() {
   const router = useRouter();
@@ -43,7 +44,7 @@ export default function GenerateQuestionsPage() {
 
   const handleGenerate = async () => {
     if (!documentContent.trim()) {
-      alert("请输入文档内容");
+      toast("请输入文档内容", "error");
       return;
     }
 
@@ -78,7 +79,7 @@ export default function GenerateQuestionsPage() {
       }
     } catch (error: any) {
       console.error("Generate error:", error);
-      alert(error.message || "生成题目失败");
+      toast(error.message || "生成题目失败", "error");
     } finally {
       setIsGenerating(false);
     }
@@ -110,11 +111,11 @@ export default function GenerateQuestionsPage() {
         });
       }
 
-      alert(`成功添加 ${questionsToSave.length} 道题目`);
+      toast(`成功添加 ${questionsToSave.length} 道题目`, "success");
       router.push(`/workspace/practice/questions/${bankId}`);
     } catch (error) {
       console.error("Save error:", error);
-      alert("保存题目失败");
+      toast("保存题目失败", "error");
     }
   };
 

@@ -6,6 +6,7 @@ import {
   getSession,
   updateSessionLevel
 } from "@/lib/server/session-service";
+import { getCurrentUserId } from "@/lib/server/auth-utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,9 +23,14 @@ export async function POST(request: Request) {
       });
     }
 
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return fail({ code: 'UNAUTHORIZED', message: '请先登录' }, 401);
+    }
+
     const sessionId = parsed.data.sessionId?.trim();
     if (sessionId) {
-      const session = await getSession(sessionId);
+      const session = await getSession(sessionId, userId);
       if (!session) {
         return fail(
           {
@@ -38,6 +44,7 @@ export async function POST(request: Request) {
 
     const result = await runLangGraphAgent({
       sessionId,
+      userId,
       userInput: parsed.data.userInput,
       currentLevel: parsed.data.currentLevel ?? 1
     });
@@ -46,11 +53,11 @@ export async function POST(request: Request) {
       await appendSessionMessage(sessionId, {
         role: "user",
         content: parsed.data.userInput
-      });
+      }, userId);
       await appendSessionMessage(sessionId, {
         role: "assistant",
         content: `[LangGraph:${result.mode}] ${result.guidance}`
-      });
+      }, userId);
       await updateSessionLevel(sessionId, result.nextLevel);
     }
 

@@ -1,6 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
+
+function getUserId(): string {
+  return getClientUserIdentity() || 'anonymous';
+}
 
 interface UseUserLevelReturn {
   addExp: (eventType: string, metadata?: any) => Promise<{
@@ -13,7 +18,8 @@ interface UseUserLevelReturn {
   error: string | null;
 }
 
-export function useUserLevel(userId: string = 'demo_user'): UseUserLevelReturn {
+export function useUserLevel(userId?: string): UseUserLevelReturn {
+  const effectiveUserId = userId || getUserId();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +34,7 @@ export function useUserLevel(userId: string = 'demo_user'): UseUserLevelReturn {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userId,
+          userId: effectiveUserId,
           eventType,
           metadata
         })

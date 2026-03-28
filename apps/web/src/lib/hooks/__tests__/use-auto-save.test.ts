@@ -1,12 +1,23 @@
-/**
- * 自动保存功能测试
- */
+// @vitest-environment jsdom
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useAutoSave } from '../use-auto-save';
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useAutoSave } from "../use-auto-save";
 
-describe('useAutoSave', () => {
+async function flushEffects() {
+  await act(async () => {
+    await Promise.resolve();
+  });
+}
+
+async function advance(ms: number) {
+  await act(async () => {
+    vi.advanceTimersByTime(ms);
+    await Promise.resolve();
+  });
+}
+
+describe("useAutoSave", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -16,174 +27,143 @@ describe('useAutoSave', () => {
     vi.useRealTimers();
   });
 
-  it('应该在延迟后触发保存', async () => {
+  it("auto-saves on mount and after a debounced update", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
-    const testData = { id: '1', content: 'test' };
+    const testData = { id: "1", content: "test" };
 
     const { result, rerender } = renderHook(
       ({ data }) => useAutoSave(data, { onSave, delay: 1000 }),
       { initialProps: { data: testData } }
     );
 
-    expect(result.current.status).toBe('idle');
+    await flushEffects();
+    expect(result.current.status).toBe("saved");
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onSave).toHaveBeenLastCalledWith(testData);
 
-    // 更新数据
-    rerender({ data: { ...testData, content: 'updated' } });
+    rerender({ data: { ...testData, content: "updated" } });
+    await advance(1000);
 
-    // 快进时间
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-
-    await waitFor(() => {
-      expect(onSave).toHaveBeenCalledTimes(1);
-    });
+    expect(onSave).toHaveBeenCalledTimes(2);
+    expect(onSave).toHaveBeenLastCalledWith({ id: "1", content: "updated" });
   });
 
-  it('应该防抖多次快速更新', async () => {
+  it("debounces rapid updates into one trailing save", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
-    let testData = { id: '1', content: 'test' };
+    let testData = { id: "1", content: "test" };
 
-    const { result, rerender } = renderHook(
+    const { rerender } = renderHook(
       ({ data }) => useAutoSave(data, { onSave, delay: 1000 }),
       { initialProps: { data: testData } }
     );
 
-    // 快速更新多次
-    for (let i = 0; i < 5; i++) {
+    await flushEffects();
+    expect(onSave).toHaveBeenCalledTimes(1);
+
+    for (let i = 0; i < 5; i += 1) {
       testData = { ...testData, content: `test${i}` };
       rerender({ data: testData });
-      act(() => {
-        vi.advanceTimersByTime(500);
-      });
+      await advance(500);
     }
 
-    // 等待防抖完成
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
+    expect(onSave).toHaveBeenCalledTimes(1);
 
-    await waitFor(() => {
-      // 应该只调用一次
-      expect(onSave).toHaveBeenCalledTimes(1);
-    });
+    await advance(1000);
+
+    expect(onSave).toHaveBeenCalledTimes(2);
+    expect(onSave).toHaveBeenLastCalledWith({ id: "1", content: "test4" });
   });
 
-  it('应该处理保存错误', async () => {
+  it("surfaces save errors", async () => {
     const onError = vi.fn();
-    const onSave = vi.fn().mockRejectedValue(new Error('Save failed'));
-    const testData = { id: '1', content: 'test' };
+    const error = new Error("Save failed");
+    const onSave = vi.fn().mockRejectedValue(error);
+    const testData = { id: "1", content: "test" };
 
-    const { result, rerender } = renderHook(
-      ({ data }) => useAutoSave(data, { onSave, onError, delay: 1000 }),
-      { initialProps: { data: testData } }
+    const { result } = renderHook(() =>
+      useAutoSave(testData, { onSave, onError, delay: 1000 })
     );
 
-    rerender({ data: { ...testData, content: 'updated' } });
+    await flushEffects();
 
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-
-    await waitFor(() => {
-      expect(result.current.status).toBe('error');
-      expect(onError).toHaveBeenCalled();
-      expect(result.current.error).toBeInstanceOf(Error);
-    });
+    expect(result.current.status).toBe("error");
+    expect(result.current.error).toBe(error);
+    expect(onError).toHaveBeenCalledWith(error);
   });
 
-  it('应该在禁用时不触发保存', async () => {
+  it("does not auto-save while disabled", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
-    const testData = { id: '1', content: 'test' };
+    const testData = { id: "1", content: "test" };
 
     const { result, rerender } = renderHook(
-      ({ data }) => useAutoSave(data, { onSave, delay: 1000, enabled: false }),
-      { initialProps: { data: testData } }
+      ({ data, enabled }) => useAutoSave(data, { onSave, delay: 1000, enabled }),
+      { initialProps: { data: testData, enabled: false } }
     );
 
-    rerender({ data: { ...testData, content: 'updated' } });
+    await flushEffects();
+    rerender({ data: { ...testData, content: "updated" }, enabled: false });
+    await advance(1000);
 
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-
-    await waitFor(() => {
-      expect(onSave).not.toHaveBeenCalled();
-    });
+    expect(onSave).not.toHaveBeenCalled();
+    expect(result.current.status).toBe("idle");
   });
 
-  it('应该在保存成功后更新状态', async () => {
+  it("marks save success and resets to idle after two seconds", async () => {
     const onSuccess = vi.fn();
     const onSave = vi.fn().mockResolvedValue(undefined);
-    const testData = { id: '1', content: 'test' };
+    const testData = { id: "1", content: "test" };
 
-    const { result, rerender } = renderHook(
-      ({ data }) => useAutoSave(data, { onSave, onSuccess, delay: 1000 }),
-      { initialProps: { data: testData } }
+    const { result } = renderHook(() =>
+      useAutoSave(testData, { onSave, onSuccess, delay: 1000 })
     );
 
-    rerender({ data: { ...testData, content: 'updated' } });
+    await flushEffects();
 
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
+    expect(result.current.status).toBe("saved");
+    expect(result.current.lastSaved).toBeInstanceOf(Date);
+    expect(onSuccess).toHaveBeenCalledTimes(1);
 
-    await waitFor(() => {
-      expect(result.current.status).toBe('saved');
-      expect(result.current.lastSaved).toBeInstanceOf(Date);
-      expect(onSuccess).toHaveBeenCalled();
-    });
+    await advance(2000);
 
-    // 2秒后应该重置为 idle
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
-
-    await waitFor(() => {
-      expect(result.current.status).toBe('idle');
-    });
+    expect(result.current.status).toBe("idle");
   });
 
-  it('应该支持手动触发保存', async () => {
+  it("supports manual save", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
-    const testData = { id: '1', content: 'test' };
+    const testData = { id: "1", content: "test" };
 
     const { result } = renderHook(() =>
       useAutoSave(testData, { onSave, delay: 1000 })
     );
 
+    await flushEffects();
+    expect(onSave).toHaveBeenCalledTimes(1);
+
     await act(async () => {
       await result.current.triggerSave();
     });
 
-    expect(onSave).toHaveBeenCalledTimes(1);
-    expect(result.current.status).toBe('saved');
+    expect(onSave).toHaveBeenCalledTimes(2);
+    expect(result.current.status).toBe("saved");
   });
 
-  it('应该支持重置状态', async () => {
-    const onSave = vi.fn().mockRejectedValue(new Error('Save failed'));
-    const testData = { id: '1', content: 'test' };
+  it("supports reset after an error", async () => {
+    const error = new Error("Save failed");
+    const onSave = vi.fn().mockRejectedValue(error);
+    const testData = { id: "1", content: "test" };
 
-    const { result, rerender } = renderHook(
-      ({ data }) => useAutoSave(data, { onSave, delay: 1000 }),
-      { initialProps: { data: testData } }
+    const { result } = renderHook(() =>
+      useAutoSave(testData, { onSave, delay: 1000 })
     );
 
-    rerender({ data: { ...testData, content: 'updated' } });
-
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-
-    await waitFor(() => {
-      expect(result.current.status).toBe('error');
-    });
+    await flushEffects();
+    expect(result.current.status).toBe("error");
 
     act(() => {
       result.current.reset();
     });
 
-    expect(result.current.status).toBe('idle');
+    expect(result.current.status).toBe("idle");
     expect(result.current.error).toBeNull();
   });
 });

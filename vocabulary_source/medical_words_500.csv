@@ -1,0 +1,201 @@
+word,definition,phonetic,example
+osteoporosis,骨质疏松症,/ˌɒstiəʊpəˈrəʊsɪs/,Osteoporosis increases the risk of fractures in older adults.
+hypertension,高血压,/ˌhaɪpəˈtenʃən/,Uncontrolled hypertension can damage the heart and kidneys.
+hypotension,低血压,/ˌhaɪpəˈtenʃən/,Severe hypotension may cause dizziness and fainting.
+tachycardia,心动过速,/ˌtækɪˈkɑːrdiə/,The ECG showed tachycardia after the patient developed a fever.
+bradycardia,心动过缓,/ˌbrædɪˈkɑːrdiə/,Bradycardia can be normal in well-trained athletes.
+arrhythmia,心律失常,/əˈrɪðmiə/,The cardiologist monitored the arrhythmia overnight.
+myocardial infarction,心肌梗死,/ˌmaɪəˈkɑːrdiəl ɪnˈfɑːrkʃən/,Rapid treatment can limit damage after a myocardial infarction.
+angina,心绞痛,/ænˈdʒaɪnə/,Exercise triggered chest pain consistent with stable angina.
+atherosclerosis,动脉粥样硬化,/ˌæθərəʊskləˈrəʊsɪs/,Smoking accelerates atherosclerosis in peripheral arteries.
+thrombosis,血栓形成,/θrɒmˈbəʊsɪs/,Early mobilization reduces the risk of thrombosis after surgery.
+embolism,栓塞,/ˈembəlɪzəm/,A pulmonary embolism can cause sudden shortness of breath.
+aneurysm,动脉瘤,/ˈænjərɪzəm/,The scan revealed an abdominal aortic aneurysm.
+ischemia,缺血,/ɪˈskiːmiə/,Prolonged ischemia may lead to irreversible tissue injury.
+edema,水肿,/ɪˈdiːmə/,The nurse noted edema in both lower limbs.
+cyanosis,发绀,/ˌsaɪəˈnəʊsɪs/,Cyanosis indicated that the infant was not getting enough oxygen.
+dyspnea,呼吸困难,/dɪsˈpniːə/,The patient presented with dyspnea on exertion.
+apnea,呼吸暂停,/ˈæpniə/,Sleep apnea is associated with daytime fatigue.
+asthma,哮喘,/ˈæsmə/,Cold air can worsen asthma symptoms.
+bronchitis,支气管炎,/brɒŋˈkaɪtɪs/,Acute bronchitis often follows a viral infection.
+pneumonia,肺炎,/njuːˈməʊniə/,Chest imaging confirmed community-acquired pneumonia.
+tuberculosis,结核病,/tjuːˌbɜːkjəˈləʊsɪs/,Tuberculosis requires prolonged combination therapy.
+emphysema,肺气肿,/ˌemfɪˈsiːmə/,Long-term smoking is a major cause of emphysema.
+pleurisy,胸膜炎,/ˈplʊərɪsi/,Deep breathing worsened the pain from pleurisy.
+hemoptysis,咯血,/hɪˈmɒptɪsɪs/,Hemoptysis should always be investigated promptly.
+sepsis,脓毒症,/ˈsepsɪs/,Broad-spectrum antibiotics were started for suspected sepsis.
+bacteremia,菌血症,/ˌbæktəˈriːmiə/,Positive blood cultures confirmed bacteremia.
+viremia,病毒血症,/vaɪˈriːmiə/,Viremia can occur early in the course of infection.
+fungemia,真菌血症,/fʌnˈdʒiːmiə/,The immunocompromised patient developed fungemia.
+inflammation,炎症,/ˌɪnfləˈmeɪʃən/,Persistent inflammation may delay wound healing.
+infection,感染,/ɪnˈfekʃən/,Strict hand hygiene helps prevent infection.
+immunity,免疫力；免疫,/ɪˈmjuːnəti/,Vaccination strengthens immunity against certain diseases.
+antibody,抗体,/ˈæntɪbɒdi/,The laboratory detected antibodies to the virus.
+antigen,抗原,/ˈæntɪdʒən/,The vaccine exposes the immune system to a harmless antigen.
+pathogen,病原体,/ˈpæθədʒən/,The pathogen spread rapidly in crowded environments.
+epidemic,流行病,/ˌepɪˈdemɪk/,Public health officials acted quickly to contain the epidemic.
+pandemic,大流行病,/pænˈdemɪk/,The pandemic changed hospital triage procedures worldwide.
+endemic,地方性流行的,/enˈdemɪk/,Malaria is endemic in some tropical regions.
+diagnosis,诊断,/ˌdaɪəɡˈnəʊsɪs/,Early diagnosis improves the chance of recovery.
+prognosis,预后,/prɒɡˈnəʊsɪs/,The prognosis depends on the stage of the disease.
+symptom,症状,/ˈsɪmptəm/,Fever was the patient's first symptom.
+syndrome,综合征,/ˈsɪndrəʊm/,Metabolic syndrome increases cardiovascular risk.
+etiology,病因学；病因,/ˌiːtiˈɒlədʒi/,The etiology of the condition remains unclear.
+pathology,病理学；病理,/pəˈθɒlədʒi/,The biopsy was sent to pathology for analysis.
+histology,组织学,/hɪˈstɒlədʒi/,Histology showed chronic inflammatory changes.
+cytology,细胞学,/saɪˈtɒlədʒi/,Cytology can help detect abnormal cervical cells.
+biopsy,活组织检查,/ˈbaɪɒpsi/,A biopsy was performed to confirm the diagnosis.
+lesion,病变；损伤,/ˈliːʒən/,MRI detected a small lesion in the liver.
+malignancy,恶性肿瘤；恶性,/məˈlɪɡnənsi/,The surgeon ruled out malignancy after the operation.
+benign,良性的,/bɪˈnaɪn/,The nodule was benign and required no treatment.
+metastasis,转移,/məˈtæstəsɪs/,Bone pain may indicate metastasis in advanced cancer.
+oncology,肿瘤学,/ɒŋˈkɒlədʒi/,She began her rotation in oncology this month.
+carcinoma,癌；癌瘤,/ˌkɑːsɪˈnəʊmə/,The pathology report identified a basal cell carcinoma.
+sarcoma,肉瘤,/sɑːˈkəʊmə/,Sarcoma is a rare cancer of connective tissue.
+lymphoma,淋巴瘤,/lɪmˈfəʊmə/,Chemotherapy is commonly used to treat lymphoma.
+leukemia,白血病,/luːˈkiːmiə/,The child was diagnosed with acute leukemia.
+anemia,贫血,/əˈniːmiə/,Iron deficiency is a common cause of anemia.
+hemorrhage,出血；大出血,/ˈhemərɪdʒ/,Prompt intervention controlled the postoperative hemorrhage.
+hematoma,血肿,/ˌhiːməˈtəʊmə/,A hematoma developed near the incision site.
+coagulation,凝血,/kəʊˌæɡjuˈleɪʃən/,The lab measured coagulation before surgery.
+platelet,血小板,/ˈpleɪtlət/,A low platelet count increases bleeding risk.
+hemoglobin,血红蛋白,/ˈhiːməɡləʊbɪn/,Her hemoglobin level improved after treatment.
+hematocrit,红细胞比容,/hɪˈmætəkrɪt/,Dehydration can falsely elevate the hematocrit.
+neutropenia,中性粒细胞减少,/ˌnjuːtrəˈpiːniə/,Chemotherapy-induced neutropenia raises infection risk.
+leukocytosis,白细胞增多,/ˌluːkəʊsaɪˈtəʊsɪs/,Leukocytosis suggested an acute bacterial infection.
+hyperglycemia,高血糖,/ˌhaɪpəɡlaɪˈsiːmiə/,Insulin was given to correct hyperglycemia.
+hypoglycemia,低血糖,/ˌhaɪpəʊɡlaɪˈsiːmiə/,Sweating and confusion can signal hypoglycemia.
+diabetes mellitus,糖尿病,/ˌdaɪəˈbiːtiːz ˈmelɪtəs/,Poorly controlled diabetes mellitus damages small blood vessels.
+insulin,胰岛素,/ˈɪnsjʊlɪn/,The patient requires insulin before meals.
+glucagon,胰高血糖素,/ˈɡluːkəɡɒn/,Emergency glucagon can treat severe hypoglycemia.
+thyroid,甲状腺,/ˈθaɪrɔɪd/,The ultrasound showed an enlarged thyroid.
+hypothyroidism,甲状腺功能减退,/ˌhaɪpəʊˈθaɪrɔɪdɪzəm/,Fatigue and weight gain are common in hypothyroidism.
+hyperthyroidism,甲状腺功能亢进,/ˌhaɪpəˈθaɪrɔɪdɪzəm/,Hyperthyroidism may cause palpitations and tremor.
+goiter,甲状腺肿,/ˈɡɔɪtə(r)/,Iodine deficiency can lead to goiter.
+adrenal,肾上腺的,/əˈdriːnəl/,The adrenal gland produces several vital hormones.
+cortisol,皮质醇,/ˈkɔːtɪzɒl/,Stress can temporarily raise cortisol levels.
+pituitary,垂体,/pɪˈtjuːɪtəri/,The MRI revealed a pituitary adenoma.
+renal,肾脏的,/ˈriːnəl/,The physician monitored renal function closely.
+nephrology,肾脏病学,/nɪˈfrɒlədʒi/,She specializes in nephrology at the teaching hospital.
+nephritis,肾炎,/nɪˈfraɪtɪs/,Urinalysis suggested acute nephritis.
+nephropathy,肾病,/nɪˈfrɒpəθi/,Diabetic nephropathy is a major cause of renal failure.
+dialysis,透析,/daɪˈæləsɪs/,The patient started dialysis three times a week.
+proteinuria,蛋白尿,/prəʊˌtiːˈnjʊəriə/,Persistent proteinuria warrants further evaluation.
+hematuria,血尿,/ˌhiːməˈtjʊəriə/,Visible hematuria should never be ignored.
+urology,泌尿外科学,/jʊəˈrɒlədʒi/,He was referred to urology for recurrent stones.
+cystitis,膀胱炎,/sɪˈstaɪtɪs/,Cystitis commonly causes painful urination.
+pyelonephritis,肾盂肾炎,/ˌpaɪələʊnɪˈfraɪtɪs/,High fever and flank pain suggested pyelonephritis.
+gastroenterology,胃肠病学,/ˌɡæstrəʊˌentəˈrɒlədʒi/,He plans to pursue gastroenterology after residency.
+gastritis,胃炎,/ɡæˈstraɪtɪs/,Long-term NSAID use can worsen gastritis.
+hepatitis,肝炎,/ˌhepəˈtaɪtɪs/,Vaccination can prevent some forms of hepatitis.
+cirrhosis,肝硬化,/səˈrəʊsɪs/,Alcohol misuse is a common cause of cirrhosis.
+pancreatitis,胰腺炎,/ˌpæŋkriəˈtaɪtɪs/,Severe pancreatitis may require intensive care.
+colitis,结肠炎,/kəˈlaɪtɪs/,The patient was admitted with ulcerative colitis.
+appendicitis,阑尾炎,/əˌpendɪˈsaɪtɪs/,Right lower quadrant pain raised concern for appendicitis.
+hepatomegaly,肝肿大,/hɪˌpætəˈmeɡəli/,Physical examination suggested mild hepatomegaly.
+splenomegaly,脾肿大,/ˌspliːnəˈmeɡəli/,Mononucleosis may cause temporary splenomegaly.
+jaundice,黄疸,/ˈdʒɔːndɪs/,Newborn jaundice often resolves with proper monitoring.
+nausea,恶心,/ˈnɔːziə/,The medication caused nausea in some patients.
+vomiting,呕吐,/ˈvɒmɪtɪŋ/,Persistent vomiting can lead to dehydration.
+diarrhea,腹泻,/ˌdaɪəˈriːə/,Travelers are advised to prevent infectious diarrhea.
+constipation,便秘,/ˌkɒnstɪˈpeɪʃən/,Low fiber intake can contribute to constipation.
+ulcer,溃疡,/ˈʌlsə(r)/,Endoscopy confirmed a gastric ulcer.
+ulceration,溃疡形成,/ˌʌlsəˈreɪʃən/,Severe ulceration was noted in the colon.
+neurology,神经病学,/njʊəˈrɒlədʒi/,She completed an elective in neurology.
+neuropathy,神经病变,/njʊəˈrɒpəθi/,Peripheral neuropathy can cause numbness in the feet.
+neuron,神经元,/ˈnjʊərɒn/,Each neuron communicates through electrical signals.
+synapse,突触,/ˈsɪnæps/,Neurotransmitters cross the synapse to transmit signals.
+seizure,癫痫发作；惊厥,/ˈsiːʒə(r)/,The child had a seizure during the high fever.
+epilepsy,癫痫,/ˈepɪlepsi/,Epilepsy requires long-term follow-up in many cases.
+stroke,卒中；中风,/strəʊk/,Rapid treatment after a stroke can save brain tissue.
+hemiplegia,偏瘫,/ˌhemɪˈpliːdʒə/,The patient developed left-sided hemiplegia after the stroke.
+paralysis,瘫痪,/pəˈræləsɪs/,Spinal cord injury may result in paralysis.
+meningitis,脑膜炎,/ˌmenɪnˈdʒaɪtɪs/,Suspected meningitis requires urgent antibiotics.
+encephalitis,脑炎,/enˌsefəˈlaɪtɪs/,The virus can occasionally cause encephalitis.
+dementia,痴呆,/dɪˈmenʃə/,"Dementia affects memory, behavior, and daily function."
+delirium,谵妄,/dɪˈlɪriəm/,The elderly patient developed delirium after surgery.
+psychiatry,精神病学,/saɪˈkaɪətri/,He chose psychiatry because he values long-term patient care.
+depression,抑郁症；抑郁,/dɪˈpreʃən/,"Depression can affect sleep, appetite, and concentration."
+anxiety,焦虑,/æŋˈzaɪəti/,Breathing exercises may reduce anxiety before procedures.
+schizophrenia,精神分裂症,/ˌskɪtsəˈfriːniə/,Schizophrenia usually requires comprehensive treatment.
+insomnia,失眠,/ɪnˈsɒmniə/,Chronic insomnia can impair daytime performance.
+analgesia,镇痛,/ˌænəlˈdʒiːziə/,The epidural provided effective analgesia during labor.
+anesthesia,麻醉,/ˌænəsˈθiːziə/,General anesthesia was necessary for the operation.
+sedation,镇静,/sɪˈdeɪʃən/,Sedation made the endoscopy more comfortable.
+intubation,插管,/ˌɪntjuˈbeɪʃən/,Emergency intubation secured the patient's airway.
+ventilation,通气,/ˌventɪˈleɪʃən/,Mechanical ventilation supported the patient overnight.
+resuscitation,复苏,/rɪˌsʌsɪˈteɪʃən/,Immediate resuscitation restored spontaneous circulation.
+defibrillation,除颤,/diːˌfɪbrɪˈleɪʃən/,Early defibrillation improves survival in cardiac arrest.
+catheter,导管,/ˈkæθɪtə(r)/,A urinary catheter was inserted after surgery.
+suture,缝线；缝合,/ˈsuːtʃə(r)/,The wound required three sutures.
+incision,切口,/ɪnˈsɪʒən/,The surgeon examined the incision for signs of infection.
+excision,切除,/ɪkˈsɪʒən/,Complete excision of the lesion was achieved.
+transplant,移植,/trænsˈplɑːnt/,The patient is waiting for a kidney transplant.
+graft,移植物；移植片,/ɡrɑːft/,The burn was covered with a skin graft.
+amputation,截肢,/ˌæmpjʊˈteɪʃən/,Severe trauma sometimes necessitates amputation.
+fracture,骨折,/ˈfræktʃə(r)/,The X-ray showed a displaced fracture of the radius.
+dislocation,脱位,/ˌdɪsləˈkeɪʃən/,The shoulder dislocation was reduced in the emergency room.
+sprain,扭伤,/spreɪn/,An ankle sprain usually improves with rest and ice.
+arthritis,关节炎,/ɑːˈθraɪtɪs/,Rheumatoid arthritis can affect small joints symmetrically.
+osteoarthritis,骨关节炎,/ˌɒstiəʊɑːˈθraɪtɪs/,Osteoarthritis often causes knee pain in older adults.
+rheumatology,风湿病学,/ˌruːməˈtɒlədʒi/,She consulted rheumatology for persistent joint swelling.
+scoliosis,脊柱侧弯,/ˌskɒliˈəʊsɪs/,The screening program detected mild scoliosis.
+osteomyelitis,骨髓炎,/ˌɒstiəʊmaɪəˈlaɪtɪs/,Diabetic foot ulcers may progress to osteomyelitis.
+dermatology,皮肤病学,/ˌdɜːməˈtɒlədʒi/,She hopes to match into dermatology next year.
+eczema,湿疹,/ˈeksɪmə/,Moisturizers help control eczema flare-ups.
+psoriasis,银屑病,/səˈraɪəsɪs/,Psoriasis may also affect the nails.
+melanoma,黑色素瘤,/ˌmeləˈnəʊmə/,Early melanoma can often be cured surgically.
+cellulitis,蜂窝织炎,/ˌseljʊˈlaɪtɪs/,Redness and warmth suggested cellulitis.
+ultrasound,超声检查,/ˈʌltrəsaʊnd/,Ultrasound confirmed the presence of gallstones.
+radiology,放射学,/ˌreɪdiˈɒlədʒi/,The images were reviewed by radiology.
+computed tomography,计算机断层扫描,/kəmˈpjuːtɪd təˈmɒɡrəfi/,Computed tomography revealed a small intracranial bleed.
+magnetic resonance imaging,磁共振成像,/mæɡˌnetɪk ˈrezənəns ˈɪmɪdʒɪŋ/,Magnetic resonance imaging provided detailed soft-tissue images.
+electrocardiogram,心电图,/ɪˌlektrəʊˈkɑːdiəɡræm/,The electrocardiogram showed ST-segment elevation.
+electroencephalogram,脑电图,/ɪˌlektrəʊɪnˈsefələɡræm/,The electroencephalogram helped classify the seizures.
+echocardiography,超声心动图,/ˌekəʊkɑːdiˈɒɡrəfi/,Echocardiography demonstrated reduced ejection fraction.
+endoscopy,内镜检查,/enˈdɒskəpi/,Endoscopy identified the source of bleeding.
+laparoscopy,腹腔镜检查；腹腔镜手术,/ˌlæpəˈrɒskəpi/,Laparoscopy shortened the patient's recovery time.
+screening,筛查,/ˈskriːnɪŋ/,Breast cancer screening improves early detection.
+vaccination,疫苗接种,/ˌvæksɪˈneɪʃən/,Vaccination protects both individuals and communities.
+immunization,免疫接种,/ˌɪmjʊnaɪˈzeɪʃən/,The clinic offers routine childhood immunization.
+rehabilitation,康复,/ˌriːhəˌbɪlɪˈteɪʃən/,Early rehabilitation improved the patient's mobility.
+physiotherapy,物理治疗,/ˌfɪziəʊˈθerəpi/,Physiotherapy helped restore shoulder function.
+occupational therapy,作业治疗,/ˌɒkjʊˈpeɪʃənəl ˈθerəpi/,Occupational therapy focused on daily living skills.
+pediatrics,儿科学,/ˌpiːdiˈætrɪks/,She completed a pediatrics rotation this spring.
+geriatrics,老年医学,/ˌdʒeriˈætrɪks/,Geriatrics emphasizes function and quality of life.
+obstetrics,产科学,/əbˈstetrɪks/,He is interested in obstetrics and maternal care.
+gynecology,妇科学,/ˌɡaɪnəˈkɒlədʒi/,Gynecology clinics provide routine cervical screening.
+fertility,生育力,/fəˈtɪləti/,The couple sought specialist advice about fertility.
+pregnancy,妊娠,/ˈpreɡnənsi/,Good nutrition is vital during pregnancy.
+prenatal,产前的,/priːˈneɪtəl/,Prenatal care reduces complications for mother and baby.
+postpartum,产后的,/ˌpəʊstˈpɑːtəm/,The nurse monitored the mother during the postpartum period.
+cesarean,剖宫产的,/sɪˈzeəriən/,A cesarean delivery was performed because of fetal distress.
+neonate,新生儿,/ˈniːəneɪt/,The neonate was transferred to intensive care.
+prematurity,早产；未成熟,/ˌpriːməˈtjʊərəti/,Prematurity can affect lung development.
+palliative,姑息治疗的,/ˈpæliətɪv/,Palliative care aims to relieve suffering.
+hospice,临终关怀,/ˈhɒspɪs/,The family chose hospice for comfort-focused care.
+morbidity,发病率；病态,/mɔːˈbɪdəti/,The program reduced postoperative morbidity.
+mortality,死亡率,/mɔːˈtæləti/,Vaccines have lowered infant mortality in many regions.
+prevalence,患病率；流行率,/ˈprevələns/,The prevalence of obesity continues to rise.
+incidence,发病率,/ˈɪnsɪdəns/,Researchers tracked the annual incidence of the disease.
+epidemiology,流行病学,/ˌepɪdiːmiˈɒlədʒi/,Epidemiology helps explain patterns of disease in populations.
+comorbidity,合并症,/ˌkəʊmɔːˈbɪdəti/,Diabetes is a common comorbidity in these patients.
+contraindication,禁忌证,/ˌkɒntrəˌɪndɪˈkeɪʃən/,Severe allergy is a contraindication to this drug.
+adverse effect,不良反应,/ˌædvɜːs ɪˈfekt/,Nausea is a common adverse effect of the medication.
+dosage,剂量,/ˈdəʊsɪdʒ/,The dosage was adjusted for renal impairment.
+prescription,处方,/prɪˈskrɪpʃən/,The pharmacist verified the prescription before dispensing.
+antibiotic,抗生素,/ˌæntibaɪˈɒtɪk/,The doctor prescribed an antibiotic for the infection.
+antiviral,抗病毒药,/ˌæntiˈvaɪrəl/,The antiviral is most effective when given early.
+antifungal,抗真菌药,/ˌæntiˈfʌŋɡəl/,An antifungal cream was applied to the rash.
+analgesic,止痛药；镇痛剂,/ˌænəlˈdʒiːzɪk/,The analgesic reduced the patient's postoperative pain.
+anticoagulant,抗凝剂,/ˌæntikəʊˈæɡjʊlənt/,An anticoagulant was started to prevent clot formation.
+antipyretic,退热药,/ˌæntipaɪˈretɪk/,Paracetamol acts as an antipyretic in children.
+placebo,安慰剂,/pləˈsiːbəʊ/,The placebo group was included in the clinical trial.
+prophylaxis,预防；预防治疗,/ˌprɒfɪˈlæksɪs/,Antibiotic prophylaxis was given before the procedure.
+asepsis,无菌状态；无菌操作,/eɪˈsepsɪs/,Strict asepsis is essential in the operating room.
+sterilization,灭菌,/ˌsterəlaɪˈzeɪʃən/,Proper sterilization prevents surgical site infection.
+auscultation,听诊,/ˌɔːskəlˈteɪʃən/,Auscultation revealed crackles at the lung bases.
+palpation,触诊,/pælˈpeɪʃən/,Palpation identified tenderness in the abdomen.
+percussion,叩诊,/pəˈkʌʃən/,Percussion suggested fluid in the pleural space.
+dehydration,脱水,/ˌdiːhaɪˈdreɪʃən/,Severe diarrhea can quickly lead to dehydration.
+electrolyte,电解质,/ɪˈlektrəlaɪt/,The blood test showed low electrolyte levels.

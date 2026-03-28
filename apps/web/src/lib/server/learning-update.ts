@@ -23,6 +23,40 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function stageToMastery(stage: "seen" | "understood" | "applied" | "mastered"): number {
+  switch (stage) {
+    case "seen":
+      return 0.12;
+    case "understood":
+      return 0.37;
+    case "applied":
+      return 0.65;
+    case "mastered":
+      return 0.9;
+  }
+}
+
+export async function setMasteryStage(
+  nodeId: string,
+  stage: "seen" | "understood" | "applied" | "mastered"
+): Promise<void> {
+  const db = await loadDb();
+  db.masteryByNode[nodeId] = stageToMastery(stage);
+  await saveDb(db);
+}
+
+export async function setNeedsReview(nodeId: string, value: boolean): Promise<void> {
+  const db = await loadDb();
+  if (value) {
+    if (!db.needsReviewNodes.includes(nodeId)) {
+      db.needsReviewNodes.push(nodeId);
+    }
+  } else {
+    db.needsReviewNodes = db.needsReviewNodes.filter((id) => id !== nodeId);
+  }
+  await saveDb(db);
+}
+
 export async function applyPathFocusFeedback(input: {
   nodeId: string;
   nodeLabel?: string;

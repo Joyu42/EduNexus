@@ -10,8 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   BookOpen,
   Network,
-  Route,
-  BarChart3,
   Database,
   Settings,
   ArrowRight,
@@ -21,6 +19,7 @@ import {
   Zap,
   TrendingUp
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 const coreEntries = [
   {
@@ -36,24 +35,10 @@ const coreEntries = [
     description: "定位高风险关系链，并把批次直接推送到学习执行面。",
     tag: "风险链路联动",
     icon: Network
-  },
-  {
-    href: "/path",
-    title: "🎮 成长地图",
-    description: "基于图谱焦点生成可执行任务序列，并持续回写掌握度。",
-    tag: "目标到执行闭环",
-    icon: Route
   }
 ];
 
 const supportEntries = [
-  {
-    href: "/dashboard",
-    title: "生态看板",
-    description: "统一追踪学习增益、提示依赖和风险干预结果。",
-    tag: "趋势与干预",
-    icon: BarChart3
-  },
   {
     href: "/kb",
     title: "📚 知识宝库",
@@ -94,6 +79,9 @@ const itemVariants = {
 };
 
 export default function HomePage() {
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   return (
     <motion.section
       className="page-container space-y-12"
@@ -108,19 +96,38 @@ export default function HomePage() {
           tags={["纯 Web", "LangGraph", "ModelScope", "本地优先知识库"]}
           actions={
             <>
-              <Link href="/workspace">
-                <Button size="lg" className="btn-primary group">
-                  <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" />
-                  开始学习
-                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-              <Link href="/graph">
-                <Button size="lg" variant="outline" className="group">
-                  <Network className="mr-2 h-4 w-4" />
-                  查看知识星图
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/workspace">
+                    <Button size="lg" className="btn-primary group">
+                      <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" />
+                      开始学习
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                  <Link href="/graph">
+                    <Button size="lg" variant="outline" className="group">
+                      <Network className="mr-2 h-4 w-4" />
+                      查看知识星图
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button size="lg" className="btn-primary group">
+                      <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" />
+                      登录账号
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button size="lg" variant="outline" className="group">
+                      <Network className="mr-2 h-4 w-4" />
+                      创建账户
+                    </Button>
+                  </Link>
+                </>
+              )}
             </>
           }
         />
@@ -130,26 +137,20 @@ export default function HomePage() {
         <GalaxyHero
           badge="学习生态主入口"
           title="从「会做题」升级为「会学习、会迁移、会复盘」"
-          description="工作区负责引导，星图负责定位，地图负责执行，宝库负责沉淀。每次学习都会进入可检索、可回放、可复用的长期资产。"
+          description="工作区负责引导，星图负责定位与执行，宝库负责沉淀。每次学习都会进入可检索、可回放、可复用的长期资产。"
           quote="同一套界面里完成「问题理解 -> 结构化思考 -> 证据沉淀 -> 路径回写」，避免碎片化跳转。"
-          chips={["LangGraph 工作流", "ModelScope 模型接入", "本地优先沉淀", "Web 全链路"]}
-          metrics={[
-            { label: "核心工作台", value: "3", hint: "工作区 / 星图 / 地图" },
-            { label: "生态模块", value: "8", hint: "覆盖学习与教学协同" },
-            { label: "上线形态", value: "Web", hint: "可直接部署到 Vercel" }
-          ]}
+            chips={["LangGraph 工作流", "ModelScope 模型接入", "本地优先沉淀", "Web 全链路"]}
+            metrics={[
+              { label: "核心工作台", value: "2", hint: "工作区 / 星图" },
+              { label: "生态模块", value: "2", hint: "知识库 / 配置中心" },
+              { label: "上线形态", value: "Web", hint: "可直接部署到 Vercel" }
+            ]}
           actions={
             <>
               <Link href="/workspace">
                 <Button size="lg" className="btn-primary group">
                   <Zap className="mr-2 h-4 w-4 group-hover:animate-pulse" />
                   进入学习工作区
-                </Button>
-              </Link>
-              <Link href="/path">
-                <Button size="lg" variant="outline" className="group">
-                  <Route className="mr-2 h-4 w-4" />
-                  查看成长地图
                 </Button>
               </Link>
             </>
@@ -191,10 +192,10 @@ export default function HomePage() {
         </div>
 
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
           variants={containerVariants}
         >
-          {coreEntries.map((item, index) => {
+          {coreEntries.map((item) => {
             const Icon = item.icon;
             return (
               <motion.div key={item.href} variants={itemVariants}>
@@ -237,7 +238,7 @@ export default function HomePage() {
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-secondary/50">
-              <BarChart3 className="h-5 w-5 text-secondary-foreground" />
+              <Database className="h-5 w-5 text-secondary-foreground" />
             </div>
             <div>
               <h2 className="text-2xl font-bold">生态支撑模块</h2>
@@ -250,7 +251,7 @@ export default function HomePage() {
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
           variants={containerVariants}
         >
-          {supportEntries.map((item, index) => {
+          {supportEntries.map((item) => {
             const Icon = item.icon;
             return (
               <motion.div key={item.href} variants={itemVariants}>

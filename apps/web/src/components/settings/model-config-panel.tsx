@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, Save, Sparkles, RefreshCw, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { getModelConfig, saveModelConfig } from "@/lib/client/model-config";
 
 interface ModelConfigPanelProps {
   temperature: number;
@@ -74,24 +75,46 @@ export function ModelConfigPanel({
   useEffect(() => {
     loadModels();
 
-    // 从 localStorage 加载保存的配置
-    const savedConfig = localStorage.getItem("edunexus_model_config");
-    if (savedConfig) {
+    const localConfig = getModelConfig();
+    if (localConfig.model) setSelectedModel(localConfig.model);
+    if (localConfig.apiEndpoint) setApiEndpoint(localConfig.apiEndpoint);
+    onApiKeyChange(localConfig.apiKey);
+    if (localConfig.temperature !== undefined) onTemperatureChange(localConfig.temperature);
+    if (localConfig.topP !== undefined) onTopPChange(localConfig.topP);
+    if (localConfig.maxTokens !== undefined) onMaxTokensChange(localConfig.maxTokens);
+
+    const loadServerConfig = async () => {
       try {
-        const config = JSON.parse(savedConfig);
-        if (config.model) setSelectedModel(config.model);
-        if (config.apiEndpoint) setApiEndpoint(config.apiEndpoint);
-        if (config.apiKey) onApiKeyChange(config.apiKey);
-        if (config.temperature !== undefined) onTemperatureChange(config.temperature);
-        if (config.topP !== undefined) onTopPChange(config.topP);
-        if (config.maxTokens !== undefined) onMaxTokensChange(config.maxTokens);
-      } catch (e) {
-        console.error("Failed to load saved config:", e);
+        const response = await fetch("/api/config/save", { cache: "no-store" });
+        const data = await response.json();
+        const serverConfig = data?.data;
+        if (!response.ok || !serverConfig) {
+          return;
+        }
+
+        const merged = {
+          ...localConfig,
+          model: typeof serverConfig.model === "string" && serverConfig.model ? serverConfig.model : localConfig.model,
+          apiEndpoint:
+            typeof serverConfig.apiEndpoint === "string" && serverConfig.apiEndpoint
+              ? serverConfig.apiEndpoint
+              : localConfig.apiEndpoint,
+          apiKey: typeof serverConfig.apiKey === "string" ? serverConfig.apiKey : localConfig.apiKey,
+        };
+
+        saveModelConfig(merged);
+        setSelectedModel(merged.model);
+        setApiEndpoint(merged.apiEndpoint);
+        onApiKeyChange(merged.apiKey);
+      } catch {
+        return;
       }
-    }
+    };
+
+    void loadServerConfig();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const config = {
       model: selectedModel,
       apiEndpoint,
@@ -100,10 +123,9 @@ export function ModelConfigPanel({
       topP,
       maxTokens
     };
-    localStorage.setItem("edunexus_model_config", JSON.stringify(config));
+    saveModelConfig(config);
 
-    // 同时保存到环境变量（通过 API）
-    fetch("/api/config/save", {
+    const response = await fetch("/api/config/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -111,9 +133,15 @@ export function ModelConfigPanel({
         MODELSCOPE_BASE_URL: apiEndpoint,
         MODELSCOPE_CHAT_MODEL: selectedModel,
       }),
-    }).catch(console.error);
+    });
 
-    alert("模型配置已保存");
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      alert(data?.error?.message || data?.error || "模型配置保存失败");
+      return;
+    }
+
+    alert("模型配置已保存到服务器");
   };
 
   return (

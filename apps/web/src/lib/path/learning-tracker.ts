@@ -2,6 +2,7 @@
  * 学习记录追踪服务 - 记录和分析学习活动
  */
 
+import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
 import type { LearningRecord } from '../path/skill-tree-types';
 
 // IndexedDB 配置
@@ -10,6 +11,11 @@ const DB_VERSION = 1;
 const STORE_EVENTS = 'events';
 const STORE_STATS = 'stats';
 const STORE_SESSIONS = 'sessions';
+
+// 获取当前用户ID（用于数据隔离）
+function getCurrentUserId(): string {
+  return getClientUserIdentity() || 'anonymous';
+}
 
 /**
  * 学习事件类型
@@ -179,9 +185,10 @@ export class LearningTracker {
    */
   private async startNewSession(): Promise<void> {
     const sessionId = `session_${Date.now()}`;
+    const userId = getCurrentUserId();
     this.currentSession = {
       id: sessionId,
-      userId: 'default', // TODO: 从用户上下文获取
+      userId,
       startTime: new Date(),
       activities: [],
     };

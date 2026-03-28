@@ -1,0 +1,220 @@
+{
+  "sessions": [
+    {
+      "id": "ws_demo_frontend_foundations",
+      "title": "前端基础打底：从 HTML 到 Grid",
+      "userId": "demo_user",
+      "createdAt": "2026-03-18T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z",
+      "lastLevel": 1,
+      "messages": []
+    }
+  ],
+  "plans": [
+    {
+      "planId": "demo_goal_1",
+      "goalType": "project",
+      "goal": "精通前端基础布局",
+      "tasks": [],
+      "createdAt": "2026-03-01T00:00:00.000Z",
+      "updatedAt": "2026-03-31T00:00:00.000Z"
+    },
+    {
+      "planId": "demo_graph_node::demo_node_html_basics",
+      "goalType": "project",
+      "goal": "HTML 基础",
+      "focusNodeId": "demo_node_html_basics",
+      "focusNodeLabel": "kb_doc_html",
+      "focusNodeRisk": 0.1,
+      "tasks": [],
+      "createdAt": "2026-03-18T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "syncedPaths": [
+    {
+      "userId": "demo_user",
+      "pathId": "demo_path_frontend_foundations",
+      "title": "前端基础打底",
+      "description": "demo",
+      "status": "in_progress",
+      "progress": 40,
+      "tags": ["演示", "前端"],
+      "tasks": [],
+      "updatedAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "masteryByNode": {
+    "demo_node_html_basics": 0.92
+  },
+  "needsReviewNodes": ["demo_node_html_basics"],
+  "publicPosts": [
+    {
+      "id": "demo_post_react_plan",
+      "title": "React 路径怎么安排更稳？",
+      "content": "demo",
+      "authorId": "demo_user",
+      "authorName": "Demo Learner",
+      "createdAt": "2026-03-18T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "publicTopics": [
+    { "id": "demo_topic_react", "name": "React", "createdAt": "2026-03-18T00:00:00.000Z" }
+  ],
+  "publicGroups": [
+    {
+      "id": "1774468684818",
+      "name": "QA Group 1774468684818",
+      "description": "polluted",
+      "memberCount": 1,
+      "createdBy": "seed",
+      "createdAt": "2026-03-18T00:00:00.000Z"
+    },
+    {
+      "id": "demo_group_frontend",
+      "name": "前端冲刺小组",
+      "description": "demo",
+      "memberCount": 18,
+      "createdBy": "demo_user",
+      "createdAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "publicResources": [
+    {
+      "id": "demo_public_res_react_docs",
+      "title": "React 官方文档",
+      "description": "demo",
+      "url": "https://react.dev/",
+      "createdBy": "demo_user",
+      "createdAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "resourceBookmarks": [
+    {
+      "id": "demo_res_bookmark_1",
+      "userId": "demo_user",
+      "resourceId": "demo_public_res_react_docs",
+      "createdAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "resourceFolders": [],
+  "resourceNotes": [
+    {
+      "id": "demo_res_note_1",
+      "userId": "demo_user",
+      "resourceId": "demo_public_res_react_docs",
+      "content": "demo",
+      "createdAt": "2026-03-18T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "resourceRatings": [
+    {
+      "id": "demo_res_rating_1",
+      "userId": "demo_user",
+      "resourceId": "demo_public_res_react_docs",
+      "rating": 5,
+      "createdAt": "2026-03-18T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "groupMembers": [
+    {
+      "id": "demo_group_member_frontend_owner",
+      "groupId": "demo_group_frontend",
+      "userId": "demo_user",
+      "role": "owner",
+      "status": "active",
+      "joinedAt": "2026-03-18T00:00:00.000Z"
+    },
+    {
+      "id": "qa_member_1",
+      "groupId": "1774468684818",
+      "userId": "qa_user",
+      "role": "owner",
+      "status": "active",
+      "joinedAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "groupPosts": [
+    {
+      "id": "demo_group_post_1",
+      "groupId": "demo_group_frontend",
+      "authorId": "demo_user",
+      "title": "demo",
+      "content": "demo",
+      "createdAt": "2026-03-18T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z"
+    },
+    {
+      "id": "qa_post_1",
+      "groupId": "1774468684818",
+      "authorId": "qa_user",
+      "title": "qa",
+      "content": "qa",
+      "createdAt": "2026-03-18T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "groupTasks": [
+    {
+      "id": "demo_group_task_frontend_1",
+      "groupId": "demo_group_frontend",
+      "title": "demo",
+      "description": "demo",
+      "status": "todo",
+      "assigneeId": null,
+      "dueDate": null,
+      "createdAt": "2026-03-18T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z"
+    },
+    {
+      "id": "qa_task_1",
+      "groupId": "1774468684818",
+      "title": "qa",
+      "description": "qa",
+      "status": "todo",
+      "assigneeId": null,
+      "dueDate": null,
+      "createdAt": "2026-03-18T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "groupSharedResources": [
+    {
+      "id": "qa_shared_1",
+      "groupId": "1774468684818",
+      "resourceId": "demo_public_res_react_docs",
+      "sharedBy": "qa_user",
+      "note": "qa",
+      "createdAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "communityComments": [
+    {
+      "id": "demo_post_comment_1",
+      "postId": "demo_post_react_plan",
+      "authorId": "demo_user",
+      "content": "demo",
+      "parentCommentId": null,
+      "createdAt": "2026-03-18T00:00:00.000Z",
+      "updatedAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "communityReactions": [
+    {
+      "id": "demo_post_reaction_1",
+      "targetType": "post",
+      "targetId": "demo_post_react_plan",
+      "actorId": "demo_user",
+      "reactionType": "like",
+      "createdAt": "2026-03-18T00:00:00.000Z"
+    }
+  ],
+  "communityFollows": [],
+  "communityTopics": [],
+  "analyticsEvents": [],
+  "analyticsSnapshots": [],
+  "learningPacks": []
+}

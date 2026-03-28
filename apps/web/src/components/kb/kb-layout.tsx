@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PanelLeftClose, PanelRightClose } from "lucide-react";
+import { PanelLeftClose, PanelRightClose, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KBSidebar } from "./kb-sidebar";
 import { KBEditor } from "./kb-editor";
 import { KBRightPanel } from "./kb-right-panel";
 import { useKBShortcuts } from "@/lib/hooks/use-kb-shortcuts";
-import { useRouter } from "next/navigation";
 import type { KBDocument, KBVault } from "@/lib/client/kb-storage";
 
 interface KBLayoutProps {
@@ -20,6 +19,7 @@ interface KBLayoutProps {
   onCreateDocument: (title: string) => Promise<void>;
   onUpdateDocument: (doc: KBDocument) => Promise<void>;
   onDeleteDocument: (docId: string) => Promise<void>;
+  onDeleteDocuments: (docIds: string[]) => Promise<void>;
   onSelectDocument: (doc: KBDocument) => void;
 }
 
@@ -32,11 +32,30 @@ export function KBLayout({
   onCreateDocument,
   onUpdateDocument,
   onDeleteDocument,
+  onDeleteDocuments,
   onSelectDocument,
 }: KBLayoutProps) {
-  const router = useRouter();
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteCurrentDocument = async () => {
+    if (!currentDoc || isDeleting) {
+      return;
+    }
+
+    const confirmed = window.confirm(`确定删除文档「${currentDoc.title}」吗？此操作不可撤销。`);
+    if (!confirmed) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await onDeleteDocument(currentDoc.id);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // 快捷键支持
   useKBShortcuts([
@@ -72,6 +91,7 @@ export function KBLayout({
               onVaultChange={onVaultChange}
               onCreateDocument={onCreateDocument}
               onDeleteDocument={onDeleteDocument}
+              onDeleteDocuments={onDeleteDocuments}
               onSelectDocument={onSelectDocument}
             />
           </motion.div>
@@ -113,6 +133,18 @@ export function KBLayout({
           </div>
 
           <div className="flex items-center gap-2">
+            {currentDoc && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDeleteCurrentDocument}
+                disabled={isDeleting}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                删除文档
+              </Button>
+            )}
             {rightPanelOpen && (
               <Button
                 variant="ghost"

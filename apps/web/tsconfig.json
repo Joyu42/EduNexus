@@ -12,13 +12,16 @@
         "./src/*"
       ]
     },
-    "incremental": true
+    "incremental": true,
+    "ignoreDeprecations": "5.0"
   },
   "include": [
     "next-env.d.ts",
+    "**/*.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "auth.ts"
   ],
   "exclude": [
     "node_modules"

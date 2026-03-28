@@ -1,0 +1,2504 @@
+{
+  "words": [
+    {
+      "word": "artery_0",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_1",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_2",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_3",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_4",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_5",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_6",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_7",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_8",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_9",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_10",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_11",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_12",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_13",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_14",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_15",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_16",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_17",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_18",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_19",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_20",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_21",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_22",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_23",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_24",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_25",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_26",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_27",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_28",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_29",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_30",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_31",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_32",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_33",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_34",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_35",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_36",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_37",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_38",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_39",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_40",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_41",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_42",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_43",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_44",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_45",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_46",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_47",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_48",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_49",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_50",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_51",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_52",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_53",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_54",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_55",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_56",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_57",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_58",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_59",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_60",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_61",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_62",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_63",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_64",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_65",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_66",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_67",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_68",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_69",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_70",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_71",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_72",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_73",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_74",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_75",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_76",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_77",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_78",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_79",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_80",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_81",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_82",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_83",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_84",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_85",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_86",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_87",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_88",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_89",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_90",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_91",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_92",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_93",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_94",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_95",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_96",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_97",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_98",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_99",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_100",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_101",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_102",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_103",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_104",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_105",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_106",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_107",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_108",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_109",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_110",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_111",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_112",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_113",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_114",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_115",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_116",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_117",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_118",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_119",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_120",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_121",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_122",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_123",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_124",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_125",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_126",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_127",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_128",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_129",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_130",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_131",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_132",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_133",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_134",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_135",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_136",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_137",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_138",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_139",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_140",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_141",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_142",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_143",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_144",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_145",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_146",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_147",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_148",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_149",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_150",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_151",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_152",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_153",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_154",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_155",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_156",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_157",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_158",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_159",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_160",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_161",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_162",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_163",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_164",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_165",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_166",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_167",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_168",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_169",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_170",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_171",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_172",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_173",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_174",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_175",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_176",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_177",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_178",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_179",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_180",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_181",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_182",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_183",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_184",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_185",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_186",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_187",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_188",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_189",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_190",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_191",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_192",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_193",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_194",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_195",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_196",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_197",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_198",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_199",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_200",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_201",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_202",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_203",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_204",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_205",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_206",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_207",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_208",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_209",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_210",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_211",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_212",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_213",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_214",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_215",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_216",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_217",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_218",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_219",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_220",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_221",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_222",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_223",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_224",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_225",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_226",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_227",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_228",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_229",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_230",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_231",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_232",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_233",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_234",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_235",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_236",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_237",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_238",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_239",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_240",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_241",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_242",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_243",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_244",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_245",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_246",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_247",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_248",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_249",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_250",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_251",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_252",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_253",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_254",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_255",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_256",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_257",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_258",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_259",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_260",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_261",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_262",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_263",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_264",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_265",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_266",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_267",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_268",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_269",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_270",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_271",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_272",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_273",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_274",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_275",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_276",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_277",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_278",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_279",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_280",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_281",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_282",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_283",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_284",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_285",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_286",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_287",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_288",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_289",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_290",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_291",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_292",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_293",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_294",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_295",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_296",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_297",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_298",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_299",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_300",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_301",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_302",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_303",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_304",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_305",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_306",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_307",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_308",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_309",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_310",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_311",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_312",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_313",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_314",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_315",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_316",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_317",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_318",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_319",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_320",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_321",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_322",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_323",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_324",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_325",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_326",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_327",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_328",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_329",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_330",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_331",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_332",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_333",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_334",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_335",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_336",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_337",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_338",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_339",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_340",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_341",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_342",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_343",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_344",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_345",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_346",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_347",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_348",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_349",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_350",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_351",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_352",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_353",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_354",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_355",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_356",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_357",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_358",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_359",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_360",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_361",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_362",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_363",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_364",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_365",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_366",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_367",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_368",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_369",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_370",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_371",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_372",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_373",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_374",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_375",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_376",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_377",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_378",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_379",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_380",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_381",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_382",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_383",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_384",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_385",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_386",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_387",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_388",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_389",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_390",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_391",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_392",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_393",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_394",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_395",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_396",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_397",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_398",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_399",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_400",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_401",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_402",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_403",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_404",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_405",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_406",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_407",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_408",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_409",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_410",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_411",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_412",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_413",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_414",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_415",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_416",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_417",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_418",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_419",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_420",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_421",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_422",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_423",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_424",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_425",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_426",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_427",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_428",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_429",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_430",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_431",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_432",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_433",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_434",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_435",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_436",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_437",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_438",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_439",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_440",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_441",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_442",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_443",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_444",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_445",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_446",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_447",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_448",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_449",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_450",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_451",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_452",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_453",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_454",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_455",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_456",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_457",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_458",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_459",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    },
+    {
+      "word": "therapy_460",
+      "definition": "治疗",
+      "phonetic": "/ˈθerəpi/"
+    },
+    {
+      "word": "symptom_461",
+      "definition": "症状",
+      "phonetic": "/ˈsɪmptəm/"
+    },
+    {
+      "word": "disease_462",
+      "definition": "疾病",
+      "phonetic": "/dɪˈziːz/"
+    },
+    {
+      "word": "infection_463",
+      "definition": "感染",
+      "phonetic": "/ɪnˈfekʃən/"
+    },
+    {
+      "word": "virus_464",
+      "definition": "病毒",
+      "phonetic": "/ˈvaɪrəs/"
+    },
+    {
+      "word": "bacteria_465",
+      "definition": "细菌",
+      "phonetic": "/bækˈtɪəriə/"
+    },
+    {
+      "word": "fungus_466",
+      "definition": "真菌",
+      "phonetic": "/ˈfʌŋɡəs/"
+    },
+    {
+      "word": "parasite_467",
+      "definition": "寄生虫",
+      "phonetic": "/ˈpærəsaɪt/"
+    },
+    {
+      "word": "antibody_468",
+      "definition": "抗体",
+      "phonetic": "/ˈæntɪbɒdi/"
+    },
+    {
+      "word": "antigen_469",
+      "definition": "抗原",
+      "phonetic": "/ˈæntɪdʒən/"
+    },
+    {
+      "word": "inflammation_470",
+      "definition": "炎症",
+      "phonetic": "/ˌɪnfləˈmeɪʃən/"
+    },
+    {
+      "word": "fever_471",
+      "definition": "发烧",
+      "phonetic": "/ˈfiːvər/"
+    },
+    {
+      "word": "pain_472",
+      "definition": "疼痛",
+      "phonetic": "/peɪn/"
+    },
+    {
+      "word": "fracture_473",
+      "definition": "骨折",
+      "phonetic": "/ˈfræktʃər/"
+    },
+    {
+      "word": "tumor_474",
+      "definition": "肿瘤",
+      "phonetic": "/ˈtuːmər/"
+    },
+    {
+      "word": "cancer_475",
+      "definition": "癌症",
+      "phonetic": "/ˈkænsər/"
+    },
+    {
+      "word": "benign_476",
+      "definition": "良性的",
+      "phonetic": "/bɪˈnaɪn/"
+    },
+    {
+      "word": "malignant_477",
+      "definition": "恶性的",
+      "phonetic": "/məˈlɪɡnənt/"
+    },
+    {
+      "word": "enzyme_478",
+      "definition": "酶",
+      "phonetic": "/ˈenzaɪm/"
+    },
+    {
+      "word": "hormone_479",
+      "definition": "激素",
+      "phonetic": "/ˈhɔːrmoʊn/"
+    },
+    {
+      "word": "artery_480",
+      "definition": "动脉",
+      "phonetic": "/ˈɑːrtəri/"
+    },
+    {
+      "word": "vein_481",
+      "definition": "静脉",
+      "phonetic": "/veɪn/"
+    },
+    {
+      "word": "capillary_482",
+      "definition": "毛细血管",
+      "phonetic": "/ˈkæpɪleri/"
+    },
+    {
+      "word": "neuron_483",
+      "definition": "神经元",
+      "phonetic": "/ˈnjʊrɒn/"
+    },
+    {
+      "word": "synapse_484",
+      "definition": "突触",
+      "phonetic": "/ˈsɪnæps/"
+    },
+    {
+      "word": "axon_485",
+      "definition": "轴突",
+      "phonetic": "/ˈæksɒn/"
+    },
+    {
+      "word": "dendrite_486",
+      "definition": "树突",
+      "phonetic": "/ˈdendraɪt/"
+    },
+    {
+      "word": "tissue_487",
+      "definition": "组织",
+      "phonetic": "/ˈtɪʃuː/"
+    },
+    {
+      "word": "cell_488",
+      "definition": "细胞",
+      "phonetic": "/sel/"
+    },
+    {
+      "word": "organ_489",
+      "definition": "器官",
+      "phonetic": "/ˈɔːrɡən/"
+    },
+    {
+      "word": "heart_490",
+      "definition": "心脏",
+      "phonetic": "/hɑːrt/"
+    },
+    {
+      "word": "lung_491",
+      "definition": "肺",
+      "phonetic": "/lʌŋ/"
+    },
+    {
+      "word": "liver_492",
+      "definition": "肝脏",
+      "phonetic": "/ˈlɪvər/"
+    },
+    {
+      "word": "kidney_493",
+      "definition": "肾脏",
+      "phonetic": "/ˈkɪdni/"
+    },
+    {
+      "word": "brain_494",
+      "definition": "大脑",
+      "phonetic": "/breɪn/"
+    },
+    {
+      "word": "blood_495",
+      "definition": "血液",
+      "phonetic": "/blʌd/"
+    },
+    {
+      "word": "plasma_496",
+      "definition": "血浆",
+      "phonetic": "/ˈplæzmə/"
+    },
+    {
+      "word": "platelet_497",
+      "definition": "血小板",
+      "phonetic": "/ˈpleɪtlət/"
+    },
+    {
+      "word": "hemoglobin_498",
+      "definition": "血红蛋白",
+      "phonetic": "/ˌhiːməˈɡloʊbɪn/"
+    },
+    {
+      "word": "diagnosis_499",
+      "definition": "诊断",
+      "phonetic": "/ˌdaɪəɡˈnoʊsɪs/"
+    }
+  ]
+}

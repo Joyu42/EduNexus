@@ -5,12 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Calendar, Target, BookOpen, Edit, Trash2, ExternalLink } from 'lucide-react';
+import { Calendar, Target, BookOpen, Edit, Trash2, ExternalLink, Archive } from 'lucide-react';
 import Link from 'next/link';
 
 interface GoalCardProps {
   goal: Goal;
   onUpdateProgress: (id: string, progress: number) => void;
+  onEdit?: (id: string, updates: Partial<Goal>) => void;
+  onArchive?: (id: string) => void;
   onDelete: (id: string) => void;
   linkedPathsCount?: number;
   linkedPathsProgress?: number;
@@ -19,6 +21,8 @@ interface GoalCardProps {
 export function GoalCard({
   goal,
   onUpdateProgress,
+  onEdit,
+  onArchive,
   onDelete,
   linkedPathsCount = 0,
   linkedPathsProgress = 0
@@ -51,6 +55,37 @@ export function GoalCard({
       cancelled: 'bg-gray-500',
     };
     return colors[status as keyof typeof colors] || 'bg-gray-500';
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels = {
+      active: '进行中',
+      completed: '已完成',
+      paused: '已归档',
+      cancelled: '已取消',
+    };
+    return labels[status as keyof typeof labels] || status;
+  };
+
+  const handleEdit = () => {
+    if (!onEdit) {
+      return;
+    }
+
+    const nextTitle = window.prompt('编辑目标标题', goal.title);
+    if (nextTitle === null) {
+      return;
+    }
+
+    const nextDescription = window.prompt('编辑目标描述', goal.description);
+    if (nextDescription === null) {
+      return;
+    }
+
+    onEdit(goal.id, {
+      title: nextTitle.trim() || goal.title,
+      description: nextDescription.trim() || goal.description,
+    });
   };
 
   const daysRemaining = Math.ceil(
@@ -96,7 +131,7 @@ export function GoalCard({
                 <span className="font-medium">关联学习路径</span>
                 <Badge variant="secondary" className="text-xs">{linkedPathsCount}</Badge>
               </div>
-              <Link href="/path">
+              <Link href="/graph?view=path">
                 <Button variant="ghost" size="sm" className="h-6 text-xs">
                   查看 <ExternalLink className="w-3 h-3 ml-1" />
                 </Button>
@@ -114,7 +149,7 @@ export function GoalCard({
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <BookOpen className="w-4 h-4" />
               <span>暂无关联学习路径</span>
-              <Link href="/path">
+              <Link href="/graph?view=path">
                 <Button variant="link" size="sm" className="h-auto p-0 text-xs">
                   去创建
                 </Button>
@@ -137,10 +172,12 @@ export function GoalCard({
               )}
             </span>
           </div>
-          <div className={`w-2 h-2 rounded-full ${getStatusColor(goal.status)}`} />
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{getStatusLabel(goal.status)}</span>
+            <div className={`w-2 h-2 rounded-full ${getStatusColor(goal.status)}`} />
+          </div>
         </div>
 
-        {/* 操作按钮 */}
         <div className="flex gap-2 pt-2 border-t opacity-0 group-hover:opacity-100 transition-opacity">
           <Button
             size="sm"
@@ -150,10 +187,20 @@ export function GoalCard({
           >
             +10% 进度
           </Button>
-          <Button size="sm" variant="ghost" className="px-3">
+          <Button size="sm" variant="ghost" className="px-3" onClick={handleEdit} aria-label="编辑目标">
             <Edit className="w-4 h-4" />
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => onDelete(goal.id)} className="px-3 text-red-500 hover:text-red-600">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="px-3"
+            onClick={() => onArchive?.(goal.id)}
+            aria-label="归档目标"
+            disabled={!onArchive || goal.status !== 'active'}
+          >
+            <Archive className="w-4 h-4" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => onDelete(goal.id)} className="px-3 text-red-500 hover:text-red-600" aria-label="删除目标">
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>

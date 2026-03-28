@@ -1,209 +1,184 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Search, Plus, TrendingUp, Users, Filter, Key } from 'lucide-react';
-import { GroupCard } from '@/components/groups/group-card';
-import { GroupRecommendations } from '@/components/groups/group-recommendations';
-import { JoinByInviteCode } from '@/components/groups/join-by-invite-code';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Users, Plus, Loader2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 import {
-  getAllGroups,
-  searchGroups,
-  initializeSampleData,
-  joinGroupByInviteCode,
-} from '@/lib/groups/group-storage';
-import type { Group, GroupCategory } from '@/lib/groups/group-types';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { GroupCard } from "@/components/groups/group-card";
 
-const categories: Array<{ value: GroupCategory | 'all'; label: string }> = [
-  { value: 'all', label: '全部' },
-  { value: 'programming', label: '编程' },
-  { value: 'math', label: '数学' },
-  { value: 'language', label: '语言' },
-  { value: 'science', label: '科学' },
-  { value: 'art', label: '艺术' },
-  { value: 'business', label: '商业' },
-  { value: 'other', label: '其他' },
-];
-
-type SortBy = 'activity' | 'members' | 'newest';
+type PublicGroup = {
+  id: string;
+  name: string;
+  description: string;
+  memberCount: number;
+};
 
 export default function GroupsPage() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
   const router = useRouter();
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<GroupCategory | 'all'>('all');
-  const [sortBy, setSortBy] = useState<SortBy>('activity');
-  const [showInviteCodeDialog, setShowInviteCodeDialog] = useState(false);
+  const { status } = useSession();
 
-  useEffect(() => {
-    initializeSampleData();
-    loadGroups();
-  }, []);
-
-  useEffect(() => {
-    filterAndSortGroups();
-  }, [groups, searchQuery, selectedCategory, sortBy]);
-
-  const loadGroups = () => {
-    const allGroups = getAllGroups();
-    setGroups(allGroups);
-  };
-
-  const filterAndSortGroups = () => {
-    let filtered = groups;
-
-    if (searchQuery) {
-      const category = selectedCategory === 'all' ? undefined : selectedCategory;
-      filtered = searchGroups(searchQuery, category);
-    } else if (selectedCategory !== 'all') {
-      filtered = groups.filter((g) => g.category === selectedCategory);
-    }
-
-    const sorted = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case 'activity':
-          return b.activeLevel - a.activeLevel;
-        case 'members':
-          return b.memberCount - a.memberCount;
-        case 'newest':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        default:
-          return 0;
+  const { data: groups = [], isLoading: loading } = useQuery({
+    queryKey: ["groups"],
+    queryFn: async () => {
+      const response = await fetch("/api/groups");
+      if (!response.ok) {
+        throw new Error("获取小组失败");
       }
-    });
+      const payload = await response.json();
+      return (payload.data?.groups ?? []) as PublicGroup[];
+    },
+  });
 
-    setFilteredGroups(sorted);
-  };
+  const createMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const name = formData.get("name") as string;
+      const description = formData.get("description") as string;
 
-  const handleJoinByInviteCode = (inviteCode: string) => {
-    const result = joinGroupByInviteCode(inviteCode, 'user-1', '当前用户');
-    if (result.success && result.groupId) {
-      setShowInviteCodeDialog(false);
-      router.push(`/groups/${result.groupId}`);
-    } else {
-      alert(result.error || '加入失败');
+      const response = await fetch("/api/groups", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          description: description || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const message =
+          typeof errorData?.error?.message === "string"
+            ? errorData.error.message
+            : "创建小组失败";
+        throw new Error(message);
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast.success("小组创建成功");
+      setIsDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      if (data?.data?.group?.id) {
+        router.push(`/groups/${data.data.group.id}`);
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (status === "unauthenticated") {
+      toast.error("请先登录后再创建小组");
+      router.push(`/login?callbackUrl=${encodeURIComponent("/groups")}`);
+      return;
     }
+    const formData = new FormData(e.currentTarget);
+    createMutation.mutate(formData);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50/40 via-sky-50/20 to-blue-50/40">
+      <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-blue-500 text-white shadow-sm">
+              <Users className="h-5 w-5" />
+            </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">学习小组</h1>
-              <p className="text-gray-600">加入小组，与志同道合的伙伴一起学习进步</p>
+              <h1 className="text-3xl font-bold tracking-tight">学习小组</h1>
+              <p className="text-muted-foreground mt-1">公开浏览小组，登录后创建并加入。</p>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowInviteCodeDialog(true)}
-                className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-medium"
-              >
-                <Key className="w-5 h-5" />
-                邀请码加入
-              </button>
-              <button
-                onClick={() => router.push('/groups/create')}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
-              >
-                <Plus className="w-5 h-5" />
+          </div>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="shrink-0 gap-2">
+                <Plus className="h-4 w-4" />
                 创建小组
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="搜索小组名称、描述或标签..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">分类:</span>
-                <div className="flex gap-2">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.value}
-                      onClick={() => setSelectedCategory(cat.value)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        selectedCategory === cat.value
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>创建学习小组</DialogTitle>
+                <DialogDescription>
+                  创建一个新的学习小组，邀请其他成员一起学习。
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">小组名称 <span className="text-destructive">*</span></Label>
+                  <Input 
+                    id="name" 
+                    name="name" 
+                    placeholder="例如: Next.js 学习交流群" 
+                    required 
+                    autoComplete="off"
+                  />
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2 ml-auto">
-                <span className="text-sm font-medium text-gray-700">排序:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortBy)}
-                  className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                >
-                  <option value="activity">活跃度</option>
-                  <option value="members">成员数</option>
-                  <option value="newest">最新创建</option>
-                </select>
-              </div>
-            </div>
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">小组简介</Label>
+                  <Textarea 
+                    id="description" 
+                    name="description" 
+                    placeholder="简单介绍一下这个小组的学习目标..." 
+                    rows={3}
+                  />
+                </div>
+                <DialogFooter className="pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsDialogOpen(false)}
+                    disabled={createMutation.isPending}
+                  >
+                    取消
+                  </Button>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    创建小组
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {filteredGroups.map((group) => (
-                <GroupCard
-                  key={group.id}
-                  group={group}
-                  onClick={() => router.push(`/groups/${group.id}`)}
-                />
-              ))}
-            </div>
-
-            {filteredGroups.length === 0 && (
-              <div className="text-center py-12">
-                <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">没有找到小组</h3>
-                <p className="text-gray-600 mb-4">试试其他搜索条件，或创建一个新小组</p>
-                <button
-                  onClick={() => router.push('/groups/create')}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  创建小组
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="lg:col-span-1">
-            <GroupRecommendations
-              userId="user-1"
-              onGroupClick={(groupId) => router.push(`/groups/${groupId}`)}
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {loading ? (
+            <Card className="p-8 text-center text-muted-foreground md:col-span-2">加载中...</Card>
+          ) : groups.length === 0 ? (
+            <Card className="p-8 text-center text-muted-foreground md:col-span-2">暂无公开小组</Card>
+          ) : (
+            groups.map((group) => (
+              <GroupCard key={group.id} group={group} />
+            ))
+          )}
         </div>
       </div>
-
-      {showInviteCodeDialog && (
-        <JoinByInviteCode
-          onJoin={handleJoinByInviteCode}
-          onClose={() => setShowInviteCodeDialog(false)}
-        />
-      )}
     </div>
   );
 }

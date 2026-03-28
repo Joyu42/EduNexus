@@ -1,0 +1,2504 @@
+{
+  "words": [
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    },
+    {
+      "word": "signal",
+      "definition": "信号",
+      "phonetic": "/ˈsɪɡnəl/"
+    },
+    {
+      "word": "analog",
+      "definition": "模拟",
+      "phonetic": "/ˈænəlɒɡ/"
+    },
+    {
+      "word": "digital",
+      "definition": "数字",
+      "phonetic": "/ˈdɪdʒɪtl/"
+    },
+    {
+      "word": "amplifier",
+      "definition": "放大器",
+      "phonetic": "/ˈæmplɪfaɪər/"
+    },
+    {
+      "word": "oscillator",
+      "definition": "振荡器",
+      "phonetic": "/ˈɒsɪleɪtər/"
+    },
+    {
+      "word": "waveform",
+      "definition": "波形",
+      "phonetic": "/ˈweɪvfɔːrm/"
+    },
+    {
+      "word": "power",
+      "definition": "功率",
+      "phonetic": "/ˈpaʊər/"
+    },
+    {
+      "word": "energy",
+      "definition": "能量",
+      "phonetic": "/ˈenərdʒi/"
+    },
+    {
+      "word": "impedance",
+      "definition": "阻抗",
+      "phonetic": "/ɪmˈpiːdəns/"
+    },
+    {
+      "word": "reactance",
+      "definition": "电抗",
+      "phonetic": "/riˈæktəns/"
+    },
+    {
+      "word": "transformer",
+      "definition": "变压器",
+      "phonetic": "/trænsˈfɔːrmər/"
+    },
+    {
+      "word": "generator",
+      "definition": "发电机",
+      "phonetic": "/ˈdʒenəreɪtər/"
+    },
+    {
+      "word": "motor",
+      "definition": "电机",
+      "phonetic": "/ˈmoʊtər/"
+    },
+    {
+      "word": "relay",
+      "definition": "继电器",
+      "phonetic": "/ˈriːleɪ/"
+    },
+    {
+      "word": "sensor",
+      "definition": "传感器",
+      "phonetic": "/ˈsensər/"
+    },
+    {
+      "word": "controller",
+      "definition": "控制器",
+      "phonetic": "/kənˈtroʊlər/"
+    },
+    {
+      "word": "microcontroller",
+      "definition": "微控制器",
+      "phonetic": "/ˌmaɪkroʊkənˈtroʊlər/"
+    },
+    {
+      "word": "microprocessor",
+      "definition": "微处理器",
+      "phonetic": "/ˌmaɪkroʊˈprɑːsesər/"
+    },
+    {
+      "word": "pcb",
+      "definition": "印刷电路板",
+      "phonetic": ""
+    },
+    {
+      "word": "cable",
+      "definition": "电缆",
+      "phonetic": "/ˈkeɪbl/"
+    },
+    {
+      "word": "ground",
+      "definition": "接地",
+      "phonetic": "/ɡraʊnd/"
+    },
+    {
+      "word": "phase",
+      "definition": "相位",
+      "phonetic": "/feɪz/"
+    },
+    {
+      "word": "load",
+      "definition": "负载",
+      "phonetic": "/loʊd/"
+    },
+    {
+      "word": "short circuit",
+      "definition": "短路",
+      "phonetic": ""
+    },
+    {
+      "word": "open circuit",
+      "definition": "开路",
+      "phonetic": ""
+    },
+    {
+      "word": "voltmeter",
+      "definition": "电压表",
+      "phonetic": "/ˈvoʊltmiːtər/"
+    },
+    {
+      "word": "ammeter",
+      "definition": "电流表",
+      "phonetic": "/ˈæmiːtər/"
+    },
+    {
+      "word": "watt",
+      "definition": "瓦特",
+      "phonetic": "/wɒt/"
+    },
+    {
+      "word": "ohm",
+      "definition": "欧姆",
+      "phonetic": "/oʊm/"
+    },
+    {
+      "word": "farad",
+      "definition": "法拉",
+      "phonetic": "/ˈfærəd/"
+    },
+    {
+      "word": "henry",
+      "definition": "亨利",
+      "phonetic": "/ˈhenri/"
+    },
+    {
+      "word": "hertz",
+      "definition": "赫兹",
+      "phonetic": "/hɜːrts/"
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "modulation",
+      "definition": "调制",
+      "phonetic": "/ˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "demodulation",
+      "definition": "解调",
+      "phonetic": "/diːˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "noise",
+      "definition": "噪声",
+      "phonetic": "/nɔɪz/"
+    },
+    {
+      "word": "filter",
+      "definition": "滤波器",
+      "phonetic": "/ˈfɪltər/"
+    },
+    {
+      "word": "attenuation",
+      "definition": "衰减",
+      "phonetic": "/əˌtenjuˈeɪʃən/"
+    },
+    {
+      "word": "gain",
+      "definition": "增益",
+      "phonetic": "/ɡeɪn/"
+    },
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    },
+    {
+      "word": "signal",
+      "definition": "信号",
+      "phonetic": "/ˈsɪɡnəl/"
+    },
+    {
+      "word": "analog",
+      "definition": "模拟",
+      "phonetic": "/ˈænəlɒɡ/"
+    },
+    {
+      "word": "digital",
+      "definition": "数字",
+      "phonetic": "/ˈdɪdʒɪtl/"
+    },
+    {
+      "word": "amplifier",
+      "definition": "放大器",
+      "phonetic": "/ˈæmplɪfaɪər/"
+    },
+    {
+      "word": "oscillator",
+      "definition": "振荡器",
+      "phonetic": "/ˈɒsɪleɪtər/"
+    },
+    {
+      "word": "waveform",
+      "definition": "波形",
+      "phonetic": "/ˈweɪvfɔːrm/"
+    },
+    {
+      "word": "power",
+      "definition": "功率",
+      "phonetic": "/ˈpaʊər/"
+    },
+    {
+      "word": "energy",
+      "definition": "能量",
+      "phonetic": "/ˈenərdʒi/"
+    },
+    {
+      "word": "impedance",
+      "definition": "阻抗",
+      "phonetic": "/ɪmˈpiːdəns/"
+    },
+    {
+      "word": "reactance",
+      "definition": "电抗",
+      "phonetic": "/riˈæktəns/"
+    },
+    {
+      "word": "transformer",
+      "definition": "变压器",
+      "phonetic": "/trænsˈfɔːrmər/"
+    },
+    {
+      "word": "generator",
+      "definition": "发电机",
+      "phonetic": "/ˈdʒenəreɪtər/"
+    },
+    {
+      "word": "motor",
+      "definition": "电机",
+      "phonetic": "/ˈmoʊtər/"
+    },
+    {
+      "word": "relay",
+      "definition": "继电器",
+      "phonetic": "/ˈriːleɪ/"
+    },
+    {
+      "word": "sensor",
+      "definition": "传感器",
+      "phonetic": "/ˈsensər/"
+    },
+    {
+      "word": "controller",
+      "definition": "控制器",
+      "phonetic": "/kənˈtroʊlər/"
+    },
+    {
+      "word": "microcontroller",
+      "definition": "微控制器",
+      "phonetic": "/ˌmaɪkroʊkənˈtroʊlər/"
+    },
+    {
+      "word": "microprocessor",
+      "definition": "微处理器",
+      "phonetic": "/ˌmaɪkroʊˈprɑːsesər/"
+    },
+    {
+      "word": "pcb",
+      "definition": "印刷电路板",
+      "phonetic": ""
+    },
+    {
+      "word": "cable",
+      "definition": "电缆",
+      "phonetic": "/ˈkeɪbl/"
+    },
+    {
+      "word": "ground",
+      "definition": "接地",
+      "phonetic": "/ɡraʊnd/"
+    },
+    {
+      "word": "phase",
+      "definition": "相位",
+      "phonetic": "/feɪz/"
+    },
+    {
+      "word": "load",
+      "definition": "负载",
+      "phonetic": "/loʊd/"
+    },
+    {
+      "word": "short circuit",
+      "definition": "短路",
+      "phonetic": ""
+    },
+    {
+      "word": "open circuit",
+      "definition": "开路",
+      "phonetic": ""
+    },
+    {
+      "word": "voltmeter",
+      "definition": "电压表",
+      "phonetic": "/ˈvoʊltmiːtər/"
+    },
+    {
+      "word": "ammeter",
+      "definition": "电流表",
+      "phonetic": "/ˈæmiːtər/"
+    },
+    {
+      "word": "watt",
+      "definition": "瓦特",
+      "phonetic": "/wɒt/"
+    },
+    {
+      "word": "ohm",
+      "definition": "欧姆",
+      "phonetic": "/oʊm/"
+    },
+    {
+      "word": "farad",
+      "definition": "法拉",
+      "phonetic": "/ˈfærəd/"
+    },
+    {
+      "word": "henry",
+      "definition": "亨利",
+      "phonetic": "/ˈhenri/"
+    },
+    {
+      "word": "hertz",
+      "definition": "赫兹",
+      "phonetic": "/hɜːrts/"
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "modulation",
+      "definition": "调制",
+      "phonetic": "/ˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "demodulation",
+      "definition": "解调",
+      "phonetic": "/diːˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "noise",
+      "definition": "噪声",
+      "phonetic": "/nɔɪz/"
+    },
+    {
+      "word": "filter",
+      "definition": "滤波器",
+      "phonetic": "/ˈfɪltər/"
+    },
+    {
+      "word": "attenuation",
+      "definition": "衰减",
+      "phonetic": "/əˌtenjuˈeɪʃən/"
+    },
+    {
+      "word": "gain",
+      "definition": "增益",
+      "phonetic": "/ɡeɪn/"
+    },
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    },
+    {
+      "word": "signal",
+      "definition": "信号",
+      "phonetic": "/ˈsɪɡnəl/"
+    },
+    {
+      "word": "analog",
+      "definition": "模拟",
+      "phonetic": "/ˈænəlɒɡ/"
+    },
+    {
+      "word": "digital",
+      "definition": "数字",
+      "phonetic": "/ˈdɪdʒɪtl/"
+    },
+    {
+      "word": "amplifier",
+      "definition": "放大器",
+      "phonetic": "/ˈæmplɪfaɪər/"
+    },
+    {
+      "word": "oscillator",
+      "definition": "振荡器",
+      "phonetic": "/ˈɒsɪleɪtər/"
+    },
+    {
+      "word": "waveform",
+      "definition": "波形",
+      "phonetic": "/ˈweɪvfɔːrm/"
+    },
+    {
+      "word": "power",
+      "definition": "功率",
+      "phonetic": "/ˈpaʊər/"
+    },
+    {
+      "word": "energy",
+      "definition": "能量",
+      "phonetic": "/ˈenərdʒi/"
+    },
+    {
+      "word": "impedance",
+      "definition": "阻抗",
+      "phonetic": "/ɪmˈpiːdəns/"
+    },
+    {
+      "word": "reactance",
+      "definition": "电抗",
+      "phonetic": "/riˈæktəns/"
+    },
+    {
+      "word": "transformer",
+      "definition": "变压器",
+      "phonetic": "/trænsˈfɔːrmər/"
+    },
+    {
+      "word": "generator",
+      "definition": "发电机",
+      "phonetic": "/ˈdʒenəreɪtər/"
+    },
+    {
+      "word": "motor",
+      "definition": "电机",
+      "phonetic": "/ˈmoʊtər/"
+    },
+    {
+      "word": "relay",
+      "definition": "继电器",
+      "phonetic": "/ˈriːleɪ/"
+    },
+    {
+      "word": "sensor",
+      "definition": "传感器",
+      "phonetic": "/ˈsensər/"
+    },
+    {
+      "word": "controller",
+      "definition": "控制器",
+      "phonetic": "/kənˈtroʊlər/"
+    },
+    {
+      "word": "microcontroller",
+      "definition": "微控制器",
+      "phonetic": "/ˌmaɪkroʊkənˈtroʊlər/"
+    },
+    {
+      "word": "microprocessor",
+      "definition": "微处理器",
+      "phonetic": "/ˌmaɪkroʊˈprɑːsesər/"
+    },
+    {
+      "word": "pcb",
+      "definition": "印刷电路板",
+      "phonetic": ""
+    },
+    {
+      "word": "cable",
+      "definition": "电缆",
+      "phonetic": "/ˈkeɪbl/"
+    },
+    {
+      "word": "ground",
+      "definition": "接地",
+      "phonetic": "/ɡraʊnd/"
+    },
+    {
+      "word": "phase",
+      "definition": "相位",
+      "phonetic": "/feɪz/"
+    },
+    {
+      "word": "load",
+      "definition": "负载",
+      "phonetic": "/loʊd/"
+    },
+    {
+      "word": "short circuit",
+      "definition": "短路",
+      "phonetic": ""
+    },
+    {
+      "word": "open circuit",
+      "definition": "开路",
+      "phonetic": ""
+    },
+    {
+      "word": "voltmeter",
+      "definition": "电压表",
+      "phonetic": "/ˈvoʊltmiːtər/"
+    },
+    {
+      "word": "ammeter",
+      "definition": "电流表",
+      "phonetic": "/ˈæmiːtər/"
+    },
+    {
+      "word": "watt",
+      "definition": "瓦特",
+      "phonetic": "/wɒt/"
+    },
+    {
+      "word": "ohm",
+      "definition": "欧姆",
+      "phonetic": "/oʊm/"
+    },
+    {
+      "word": "farad",
+      "definition": "法拉",
+      "phonetic": "/ˈfærəd/"
+    },
+    {
+      "word": "henry",
+      "definition": "亨利",
+      "phonetic": "/ˈhenri/"
+    },
+    {
+      "word": "hertz",
+      "definition": "赫兹",
+      "phonetic": "/hɜːrts/"
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "modulation",
+      "definition": "调制",
+      "phonetic": "/ˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "demodulation",
+      "definition": "解调",
+      "phonetic": "/diːˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "noise",
+      "definition": "噪声",
+      "phonetic": "/nɔɪz/"
+    },
+    {
+      "word": "filter",
+      "definition": "滤波器",
+      "phonetic": "/ˈfɪltər/"
+    },
+    {
+      "word": "attenuation",
+      "definition": "衰减",
+      "phonetic": "/əˌtenjuˈeɪʃən/"
+    },
+    {
+      "word": "gain",
+      "definition": "增益",
+      "phonetic": "/ɡeɪn/"
+    },
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    },
+    {
+      "word": "signal",
+      "definition": "信号",
+      "phonetic": "/ˈsɪɡnəl/"
+    },
+    {
+      "word": "analog",
+      "definition": "模拟",
+      "phonetic": "/ˈænəlɒɡ/"
+    },
+    {
+      "word": "digital",
+      "definition": "数字",
+      "phonetic": "/ˈdɪdʒɪtl/"
+    },
+    {
+      "word": "amplifier",
+      "definition": "放大器",
+      "phonetic": "/ˈæmplɪfaɪər/"
+    },
+    {
+      "word": "oscillator",
+      "definition": "振荡器",
+      "phonetic": "/ˈɒsɪleɪtər/"
+    },
+    {
+      "word": "waveform",
+      "definition": "波形",
+      "phonetic": "/ˈweɪvfɔːrm/"
+    },
+    {
+      "word": "power",
+      "definition": "功率",
+      "phonetic": "/ˈpaʊər/"
+    },
+    {
+      "word": "energy",
+      "definition": "能量",
+      "phonetic": "/ˈenərdʒi/"
+    },
+    {
+      "word": "impedance",
+      "definition": "阻抗",
+      "phonetic": "/ɪmˈpiːdəns/"
+    },
+    {
+      "word": "reactance",
+      "definition": "电抗",
+      "phonetic": "/riˈæktəns/"
+    },
+    {
+      "word": "transformer",
+      "definition": "变压器",
+      "phonetic": "/trænsˈfɔːrmər/"
+    },
+    {
+      "word": "generator",
+      "definition": "发电机",
+      "phonetic": "/ˈdʒenəreɪtər/"
+    },
+    {
+      "word": "motor",
+      "definition": "电机",
+      "phonetic": "/ˈmoʊtər/"
+    },
+    {
+      "word": "relay",
+      "definition": "继电器",
+      "phonetic": "/ˈriːleɪ/"
+    },
+    {
+      "word": "sensor",
+      "definition": "传感器",
+      "phonetic": "/ˈsensər/"
+    },
+    {
+      "word": "controller",
+      "definition": "控制器",
+      "phonetic": "/kənˈtroʊlər/"
+    },
+    {
+      "word": "microcontroller",
+      "definition": "微控制器",
+      "phonetic": "/ˌmaɪkroʊkənˈtroʊlər/"
+    },
+    {
+      "word": "microprocessor",
+      "definition": "微处理器",
+      "phonetic": "/ˌmaɪkroʊˈprɑːsesər/"
+    },
+    {
+      "word": "pcb",
+      "definition": "印刷电路板",
+      "phonetic": ""
+    },
+    {
+      "word": "cable",
+      "definition": "电缆",
+      "phonetic": "/ˈkeɪbl/"
+    },
+    {
+      "word": "ground",
+      "definition": "接地",
+      "phonetic": "/ɡraʊnd/"
+    },
+    {
+      "word": "phase",
+      "definition": "相位",
+      "phonetic": "/feɪz/"
+    },
+    {
+      "word": "load",
+      "definition": "负载",
+      "phonetic": "/loʊd/"
+    },
+    {
+      "word": "short circuit",
+      "definition": "短路",
+      "phonetic": ""
+    },
+    {
+      "word": "open circuit",
+      "definition": "开路",
+      "phonetic": ""
+    },
+    {
+      "word": "voltmeter",
+      "definition": "电压表",
+      "phonetic": "/ˈvoʊltmiːtər/"
+    },
+    {
+      "word": "ammeter",
+      "definition": "电流表",
+      "phonetic": "/ˈæmiːtər/"
+    },
+    {
+      "word": "watt",
+      "definition": "瓦特",
+      "phonetic": "/wɒt/"
+    },
+    {
+      "word": "ohm",
+      "definition": "欧姆",
+      "phonetic": "/oʊm/"
+    },
+    {
+      "word": "farad",
+      "definition": "法拉",
+      "phonetic": "/ˈfærəd/"
+    },
+    {
+      "word": "henry",
+      "definition": "亨利",
+      "phonetic": "/ˈhenri/"
+    },
+    {
+      "word": "hertz",
+      "definition": "赫兹",
+      "phonetic": "/hɜːrts/"
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "modulation",
+      "definition": "调制",
+      "phonetic": "/ˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "demodulation",
+      "definition": "解调",
+      "phonetic": "/diːˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "noise",
+      "definition": "噪声",
+      "phonetic": "/nɔɪz/"
+    },
+    {
+      "word": "filter",
+      "definition": "滤波器",
+      "phonetic": "/ˈfɪltər/"
+    },
+    {
+      "word": "attenuation",
+      "definition": "衰减",
+      "phonetic": "/əˌtenjuˈeɪʃən/"
+    },
+    {
+      "word": "gain",
+      "definition": "增益",
+      "phonetic": "/ɡeɪn/"
+    },
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    },
+    {
+      "word": "signal",
+      "definition": "信号",
+      "phonetic": "/ˈsɪɡnəl/"
+    },
+    {
+      "word": "analog",
+      "definition": "模拟",
+      "phonetic": "/ˈænəlɒɡ/"
+    },
+    {
+      "word": "digital",
+      "definition": "数字",
+      "phonetic": "/ˈdɪdʒɪtl/"
+    },
+    {
+      "word": "amplifier",
+      "definition": "放大器",
+      "phonetic": "/ˈæmplɪfaɪər/"
+    },
+    {
+      "word": "oscillator",
+      "definition": "振荡器",
+      "phonetic": "/ˈɒsɪleɪtər/"
+    },
+    {
+      "word": "waveform",
+      "definition": "波形",
+      "phonetic": "/ˈweɪvfɔːrm/"
+    },
+    {
+      "word": "power",
+      "definition": "功率",
+      "phonetic": "/ˈpaʊər/"
+    },
+    {
+      "word": "energy",
+      "definition": "能量",
+      "phonetic": "/ˈenərdʒi/"
+    },
+    {
+      "word": "impedance",
+      "definition": "阻抗",
+      "phonetic": "/ɪmˈpiːdəns/"
+    },
+    {
+      "word": "reactance",
+      "definition": "电抗",
+      "phonetic": "/riˈæktəns/"
+    },
+    {
+      "word": "transformer",
+      "definition": "变压器",
+      "phonetic": "/trænsˈfɔːrmər/"
+    },
+    {
+      "word": "generator",
+      "definition": "发电机",
+      "phonetic": "/ˈdʒenəreɪtər/"
+    },
+    {
+      "word": "motor",
+      "definition": "电机",
+      "phonetic": "/ˈmoʊtər/"
+    },
+    {
+      "word": "relay",
+      "definition": "继电器",
+      "phonetic": "/ˈriːleɪ/"
+    },
+    {
+      "word": "sensor",
+      "definition": "传感器",
+      "phonetic": "/ˈsensər/"
+    },
+    {
+      "word": "controller",
+      "definition": "控制器",
+      "phonetic": "/kənˈtroʊlər/"
+    },
+    {
+      "word": "microcontroller",
+      "definition": "微控制器",
+      "phonetic": "/ˌmaɪkroʊkənˈtroʊlər/"
+    },
+    {
+      "word": "microprocessor",
+      "definition": "微处理器",
+      "phonetic": "/ˌmaɪkroʊˈprɑːsesər/"
+    },
+    {
+      "word": "pcb",
+      "definition": "印刷电路板",
+      "phonetic": ""
+    },
+    {
+      "word": "cable",
+      "definition": "电缆",
+      "phonetic": "/ˈkeɪbl/"
+    },
+    {
+      "word": "ground",
+      "definition": "接地",
+      "phonetic": "/ɡraʊnd/"
+    },
+    {
+      "word": "phase",
+      "definition": "相位",
+      "phonetic": "/feɪz/"
+    },
+    {
+      "word": "load",
+      "definition": "负载",
+      "phonetic": "/loʊd/"
+    },
+    {
+      "word": "short circuit",
+      "definition": "短路",
+      "phonetic": ""
+    },
+    {
+      "word": "open circuit",
+      "definition": "开路",
+      "phonetic": ""
+    },
+    {
+      "word": "voltmeter",
+      "definition": "电压表",
+      "phonetic": "/ˈvoʊltmiːtər/"
+    },
+    {
+      "word": "ammeter",
+      "definition": "电流表",
+      "phonetic": "/ˈæmiːtər/"
+    },
+    {
+      "word": "watt",
+      "definition": "瓦特",
+      "phonetic": "/wɒt/"
+    },
+    {
+      "word": "ohm",
+      "definition": "欧姆",
+      "phonetic": "/oʊm/"
+    },
+    {
+      "word": "farad",
+      "definition": "法拉",
+      "phonetic": "/ˈfærəd/"
+    },
+    {
+      "word": "henry",
+      "definition": "亨利",
+      "phonetic": "/ˈhenri/"
+    },
+    {
+      "word": "hertz",
+      "definition": "赫兹",
+      "phonetic": "/hɜːrts/"
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "modulation",
+      "definition": "调制",
+      "phonetic": "/ˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "demodulation",
+      "definition": "解调",
+      "phonetic": "/diːˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "noise",
+      "definition": "噪声",
+      "phonetic": "/nɔɪz/"
+    },
+    {
+      "word": "filter",
+      "definition": "滤波器",
+      "phonetic": "/ˈfɪltər/"
+    },
+    {
+      "word": "attenuation",
+      "definition": "衰减",
+      "phonetic": "/əˌtenjuˈeɪʃən/"
+    },
+    {
+      "word": "gain",
+      "definition": "增益",
+      "phonetic": "/ɡeɪn/"
+    },
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    },
+    {
+      "word": "signal",
+      "definition": "信号",
+      "phonetic": "/ˈsɪɡnəl/"
+    },
+    {
+      "word": "analog",
+      "definition": "模拟",
+      "phonetic": "/ˈænəlɒɡ/"
+    },
+    {
+      "word": "digital",
+      "definition": "数字",
+      "phonetic": "/ˈdɪdʒɪtl/"
+    },
+    {
+      "word": "amplifier",
+      "definition": "放大器",
+      "phonetic": "/ˈæmplɪfaɪər/"
+    },
+    {
+      "word": "oscillator",
+      "definition": "振荡器",
+      "phonetic": "/ˈɒsɪleɪtər/"
+    },
+    {
+      "word": "waveform",
+      "definition": "波形",
+      "phonetic": "/ˈweɪvfɔːrm/"
+    },
+    {
+      "word": "power",
+      "definition": "功率",
+      "phonetic": "/ˈpaʊər/"
+    },
+    {
+      "word": "energy",
+      "definition": "能量",
+      "phonetic": "/ˈenərdʒi/"
+    },
+    {
+      "word": "impedance",
+      "definition": "阻抗",
+      "phonetic": "/ɪmˈpiːdəns/"
+    },
+    {
+      "word": "reactance",
+      "definition": "电抗",
+      "phonetic": "/riˈæktəns/"
+    },
+    {
+      "word": "transformer",
+      "definition": "变压器",
+      "phonetic": "/trænsˈfɔːrmər/"
+    },
+    {
+      "word": "generator",
+      "definition": "发电机",
+      "phonetic": "/ˈdʒenəreɪtər/"
+    },
+    {
+      "word": "motor",
+      "definition": "电机",
+      "phonetic": "/ˈmoʊtər/"
+    },
+    {
+      "word": "relay",
+      "definition": "继电器",
+      "phonetic": "/ˈriːleɪ/"
+    },
+    {
+      "word": "sensor",
+      "definition": "传感器",
+      "phonetic": "/ˈsensər/"
+    },
+    {
+      "word": "controller",
+      "definition": "控制器",
+      "phonetic": "/kənˈtroʊlər/"
+    },
+    {
+      "word": "microcontroller",
+      "definition": "微控制器",
+      "phonetic": "/ˌmaɪkroʊkənˈtroʊlər/"
+    },
+    {
+      "word": "microprocessor",
+      "definition": "微处理器",
+      "phonetic": "/ˌmaɪkroʊˈprɑːsesər/"
+    },
+    {
+      "word": "pcb",
+      "definition": "印刷电路板",
+      "phonetic": ""
+    },
+    {
+      "word": "cable",
+      "definition": "电缆",
+      "phonetic": "/ˈkeɪbl/"
+    },
+    {
+      "word": "ground",
+      "definition": "接地",
+      "phonetic": "/ɡraʊnd/"
+    },
+    {
+      "word": "phase",
+      "definition": "相位",
+      "phonetic": "/feɪz/"
+    },
+    {
+      "word": "load",
+      "definition": "负载",
+      "phonetic": "/loʊd/"
+    },
+    {
+      "word": "short circuit",
+      "definition": "短路",
+      "phonetic": ""
+    },
+    {
+      "word": "open circuit",
+      "definition": "开路",
+      "phonetic": ""
+    },
+    {
+      "word": "voltmeter",
+      "definition": "电压表",
+      "phonetic": "/ˈvoʊltmiːtər/"
+    },
+    {
+      "word": "ammeter",
+      "definition": "电流表",
+      "phonetic": "/ˈæmiːtər/"
+    },
+    {
+      "word": "watt",
+      "definition": "瓦特",
+      "phonetic": "/wɒt/"
+    },
+    {
+      "word": "ohm",
+      "definition": "欧姆",
+      "phonetic": "/oʊm/"
+    },
+    {
+      "word": "farad",
+      "definition": "法拉",
+      "phonetic": "/ˈfærəd/"
+    },
+    {
+      "word": "henry",
+      "definition": "亨利",
+      "phonetic": "/ˈhenri/"
+    },
+    {
+      "word": "hertz",
+      "definition": "赫兹",
+      "phonetic": "/hɜːrts/"
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "modulation",
+      "definition": "调制",
+      "phonetic": "/ˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "demodulation",
+      "definition": "解调",
+      "phonetic": "/diːˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "noise",
+      "definition": "噪声",
+      "phonetic": "/nɔɪz/"
+    },
+    {
+      "word": "filter",
+      "definition": "滤波器",
+      "phonetic": "/ˈfɪltər/"
+    },
+    {
+      "word": "attenuation",
+      "definition": "衰减",
+      "phonetic": "/əˌtenjuˈeɪʃən/"
+    },
+    {
+      "word": "gain",
+      "definition": "增益",
+      "phonetic": "/ɡeɪn/"
+    },
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    },
+    {
+      "word": "signal",
+      "definition": "信号",
+      "phonetic": "/ˈsɪɡnəl/"
+    },
+    {
+      "word": "analog",
+      "definition": "模拟",
+      "phonetic": "/ˈænəlɒɡ/"
+    },
+    {
+      "word": "digital",
+      "definition": "数字",
+      "phonetic": "/ˈdɪdʒɪtl/"
+    },
+    {
+      "word": "amplifier",
+      "definition": "放大器",
+      "phonetic": "/ˈæmplɪfaɪər/"
+    },
+    {
+      "word": "oscillator",
+      "definition": "振荡器",
+      "phonetic": "/ˈɒsɪleɪtər/"
+    },
+    {
+      "word": "waveform",
+      "definition": "波形",
+      "phonetic": "/ˈweɪvfɔːrm/"
+    },
+    {
+      "word": "power",
+      "definition": "功率",
+      "phonetic": "/ˈpaʊər/"
+    },
+    {
+      "word": "energy",
+      "definition": "能量",
+      "phonetic": "/ˈenərdʒi/"
+    },
+    {
+      "word": "impedance",
+      "definition": "阻抗",
+      "phonetic": "/ɪmˈpiːdəns/"
+    },
+    {
+      "word": "reactance",
+      "definition": "电抗",
+      "phonetic": "/riˈæktəns/"
+    },
+    {
+      "word": "transformer",
+      "definition": "变压器",
+      "phonetic": "/trænsˈfɔːrmər/"
+    },
+    {
+      "word": "generator",
+      "definition": "发电机",
+      "phonetic": "/ˈdʒenəreɪtər/"
+    },
+    {
+      "word": "motor",
+      "definition": "电机",
+      "phonetic": "/ˈmoʊtər/"
+    },
+    {
+      "word": "relay",
+      "definition": "继电器",
+      "phonetic": "/ˈriːleɪ/"
+    },
+    {
+      "word": "sensor",
+      "definition": "传感器",
+      "phonetic": "/ˈsensər/"
+    },
+    {
+      "word": "controller",
+      "definition": "控制器",
+      "phonetic": "/kənˈtroʊlər/"
+    },
+    {
+      "word": "microcontroller",
+      "definition": "微控制器",
+      "phonetic": "/ˌmaɪkroʊkənˈtroʊlər/"
+    },
+    {
+      "word": "microprocessor",
+      "definition": "微处理器",
+      "phonetic": "/ˌmaɪkroʊˈprɑːsesər/"
+    },
+    {
+      "word": "pcb",
+      "definition": "印刷电路板",
+      "phonetic": ""
+    },
+    {
+      "word": "cable",
+      "definition": "电缆",
+      "phonetic": "/ˈkeɪbl/"
+    },
+    {
+      "word": "ground",
+      "definition": "接地",
+      "phonetic": "/ɡraʊnd/"
+    },
+    {
+      "word": "phase",
+      "definition": "相位",
+      "phonetic": "/feɪz/"
+    },
+    {
+      "word": "load",
+      "definition": "负载",
+      "phonetic": "/loʊd/"
+    },
+    {
+      "word": "short circuit",
+      "definition": "短路",
+      "phonetic": ""
+    },
+    {
+      "word": "open circuit",
+      "definition": "开路",
+      "phonetic": ""
+    },
+    {
+      "word": "voltmeter",
+      "definition": "电压表",
+      "phonetic": "/ˈvoʊltmiːtər/"
+    },
+    {
+      "word": "ammeter",
+      "definition": "电流表",
+      "phonetic": "/ˈæmiːtər/"
+    },
+    {
+      "word": "watt",
+      "definition": "瓦特",
+      "phonetic": "/wɒt/"
+    },
+    {
+      "word": "ohm",
+      "definition": "欧姆",
+      "phonetic": "/oʊm/"
+    },
+    {
+      "word": "farad",
+      "definition": "法拉",
+      "phonetic": "/ˈfærəd/"
+    },
+    {
+      "word": "henry",
+      "definition": "亨利",
+      "phonetic": "/ˈhenri/"
+    },
+    {
+      "word": "hertz",
+      "definition": "赫兹",
+      "phonetic": "/hɜːrts/"
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "modulation",
+      "definition": "调制",
+      "phonetic": "/ˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "demodulation",
+      "definition": "解调",
+      "phonetic": "/diːˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "noise",
+      "definition": "噪声",
+      "phonetic": "/nɔɪz/"
+    },
+    {
+      "word": "filter",
+      "definition": "滤波器",
+      "phonetic": "/ˈfɪltər/"
+    },
+    {
+      "word": "attenuation",
+      "definition": "衰减",
+      "phonetic": "/əˌtenjuˈeɪʃən/"
+    },
+    {
+      "word": "gain",
+      "definition": "增益",
+      "phonetic": "/ɡeɪn/"
+    },
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    },
+    {
+      "word": "signal",
+      "definition": "信号",
+      "phonetic": "/ˈsɪɡnəl/"
+    },
+    {
+      "word": "analog",
+      "definition": "模拟",
+      "phonetic": "/ˈænəlɒɡ/"
+    },
+    {
+      "word": "digital",
+      "definition": "数字",
+      "phonetic": "/ˈdɪdʒɪtl/"
+    },
+    {
+      "word": "amplifier",
+      "definition": "放大器",
+      "phonetic": "/ˈæmplɪfaɪər/"
+    },
+    {
+      "word": "oscillator",
+      "definition": "振荡器",
+      "phonetic": "/ˈɒsɪleɪtər/"
+    },
+    {
+      "word": "waveform",
+      "definition": "波形",
+      "phonetic": "/ˈweɪvfɔːrm/"
+    },
+    {
+      "word": "power",
+      "definition": "功率",
+      "phonetic": "/ˈpaʊər/"
+    },
+    {
+      "word": "energy",
+      "definition": "能量",
+      "phonetic": "/ˈenərdʒi/"
+    },
+    {
+      "word": "impedance",
+      "definition": "阻抗",
+      "phonetic": "/ɪmˈpiːdəns/"
+    },
+    {
+      "word": "reactance",
+      "definition": "电抗",
+      "phonetic": "/riˈæktəns/"
+    },
+    {
+      "word": "transformer",
+      "definition": "变压器",
+      "phonetic": "/trænsˈfɔːrmər/"
+    },
+    {
+      "word": "generator",
+      "definition": "发电机",
+      "phonetic": "/ˈdʒenəreɪtər/"
+    },
+    {
+      "word": "motor",
+      "definition": "电机",
+      "phonetic": "/ˈmoʊtər/"
+    },
+    {
+      "word": "relay",
+      "definition": "继电器",
+      "phonetic": "/ˈriːleɪ/"
+    },
+    {
+      "word": "sensor",
+      "definition": "传感器",
+      "phonetic": "/ˈsensər/"
+    },
+    {
+      "word": "controller",
+      "definition": "控制器",
+      "phonetic": "/kənˈtroʊlər/"
+    },
+    {
+      "word": "microcontroller",
+      "definition": "微控制器",
+      "phonetic": "/ˌmaɪkroʊkənˈtroʊlər/"
+    },
+    {
+      "word": "microprocessor",
+      "definition": "微处理器",
+      "phonetic": "/ˌmaɪkroʊˈprɑːsesər/"
+    },
+    {
+      "word": "pcb",
+      "definition": "印刷电路板",
+      "phonetic": ""
+    },
+    {
+      "word": "cable",
+      "definition": "电缆",
+      "phonetic": "/ˈkeɪbl/"
+    },
+    {
+      "word": "ground",
+      "definition": "接地",
+      "phonetic": "/ɡraʊnd/"
+    },
+    {
+      "word": "phase",
+      "definition": "相位",
+      "phonetic": "/feɪz/"
+    },
+    {
+      "word": "load",
+      "definition": "负载",
+      "phonetic": "/loʊd/"
+    },
+    {
+      "word": "short circuit",
+      "definition": "短路",
+      "phonetic": ""
+    },
+    {
+      "word": "open circuit",
+      "definition": "开路",
+      "phonetic": ""
+    },
+    {
+      "word": "voltmeter",
+      "definition": "电压表",
+      "phonetic": "/ˈvoʊltmiːtər/"
+    },
+    {
+      "word": "ammeter",
+      "definition": "电流表",
+      "phonetic": "/ˈæmiːtər/"
+    },
+    {
+      "word": "watt",
+      "definition": "瓦特",
+      "phonetic": "/wɒt/"
+    },
+    {
+      "word": "ohm",
+      "definition": "欧姆",
+      "phonetic": "/oʊm/"
+    },
+    {
+      "word": "farad",
+      "definition": "法拉",
+      "phonetic": "/ˈfærəd/"
+    },
+    {
+      "word": "henry",
+      "definition": "亨利",
+      "phonetic": "/ˈhenri/"
+    },
+    {
+      "word": "hertz",
+      "definition": "赫兹",
+      "phonetic": "/hɜːrts/"
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "modulation",
+      "definition": "调制",
+      "phonetic": "/ˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "demodulation",
+      "definition": "解调",
+      "phonetic": "/diːˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "noise",
+      "definition": "噪声",
+      "phonetic": "/nɔɪz/"
+    },
+    {
+      "word": "filter",
+      "definition": "滤波器",
+      "phonetic": "/ˈfɪltər/"
+    },
+    {
+      "word": "attenuation",
+      "definition": "衰减",
+      "phonetic": "/əˌtenjuˈeɪʃən/"
+    },
+    {
+      "word": "gain",
+      "definition": "增益",
+      "phonetic": "/ɡeɪn/"
+    },
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    },
+    {
+      "word": "signal",
+      "definition": "信号",
+      "phonetic": "/ˈsɪɡnəl/"
+    },
+    {
+      "word": "analog",
+      "definition": "模拟",
+      "phonetic": "/ˈænəlɒɡ/"
+    },
+    {
+      "word": "digital",
+      "definition": "数字",
+      "phonetic": "/ˈdɪdʒɪtl/"
+    },
+    {
+      "word": "amplifier",
+      "definition": "放大器",
+      "phonetic": "/ˈæmplɪfaɪər/"
+    },
+    {
+      "word": "oscillator",
+      "definition": "振荡器",
+      "phonetic": "/ˈɒsɪleɪtər/"
+    },
+    {
+      "word": "waveform",
+      "definition": "波形",
+      "phonetic": "/ˈweɪvfɔːrm/"
+    },
+    {
+      "word": "power",
+      "definition": "功率",
+      "phonetic": "/ˈpaʊər/"
+    },
+    {
+      "word": "energy",
+      "definition": "能量",
+      "phonetic": "/ˈenərdʒi/"
+    },
+    {
+      "word": "impedance",
+      "definition": "阻抗",
+      "phonetic": "/ɪmˈpiːdəns/"
+    },
+    {
+      "word": "reactance",
+      "definition": "电抗",
+      "phonetic": "/riˈæktəns/"
+    },
+    {
+      "word": "transformer",
+      "definition": "变压器",
+      "phonetic": "/trænsˈfɔːrmər/"
+    },
+    {
+      "word": "generator",
+      "definition": "发电机",
+      "phonetic": "/ˈdʒenəreɪtər/"
+    },
+    {
+      "word": "motor",
+      "definition": "电机",
+      "phonetic": "/ˈmoʊtər/"
+    },
+    {
+      "word": "relay",
+      "definition": "继电器",
+      "phonetic": "/ˈriːleɪ/"
+    },
+    {
+      "word": "sensor",
+      "definition": "传感器",
+      "phonetic": "/ˈsensər/"
+    },
+    {
+      "word": "controller",
+      "definition": "控制器",
+      "phonetic": "/kənˈtroʊlər/"
+    },
+    {
+      "word": "microcontroller",
+      "definition": "微控制器",
+      "phonetic": "/ˌmaɪkroʊkənˈtroʊlər/"
+    },
+    {
+      "word": "microprocessor",
+      "definition": "微处理器",
+      "phonetic": "/ˌmaɪkroʊˈprɑːsesər/"
+    },
+    {
+      "word": "pcb",
+      "definition": "印刷电路板",
+      "phonetic": ""
+    },
+    {
+      "word": "cable",
+      "definition": "电缆",
+      "phonetic": "/ˈkeɪbl/"
+    },
+    {
+      "word": "ground",
+      "definition": "接地",
+      "phonetic": "/ɡraʊnd/"
+    },
+    {
+      "word": "phase",
+      "definition": "相位",
+      "phonetic": "/feɪz/"
+    },
+    {
+      "word": "load",
+      "definition": "负载",
+      "phonetic": "/loʊd/"
+    },
+    {
+      "word": "short circuit",
+      "definition": "短路",
+      "phonetic": ""
+    },
+    {
+      "word": "open circuit",
+      "definition": "开路",
+      "phonetic": ""
+    },
+    {
+      "word": "voltmeter",
+      "definition": "电压表",
+      "phonetic": "/ˈvoʊltmiːtər/"
+    },
+    {
+      "word": "ammeter",
+      "definition": "电流表",
+      "phonetic": "/ˈæmiːtər/"
+    },
+    {
+      "word": "watt",
+      "definition": "瓦特",
+      "phonetic": "/wɒt/"
+    },
+    {
+      "word": "ohm",
+      "definition": "欧姆",
+      "phonetic": "/oʊm/"
+    },
+    {
+      "word": "farad",
+      "definition": "法拉",
+      "phonetic": "/ˈfærəd/"
+    },
+    {
+      "word": "henry",
+      "definition": "亨利",
+      "phonetic": "/ˈhenri/"
+    },
+    {
+      "word": "hertz",
+      "definition": "赫兹",
+      "phonetic": "/hɜːrts/"
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "modulation",
+      "definition": "调制",
+      "phonetic": "/ˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "demodulation",
+      "definition": "解调",
+      "phonetic": "/diːˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "noise",
+      "definition": "噪声",
+      "phonetic": "/nɔɪz/"
+    },
+    {
+      "word": "filter",
+      "definition": "滤波器",
+      "phonetic": "/ˈfɪltər/"
+    },
+    {
+      "word": "attenuation",
+      "definition": "衰减",
+      "phonetic": "/əˌtenjuˈeɪʃən/"
+    },
+    {
+      "word": "gain",
+      "definition": "增益",
+      "phonetic": "/ɡeɪn/"
+    },
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    },
+    {
+      "word": "signal",
+      "definition": "信号",
+      "phonetic": "/ˈsɪɡnəl/"
+    },
+    {
+      "word": "analog",
+      "definition": "模拟",
+      "phonetic": "/ˈænəlɒɡ/"
+    },
+    {
+      "word": "digital",
+      "definition": "数字",
+      "phonetic": "/ˈdɪdʒɪtl/"
+    },
+    {
+      "word": "amplifier",
+      "definition": "放大器",
+      "phonetic": "/ˈæmplɪfaɪər/"
+    },
+    {
+      "word": "oscillator",
+      "definition": "振荡器",
+      "phonetic": "/ˈɒsɪleɪtər/"
+    },
+    {
+      "word": "waveform",
+      "definition": "波形",
+      "phonetic": "/ˈweɪvfɔːrm/"
+    },
+    {
+      "word": "power",
+      "definition": "功率",
+      "phonetic": "/ˈpaʊər/"
+    },
+    {
+      "word": "energy",
+      "definition": "能量",
+      "phonetic": "/ˈenərdʒi/"
+    },
+    {
+      "word": "impedance",
+      "definition": "阻抗",
+      "phonetic": "/ɪmˈpiːdəns/"
+    },
+    {
+      "word": "reactance",
+      "definition": "电抗",
+      "phonetic": "/riˈæktəns/"
+    },
+    {
+      "word": "transformer",
+      "definition": "变压器",
+      "phonetic": "/trænsˈfɔːrmər/"
+    },
+    {
+      "word": "generator",
+      "definition": "发电机",
+      "phonetic": "/ˈdʒenəreɪtər/"
+    },
+    {
+      "word": "motor",
+      "definition": "电机",
+      "phonetic": "/ˈmoʊtər/"
+    },
+    {
+      "word": "relay",
+      "definition": "继电器",
+      "phonetic": "/ˈriːleɪ/"
+    },
+    {
+      "word": "sensor",
+      "definition": "传感器",
+      "phonetic": "/ˈsensər/"
+    },
+    {
+      "word": "controller",
+      "definition": "控制器",
+      "phonetic": "/kənˈtroʊlər/"
+    },
+    {
+      "word": "microcontroller",
+      "definition": "微控制器",
+      "phonetic": "/ˌmaɪkroʊkənˈtroʊlər/"
+    },
+    {
+      "word": "microprocessor",
+      "definition": "微处理器",
+      "phonetic": "/ˌmaɪkroʊˈprɑːsesər/"
+    },
+    {
+      "word": "pcb",
+      "definition": "印刷电路板",
+      "phonetic": ""
+    },
+    {
+      "word": "cable",
+      "definition": "电缆",
+      "phonetic": "/ˈkeɪbl/"
+    },
+    {
+      "word": "ground",
+      "definition": "接地",
+      "phonetic": "/ɡraʊnd/"
+    },
+    {
+      "word": "phase",
+      "definition": "相位",
+      "phonetic": "/feɪz/"
+    },
+    {
+      "word": "load",
+      "definition": "负载",
+      "phonetic": "/loʊd/"
+    },
+    {
+      "word": "short circuit",
+      "definition": "短路",
+      "phonetic": ""
+    },
+    {
+      "word": "open circuit",
+      "definition": "开路",
+      "phonetic": ""
+    },
+    {
+      "word": "voltmeter",
+      "definition": "电压表",
+      "phonetic": "/ˈvoʊltmiːtər/"
+    },
+    {
+      "word": "ammeter",
+      "definition": "电流表",
+      "phonetic": "/ˈæmiːtər/"
+    },
+    {
+      "word": "watt",
+      "definition": "瓦特",
+      "phonetic": "/wɒt/"
+    },
+    {
+      "word": "ohm",
+      "definition": "欧姆",
+      "phonetic": "/oʊm/"
+    },
+    {
+      "word": "farad",
+      "definition": "法拉",
+      "phonetic": "/ˈfærəd/"
+    },
+    {
+      "word": "henry",
+      "definition": "亨利",
+      "phonetic": "/ˈhenri/"
+    },
+    {
+      "word": "hertz",
+      "definition": "赫兹",
+      "phonetic": "/hɜːrts/"
+    },
+    {
+      "word": "bandwidth",
+      "definition": "带宽",
+      "phonetic": "/ˈbændwɪdθ/"
+    },
+    {
+      "word": "modulation",
+      "definition": "调制",
+      "phonetic": "/ˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "demodulation",
+      "definition": "解调",
+      "phonetic": "/diːˌmɒdjʊˈleɪʃən/"
+    },
+    {
+      "word": "noise",
+      "definition": "噪声",
+      "phonetic": "/nɔɪz/"
+    },
+    {
+      "word": "filter",
+      "definition": "滤波器",
+      "phonetic": "/ˈfɪltər/"
+    },
+    {
+      "word": "attenuation",
+      "definition": "衰减",
+      "phonetic": "/əˌtenjuˈeɪʃən/"
+    },
+    {
+      "word": "gain",
+      "definition": "增益",
+      "phonetic": "/ɡeɪn/"
+    },
+    {
+      "word": "voltage",
+      "definition": "电压",
+      "phonetic": "/ˈvoʊltɪdʒ/"
+    },
+    {
+      "word": "current",
+      "definition": "电流",
+      "phonetic": "/ˈkɜːrənt/"
+    },
+    {
+      "word": "resistance",
+      "definition": "电阻",
+      "phonetic": "/rɪˈzɪstəns/"
+    },
+    {
+      "word": "circuit",
+      "definition": "电路",
+      "phonetic": "/ˈsɜːrkɪt/"
+    },
+    {
+      "word": "capacitor",
+      "definition": "电容器",
+      "phonetic": "/kəˈpæsɪtər/"
+    },
+    {
+      "word": "inductor",
+      "definition": "电感",
+      "phonetic": "/ɪnˈdʌktər/"
+    },
+    {
+      "word": "transistor",
+      "definition": "晶体管",
+      "phonetic": "/trænˈzɪstər/"
+    },
+    {
+      "word": "diode",
+      "definition": "二极管",
+      "phonetic": "/ˈdaɪoʊd/"
+    },
+    {
+      "word": "semiconductor",
+      "definition": "半导体",
+      "phonetic": "/ˌsemikənˈdʌktər/"
+    },
+    {
+      "word": "frequency",
+      "definition": "频率",
+      "phonetic": "/ˈfriːkwənsi/"
+    }
+  ]
+}

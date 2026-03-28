@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Check, X, Clock, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,10 @@ import {
   Question,
   QuestionType,
   QuestionDifficulty,
-} from "@/lib/client/practice-storage";
+} from "@/lib/practice";
 import { QuestionRenderer } from "@/components/practice/question-renderer";
 
-export default function DrillPage() {
+function DrillContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const bankId = searchParams.get("bankId");
@@ -89,25 +89,40 @@ export default function DrillPage() {
   const checkAnswer = (question: Question, answer: string): boolean => {
     switch (question.type) {
       case QuestionType.MULTIPLE_CHOICE:
-        const correctOption = question.options?.find((o) => o.isCorrect);
-        return answer === correctOption?.id;
+        if (!question.options || question.options.length === 0) {
+          console.warn("Multiple choice question missing options:", question.id);
+          return false;
+        }
+        const correctOption = question.options.find((o) => o.isCorrect);
+        if (!correctOption) {
+          console.warn("Multiple choice question has no correct option:", question.id);
+          return false;
+        }
+        return answer === correctOption.id;
 
       case QuestionType.FILL_IN_BLANK:
-        const blanks = question.blanks || [];
+        const blanks = question.blanks;
+        if (!blanks || blanks.length === 0) {
+          console.warn("Fill in blank question missing blanks:", question.id);
+          return false;
+        }
         const userBlanks = answer.split("|");
         return blanks.every((blank, idx) =>
           userBlanks[idx]?.trim().toLowerCase() === blank.trim().toLowerCase()
         );
 
       case QuestionType.SHORT_ANSWER:
-        // 简答题需要人工评分，这里简单判断非空
         return answer.trim().length > 10;
 
       case QuestionType.CODING:
-        // 编程题需要运行测试用例，这里简化处理
+        if (!question.testCases || question.testCases.length === 0) {
+          console.warn("Coding question missing testCases:", question.id);
+          return false;
+        }
         return answer.trim().length > 0;
 
       default:
+        console.warn("Unknown question type:", question.type);
         return false;
     }
   };
@@ -256,5 +271,13 @@ export default function DrillPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function DrillPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">加载中...</div>}>
+      <DrillContent />
+    </Suspense>
   );
 }

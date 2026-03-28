@@ -5,6 +5,7 @@ import type { GraphNode, GraphEdge, LearningPath, KnowledgeGap } from "./types";
 export class RecommendationEngine {
   private nodes: GraphNode[];
   private edges: GraphEdge[];
+  private pathIdCounter = 0;
 
   constructor(nodes: GraphNode[], edges: GraphEdge[]) {
     this.nodes = nodes;
@@ -128,7 +129,7 @@ export class RecommendationEngine {
       avgImportance > 0.7 ? "hard" : avgImportance > 0.4 ? "medium" : "easy";
 
     return {
-      id: `path-${Date.now()}`,
+      id: `path-${Date.now()}-${this.pathIdCounter++}`,
       name: `从 ${pathNodes[0].name} 到 ${pathNodes[pathNodes.length - 1].name}`,
       nodes: path,
       estimatedTime,

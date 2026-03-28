@@ -3,6 +3,8 @@
  * 支持题库、题目、练习记录和错题本管理
  */
 
+import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
+
 // 题目类型枚举
 export enum QuestionType {
   MULTIPLE_CHOICE = "multiple_choice",
@@ -98,7 +100,18 @@ export type WrongQuestion = {
 };
 
 // IndexedDB 配置
-const DB_NAME = "EduNexusPractice";
+// 获取用户特定的数据库名
+export function resolvePracticeDatabaseName(userId: string | null): string | null {
+  if (!userId) {
+    return null;
+  }
+  return `EduNexusPractice_${userId}`;
+}
+
+function getDBName(): string | null {
+  return resolvePracticeDatabaseName(getClientUserIdentity());
+}
+
 const DB_VERSION = 1;
 const STORE_BANKS = "question_banks";
 const STORE_QUESTIONS = "questions";
@@ -109,6 +122,10 @@ const STORE_WRONG = "wrong_questions";
  * 初始化 IndexedDB
  */
 function openDatabase(): Promise<IDBDatabase> {
+  const DB_NAME = getDBName();
+  if (!DB_NAME) {
+    return Promise.reject(new Error("Missing client user identity for practice storage"));
+  }
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -747,15 +764,22 @@ export class PracticeStorageManager {
   }
 }
 
-// 单例实例
-let practiceStorageInstance: PracticeStorageManager | null = null;
+const practiceStorageInstances = new Map<string, PracticeStorageManager>();
 
 /**
  * 获取练习存储管理器实例
  */
 export function getPracticeStorage(): PracticeStorageManager {
-  if (!practiceStorageInstance) {
-    practiceStorageInstance = new PracticeStorageManager();
+  const userId = getClientUserIdentity();
+  if (!userId) {
+    return new PracticeStorageManager();
   }
-  return practiceStorageInstance;
+  const existing = practiceStorageInstances.get(userId);
+  if (existing) {
+    return existing;
+  }
+
+  const instance = new PracticeStorageManager();
+  practiceStorageInstances.set(userId, instance);
+  return instance;
 }

@@ -4,6 +4,7 @@
  */
 
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
 import { localStoragePathManager } from './path-storage-fallback';
 import { getDataSyncEventManager, SyncEventType } from '../sync/data-sync-events';
 
@@ -63,7 +64,19 @@ interface PathDB extends DBSchema {
   };
 }
 
-const DB_NAME = 'EduNexusPath';
+// 获取用户特定的数据库名
+export function resolvePathDatabaseName(userId: string | null): string | null {
+  if (!userId) {
+    return null;
+  }
+  return `EduNexusPath_${userId}`;
+}
+
+function getDBName(): string | null {
+  const userId = getClientUserIdentity();
+  return resolvePathDatabaseName(userId);
+}
+
 const DB_VERSION = 1;
 
 const toSafeCategory = (path: Pick<LearningPath, 'tags' | 'status'>): string => {
@@ -177,9 +190,14 @@ export class PathStorageManager {
     if (this.db) return;
     if (this.useLocalStorage) return; // 已经在使用 LocalStorage
 
+    const dbName = getDBName();
+    if (!dbName) {
+      return;
+    }
+
     try {
       console.log('[PathStorage] 初始化数据库...');
-      this.db = await openDB<PathDB>(DB_NAME, DB_VERSION, {
+      this.db = await openDB<PathDB>(dbName, DB_VERSION, {
         upgrade(db) {
           // 创建路径存储
           if (!db.objectStoreNames.contains('paths')) {
@@ -229,6 +247,10 @@ export class PathStorageManager {
    * 获取所有学习路径
    */
   async getAllPaths(): Promise<LearningPath[]> {
+    if (!getDBName()) {
+      return [];
+    }
+
     try {
       await this.initialize();
 
@@ -251,7 +273,17 @@ export class PathStorageManager {
   /**
    * 创建新路径
    */
-  async createPath(data: Omit<LearningPath, 'id' | 'createdAt' | 'updatedAt'>): Promise<LearningPath> {
+  async createPath(
+    data: Omit<LearningPath, 'id' | 'createdAt' | 'updatedAt'> & {
+      id?: string;
+      createdAt?: Date;
+      updatedAt?: Date;
+    }
+  ): Promise<LearningPath> {
+    if (!getDBName()) {
+      throw new Error('Missing client user identity for path storage');
+    }
+
     try {
       await this.initialize();
 
@@ -267,9 +299,9 @@ export class PathStorageManager {
 
       const path: LearningPath = {
         ...data,
-        id: `path_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        id: data.id ?? `path_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: data.createdAt ?? new Date(),
+        updatedAt: data.updatedAt ?? new Date(),
       };
 
       console.log('[PathStorage] 创建路径:', path.id, path.title);
@@ -303,6 +335,10 @@ export class PathStorageManager {
    * 根据 ID 获取路径
    */
   async getPath(id: string): Promise<LearningPath | undefined> {
+    if (!getDBName()) {
+      return undefined;
+    }
+
     await this.initialize();
 
     // 使用 LocalStorage 备用方案
@@ -318,6 +354,10 @@ export class PathStorageManager {
    * 更新路径
    */
   async updatePath(id: string, updates: Partial<LearningPath>): Promise<LearningPath> {
+    if (!getDBName()) {
+      throw new Error('Missing client user identity for path storage');
+    }
+
     try {
       await this.initialize();
 
@@ -367,6 +407,10 @@ export class PathStorageManager {
    * 删除路径
    */
   async deletePath(id: string): Promise<void> {
+    if (!getDBName()) {
+      return;
+    }
+
     await this.initialize();
 
     if (this.useLocalStorage) {
@@ -385,6 +429,10 @@ export class PathStorageManager {
    * 复制路径
    */
   async duplicatePath(id: string): Promise<LearningPath> {
+    if (!getDBName()) {
+      throw new Error('Missing client user identity for path storage');
+    }
+
     await this.initialize();
 
     const original = await this.getPath(id);
@@ -437,6 +485,10 @@ export class PathStorageManager {
    * 导入路径数据
    */
   async importPath(jsonData: string): Promise<LearningPath> {
+    if (!getDBName()) {
+      throw new Error('Missing client user identity for path storage');
+    }
+
     const data = JSON.parse(jsonData);
 
     // 生成新 ID

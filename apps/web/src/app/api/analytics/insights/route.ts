@@ -1,101 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
-import { loadDb } from "@/lib/server/store";
-import { generateLearningInsights } from "@/lib/analytics/report-generator";
-import type { LearningSession } from "@/lib/analytics/learning-session";
-import type { UserStats } from "@/lib/server/user-level-types";
+import { generateAnalyticsInsights } from "@/lib/analytics/insight-generator";
+import { buildAnalyticsReport, type AnalyticsRange } from "@/lib/analytics/report-builder";
+import { listAnalyticsEvents, listAnalyticsSnapshots } from "@/lib/server/analytics-service";
+import { fail, ok } from "@/lib/server/response";
 
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get("userId") || "demo_user";
-    const period = searchParams.get("period") || "month"; // week or month
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-    // 加载数据库
-    const db = await loadDb();
-
-    // 获取用户统计数据
-    const userStats: UserStats = db.userStats[userId] || {
-      userId,
-      learningMinutes: 0,
-      notesCreated: 0,
-      notesEdited: 0,
-      practiceCorrect: 50,
-      practiceWrong: 10,
-      knowledgePointsMastered: 8,
-      pathsCompleted: 0,
-      quizzesPassed: 0,
-      postsCount: 0,
-      answersCount: 0,
-      answersAccepted: 0,
-      likesReceived: 0,
-      notesShared: 0,
-      currentStreak: 5,
-      longestStreak: 12,
-      lastActiveDate: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    // 模拟学习会话数据
-    const sessions: LearningSession[] = generateMockSessions(userId, period);
-
-    // 生成 AI 洞察
-    const insights = generateLearningInsights(sessions, userStats);
-
-    return NextResponse.json(insights);
-  } catch (error) {
-    console.error("Error generating AI insights:", error);
-    return NextResponse.json(
-      { error: "Failed to generate AI insights" },
-      { status: 500 }
-    );
+function normalizeRange(value: string | null): AnalyticsRange | null {
+  if (value === null || value === "") {
+    return "weekly";
   }
+  if (value === "weekly" || value === "monthly") {
+    return value;
+  }
+  return null;
 }
 
-function generateMockSessions(userId: string, period: string): LearningSession[] {
-  const sessions: LearningSession[] = [];
-  const endDate = new Date();
-  const startDate = new Date(endDate);
-
-  if (period === "week") {
-    startDate.setDate(endDate.getDate() - 7);
-  } else {
-    startDate.setDate(endDate.getDate() - 30);
+export async function GET(request: Request) {
+  const range = normalizeRange(new URL(request.url).searchParams.get("range"));
+  if (!range) {
+    return fail(
+      {
+        code: "INVALID_RANGE",
+        message: "range 仅支持 weekly 或 monthly。"
+      },
+      400
+    );
   }
 
-  const activityTypes: LearningSession['activityType'][] = [
-    'document_create',
-    'document_edit',
-    'practice',
-    'chat',
-    'reading',
-  ];
+  try {
+    const [events, snapshots] = await Promise.all([listAnalyticsEvents(), listAnalyticsSnapshots()]);
+    const report = buildAnalyticsReport({ range, events, snapshots });
+    const insights = generateAnalyticsInsights(report);
 
-  const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-
-  for (let i = 0; i < days; i++) {
-    const date = new Date(startDate);
-    date.setDate(startDate.getDate() + i);
-
-    const sessionsPerDay = Math.floor(Math.random() * 4) + 2;
-
-    for (let j = 0; j < sessionsPerDay; j++) {
-      const activityType = activityTypes[Math.floor(Math.random() * activityTypes.length)];
-      const duration = Math.floor(Math.random() * 60) + 20;
-
-      sessions.push({
-        sessionId: `session_${date.getTime()}_${j}`,
-        userId,
-        startTime: date.toISOString(),
-        endTime: new Date(date.getTime() + duration * 60000).toISOString(),
-        duration,
-        activityType,
-        metadata: activityType === 'practice' ? {
-          questionsCount: Math.floor(Math.random() * 10) + 5,
-          correctCount: Math.floor(Math.random() * 8) + 4,
-        } : undefined,
-      });
-    }
+    const response = ok({ insights });
+    response.headers.set("Cache-Control", "private, max-age=60");
+    return response;
+  } catch (error) {
+    return fail(
+      {
+        code: "ANALYTICS_INSIGHTS_FAILED",
+        message: "生成分析洞察失败。",
+        details: error instanceof Error ? error.message : error
+      },
+      500
+    );
   }
-
-  return sessions;
 }

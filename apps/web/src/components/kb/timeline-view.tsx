@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { FileText, ChevronDown, ChevronRight, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,11 @@ type TimeGroup = {
 
 export function TimelineView({ documents, onSelectDocument, selectedDocId }: TimelineViewProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["今天", "昨天", "本周"]));
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const timeGroups = useMemo(() => {
     const now = new Date();
@@ -134,11 +139,11 @@ export function TimelineView({ documents, onSelectDocument, selectedDocId }: Tim
                         <FileText className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                         <h3 className="font-semibold text-amber-950">{doc.title}</h3>
                       </div>
-                      <span className="text-xs text-amber-600 whitespace-nowrap">
-                        {doc.updatedAt.toLocaleTimeString("zh-CN", {
+                      <span className="text-xs text-amber-600 whitespace-nowrap" suppressHydrationWarning>
+                        {isMounted ? doc.updatedAt.toLocaleTimeString("zh-CN", {
                           hour: "2-digit",
                           minute: "2-digit",
-                        })}
+                        }) : ""}
                       </span>
                     </div>
 

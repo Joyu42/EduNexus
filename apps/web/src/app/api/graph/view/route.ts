@@ -1,14 +1,27 @@
 import { fail, ok } from "@/lib/server/response";
 import { getGraphView } from "@/lib/server/graph-service";
+import { getCurrentUserId } from "@/lib/server/auth-utils";
+import type { WorkspaceGraphView } from "@/lib/server/graph-service";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return fail(
+        {
+          code: "UNAUTHORIZED",
+          message: "用户未登录。"
+        },
+        401
+      );
+    }
+    
     const { searchParams } = new URL(request.url);
     const domain = searchParams.get("domain") ?? undefined;
-    const owner = searchParams.get("owner") ?? undefined;
-    const graph = await getGraphView({ domain, owner });
+    const packId = searchParams.get("packId") ?? undefined;
+    const graph: WorkspaceGraphView = await getGraphView(userId, { domain, packId });
     return ok(graph);
   } catch (error) {
     return fail(

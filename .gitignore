@@ -4,7 +4,7 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
-
+apps/web/next-env.d.ts
 # Environment
 .env
 .env.*
@@ -34,3 +34,23 @@ temp/
 
 # Runtime local data
 .edunexus/
+
+# OpenCode OmO Agent scratchpad / plans
+.sisyphus/
+
+# Local Claude/Agent config
+.claude/
+
+# GEMINI 
+GEMINI.md
+# Use pnpm only
+package-lock.json
+apps/web/package-lock.json
+
+# AI config
+.worktrees/
+
+
+ecosystem.config.js
+deploy.sh
+deploy.log

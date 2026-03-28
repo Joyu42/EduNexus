@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  Route,
   Edit,
   Trash2,
 } from "lucide-react";
@@ -47,7 +48,6 @@ export function NodeDetailPanel({
 
   const { node, prerequisites, nextSteps, relatedNotes, relatedPractices, learningProgress } = detail;
   const statusConfig = STATUS_CONFIG[node.status];
-  const StatusIcon = statusConfig.icon;
 
   return (
     <div className="w-96 border-l bg-card/95 backdrop-blur-sm overflow-hidden flex flex-col absolute right-0 top-0 bottom-0 z-30 pointer-events-auto">
@@ -65,14 +65,22 @@ export function NodeDetailPanel({
                 创建于 {node.createdAt.toLocaleDateString("zh-CN")}
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button asChild variant="outline" size="sm" className="h-8">
+                <a href="/graph?view=path">
+                  <Route className="h-4 w-4 mr-1" />
+                  学习路径
+                </a>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           <Separator />
@@ -313,8 +321,8 @@ export function NodeDetailPanel({
               className="w-full justify-start gap-2"
               variant="outline"
               onClick={() => {
-                // 跳转到笔记页面
-                window.location.href = `/kb?node=${node.id}`;
+                const kbDocumentId = node.kbDocumentId || node.id;
+                window.location.href = `/kb?doc=${encodeURIComponent(kbDocumentId)}`;
               }}
             >
               <FileText className="h-4 w-4" />
@@ -324,8 +332,7 @@ export function NodeDetailPanel({
               className="w-full justify-start gap-2"
               variant="outline"
               onClick={() => {
-                // 跳转到练习页面
-                window.location.href = `/workspace/practice?node=${node.id}`;
+                window.location.href = `/workspace/practice/questions?node=${node.id}`;
               }}
             >
               <BookOpen className="h-4 w-4" />

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Goal, goalStorage, Habit, habitStorage } from '@/lib/goals/goal-storage';
 import { pathStorage } from '@/lib/client/path-storage';
 import { GoalWizard } from '@/components/goals/goal-wizard';
@@ -8,6 +10,8 @@ import { GoalCard } from '@/components/goals/goal-card';
 import { HabitCalendar } from '@/components/goals/habit-calendar';
 import { HabitTracker } from '@/components/goals/habit-tracker';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { LoginPrompt } from '@/components/ui/login-prompt';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -17,6 +21,8 @@ import { Plus, Target, Calendar, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function GoalsPage() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [showWizard, setShowWizard] = useState(false);
@@ -24,20 +30,11 @@ export default function GoalsPage() {
   const [newHabit, setNewHabit] = useState({ name: '', description: '' });
   const [linkedPathsData, setLinkedPathsData] = useState<Record<string, { count: number; progress: number }>>({});
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setGoals(goalStorage.getGoals());
-    setHabits(habitStorage.getHabits());
-
-    // 加载关联路径数据
-    const goals = goalStorage.getGoals();
+  const buildLinkedPathsData = async (nextGoals: Goal[]) => {
+    const paths = await pathStorage.getAllPaths();
     const pathsData: Record<string, { count: number; progress: number }> = {};
 
-    for (const goal of goals) {
-      const paths = await pathStorage.getAllPaths();
+    for (const goal of nextGoals) {
       const linkedPaths = paths.filter(p => p.goalId === goal.id);
       const avgProgress = linkedPaths.length > 0
         ? Math.round(linkedPaths.reduce((sum, p) => sum + p.progress, 0) / linkedPaths.length)
@@ -45,31 +42,100 @@ export default function GoalsPage() {
 
       pathsData[goal.id] = {
         count: linkedPaths.length,
-        progress: avgProgress
+        progress: avgProgress,
       };
     }
 
     setLinkedPathsData(pathsData);
   };
 
+  useEffect(() => {
+    if (status === 'authenticated') {
+      loadData();
+    }
+  }, [status]);
+
+  const loadData = async () => {
+    const storedGoals = goalStorage.getGoals();
+
+    setGoals(storedGoals);
+    setHabits(habitStorage.getHabits());
+    await buildLinkedPathsData(storedGoals);
+  };
+
   const handleCreateGoal = (goal: Goal) => {
     goalStorage.saveGoal(goal);
-    loadData();
+    setGoals(prev => [goal, ...prev]);
+    setLinkedPathsData(prev => ({
+      ...prev,
+      [goal.id]: prev[goal.id] ?? { count: 0, progress: 0 },
+    }));
     setShowWizard(false);
     toast.success('目标创建成功！');
   };
 
   const handleUpdateProgress = (id: string, progress: number) => {
-    goalStorage.updateProgress(id, progress);
-    loadData();
+    const safeProgress = Math.max(0, Math.min(100, progress));
+    goalStorage.updateProgress(id, safeProgress);
+    setGoals(prev => prev.map(goal => {
+      if (goal.id !== id) {
+        return goal;
+      }
+
+      return {
+        ...goal,
+        progress: safeProgress,
+        status: safeProgress >= 100 ? 'completed' : goal.status,
+        updatedAt: new Date().toISOString(),
+      };
+    }));
     toast.success('进度已更新');
+  };
+
+  const handleEditGoal = (id: string, updates: Partial<Goal>) => {
+    const currentGoal = goals.find(goal => goal.id === id);
+    if (!currentGoal) {
+      return;
+    }
+
+    const updatedGoal: Goal = {
+      ...currentGoal,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    goalStorage.saveGoal(updatedGoal);
+    setGoals(prev => prev.map(goal => goal.id === id ? updatedGoal : goal));
+    toast.success('目标已更新');
+  };
+
+  const handleArchiveGoal = (id: string) => {
+    const currentGoal = goals.find(goal => goal.id === id);
+    if (!currentGoal) {
+      return;
+    }
+
+    const archivedGoal: Goal = {
+      ...currentGoal,
+      status: 'paused',
+      updatedAt: new Date().toISOString(),
+    };
+
+    goalStorage.saveGoal(archivedGoal);
+    setGoals(prev => prev.map(goal => goal.id === id ? archivedGoal : goal));
+    toast.success('目标已归档');
   };
 
 
   const handleDeleteGoal = (id: string) => {
     if (confirm('确定要删除这个目标吗？')) {
       goalStorage.deleteGoal(id);
-      loadData();
+      setGoals(prev => prev.filter(goal => goal.id !== id));
+      setLinkedPathsData(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       toast.success('目标已删除');
     }
   };
@@ -111,6 +177,21 @@ export default function GoalsPage() {
   const avgProgress = goals.length > 0
     ? Math.round(goals.reduce((sum, g) => sum + g.progress, 0) / goals.length)
     : 0;
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
+          <p className="text-muted-foreground mt-4">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return <LoginPrompt title="目标管理" />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-amber-50/20 to-rose-50/30">
@@ -185,6 +266,14 @@ export default function GoalsPage() {
               <p className="text-muted-foreground mb-4">
                 还没有目标，点击上方按钮创建你的第一个目标
               </p>
+              <div className="flex items-center justify-center gap-3">
+                <Button onClick={() => setShowWizard(true)}>
+                  <Plus className="w-4 h-4 mr-2" />创建目标
+                </Button>
+                <Button variant="outline" onClick={() => setShowWizard(true)}>
+                  <Sparkles className="w-4 h-4 mr-2" />生成建议目标
+                </Button>
+              </div>
             </div>
           )}
 
@@ -194,6 +283,8 @@ export default function GoalsPage() {
                 key={goal.id}
                 goal={goal}
                 onUpdateProgress={handleUpdateProgress}
+                onEdit={handleEditGoal}
+                onArchive={handleArchiveGoal}
                 onDelete={handleDeleteGoal}
                 linkedPathsCount={linkedPathsData[goal.id]?.count || 0}
                 linkedPathsProgress={linkedPathsData[goal.id]?.progress || 0}
