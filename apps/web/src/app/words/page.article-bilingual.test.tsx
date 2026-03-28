@@ -40,7 +40,7 @@ describe("DailyArticlePreviewDialog", () => {
     expect(mockOnSave).toHaveBeenCalledTimes(1);
   });
 
-  it("toggles bilingual mode and shows paired paragraphs", async () => {
+  it("toggles bilingual mode and shows full article sections", async () => {
     const bilingualContent = `
 ### 中文内容
 
@@ -68,16 +68,21 @@ Second English paragraph.
     const toggle = screen.getByRole("switch") as HTMLButtonElement;
     expect(toggle.getAttribute("aria-checked")).toBe("false");
 
-    expect(screen.getByTestId("markdown-renderer").textContent).toContain("第一段中文内容。");
+    // In non-bilingual mode, it should just show the combined Chinese text
+    expect(screen.getByTestId("markdown-renderer").textContent).toContain("第一段中文内容。\n\n第二段中文内容。");
     expect(screen.getByTestId("markdown-renderer").textContent).not.toContain("First English paragraph");
 
     fireEvent.click(toggle);
 
     await waitFor(() => {
       const elements = screen.getAllByTestId("markdown-renderer");
-      const combinedText = elements.map(e => e.textContent).join(" ");
-      expect(combinedText).toContain("First English paragraph");
-      expect(combinedText).toContain("第一段中文内容。");
+      expect(elements).toHaveLength(2); // One for Chinese, one for English
+      
+      const zhSection = elements[0].textContent;
+      const enSection = elements[1].textContent;
+      
+      expect(zhSection).toContain("第一段中文内容。\n\n第二段中文内容。");
+      expect(enSection).toContain("First English paragraph.\n\nSecond English paragraph.");
     });
   });
 

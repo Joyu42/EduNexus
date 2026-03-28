@@ -32,13 +32,10 @@ export function DailyArticlePreviewDialog({
     const enMatch = articleContent.match(/###\s*英文[^\n]*\n([\s\S]*?)(?=###|$)/i);
     
     if (zhMatch && enMatch) {
-      const zhParagraphs = zhMatch[1].trim().split(/\n\s*\n/).filter(p => p.trim());
-      const enParagraphs = enMatch[1].trim().split(/\n\s*\n/).filter(p => p.trim());
-      
       return {
         isBilingual: true,
-        zhParagraphs,
-        enParagraphs,
+        zhContent: zhMatch[1].trim(),
+        enContent: enMatch[1].trim(),
         fallbackText: null,
       };
     }
@@ -48,8 +45,8 @@ export function DailyArticlePreviewDialog({
     if (justZhMatch) {
         return {
             isBilingual: false,
-            zhParagraphs: [justZhMatch[1].trim()],
-            enParagraphs: [],
+            zhContent: justZhMatch[1].trim(),
+            enContent: "",
             fallbackText: "未能提取到中英对照内容，可能生成结果缺少英文部分。",
         };
     }
@@ -57,8 +54,8 @@ export function DailyArticlePreviewDialog({
     // Complete fallback, we just treat the whole content as Chinese or unparseable
     return {
       isBilingual: false,
-      zhParagraphs: [articleContent.trim()],
-      enParagraphs: [],
+      zhContent: articleContent.trim(),
+      enContent: "",
       fallbackText: "未能提取到中英对照内容，可能生成结果缺少英文部分。",
     };
   }, [articleContent]);
@@ -68,10 +65,9 @@ export function DailyArticlePreviewDialog({
 
     if (!bilingual) {
       // If not bilingual mode, just render the chinese part, or the whole thing if we couldn't parse
-      const zhContent = parsed.zhParagraphs.join("\n\n");
       return (
         <div className="prose prose-sm max-w-none">
-          <MarkdownRenderer content={zhContent} />
+          <MarkdownRenderer content={parsed.zhContent} />
         </div>
       );
     }
@@ -86,36 +82,24 @@ export function DailyArticlePreviewDialog({
             </AlertDescription>
           </Alert>
           <div className="prose prose-sm max-w-none">
-            <MarkdownRenderer content={parsed.zhParagraphs.join("\n\n")} />
+            <MarkdownRenderer content={parsed.zhContent} />
           </div>
         </div>
       );
     }
 
-    // Paired rendering
-    const maxLen = Math.max(parsed.zhParagraphs.length, parsed.enParagraphs.length);
-    const pairs = [];
-    for (let i = 0; i < maxLen; i++) {
-      pairs.push({
-        zh: parsed.zhParagraphs[i] || "",
-        en: parsed.enParagraphs[i] || "",
-      });
-    }
-
     return (
       <div className="space-y-6">
-        {pairs.map((pair, idx) => (
-          <div key={idx} className="space-y-2 rounded-lg bg-slate-50 p-4 border border-slate-100">
-            <div className="prose prose-sm max-w-none text-slate-900">
-              <MarkdownRenderer content={pair.zh} />
-            </div>
-            {pair.en && (
-              <div className="prose prose-sm max-w-none text-slate-600 mt-2 pt-2 border-t border-slate-200 border-dashed">
-                <MarkdownRenderer content={pair.en} />
-              </div>
-            )}
+        <div className="space-y-2 rounded-lg bg-slate-50 p-4 border border-slate-100">
+          <div className="prose prose-sm max-w-none text-slate-900">
+            <MarkdownRenderer content={parsed.zhContent} />
           </div>
-        ))}
+        </div>
+        <div className="space-y-2 rounded-lg bg-slate-50 p-4 border border-slate-100">
+          <div className="prose prose-sm max-w-none text-slate-600 mt-2 pt-2 border-t border-slate-200 border-dashed">
+            <MarkdownRenderer content={parsed.enContent} />
+          </div>
+        </div>
       </div>
     );
   };
