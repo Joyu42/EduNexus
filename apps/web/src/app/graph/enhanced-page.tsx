@@ -30,6 +30,7 @@ import {
   Route,
   Sparkles,
   PlusCircle,
+  PanelRightClose,
 } from "lucide-react";
 import { InteractiveGraph } from "@/components/graph/interactive-graph";
 import { LearningPathOverlay } from "@/components/graph/learning-path-overlay";
@@ -133,6 +134,7 @@ function GraphPageContent() {
   const [nodeDetail, setNodeDetail] = useState<NodeDetail | null>(null);
   const [isGraphLoading, setIsGraphLoading] = useState(true);
   const [activeMode, setActiveMode] = useState<GraphMode>("explore");
+  const [isRightRailCollapsed, setIsRightRailCollapsed] = useState(false);
 
   const [kbDoc, setKbDoc] = useState<SidebarKBDoc | null>(null);
   const [isKbDocLoading, setIsKbDocLoading] = useState(false);
@@ -828,7 +830,7 @@ function GraphPageContent() {
           </div>
         </div>
 
-        <div className="flex-1 flex min-h-0 gap-4">
+        <div className="flex-1 flex min-h-0 gap-4 relative">
           {!isCollapsed && (
             <div
               className={cn(
@@ -964,32 +966,46 @@ function GraphPageContent() {
           </div>
 
           {/* Right Sidebar (Conditional) */}
-          {!isCollapsed && selectedNode && (
-            <div data-testid="graph-planet-sidebar" className="w-80 shrink-0 border bg-card rounded-lg overflow-y-auto flex flex-col">
-              {/* Section 1: Summary */}
-              <div data-testid="graph-sidebar-summary" className="p-4 border-b">
-                <div className="flex items-start justify-between mb-2">
-                  <h2 className="text-xl font-bold leading-tight">
-                    {selectedNode.name}
-                  </h2>
-                  {selectedNode.needsReview && (
-                    <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
-                      复习
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Badge variant="secondary">
-                    {NODE_TYPE_CONFIG[selectedNode.type]?.label || selectedNode.type}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {nodeDetail?.relatedNotes?.[0]?.excerpt || "暂无相关描述信息..."}
-                </p>
-              </div>
+          {!isRightRailCollapsed && selectedNode && activeMode !== "path" && (
+            <div data-testid="graph-planet-sidebar" className="w-80 shrink-0 border bg-card rounded-lg overflow-hidden flex flex-col relative">
+              <Button
+                data-testid="graph-right-rail-collapse"
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 z-10 h-8 w-8 bg-white/70 hover:bg-white shadow-sm"
+                onClick={() => setIsRightRailCollapsed(true)}
+                title="收起"
+              >
+                <PanelRightClose className="h-4 w-4" />
+              </Button>
 
-              {/* Section 2: Quick Learning Actions */}
-              <div data-testid="graph-sidebar-learning-actions" className="p-4 border-b">
+              <div className="flex-1 overflow-y-auto flex flex-col">
+                {/* Section 1: Summary */}
+                <div data-testid="graph-sidebar-summary" className="p-4 border-b shrink-0">
+                  <div className="flex items-start justify-between mb-2">
+                    <h2 className="text-xl font-bold leading-tight pr-10">
+                      {selectedNode.name}
+                    </h2>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {selectedNode.needsReview && (
+                        <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
+                          复习
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge variant="secondary">
+                      {NODE_TYPE_CONFIG[selectedNode.type]?.label || selectedNode.type}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {nodeDetail?.relatedNotes?.[0]?.excerpt || "暂无相关描述信息..."}
+                  </p>
+                </div>
+
+                {/* Section 2: Quick Learning Actions */}
+                <div data-testid="graph-sidebar-learning-actions" className="p-4 border-b shrink-0">
                 <h3 className="text-sm font-medium mb-3">学习状态</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {(["seen", "understood", "applied", "mastered"] as const).map((stage) => {
@@ -1049,7 +1065,8 @@ function GraphPageContent() {
 
               {/* Section 3: Path Actions */}
               <div data-testid="graph-sidebar-path-actions" className="p-4 border-b">
-                <h3 className="text-sm font-medium mb-3">路径信息</h3>
+                <h3 className="text-sm font-medium">学习路径 (Learning Path)</h3>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">学习路径由一系列相互关联的星群（Constellation Groups）组成。</p>
                 {selectedNode.pathMemberships && selectedNode.pathMemberships.length > 0 ? (
                   <div className="space-y-2 mb-3">
                     <p className="text-xs text-muted-foreground">当前星球所在路径：</p>
@@ -1077,14 +1094,13 @@ function GraphPageContent() {
                 ) : (
                   <p className="text-sm text-muted-foreground mb-3">尚未在任何路径中</p>
                 )}
-                <Button
-                  size="sm"
-                  className="w-full mb-2"
-                  onClick={() => {
-                    router.push("/graph?view=path");
-                    setShowPathDialog(true);
-                  }}
-                >
+                  <Button
+                    size="sm"
+                    className="w-full mb-2"
+                    onClick={() => {
+                      router.push("/graph?view=path");
+                    }}
+                  >
                   <Route className="h-4 w-4 mr-2" />
                   在学习路径中规划
                 </Button>
@@ -1106,7 +1122,7 @@ function GraphPageContent() {
                 <div className="space-y-3">
                   <div>
                     <h3 className="text-sm font-medium">知识宝库文档</h3>
-                    <p className="text-xs text-muted-foreground mt-1">当前星球固定映射到 1 篇知识宝库文档（唯一主文档）。</p>
+                    <p className="text-xs text-muted-foreground mt-1">当前知识星球（Planet）与知识宝库（KB）文档保持 1:1 映射关系。</p>
                   </div>
 
                   {!selectedNode.kbDocumentId ? (
@@ -1331,7 +1347,7 @@ function GraphPageContent() {
               </div>
 
               {/* Section 5: AI Assistance */}
-              <div data-testid="graph-sidebar-ai" className="p-4 bg-primary/5 rounded-b-lg flex-1">
+              <div data-testid="graph-sidebar-ai" className="p-4 bg-primary/5 rounded-b-lg shrink-0">
                 <h3 className="text-sm font-medium mb-3 flex items-center gap-2 text-primary">
                   <Sparkles className="h-4 w-4" /> AI 学习助手
                 </h3>
@@ -1348,15 +1364,30 @@ function GraphPageContent() {
                 </Button>
               </div>
             </div>
+            </div>
           )}
 
-          {activeMode === "path" && (
+          {activeMode === "path" && !isRightRailCollapsed && (
             <div
               data-testid="graph-path-detail-rail"
-              className="w-80 shrink-0 border bg-card rounded-lg overflow-y-auto flex flex-col"
+              className="w-80 shrink-0 border bg-card rounded-lg overflow-hidden flex flex-col relative"
             >
-              <div className="p-4 border-b">
-                <h3 className="text-sm font-medium mb-3">当前节点</h3>
+              <Button
+                data-testid="graph-right-rail-collapse"
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4 z-10 h-8 w-8 bg-white/70 hover:bg-white shadow-sm"
+                onClick={() => setIsRightRailCollapsed(true)}
+                title="收起"
+              >
+                <PanelRightClose className="h-4 w-4" />
+              </Button>
+
+              <div className="flex-1 overflow-y-auto flex flex-col">
+                <div className="p-4 border-b shrink-0">
+                  <div className="flex items-center justify-between mb-3 pr-10">
+                    <h3 className="text-sm font-medium">当前节点</h3>
+                  </div>
                 {selectedNode ? (
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -1386,7 +1417,8 @@ function GraphPageContent() {
               </div>
 
               <div className="p-4 border-b">
-                <h3 className="text-sm font-medium mb-3">路径进度</h3>
+                <h3 className="text-sm font-medium">学习路径 (Learning Path) 进度</h3>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">路径由相互关联的星群（Constellation Groups）组成</p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
@@ -1423,6 +1455,22 @@ function GraphPageContent() {
                     : "选择一个节点后在此查看说明。"}
                 </p>
               </div>
+            </div>
+            </div>
+          )}
+
+          {/* Right Rail Expand Button */}
+          {isRightRailCollapsed && ((selectedNode && activeMode !== "path") || activeMode === "path") && (
+            <div className={cn("absolute top-4 z-10 transition-all", showLearningPath ? "right-[340px]" : "right-4")}>
+              <Button
+                data-testid="graph-right-rail-expand"
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsRightRailCollapsed(false)}
+                className="h-8 w-8 bg-white/70 hover:bg-white shadow-sm"
+              >
+                <PanelRightClose className="h-4 w-4 rotate-180" />
+              </Button>
             </div>
           )}
         </div>

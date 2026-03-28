@@ -28,6 +28,7 @@ vi.mock("@/components/words", () => ({
   ProgressRing: () => null,
   StatsCard: () => null,
   StreakCalendar: () => null,
+  DailyArticlePreviewDialog: () => null,
 }));
 
 vi.mock("@/components/ui/select", () => ({

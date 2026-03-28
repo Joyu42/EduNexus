@@ -102,20 +102,21 @@ it("normalizes graph api nodes with KB identity and path memberships", async () 
     });
   });
 
-  it("keeps graph path mode discoverable from shell and selected planet CTAs", async () => {
+  it("keeps graph path mode discoverable from the shell while routing the path CTA to graph path mode", async () => {
     const file = path.resolve(process.cwd(), "src/app/graph/enhanced-page.tsx");
     const content = await fs.readFile(file, "utf8");
 
     expect(content).toContain('data-testid="graph-mode-switcher"');
     expect(content).toContain("学习路径工作流");
     expect(content).toContain("在学习路径中规划");
-    expect((content.match(/router\.push\("\/graph\?view=path"\)/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect((content.match(/router\.push\("\/graph\?view=path"\)/g) ?? []).length).toBe(3);
+    expect((content.match(/router\.push\("\/path\/new-editor"\)/g) ?? []).length).toBe(0);
     expect(content).toContain("知识星图 · 学习路径模式");
     expect(content).toContain("返回探索");
 
     expect(content).toContain('data-testid="graph-path-detail-rail"');
     expect(content).toContain("当前节点");
-    expect(content).toContain("路径进度");
+    expect(content).toContain("学习路径 (Learning Path) 进度");
     expect(content).toContain("节点说明");
   });
 

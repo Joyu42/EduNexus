@@ -19,6 +19,7 @@ import {
   ProgressRing,
   StatsCard,
   StreakCalendar,
+  DailyArticlePreviewDialog,
 } from "@/components/words";
 import { ensureWordsBootstrap } from "@/lib/words/bootstrap";
 import { getWordsToday, listenForWordsTodayChange } from "@/lib/words/date";
@@ -348,7 +349,7 @@ export default function WordsDashboardPage() {
       const field = currentBook?.name || "通识";
 
       // 6. 调用 AI 生成
-      const prompt = `请根据用户今日学习的单词，生成一篇约300字的中文短文。
+      const prompt = `请根据用户今日学习的单词，生成一篇约300字的中文短文，并提供英文翻译。
 
 今日学习的核心单词：${wordList}
 用户专业方向：${field}
@@ -359,6 +360,9 @@ ${forgottenText ? `遗忘的单词（需要加粗）：${forgottenText}` : ""}
 - 自然融入今日所学的单词
 - 遗忘的单词用 **加粗** 标记（如 **abandon**）
 - 文章排版美观，有适当分段
+- 必须包含两个明确的部分：
+  1. “### 中文内容” （纯中文段落）
+  2. “### 英文内容” （对应的英文段落翻译，段落数需与中文内容一致）
 - 语言流畅自然`;
 
       const modelConfig = getModelConfig();
@@ -737,39 +741,13 @@ ${forgottenText ? `遗忘的单词（需要加粗）：${forgottenText}` : ""}
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-orange-500" />
-              {generatedTitle}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {articleContent && (
-              <div className="prose prose-sm max-w-none">
-                <MarkdownRenderer content={articleContent} />
-              </div>
-            )}
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowPreview(false)}
-            >
-              关闭
-            </Button>
-            <Button
-              onClick={handleSaveArticle}
-              disabled={!articleContent}
-              className="bg-gradient-to-br from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600"
-            >
-              <BookmarkPlus className="h-4 w-4 mr-2" />
-              保存到知识宝库
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DailyArticlePreviewDialog
+        open={showPreview}
+        onOpenChange={setShowPreview}
+        generatedTitle={generatedTitle}
+        articleContent={articleContent}
+        onSave={handleSaveArticle}
+      />
     </div>
   );
 }
