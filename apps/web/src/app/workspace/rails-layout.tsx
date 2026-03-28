@@ -42,7 +42,7 @@ export function WorkspaceRailsLayout({
         left
       )}
 
-      <div data-testid="workspace-center-pane" className="flex-1 flex flex-col min-w-0">
+      <div data-testid="workspace-center-pane" className="flex-1 flex flex-col min-w-0 h-full">
         {center}
       </div>
 
