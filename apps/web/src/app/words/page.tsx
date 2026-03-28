@@ -299,6 +299,81 @@ export default function WordsDashboardPage() {
     }
   };
 
+  const handleGenerateArticle = async () => {
+    if (todaySummary.learned === 0) {
+      toast.error("今日暂无学习记录");
+      return;
+    }
+
+    setIsGenerating(true);
+    setShowPreview(false);
+
+    try {
+      // 1. 获取今日学习记录
+      const records = await wordsStorage.getAllLearningRecords();
+      const todayStr = getWordsToday();
+
+      const todayRecords = records.filter((r) => {
+        const recordDate = r.learnDate || r.lastReviewedAt?.slice(0, 10);
+        return recordDate === todayStr;
+      });
+
+      // 2. 提取今日学的单词
+      const learnedWordIds = todayRecords.map((r) => r.wordId);
+      if (learnedWordIds.length === 0) {
+        toast.error("无法获取今日学习记录");
+        return;
+      }
+
+      // 3. 获取单词详情（用于显示）
+      const allWords = await wordsStorage.getAllWords();
+      const wordMap = new Map(allWords.map((w) => [w.id, w]));
+      const learnedWords = learnedWordIds
+        .map((id) => wordMap.get(id))
+        .filter((w): w is NonNullable<typeof w> => Boolean(w));
+      const wordList = learnedWords.map((w) => w.word).join("、");
+
+      // 4. 提取遗忘的词
+      const forgottenWords = todayRecords
+        .filter((r) => r.failureCount > 0 || r.lastGrade === "again")
+        .map((r) => r.wordId)
+        .map((id) => wordMap.get(id))
+        .filter((w): w is NonNullable<typeof w> => Boolean(w))
+        .map((w) => w.word);
+      const forgottenText = forgottenWords.length > 0 ? forgottenWords.join("、") : "";
+
+      // 5. 获取专业方向
+      const currentBook = books.find((b) => b.id === selectedBookId);
+      const field = currentBook?.name || "通识";
+
+      // 6. 调用 AI 生成
+      const prompt = `请根据用户今日学习的单词，生成一篇约300字的中文短文。
+
+今日学习的核心单词：${wordList}
+用户专业方向：${field}
+${forgottenText ? `遗忘的单词（需要加粗）：${forgottenText}` : ""}
+
+要求：
+- 短文主题与用户专业相关
+- 自然融入今日所学的单词
+- 遗忘的单词用 **加粗** 标记（如 **abandon**）
+- 文章排版美观，有适当分段
+- 语言流畅自然`;
+
+      const result = await callAI([{ role: "user", content: prompt }]);
+
+      // 7. 设置预览内容
+      setGeneratedTitle(`今日学词 · ${todayStr}`);
+      setArticleContent(result);
+      setShowPreview(true);
+    } catch (error) {
+      console.error("生成文章失败:", error);
+      toast.error("生成文章失败，请重试");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleManage = (bookId: string) => {
     const book = books.find((b) => b.id === bookId);
     if (book) {
