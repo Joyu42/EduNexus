@@ -1,6 +1,7 @@
 import { fail, ok } from "@/lib/server/response";
 import { loadDb } from "@/lib/server/store";
 import { listGroupMembers } from "@/lib/server/groups-service";
+import { getUserById } from "@/lib/server/user-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,7 +37,16 @@ export async function GET(_request: Request, context: { params: Promise<{ groupI
     }
 
     const members = await listGroupMembers(id);
-    return ok({ members });
+    const membersWithNames = await Promise.all(
+      members.map(async (member) => {
+        const user = await getUserById(member.userId);
+        return {
+          ...member,
+          userName: user?.name ?? user?.email ?? "未知用户"
+        };
+      })
+    );
+    return ok({ members: membersWithNames });
   } catch (error) {
     return fail(
       {

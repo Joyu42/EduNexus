@@ -38,6 +38,7 @@ type GroupMember = {
   id: string;
   groupId: string;
   userId: string;
+  userName?: string;
   role: "owner" | "admin" | "member";
   status: "active" | "invited" | "removed";
   joinedAt: string;

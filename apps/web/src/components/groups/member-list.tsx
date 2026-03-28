@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 export type GroupMemberProps = {
   id: string;
   userId: string;
+  userName?: string;
   role: string;
   status: string;
 };
@@ -18,7 +19,7 @@ export function MemberList({ members }: { members: GroupMemberProps[] }) {
       {members.map((member) => (
         <div key={member.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
           <span className="truncate max-w-[150px]" title={member.userId}>
-            {member.userId.slice(0, 8)}...
+            {member.userName ?? member.userId}
           </span>
           <Badge variant="secondary">{member.role}</Badge>
         </div>
