@@ -225,7 +225,7 @@ export class LayoutAlgorithms {
         nodesByRegion.get(regionId)?.push(node);
       }
 
-      const spacing = 44;
+      const spacing = Math.max(60, 44 + (nodes.length - 10) * 2);
       const positionsById = new Map<string, { fx: number; fy: number }>();
 
       for (const [pathId, regionNodes] of nodesByRegion.entries()) {

@@ -505,13 +505,13 @@ export function InteractiveGraph({
         onNodeDrag={handleNodeDrag}
         onNodeDragEnd={handleNodeDragEnd}
         onEngineStop={handleEngineStop}
-        cooldownTicks={layout === "force" ? 60 : 0}
+        cooldownTicks={layout === "force" ? 100 : 0}
         warmupTicks={120}
         enableNodeDrag={layout === "force"}
         enableZoomInteraction={true}
         enablePanInteraction={true}
-        d3AlphaDecay={0.06}
-        d3VelocityDecay={0.55}
+        d3AlphaDecay={0.03}
+        d3VelocityDecay={0.4}
       />
     </div>
   );
