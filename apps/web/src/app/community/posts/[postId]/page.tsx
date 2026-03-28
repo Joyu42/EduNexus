@@ -1,6 +1,7 @@
 "use client";
 
 import { use } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ export default function CommunityPostDetailPage({ params }: { params: Promise<{ 
   const { postId } = use(params);
   const { data: session, status } = useSession();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const currentUserId = session?.user?.id;
 
   const postQuery = useQuery({
@@ -121,6 +123,24 @@ export default function CommunityPostDetailPage({ params }: { params: Promise<{ 
     onError: (error: Error) => toast.error(error.message)
   });
 
+  const deletePostMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/community/posts/${postId}`, {
+        method: "DELETE"
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error?.message ?? "删除帖子失败");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("帖子已删除");
+      router.push("/community");
+    },
+    onError: (error: Error) => toast.error(error.message)
+  });
+
   if (postQuery.isLoading) {
     return <div className="p-8 text-center text-muted-foreground">加载中...</div>;
   }
@@ -141,12 +161,32 @@ export default function CommunityPostDetailPage({ params }: { params: Promise<{ 
     createComment.mutate(content);
   };
 
+  const isOwner = currentUserId === post.authorId;
+
+  const handleDeletePost = () => {
+    if (window.confirm("确定要删除这个帖子吗？此操作不可撤销。")) {
+      deletePostMutation.mutate();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50/40 via-orange-50/20 to-red-50/30">
       <div className="container mx-auto px-4 py-8 max-w-4xl space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>{post.title}</CardTitle>
+            <div className="flex justify-between items-start">
+              <CardTitle>{post.title}</CardTitle>
+              {isOwner && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleDeletePost}
+                  disabled={deletePostMutation.isPending}
+                >
+                  删除帖子
+                </Button>
+              )}
+            </div>
             <div className="text-xs text-muted-foreground">作者 {post.authorName} · {new Date(post.createdAt).toLocaleString("zh-CN")}</div>
           </CardHeader>
           <CardContent className="space-y-4">

@@ -110,6 +110,31 @@ export default function CommunityPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const response = await fetch(`/api/community/posts/${postId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const message =
+          typeof errorData?.error?.message === "string"
+            ? errorData.error.message
+            : "删除帖子失败";
+        throw new Error(message);
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("帖子已删除");
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleSubmit = (data: { title: string; content: string }) => {
     if (status === "unauthenticated") {
       toast.error("请先登录后再操作");
@@ -126,6 +151,17 @@ export default function CommunityPage() {
   const handleEdit = (post: PublicPostRecord) => {
     setEditingPost(post);
     setIsDialogOpen(true);
+  };
+
+  const handleDelete = (postId: string) => {
+    if (status === "unauthenticated") {
+      toast.error("请先登录后再操作");
+      router.push(`/login?callbackUrl=${encodeURIComponent("/community")}`);
+      return;
+    }
+    if (window.confirm("确定要删除这个帖子吗？此操作不可撤销。")) {
+      deleteMutation.mutate(postId);
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -214,6 +250,7 @@ export default function CommunityPage() {
               currentUserId={currentUserId} 
               searchQuery={searchQuery}
               onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           )}
         </div>

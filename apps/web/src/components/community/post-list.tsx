@@ -8,9 +8,10 @@ export interface PostListProps {
   currentUserId?: string;
   searchQuery?: string;
   onEdit?: (post: PublicPostRecord) => void;
+  onDelete?: (postId: string) => void;
 }
 
-export function PostList({ posts, currentUserId, searchQuery = "", onEdit }: PostListProps) {
+export function PostList({ posts, currentUserId, searchQuery = "", onEdit, onDelete }: PostListProps) {
   if (posts.length === 0) {
     return (
       <Card className="p-12 text-center border-dashed">
@@ -28,7 +29,7 @@ export function PostList({ posts, currentUserId, searchQuery = "", onEdit }: Pos
   return (
     <div className="grid grid-cols-1 gap-4">
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} currentUserId={currentUserId} onEdit={onEdit} />
+        <PostCard key={post.id} post={post} currentUserId={currentUserId} onEdit={onEdit} onDelete={onDelete} />
       ))}
     </div>
   );

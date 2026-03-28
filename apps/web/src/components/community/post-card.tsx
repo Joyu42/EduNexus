@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { User, Edit } from "lucide-react";
+import { User, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { PublicPostRecord } from "@/lib/server/store";
 
@@ -7,9 +7,10 @@ export interface PostCardProps {
   post: PublicPostRecord;
   currentUserId?: string;
   onEdit?: (post: PublicPostRecord) => void;
+  onDelete?: (postId: string) => void;
 }
 
-export function PostCard({ post, currentUserId, onEdit }: PostCardProps) {
+export function PostCard({ post, currentUserId, onEdit, onDelete }: PostCardProps) {
   const isOwner = currentUserId === post.authorId;
 
   return (
@@ -27,6 +28,16 @@ export function PostCard({ post, currentUserId, onEdit }: PostCardProps) {
             >
               <Edit className="h-3 w-3" />
               编辑
+            </button>
+          )}
+          {isOwner && onDelete && (
+            <button
+              onClick={() => onDelete(post.id)}
+              className="text-xs flex items-center gap-1 text-muted-foreground hover:text-red-600 bg-muted px-2 py-1 rounded-md"
+              aria-label="删除"
+            >
+              <Trash2 className="h-3 w-3" />
+              删除
             </button>
           )}
           <span className="shrink-0 text-xs text-muted-foreground tabular-nums bg-muted px-2 py-1 rounded-md">
