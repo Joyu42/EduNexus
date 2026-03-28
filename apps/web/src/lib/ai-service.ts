@@ -108,6 +108,38 @@ async function callLocalModel(messages: Message[]): Promise<string> {
 }
 
 /**
+ * 调用 ModelScope API
+ */
+async function callModelscope(messages: Message[]): Promise<string> {
+  const { modelscope } = AI_CONFIG;
+
+  if (!modelscope.apiKey) {
+    throw new Error('ModelScope API key not configured');
+  }
+
+  const response = await fetch(`${modelscope.baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${modelscope.apiKey}`,
+    },
+    body: JSON.stringify({
+      model: modelscope.model,
+      messages,
+      max_tokens: modelscope.maxTokens,
+      temperature: modelscope.temperature,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`ModelScope API error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+
+/**
  * 模拟 AI 响应（用于开发和测试）
  */
 async function callMockModel(userInput: string): Promise<string> {
@@ -183,6 +215,8 @@ export async function callAI(messages: Message[]): Promise<string> {
         return await callAnthropic(messages);
       case 'local':
         return await callLocalModel(messages);
+      case 'modelscope':
+        return await callModelscope(messages);
       case 'mock':
         const userMessage = messages.find((m) => m.role === 'user')?.content || '';
         return await callMockModel(userMessage);
