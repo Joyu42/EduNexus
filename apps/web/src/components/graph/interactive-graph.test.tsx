@@ -88,7 +88,7 @@ describe("InteractiveGraph", () => {
     expect(merged[1]?.y).toBe(400);
   });
 
-  it("renders dynamic relation particles in explore mode", () => {
+  it("does not render relation particles in explore mode", () => {
     capturedProps = null;
 
     render(
@@ -109,10 +109,10 @@ describe("InteractiveGraph", () => {
     const particles = (capturedProps as { linkDirectionalParticles?: unknown } | null)
       ?.linkDirectionalParticles;
     if (typeof particles === "function") {
-      expect(particles({ source: "n1", target: "n2", type: "related", strength: 0.8 })).toBeGreaterThan(0);
+      expect(particles({ source: "n1", target: "n2", type: "related", strength: 0.8 })).toBe(0);
     } else {
       expect(typeof particles).toBe("number");
-      expect((particles as number) > 0).toBe(true);
+      expect(particles).toBe(0);
     }
 
     const particleColor = (capturedProps as { linkDirectionalParticleColor?: unknown } | null)
