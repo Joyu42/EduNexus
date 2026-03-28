@@ -13,7 +13,6 @@ import { loadDb } from "@/lib/server/store";
 import { getWordsProgressSummary, listWords, listWordsLearningRecords, listWordsLearningRecordsByWord, saveWordsLearningRecord } from "@/lib/server/words-service";
 import { updateWordStatus } from "@/lib/words/scheduler";
 import type { WordAnswerGrade } from "@/lib/words/types";
-import { DEMO_PATH_SEEDS } from "@/lib/server/demo-content";
 import { saveDb } from "@/lib/server/store";
 
 function requireUserId(userId?: string) {

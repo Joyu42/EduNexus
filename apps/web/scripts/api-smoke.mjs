@@ -26,13 +26,13 @@ function getNextDevSpawn(port) {
         "/d",
         "/s",
         "/c",
-        `pnpm exec next dev --port ${String(port)}`
+        `pnpm exec next dev --webpack --port ${String(port)}`
       ]
     };
   }
   return {
     command: "pnpm",
-    args: ["exec", "next", "dev", "--port", String(port)]
+    args: ["exec", "next", "dev", "--webpack", "--port", String(port)]
   };
 }
 
@@ -82,7 +82,7 @@ async function waitForServerReady(url, timeoutMs = 90_000) {
   let lastError = null;
   while (Date.now() - start < timeoutMs) {
     try {
-      const res = await fetch(url);
+      const res = await fetchWithTimeout(url, {}, 8_000);
       if (res.ok || res.status >= 400) {
         return;
       }
@@ -92,6 +92,61 @@ async function waitForServerReady(url, timeoutMs = 90_000) {
     await sleep(1000);
   }
   throw new Error(`开发服务器启动超时：${String(lastError)}`);
+}
+
+async function fetchWithTimeout(url, init = {}, timeoutMs = 120_000) {
+  if (init.signal) {
+    return fetch(url, init);
+  }
+  return fetch(url, {
+    ...init,
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+}
+
+function getSetCookieHeaders(response) {
+  if (typeof response.headers.getSetCookie === "function") {
+    return response.headers.getSetCookie();
+  }
+  const fallback = response.headers.get("set-cookie");
+  return fallback ? [fallback] : [];
+}
+
+function toCookieHeader(setCookieHeaders) {
+  return setCookieHeaders
+    .map((cookie) => cookie.split(";")[0])
+    .filter(Boolean)
+    .join("; ");
+}
+
+function isTransientAuthError(error) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  const normalized = error.message.toLowerCase();
+  return (
+    normalized.includes("timeout") ||
+    normalized.includes("fetch failed") ||
+    normalized.includes("econnreset") ||
+    normalized.includes("socket")
+  );
+}
+
+async function ensureAuthenticatedWithRetry(baseUrl, maxAttempts = 3) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await ensureAuthenticated(baseUrl);
+    } catch (error) {
+      lastError = error;
+      if (!isTransientAuthError(error) || attempt === maxAttempts) {
+        throw error;
+      }
+      await sleep(1500 * attempt);
+    }
+  }
+
+  throw lastError ?? new Error("认证重试失败");
 }
 
 async function killProcessTree(child) {
@@ -108,24 +163,28 @@ async function killProcessTree(child) {
   child.kill("SIGTERM");
 }
 
-function requestJson(baseUrl, pathname, init) {
-  return fetch(`${baseUrl}${pathname}`, init);
-}
-
 async function writeEvidence(filename, content) {
   await fs.mkdir(EVIDENCE_DIR, { recursive: true });
   await fs.writeFile(path.join(EVIDENCE_DIR, filename), content, "utf8");
 }
 
 async function registerUser(baseUrl) {
-  const res = await fetch(`${baseUrl}/api/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(SMOKE_USER),
-  });
+  const res = await fetchWithTimeout(
+    `${baseUrl}/api/auth/register`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(SMOKE_USER),
+    },
+    240_000
+  );
   if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`注册用户失败: ${res.status} ${error}`);
+    const errorBody = await res.text();
+    // EMAIL_ALREADY_EXISTS is idempotent — user already registered, treat as success
+    if (res.status === 409 && errorBody.includes("EMAIL_ALREADY_EXISTS")) {
+      return { id: undefined, email: SMOKE_USER.email, name: SMOKE_USER.name };
+    }
+    throw new Error(`注册用户失败: ${res.status} ${errorBody}`);
   }
   return res.json();
 }
@@ -133,7 +192,7 @@ async function registerUser(baseUrl) {
 async function signInAndGetCookies(baseUrl) {
   // Step 1: Get CSRF token from the dedicated CSRF endpoint
   // This also sets a csrfToken cookie that must be sent back with the callback
-  const csrfRes = await fetch(`${baseUrl}/api/auth/csrf`);
+  const csrfRes = await fetchWithTimeout(`${baseUrl}/api/auth/csrf`, {}, 240_000);
   const csrfJson = await csrfRes.json();
   const csrfToken = csrfJson.csrfToken;
 
@@ -142,8 +201,7 @@ async function signInAndGetCookies(baseUrl) {
   }
 
   // Extract CSRF cookie from the response headers
-  const csrfCookie = csrfRes.headers.get("set-cookie");
-  const csrfCookieValue = csrfCookie ? csrfCookie.split(";")[0] : null;
+  const csrfCookieValue = toCookieHeader(getSetCookieHeaders(csrfRes));
 
   // Step 2: Post credentials to the callback endpoint
   // Include the CSRF cookie that was set in step 1
@@ -161,22 +219,23 @@ async function signInAndGetCookies(baseUrl) {
     headers["Cookie"] = csrfCookieValue;
   }
 
-  const signInRes = await fetch(`${baseUrl}/api/auth/callback/credentials`, {
-    method: "POST",
-    headers,
-    body: signInParams.toString(),
-    redirect: "manual",
-  });
+  const signInRes = await fetchWithTimeout(
+    `${baseUrl}/api/auth/callback/credentials`,
+    {
+      method: "POST",
+      headers,
+      body: signInParams.toString(),
+      redirect: "manual",
+    },
+    240_000
+  );
 
   // Step 3: Extract session cookie from set-cookie headers
-  const setCookieHeader = signInRes.headers.get("set-cookie");
-  if (!setCookieHeader) {
+  const sessionCookies = toCookieHeader(getSetCookieHeaders(signInRes));
+  if (!sessionCookies) {
     throw new Error(`登录失败，未收到 session cookie，status: ${signInRes.status}`);
   }
-
-  // Parse all cookies from set-cookie header
-  const cookies = setCookieHeader.split(",").map((c) => c.trim().split(";")[0]).join("; ");
-  return cookies;
+  return sessionCookies;
 }
 
 async function ensureAuthenticated(baseUrl) {
@@ -245,6 +304,8 @@ async function main() {
     ...process.env,
     EDUNEXUS_VAULT_DIR: sandbox.vaultDir,
     EDUNEXUS_DATA_DIR: sandbox.dataDir,
+    MODELSCOPE_API_KEY: "",
+    MODELSCOPE_CHAT_MODEL: "",
     PORT: String(port)
   };
   const nextDev = getNextDevSpawn(port);
@@ -265,10 +326,10 @@ async function main() {
   const authHeaders = { "Content-Type": "application/json" };
 
   try {
-    await waitForServerReady(`${baseUrl}/api/kb/tags`);
+    await waitForServerReady(`${baseUrl}/manifest.json`);
 
     // Authenticate before calling protected endpoints
-    const cookies = await ensureAuthenticated(baseUrl);
+    const cookies = await ensureAuthenticatedWithRetry(baseUrl);
     if (cookies) {
       authHeaders["Cookie"] = cookies;
     }
@@ -283,7 +344,7 @@ async function main() {
       if (!(init.body instanceof FormData) && !headers["Content-Type"]) {
         headers["Content-Type"] = "application/json";
       }
-      return fetch(`${baseUrl}${path}`, { ...init, headers });
+      return fetchWithTimeout(`${baseUrl}${path}`, { ...init, headers }, 240_000);
     };
 
     const readSuccessPayload = async (response, label, expectedStatuses = [200]) => {
@@ -316,18 +377,60 @@ async function main() {
     });
     assert.equal(agentRes.status, 200, "LangGraph 工作流失败");
 
-    const streamRes = await authRequest("/api/workspace/agent/stream", {
-      method: "POST",
-      body: JSON.stringify({
-        sessionId,
-        userInput: "请流式展示一次分步引导。",
-        currentLevel: 2
-      })
+    const streamRes = await authRequest(`/api/workspace/session/${sessionId}/stream?prompt=${encodeURIComponent("请流式展示一次分步引导。")}`, {
+      method: "GET",
+      signal: AbortSignal.timeout(300_000)
     });
     assert.equal(streamRes.status, 200, "LangGraph 流式工作流失败");
-    const streamText = await streamRes.text();
-    assert.ok(streamText.includes("\"type\":\"trace\""), "流式结果缺少 trace 事件");
-    assert.ok(streamText.includes("\"type\":\"done\""), "流式结果缺少 done 事件");
+    assert.ok(streamRes.body, "流式结果缺少 body");
+    const reader = streamRes.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let hasTrace = false;
+    let hasDone = false;
+
+    while (!hasDone) {
+      const { done, value } = await reader.read();
+      if (value) {
+        buffer += decoder.decode(value, { stream: true });
+      }
+
+      let newlineIndex = buffer.indexOf("\n");
+      while (newlineIndex >= 0) {
+        const rawLine = buffer.slice(0, newlineIndex).trim();
+        buffer = buffer.slice(newlineIndex + 1);
+        newlineIndex = buffer.indexOf("\n");
+
+        if (!rawLine || rawLine.startsWith(":")) {
+          continue;
+        }
+
+        const line = rawLine.startsWith("data:") ? rawLine.slice(5).trim() : rawLine;
+        if (!line) {
+          continue;
+        }
+
+        try {
+          const event = JSON.parse(line);
+          if (event.type === "trace") {
+            hasTrace = true;
+          }
+          if (event.type === "done") {
+            hasDone = true;
+            break;
+          }
+        } catch {
+          // Ignore partial/non-JSON lines until the next chunk arrives.
+        }
+      }
+
+      if (done) {
+        break;
+      }
+    }
+
+    assert.ok(hasTrace, "流式结果缺少 trace 事件");
+    assert.ok(hasDone, "流式结果缺少 done 事件");
 
     const kbRes = await authRequest("/api/kb/search?q=知识");
     assert.equal(kbRes.status, 200, "知识库检索失败");

@@ -109,7 +109,7 @@ it("normalizes graph api nodes with KB identity and path memberships", async () 
     expect(content).toContain('data-testid="graph-mode-switcher"');
     expect(content).toContain("学习路径工作流");
     expect(content).toContain("在学习路径中规划");
-    expect(content).toMatch(/router\.push\("\/graph\?view=path"\)/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect((content.match(/router\.push\("\/graph\?view=path"\)/g) ?? []).length).toBeGreaterThanOrEqual(2);
     expect(content).toContain("知识星图 · 学习路径模式");
     expect(content).toContain("返回探索");
 
@@ -125,7 +125,7 @@ it("normalizes graph api nodes with KB identity and path memberships", async () 
       status: 401,
     });
 
-    await expect(loadPrivateGraphView(fetcher)).resolves.toEqual({
+    await expect(loadPrivateGraphView(undefined, fetcher)).resolves.toEqual({
       nodes: [],
       edges: [],
     });
@@ -140,7 +140,7 @@ it("normalizes graph api nodes with KB identity and path memberships", async () 
       status: 500,
     });
 
-    await expect(loadPrivateGraphView(fetcher)).rejects.toThrow(
+    await expect(loadPrivateGraphView(undefined, fetcher)).rejects.toThrow(
       "Failed to fetch graph view: 500"
     );
   });
@@ -151,9 +151,8 @@ it("normalizes graph api nodes with KB identity and path memberships", async () 
       status: 503,
     });
 
-    await expect(loadPrivateGraphView(fetcher)).rejects.toThrow(
+    await expect(loadPrivateGraphView(undefined, fetcher)).rejects.toThrow(
       "Failed to fetch graph view: 503"
     );
-  });
   });
 });

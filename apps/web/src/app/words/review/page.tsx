@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Timer } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -20,7 +20,7 @@ import { updateWordStatus } from "@/lib/words/scheduler";
 import { selectReviewWordIds } from "@/lib/words/session";
 import type { Word, WordAnswerGrade } from "@/lib/words/types";
 
-export default function ReviewWordsPage() {
+function ReviewWordsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const bookId = searchParams.get("bookId") ?? undefined;
@@ -206,5 +206,17 @@ export default function ReviewWordsPage() {
         ) : null}
       </div>
     </div>
+  );
+}
+
+export default function ReviewWordsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <p className="text-sm text-slate-600">正在加载...</p>
+      </div>
+    }>
+      <ReviewWordsPageContent />
+    </Suspense>
   );
 }
