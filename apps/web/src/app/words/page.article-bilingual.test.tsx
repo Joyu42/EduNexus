@@ -28,6 +28,7 @@ describe("DailyArticlePreviewDialog", () => {
         onOpenChange={mockOnOpenChange}
         generatedTitle="今日学词"
         articleContent="### 中文内容\n你好\n### 英文内容\nHello"
+        learnedWords={["你好", "Hello"]}
         onSave={mockOnSave}
       />
     );
@@ -61,6 +62,7 @@ Second English paragraph.
         onOpenChange={mockOnOpenChange}
         generatedTitle="今日学词"
         articleContent={bilingualContent}
+        learnedWords={["第一段", "Second", "内容"]}
         onSave={mockOnSave}
       />
     );
@@ -68,8 +70,7 @@ Second English paragraph.
     const toggle = screen.getByRole("switch") as HTMLButtonElement;
     expect(toggle.getAttribute("aria-checked")).toBe("false");
 
-    // In non-bilingual mode, it should just show the combined Chinese text
-    expect(screen.getByTestId("markdown-renderer").textContent).toContain("第一段中文内容。\n\n第二段中文内容。");
+    expect(screen.getByTestId("markdown-renderer").textContent).toContain("**第一段**中文**内容**。\n\n第二段中文**内容**。");
     expect(screen.getByTestId("markdown-renderer").textContent).not.toContain("First English paragraph");
 
     fireEvent.click(toggle);
@@ -81,8 +82,8 @@ Second English paragraph.
       const zhSection = elements[0].textContent;
       const enSection = elements[1].textContent;
       
-      expect(zhSection).toContain("第一段中文内容。\n\n第二段中文内容。");
-      expect(enSection).toContain("First English paragraph.\n\nSecond English paragraph.");
+      expect(zhSection).toContain("**第一段**中文**内容**。\n\n第二段中文**内容**。");
+      expect(enSection).toContain("First English paragraph.\n\n**Second** English paragraph.");
     });
   });
 
@@ -99,6 +100,7 @@ Second English paragraph.
         onOpenChange={mockOnOpenChange}
         generatedTitle="今日学词"
         articleContent={missingTranslation}
+        learnedWords={["只有", "英文"]}
         onSave={mockOnSave}
       />
     );

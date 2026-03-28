@@ -92,6 +92,7 @@ export default function WordsDashboardPage() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [articleContent, setArticleContent] = useState<string | null>(null);
+  const [articleLearnedWords, setArticleLearnedWords] = useState<string[]>([]);
   const [generatedTitle, setGeneratedTitle] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
 
@@ -375,6 +376,7 @@ ${forgottenText ? `遗忘的单词（需要加粗）：${forgottenText}` : ""}
       // 7. 设置预览内容
       setGeneratedTitle(`今日学词 · ${todayStr}`);
       setArticleContent(result);
+      setArticleLearnedWords(learnedWords.map((word) => word.word));
       setShowPreview(true);
     } catch (error) {
       console.error("生成文章失败:", error);
@@ -392,6 +394,7 @@ ${forgottenText ? `遗忘的单词（需要加粗）：${forgottenText}` : ""}
       toast.success("已保存到知识宝库");
       setShowPreview(false);
       setArticleContent(null);
+      setArticleLearnedWords([]);
     } catch (error) {
       console.error("保存失败:", error);
       toast.error("保存失败，请重试");
@@ -746,6 +749,7 @@ ${forgottenText ? `遗忘的单词（需要加粗）：${forgottenText}` : ""}
         onOpenChange={setShowPreview}
         generatedTitle={generatedTitle}
         articleContent={articleContent}
+        learnedWords={articleLearnedWords}
         onSave={handleSaveArticle}
       />
     </div>

@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Sparkles, BookmarkPlus, AlertCircle } from "lucide-react";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { boldLearnedWords } from "./article-bolding";
 
 interface DailyArticlePreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   generatedTitle: string;
   articleContent: string | null;
+  learnedWords: string[];
   onSave: () => void;
 }
 
@@ -20,6 +22,7 @@ export function DailyArticlePreviewDialog({
   onOpenChange,
   generatedTitle,
   articleContent,
+  learnedWords,
   onSave,
 }: DailyArticlePreviewDialogProps) {
   const [bilingual, setBilingual] = useState(false);
@@ -63,11 +66,14 @@ export function DailyArticlePreviewDialog({
   const renderContent = () => {
     if (!articleContent || !parsed) return null;
 
+    const boldZhContent = boldLearnedWords(parsed.zhContent, learnedWords);
+    const boldEnContent = boldLearnedWords(parsed.enContent, learnedWords);
+
     if (!bilingual) {
       // If not bilingual mode, just render the chinese part, or the whole thing if we couldn't parse
       return (
         <div className="prose prose-sm max-w-none">
-          <MarkdownRenderer content={parsed.zhContent} />
+          <MarkdownRenderer content={boldZhContent} />
         </div>
       );
     }
@@ -82,7 +88,7 @@ export function DailyArticlePreviewDialog({
             </AlertDescription>
           </Alert>
           <div className="prose prose-sm max-w-none">
-            <MarkdownRenderer content={parsed.zhContent} />
+            <MarkdownRenderer content={boldZhContent} />
           </div>
         </div>
       );
@@ -92,12 +98,12 @@ export function DailyArticlePreviewDialog({
       <div className="space-y-6">
         <div className="space-y-2 rounded-lg bg-slate-50 p-4 border border-slate-100">
           <div className="prose prose-sm max-w-none text-slate-900">
-            <MarkdownRenderer content={parsed.zhContent} />
+            <MarkdownRenderer content={boldZhContent} />
           </div>
         </div>
         <div className="space-y-2 rounded-lg bg-slate-50 p-4 border border-slate-100">
           <div className="prose prose-sm max-w-none text-slate-600 mt-2 pt-2 border-t border-slate-200 border-dashed">
-            <MarkdownRenderer content={parsed.enContent} />
+            <MarkdownRenderer content={boldEnContent} />
           </div>
         </div>
       </div>

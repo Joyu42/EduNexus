@@ -5,3 +5,4 @@ export { StatsCard } from "./stats-card";
 export { StreakCalendar } from "./streak-calendar";
 export { WordCard } from "./word-card";
 export { DailyArticlePreviewDialog } from "./daily-article-preview";
+export { boldLearnedWords } from "./article-bolding";
