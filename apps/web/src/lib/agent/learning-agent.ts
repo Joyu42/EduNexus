@@ -185,7 +185,7 @@ async function runToolCallingLoop(input: {
       tool_choice: "auto",
     });
 
-    const assistantMessage = completion.choices[0]?.message;
+    const assistantMessage = completion.choices?.[0]?.message;
     if (!assistantMessage) {
       break;
     }
