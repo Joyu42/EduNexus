@@ -96,20 +96,6 @@ export default function NewPathEditorPage() {
 
   return (
     <div className="h-screen flex flex-col">
-
-      <div className="bg-amber-50 border-b border-amber-200 text-amber-800 px-4 py-3 flex items-center gap-3">
-        <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-        <span className="text-sm flex-1">⚠️ 此页面已停用。学习路径功能已移至知识星图</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push('/graph?view=path')}
-          className="text-amber-800 hover:text-amber-900 hover:bg-amber-100"
-        >
-          前往知识星图 →
-        </Button>
-      </div>
-
       {/* 顶部导航 */}
       <div className="h-14 bg-white border-b border-gray-200 flex items-center px-4">
         <Button
