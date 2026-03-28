@@ -430,7 +430,7 @@ export function InteractiveGraph({
     if (isLearningPathEdge(graphLink, showLearningPath, pathNodes)) {
       return 4;
     }
-    return Math.max(1, Math.round(1 + clampStrength(graphLink.strength) * 2));
+    return 0;
   }, [showLearningPath, pathNodes]);
 
   const linkDirectionalParticleWidth = useCallback((link: any) => {
