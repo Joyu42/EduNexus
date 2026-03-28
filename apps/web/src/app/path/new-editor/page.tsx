@@ -95,7 +95,7 @@ export default function NewPathEditorPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-full flex flex-col">
       {/* 顶部导航 */}
       <div className="h-14 bg-white border-b border-gray-200 flex items-center px-4">
         <Button

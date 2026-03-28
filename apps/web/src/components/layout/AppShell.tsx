@@ -66,10 +66,10 @@ export function AppShell({ children }: AppShellProps) {
 
           {/* 主内容滚动区 */}
           <main className={cn(
-            "flex-1 overflow-y-auto overflow-x-hidden transition-all duration-300 relative z-10 pb-16",
+            "flex-1 overflow-y-auto overflow-x-hidden transition-all duration-300 relative z-10 pb-16 md:pb-0 flex flex-col",
             "scrollbar-thin scrollbar-thumb-primary/10"
           )}>
-            <div className="page-container animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex-1 flex flex-col w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
               {children}
             </div>
           </main>
