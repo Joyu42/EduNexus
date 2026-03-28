@@ -106,6 +106,8 @@ function GraphPageContent() {
   const searchParams = useSearchParams();
   const view = searchParams.get("view") || "explore";
   const urlPackId = searchParams.get("packId") || undefined;
+  const isCollapsed = useSidebarStore((state) => state.isCollapsed);
+  const toggleCollapse = useSidebarStore((state) => state.toggleCollapse);
 
   // 状态管理
   const [graphData, setGraphData] = useState<{
@@ -827,7 +829,7 @@ function GraphPageContent() {
         </div>
 
         <div className="flex-1 flex min-h-0 gap-4">
-          {!useSidebarStore.getState().isCollapsed && (
+          {!isCollapsed && (
             <div
               className={cn(
                 "shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto",
@@ -842,10 +844,10 @@ function GraphPageContent() {
                   <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
                     <Filter className="h-4 w-4" /> 节点类型
                     <button
-                      onClick={() => useSidebarStore.getState().toggleCollapse()}
+                      onClick={toggleCollapse}
                       className="ml-auto p-1 hover:bg-muted rounded text-xs"
                     >
-                      {useSidebarStore.getState().isCollapsed ? "展开" : "收起"}
+                      {isCollapsed ? "展开" : "收起"}
                     </button>
                   </h3>
                   <div className="flex flex-col gap-2">
@@ -951,7 +953,7 @@ function GraphPageContent() {
           </div>
 
           {/* Right Sidebar (Conditional) */}
-          {!useSidebarStore.getState().isCollapsed && activeMode !== "path" && selectedNode && (
+          {!isCollapsed && activeMode !== "path" && selectedNode && (
             <div data-testid="graph-planet-sidebar" className="w-80 shrink-0 border bg-card rounded-lg overflow-y-auto flex flex-col">
               {/* Section 1: Summary */}
               <div data-testid="graph-sidebar-summary" className="p-4 border-b">
