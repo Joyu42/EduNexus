@@ -837,7 +837,18 @@ function GraphPageContent() {
               )}
             >
               {activeMode === "path" ? (
-                <JourneyShell className="h-full min-h-0" />
+                <div className="flex flex-col h-full min-h-0">
+                  <div className="flex items-center justify-between mb-3 pb-2 border-b">
+                    <h3 className="text-sm font-medium">学习路径</h3>
+                    <button
+                      onClick={toggleCollapse}
+                      className="p-1 hover:bg-muted rounded text-xs"
+                    >
+                      收起
+                    </button>
+                  </div>
+                  <JourneyShell className="flex-1 min-h-0" />
+                </div>
               ) : (
               <>
                 <div>
@@ -953,7 +964,7 @@ function GraphPageContent() {
           </div>
 
           {/* Right Sidebar (Conditional) */}
-          {!isCollapsed && activeMode !== "path" && selectedNode && (
+          {!isCollapsed && selectedNode && (
             <div data-testid="graph-planet-sidebar" className="w-80 shrink-0 border bg-card rounded-lg overflow-y-auto flex flex-col">
               {/* Section 1: Summary */}
               <div data-testid="graph-sidebar-summary" className="p-4 border-b">
