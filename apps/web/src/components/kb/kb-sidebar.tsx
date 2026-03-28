@@ -171,7 +171,7 @@ export function KBSidebar({
       </div>
 
       {/* 文档列表 */}
-      <ScrollArea className="flex-1 px-2">
+      <ScrollArea className="flex-1 min-h-0 px-2">
         {/* 最近访问 */}
         <div className="mb-2">
           <button
