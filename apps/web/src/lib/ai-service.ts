@@ -110,24 +110,38 @@ async function callLocalModel(messages: Message[]): Promise<string> {
 /**
  * 调用 ModelScope API
  */
-async function callModelscope(messages: Message[]): Promise<string> {
+export type ModelScopeConfig = {
+  apiKey?: string;
+  baseUrl?: string;
+  model?: string;
+  maxTokens?: number;
+  temperature?: number;
+};
+
+async function callModelscope(messages: Message[], config?: ModelScopeConfig): Promise<string> {
   const { modelscope } = AI_CONFIG;
 
-  if (!modelscope.apiKey) {
+  const apiKey = config?.apiKey ?? modelscope.apiKey;
+  if (!apiKey) {
     throw new Error('ModelScope API key not configured');
   }
 
-  const response = await fetch(`${modelscope.baseUrl}/chat/completions`, {
+  const baseUrl = config?.baseUrl ?? modelscope.baseUrl;
+  const model = config?.model ?? modelscope.model;
+  const maxTokens = config?.maxTokens ?? modelscope.maxTokens;
+  const temperature = config?.temperature ?? modelscope.temperature;
+
+  const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${modelscope.apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: modelscope.model,
+      model,
       messages,
-      max_tokens: modelscope.maxTokens,
-      temperature: modelscope.temperature,
+      max_tokens: maxTokens,
+      temperature,
     }),
   });
 
@@ -204,7 +218,13 @@ async function callMockModel(userInput: string): Promise<string> {
 /**
  * 统一的 AI 调用接口
  */
-export async function callAI(messages: Message[]): Promise<string> {
+export type AIConfigOverride = {
+  apiKey?: string;
+  apiEndpoint?: string;
+  modelName?: string;
+};
+
+export async function callAI(messages: Message[], config?: AIConfigOverride): Promise<string> {
   const { provider } = AI_CONFIG;
 
   try {
@@ -216,7 +236,11 @@ export async function callAI(messages: Message[]): Promise<string> {
       case 'local':
         return await callLocalModel(messages);
       case 'modelscope':
-        return await callModelscope(messages);
+        return await callModelscope(messages, {
+          apiKey: config?.apiKey,
+          baseUrl: config?.apiEndpoint,
+          model: config?.modelName,
+        });
       case 'mock':
         const userMessage = messages.find((m) => m.role === 'user')?.content || '';
         return await callMockModel(userMessage);

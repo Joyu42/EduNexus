@@ -24,6 +24,7 @@ import { ensureWordsBootstrap } from "@/lib/words/bootstrap";
 import { getWordsToday, listenForWordsTodayChange } from "@/lib/words/date";
 import { wordsStorage } from "@/lib/words/storage";
 import { callAI } from "@/lib/ai-service";
+import { getModelConfig } from "@/lib/client/model-config";
 import { createDocumentOnServer } from "@/lib/client/kb-storage";
 import {
   uploadCustomBook,
@@ -360,7 +361,12 @@ ${forgottenText ? `遗忘的单词（需要加粗）：${forgottenText}` : ""}
 - 文章排版美观，有适当分段
 - 语言流畅自然`;
 
-      const result = await callAI([{ role: "user", content: prompt }]);
+      const modelConfig = getModelConfig();
+      const result = await callAI([{ role: "user", content: prompt }], {
+        apiKey: modelConfig.apiKey || undefined,
+        apiEndpoint: modelConfig.apiEndpoint || undefined,
+        modelName: modelConfig.model || undefined,
+      });
 
       // 7. 设置预览内容
       setGeneratedTitle(`今日学词 · ${todayStr}`);
