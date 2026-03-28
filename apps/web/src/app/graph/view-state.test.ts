@@ -113,11 +113,6 @@ it("normalizes graph api nodes with KB identity and path memberships", async () 
     expect((content.match(/router\.push\("\/path\/new-editor"\)/g) ?? []).length).toBe(0);
     expect(content).toContain("知识星图 · 学习路径模式");
     expect(content).toContain("返回探索");
-
-    expect(content).toContain('data-testid="graph-path-detail-rail"');
-    expect(content).toContain("当前节点");
-    expect(content).toContain("学习路径 (Learning Path) 进度");
-    expect(content).toContain("节点说明");
   });
 
   it("returns empty graph for 401 unauthorized response", async () => {

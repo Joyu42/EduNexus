@@ -35,7 +35,6 @@ import {
 } from "lucide-react";
 import { InteractiveGraph } from "@/components/graph/interactive-graph";
 import { LearningPathOverlay } from "@/components/graph/learning-path-overlay";
-import { JourneyShell } from "@/components/graph/journey-shell";
 import { PathWorkspace } from "@/components/path/path-workspace";
 import { ProgressLegend } from "@/components/graph/progress-legend";
 import { LoginPrompt } from "@/components/ui/login-prompt";
@@ -622,7 +621,7 @@ function GraphPageContent() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-full flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">加载中...</p>
@@ -644,7 +643,7 @@ function GraphPageContent() {
 
   if (viewState.kind === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-full flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">加载图谱中...</p>
@@ -655,7 +654,7 @@ function GraphPageContent() {
 
   if (viewState.kind === "empty") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <div className="min-h-full flex items-center justify-center bg-background px-6">
         <div className="max-w-lg rounded-3xl border bg-card p-10 text-center shadow-sm">
           <h1 className="text-2xl font-semibold text-foreground">{viewState.title}</h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">{viewState.description}</p>
@@ -668,7 +667,7 @@ function GraphPageContent() {
   }
 
   return (
-    <div data-testid="graph-workspace" className="min-h-screen flex flex-col bg-background">
+    <div data-testid="graph-workspace" className="min-h-full flex flex-col bg-background">
       {/* 头部 */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
@@ -849,7 +848,7 @@ function GraphPageContent() {
             <div
               className={cn(
                 "shrink-0 flex flex-col gap-4 bg-card/30 rounded-lg border p-4 overflow-y-auto relative",
-                (activeMode as string) === "path" ? "w-[24rem]" : "w-64"
+                "w-64"
               )}
             >
               <Button
@@ -862,15 +861,6 @@ function GraphPageContent() {
               >
                 <PanelLeftClose className="h-4 w-4" />
               </Button>
-              {(activeMode as string) === "path" ? (
-                <div className="flex flex-col h-full min-h-0">
-                  <div className="flex items-center justify-between mb-3 pb-2 border-b">
-                    <h3 className="text-sm font-medium">学习路径</h3>
-                    
-                  </div>
-                  <JourneyShell className="flex-1 min-h-0" />
-                </div>
-              ) : (
               <>
                 <div>
                   <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
@@ -939,16 +929,13 @@ function GraphPageContent() {
                   </Button>
                 </div>
               </>
-            )}
           </div>
           )}
 
           <div
             className={cn(
               "flex-1 relative rounded-lg border overflow-hidden",
-              (activeMode as string) === "path"
-                ? "bg-card/30 [background-image:radial-gradient(rgba(15,23,42,0.08)_1px,transparent_1px)] [background-size:18px_18px]"
-                : "bg-card/20"
+              "bg-card/20"
             )}
           >
             <InteractiveGraph
@@ -980,7 +967,7 @@ function GraphPageContent() {
           </div>
 
           {/* Right Sidebar (Conditional) */}
-          {!isRightRailCollapsed && selectedNode && (activeMode as string) !== "path" && (
+          {!isRightRailCollapsed && selectedNode && (
             <div data-testid="graph-planet-sidebar" className="w-80 shrink-0 border bg-card rounded-lg overflow-hidden flex flex-col relative">
               <Button
                 data-testid="graph-right-rail-collapse"
@@ -1381,100 +1368,9 @@ function GraphPageContent() {
             </div>
           )}
 
-          {(activeMode as string) === "path" && !isRightRailCollapsed && (
-            <div
-              data-testid="graph-path-detail-rail"
-              className="w-80 shrink-0 border bg-card rounded-lg overflow-hidden flex flex-col relative"
-            >
-              <Button
-                data-testid="graph-right-rail-collapse"
-                variant="ghost"
-                size="icon"
-                className="absolute top-4 right-4 z-10 h-8 w-8 bg-white/70 hover:bg-white shadow-sm rounded-lg transition-all duration-300 text-slate-700"
-                onClick={() => setIsRightRailCollapsed(true)}
-                title="收起"
-              >
-                <PanelRightClose className="h-4 w-4" />
-              </Button>
-
-              <div className="flex-1 overflow-y-auto flex flex-col">
-                <div className="p-4 border-b shrink-0">
-                  <div className="flex items-center justify-between mb-3 pr-10">
-                    <h3 className="text-sm font-medium">当前节点</h3>
-                  </div>
-                {selectedNode ? (
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="text-base font-semibold leading-snug truncate">
-                          {selectedNode.name}
-                        </div>
-                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                          <Badge variant="secondary" className="text-xs">
-                            {NODE_TYPE_CONFIG[selectedNode.type]?.label || selectedNode.type}
-                          </Badge>
-                          <span>
-                            掌握度 {(Math.round((selectedNode.mastery ?? 0) * 100) || 0).toString()}%
-                          </span>
-                        </div>
-                      </div>
-                      {selectedNode.needsReview ? (
-                        <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
-                          复习
-                        </Badge>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">点击画布上的节点查看详情</p>
-                )}
-              </div>
-
-              <div className="p-4 border-b">
-                <h3 className="text-sm font-medium">学习路径 (Learning Path) 进度</h3>
-                <p className="text-xs text-muted-foreground mt-1 mb-3">路径由相互关联的星群（Constellation Groups）组成</p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      已掌握 {filteredNodes.filter((n) => n.masteryStage === "mastered").length}/{filteredNodes.length}
-                    </span>
-                    <span>
-                      {filteredNodes.length > 0
-                        ? Math.round(
-                            (filteredNodes.filter((n) => n.masteryStage === "mastered").length / filteredNodes.length) *
-                              100
-                          )
-                        : 0}
-                      %
-                    </span>
-                  </div>
-                  <Progress
-                    value={
-                      filteredNodes.length > 0
-                        ? (filteredNodes.filter((n) => n.masteryStage === "mastered").length / filteredNodes.length) * 100
-                        : 0
-                    }
-                    className="h-1.5"
-                  />
-                </div>
-              </div>
-
-              <div className="p-4">
-                <h3 className="text-sm font-medium mb-3">节点说明</h3>
-                <p className="text-sm text-muted-foreground leading-6">
-                  {selectedNode
-                    ? selectedNode.keywords && selectedNode.keywords.length > 0
-                      ? selectedNode.keywords.join("、")
-                      : "暂无说明"
-                    : "选择一个节点后在此查看说明。"}
-                </p>
-              </div>
-            </div>
-            </div>
-          )}
 
           {/* Right Rail Expand Button */}
-          {isRightRailCollapsed && ((selectedNode && (activeMode as string) !== "path") || (activeMode as string) === "path") && (
+          {isRightRailCollapsed && selectedNode && (
             <div className={cn("absolute top-4 z-10 transition-all", showLearningPath ? "right-[340px]" : "right-4")}>
               <Button
                 data-testid="graph-right-rail-expand"
@@ -1591,7 +1487,7 @@ export default function EnhancedGraphPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-full flex items-center justify-center">
           <div className="animate-spin h-12 w-12 rounded-full border-b-2 border-primary"></div>
         </div>
       }

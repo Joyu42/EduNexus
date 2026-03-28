@@ -55,7 +55,7 @@ describe('PathWorkspace', () => {
     expect(screen.getByTestId('path-workspace-empty')).toBeTruthy();
     // Editor should not be rendered
     expect(screen.queryByTestId('mock-enhanced-editor')).toBeFalsy();
-    expect(screen.getByText('Select a learning path or create a new one to start editing.')).toBeTruthy();
+    expect(screen.getByText('选择或新建一个学习路径开始编辑。')).toBeTruthy();
   });
 
   it('renders list and selects first path automatically', async () => {

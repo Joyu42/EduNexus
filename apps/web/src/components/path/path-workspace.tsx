@@ -36,7 +36,7 @@ export function PathWorkspace() {
     return (
       <div className="flex h-full items-center justify-center bg-background text-muted-foreground" data-testid="path-workspace-loading">
         <Loader2 className="h-8 w-8 animate-spin mr-2" />
-        Loading workspace...
+        加载工作区...
       </div>
     );
   }
@@ -44,7 +44,7 @@ export function PathWorkspace() {
   if (error) {
     return (
       <div className="flex h-full items-center justify-center bg-background text-destructive" data-testid="path-workspace-error">
-        Error: {error.message}
+        错误: {error.message}
       </div>
     );
   }
@@ -54,15 +54,15 @@ export function PathWorkspace() {
       {/* Left Sidebar */}
       <div className="w-64 border-r flex flex-col bg-muted/20">
         <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="font-semibold text-lg">My Paths</h2>
-          <Button variant="ghost" size="icon" title="New Path">
+          <h2 className="font-semibold text-lg">我的学习路径</h2>
+          <Button variant="ghost" size="icon" title="新建路径">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
         <ScrollArea className="flex-1">
           {paths.length === 0 ? (
             <div className="p-4 text-sm text-muted-foreground text-center" data-testid="path-workspace-empty">
-              No learning paths yet. Create one to get started!
+              暂无学习路径。请新建一个学习路径开始！
             </div>
           ) : (
             <div className="p-2 space-y-1" data-testid="path-workspace-list">
@@ -78,7 +78,7 @@ export function PathWorkspace() {
                   }`}
                 >
                   <FileText className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{path.title || "Untitled Path"}</span>
+                  <span className="truncate">{path.title || "未命名路径"}</span>
                 </button>
               ))}
             </div>
@@ -95,7 +95,7 @@ export function PathWorkspace() {
           />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">
-            Select a learning path or create a new one to start editing.
+            选择或新建一个学习路径开始编辑。
           </div>
         )}
       </div>
