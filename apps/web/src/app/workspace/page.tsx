@@ -790,7 +790,7 @@ function WorkspacePageContent() {
         </motion.div>
 
         {/* Messages */}
-        <div className="h-0 flex-grow overflow-y-auto p-4 scrollbar-thin" style={{ contain: 'layout' }}>
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 scrollbar-thin" style={{ contain: 'layout' }}>
           <div className="max-w-4xl mx-auto space-y-4">
             <AnimatePresence>
               {messages.map((message, index) => (
@@ -1032,10 +1032,10 @@ function WorkspacePageContent() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="border-t bg-white/80 backdrop-blur-sm p-4 shadow-lg"
+          className="sticky bottom-0 border-t bg-white/95 backdrop-blur-sm p-4 shadow-lg z-10"
         >
           <div className="max-w-4xl mx-auto">
-            <div className="flex gap-2 mb-3 overflow-x-auto pb-2 scrollbar-thin">
+            <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-thin">
               {quickActions.map((action, index) => {
                 const Icon = action.icon;
                 return (
