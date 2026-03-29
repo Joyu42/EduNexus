@@ -73,6 +73,11 @@ export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
   return normalized;
 }
 
+export async function loadSyncedPaths(userId: string): Promise<SyncedPathRecord[]> {
+  const db = await loadDb();
+  return db.syncedPaths.filter((p) => p.userId === userId);
+}
+
 export async function deleteSyncedPath(pathId: string, userId: string) {
   const db = await loadDb();
   db.syncedPaths = db.syncedPaths.filter(

@@ -445,6 +445,86 @@ export class PathStorageManager {
   }
 
   /**
+   * 将服务器 SyncedPathRecord 转换为 LearningPath
+   */
+  private serverPathToLearningPath(serverPath: {
+    pathId: string;
+    title: string;
+    description: string;
+    status: "not_started" | "in_progress" | "completed";
+    progress: number;
+    tags: string[];
+    tasks: Array<{
+      taskId: string;
+      title: string;
+      description?: string;
+      estimatedTime?: string;
+      status?: "not_started" | "in_progress" | "completed";
+      progress?: number;
+      dependencies?: string[];
+      documentBinding?: { documentId: string; boundAt: string };
+    }>;
+    updatedAt: string;
+  }): LearningPath {
+    return {
+      id: serverPath.pathId,
+      title: serverPath.title,
+      description: serverPath.description,
+      status: serverPath.status,
+      progress: serverPath.progress,
+      tags: serverPath.tags,
+      createdAt: new Date(serverPath.updatedAt),
+      updatedAt: new Date(serverPath.updatedAt),
+      tasks: serverPath.tasks.map((t) => ({
+        id: t.taskId,
+        title: t.title,
+        description: t.description ?? "",
+        estimatedTime: t.estimatedTime ?? "30m",
+        progress: t.progress ?? 0,
+        status: t.status ?? "not_started",
+        dependencies: t.dependencies ?? [],
+        resources: [],
+        notes: "",
+        createdAt: new Date(serverPath.updatedAt),
+        documentBinding: t.documentBinding
+          ? {
+              documentId: t.documentBinding.documentId,
+              boundAt: new Date(t.documentBinding.boundAt),
+            }
+          : undefined,
+      })),
+      milestones: [],
+    };
+  }
+
+  /**
+   * 从服务器同步路径数据并合并到本地存储
+   */
+  private async hydrateFromServer(): Promise<LearningPath[]> {
+    try {
+      const res = await fetch("/api/path/sync", { credentials: "include" });
+      if (!res.ok) return [];
+      const json = await res.json();
+      const serverPaths: LearningPath[] = (json.paths ?? []).map((p: Parameters<typeof this.serverPathToLearningPath>[0]) =>
+        this.serverPathToLearningPath(p)
+      );
+      if (serverPaths.length === 0) return [];
+
+      // 将服务器路径写入本地 IndexedDB
+      if (this.db && !this.useLocalStorage) {
+        await Promise.all(
+          serverPaths.map((path) => this.db!.put("paths", this.serializePath(path)))
+        );
+      }
+      console.log("[PathStorage] 从服务器合并路径:", serverPaths.length, "个");
+      return serverPaths;
+    } catch (error) {
+      console.warn("[PathStorage] 从服务器同步路径失败:", error);
+      return [];
+    }
+  }
+
+  /**
    * 获取所有学习路径
    */
   async getAllPaths(): Promise<LearningPath[]> {
@@ -461,14 +541,37 @@ export class PathStorageManager {
         return localStoragePathManager.getAllPaths();
       }
 
-      const paths = await this.db!.getAll('paths');
-      console.log('[PathStorage] 获取所有路径:', paths.length, '个');
-      return paths.map(this.deserializePath);
+      const localPaths = await this.db!.getAll('paths');
+      const deserializedLocal = localPaths.map(this.deserializePath);
+
+      // 从服务器 hydrate 并合并（去重，服务器数据优先更新）
+      const serverPaths = await this.hydrateFromServer();
+      const merged = this.mergePaths(deserializedLocal, serverPaths);
+
+      console.log('[PathStorage] 获取所有路径:', merged.length, '个');
+      return merged;
     } catch (error) {
       console.error('[PathStorage] 获取路径失败，尝试 LocalStorage:', error);
       this.useLocalStorage = true;
       return localStoragePathManager.getAllPaths();
     }
+  }
+
+  /**
+   * 合并本地路径和服务器路径，服务器路径覆盖同名 id
+   */
+  private mergePaths(local: LearningPath[], server: LearningPath[]): LearningPath[] {
+    const serverMap = new Map(server.map((p) => [p.id, p]));
+    const localMap = new Map(local.map((p) => [p.id, p]));
+
+    // 本地有服务器没有 → 保留
+    // 服务器有本地没有 → 添加
+    // 服务器和本地都有 → 服务器优先（因为是更权威的数据源）
+    const merged = new Map(localMap);
+    for (const [id, serverPath] of serverMap) {
+      merged.set(id, serverPath);
+    }
+    return Array.from(merged.values());
   }
 
   /**

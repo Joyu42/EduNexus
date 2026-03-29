@@ -1,5 +1,5 @@
 import { fail, ok } from "@/lib/server/response";
-import { deleteSyncedPath, upsertSyncedPath } from "@/lib/server/path-sync-service";
+import { deleteSyncedPath, loadSyncedPaths, upsertSyncedPath } from "@/lib/server/path-sync-service";
 import { auth } from "@/auth";
 import { z } from "zod";
 
@@ -24,6 +24,19 @@ const pathSyncSchema = z.object({
 });
 
 export const runtime = "nodejs";
+
+export async function GET() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return fail({ code: "UNAUTHORIZED", message: "用户未登录。" }, 401);
+    }
+    const paths = await loadSyncedPaths(session.user.id);
+    return ok({ paths });
+  } catch (error) {
+    return fail({ code: "INTERNAL_ERROR", message: "获取学习路径失败。", details: error instanceof Error ? error.message : error }, 500);
+  }
+}
 
 export async function POST(request: Request) {
   try {
