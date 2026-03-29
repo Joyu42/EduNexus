@@ -127,6 +127,65 @@ export async function updatePackTitleTopic(
   };
   await putAllPacks(packs);
 }
+
+export async function updatePackFull(
+  packId: string,
+  userId: string,
+  updates: {
+    title?: string;
+    topic?: string;
+    tasks?: Array<{
+      id: string;
+      title: string;
+      description: string;
+      estimatedTime: string;
+      progress: number;
+      status: string;
+      dependencies: string[];
+      resources: Array<any>;
+      notes: string;
+      createdAt?: string;
+    }>;
+  }
+): Promise<void> {
+  const packs = await getAllPacks();
+  const idx = packs.findIndex((p) => p.packId === packId && p.userId === userId);
+  if (idx < 0) throw new Error("Pack not found");
+  const now = new Date().toISOString();
+
+  const existing = packs[idx];
+
+  let modules = existing.modules;
+  if (updates.tasks !== undefined) {
+    modules = normalizeLearningPackModuleOrder(
+      updates.tasks.map((task, index) => ({
+        moduleId: `module_${task.id}`,
+        title: task.title,
+        kbDocumentId: "",
+        stage: "seen" as const,
+        order: index,
+        studyMinutes: 0,
+        lastStudiedAt: null,
+      }))
+    );
+  }
+
+  packs[idx] = {
+    ...existing,
+    ...(updates.title !== undefined ? { title: updates.title } : {}),
+    ...(updates.topic !== undefined ? { topic: updates.topic } : {}),
+    ...(updates.tasks !== undefined
+      ? {
+          modules,
+          activeModuleId: modules[0]?.moduleId ?? null,
+          stage: derivePackStage(modules),
+          totalStudyMinutes: modules.reduce((sum, module) => sum + module.studyMinutes, 0),
+        }
+      : {}),
+    updatedAt: now,
+  };
+  await putAllPacks(packs);
+}
 export async function deleteLearningPack(packId: string, userId: string): Promise<void> {
   const packs = await getAllPacks();
   const idx = packs.findIndex((p) => p.packId === packId && p.userId === userId);

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authMock = vi.hoisted(() => vi.fn());
-const updatePackTitleTopicMock = vi.hoisted(() => vi.fn());
+const updatePackFullMock = vi.hoisted(() => vi.fn());
 const deleteLearningPackMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/auth", () => ({
@@ -9,7 +9,7 @@ vi.mock("@/auth", () => ({
 }));
 
 vi.mock("@/lib/server/learning-pack-store", () => ({
-  updatePackTitleTopic: updatePackTitleTopicMock,
+  updatePackFull: updatePackFullMock,
   deleteLearningPack: deleteLearningPackMock,
 }));
 
@@ -22,7 +22,7 @@ beforeEach(() => {
 describe("PATCH /api/graph/learning-pack/[packId]", () => {
   it("updates title and topic atomically for the authenticated user", async () => {
     authMock.mockResolvedValueOnce({ user: { id: "user-1" } });
-    updatePackTitleTopicMock.mockResolvedValueOnce(undefined);
+    updatePackFullMock.mockResolvedValueOnce(undefined);
 
     const request = new Request("http://localhost/api/graph/learning-pack/pack-1", {
       method: "PATCH",
@@ -33,10 +33,11 @@ describe("PATCH /api/graph/learning-pack/[packId]", () => {
     const response = await PATCH(request, { params: Promise.resolve({ packId: "pack-1" }) });
 
     expect(response.status).toBe(200);
-    expect(updatePackTitleTopicMock).toHaveBeenCalledTimes(1);
-    expect(updatePackTitleTopicMock).toHaveBeenCalledWith("pack-1", "user-1", {
+    expect(updatePackFullMock).toHaveBeenCalledTimes(1);
+    expect(updatePackFullMock).toHaveBeenCalledWith("pack-1", "user-1", {
       title: "New Title",
       topic: "new-topic",
+      tasks: undefined,
     });
     expect(deleteLearningPackMock).not.toHaveBeenCalled();
   });
@@ -53,13 +54,13 @@ describe("PATCH /api/graph/learning-pack/[packId]", () => {
     const response = await PATCH(request, { params: Promise.resolve({ packId: "pack-1" }) });
 
     expect(response.status).toBe(401);
-    expect(updatePackTitleTopicMock).not.toHaveBeenCalled();
+    expect(updatePackFullMock).not.toHaveBeenCalled();
     expect(deleteLearningPackMock).not.toHaveBeenCalled();
   });
 
   it("returns 404 if pack doesn't exist", async () => {
     authMock.mockResolvedValueOnce({ user: { id: "user-1" } });
-    updatePackTitleTopicMock.mockRejectedValueOnce(new Error("Pack not found"));
+    updatePackFullMock.mockRejectedValueOnce(new Error("Pack not found"));
 
     const request = new Request("http://localhost/api/graph/learning-pack/missing", {
       method: "PATCH",
@@ -70,12 +71,12 @@ describe("PATCH /api/graph/learning-pack/[packId]", () => {
     const response = await PATCH(request, { params: Promise.resolve({ packId: "missing" }) });
 
     expect(response.status).toBe(404);
-    expect(updatePackTitleTopicMock).toHaveBeenCalledTimes(1);
+    expect(updatePackFullMock).toHaveBeenCalledTimes(1);
   });
 
   it("returns 404 if pack belongs to a different user", async () => {
     authMock.mockResolvedValueOnce({ user: { id: "user-1" } });
-    updatePackTitleTopicMock.mockRejectedValueOnce(new Error("Pack not found"));
+    updatePackFullMock.mockRejectedValueOnce(new Error("Pack not found"));
 
     const request = new Request("http://localhost/api/graph/learning-pack/pack-1", {
       method: "PATCH",
@@ -86,7 +87,7 @@ describe("PATCH /api/graph/learning-pack/[packId]", () => {
     const response = await PATCH(request, { params: Promise.resolve({ packId: "pack-1" }) });
 
     expect(response.status).toBe(404);
-    expect(updatePackTitleTopicMock).toHaveBeenCalledTimes(1);
+    expect(updatePackFullMock).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -104,7 +105,7 @@ describe("DELETE /api/graph/learning-pack/[packId]", () => {
     expect(response.status).toBe(200);
     expect(deleteLearningPackMock).toHaveBeenCalledTimes(1);
     expect(deleteLearningPackMock).toHaveBeenCalledWith("pack-1", "user-1");
-    expect(updatePackTitleTopicMock).not.toHaveBeenCalled();
+    expect(updatePackFullMock).not.toHaveBeenCalled();
   });
 
   it("returns 401 if not authenticated", async () => {
@@ -117,7 +118,7 @@ describe("DELETE /api/graph/learning-pack/[packId]", () => {
     const response = await DELETE(request, { params: Promise.resolve({ packId: "pack-1" }) });
 
     expect(response.status).toBe(401);
-    expect(updatePackTitleTopicMock).not.toHaveBeenCalled();
+    expect(updatePackFullMock).not.toHaveBeenCalled();
     expect(deleteLearningPackMock).not.toHaveBeenCalled();
   });
 

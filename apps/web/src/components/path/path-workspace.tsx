@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import EnhancedPathEditor from "@/components/path/enhanced-path-editor";
 import { pathStorage, type LearningPath, type Task } from "@/lib/client/path-storage";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, FileText, Trash2, ChevronDown } from "lucide-react";
+import { Loader2, Plus, FileText, Trash2, ChevronDown, PanelLeftClose, PanelLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Edge, Node } from "reactflow";
 import type { PathNodeData } from "@/lib/path/path-types";
@@ -76,6 +76,7 @@ type PathWorkspaceProps = {
 export function PathWorkspace({ packId }: PathWorkspaceProps) {
   const [paths, setPaths] = useState<LearningPath[]>([]);
   const [expandedPathIds, setExpandedPathIds] = useState<Set<string>>(new Set());
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -162,86 +163,83 @@ export function PathWorkspace({ packId }: PathWorkspaceProps) {
   return (
     <div className="flex h-full w-full bg-background" data-testid="path-workspace-loaded">
       {/* Left Sidebar */}
-      <div className="w-64 border-r flex flex-col bg-muted/20">
+      <div className={`border-r flex flex-col bg-muted/20 transition-all duration-200 ${isSidebarCollapsed ? 'w-12' : 'w-64'}`}>
         <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="font-semibold text-lg">我的学习路径</h2>
-          <Button variant="ghost" size="icon" title="新建路径" onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        <ScrollArea className="flex-1">
-          {paths.length === 0 ? (
-            <div className="p-4 text-sm text-muted-foreground text-center" data-testid="path-workspace-empty">
-              暂无学习路径。请新建一个学习路径开始！
-            </div>
-          ) : (
-            <div className="p-2 space-y-1" data-testid="path-workspace-list">
-              {paths.map(path => (
-                <div key={path.id}>
-                  <div className="flex items-center group">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpandedPathIds((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(path.id)) next.delete(path.id);
-                          else next.add(path.id);
-                          return next;
-                        });
-                      }}
-                      className={`px-2 py-2 text-muted-foreground hover:text-foreground transition-colors rounded-l-md ${
-                        selectedPathId === path.id ? "bg-primary/10" : "hover:bg-muted"
-                      }`}
-                      title={expandedPathIds.has(path.id) ? "收起" : "展开"}
-                    >
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform duration-200 ${
-                          expandedPathIds.has(path.id) ? "transform rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                    <button
-                      data-testid={`path-item-${path.id}`}
-                      onClick={() => setSelectedPathId(path.id)}
-                      className={`flex-1 min-w-0 text-left pr-3 py-2 text-sm flex items-center gap-2 transition-colors ${
-                        selectedPathId === path.id 
-                          ? "bg-primary/10 text-primary font-medium" 
-                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <FileText className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{path.title || "未命名路径"}</span>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPathToDelete(path.id);
-                      }}
-                      className={`px-2 py-2 text-muted-foreground hover:text-destructive transition-colors rounded-r-md ${
-                        selectedPathId === path.id ? "bg-primary/10" : "hover:bg-muted"
-                      }`}
-                      title="删除"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                  {expandedPathIds.has(path.id) && (
-                    <>
-                      <div className="pl-10 pr-3 pb-2 text-xs text-muted-foreground">
-                        {path.description && <div className="mb-1">{path.description}</div>}
-                        <div className="flex items-center gap-2">
-                          <span>{path.tasks?.length || 0} 个任务</span>
-                          <span>·</span>
-                          <span>{path.progress || 0}% 完成</span>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" title={isSidebarCollapsed ? "展开侧边栏" : "收起侧边栏"} onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
+              {isSidebarCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </Button>
+            {!isSidebarCollapsed && <h2 className="font-semibold text-lg">我的学习路径</h2>}
+          </div>
+          {!isSidebarCollapsed && (
+            <Button variant="ghost" size="icon" title="新建路径" onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4" />
+            </Button>
           )}
-        </ScrollArea>
+        </div>
+        {!isSidebarCollapsed && (
+          <ScrollArea className="flex-1">
+            {paths.length === 0 ? (
+              <div className="p-4 text-sm text-muted-foreground text-center" data-testid="path-workspace-empty">
+                暂无学习路径。请新建一个学习路径开始！
+              </div>
+            ) : (
+              <div className="p-2 space-y-1" data-testid="path-workspace-list">
+                {paths.map(path => (
+                  <div key={path.id}>
+                    <div className="flex items-center group">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedPathIds((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(path.id)) next.delete(path.id);
+                            else next.add(path.id);
+                            return next;
+                          });
+                        }}
+                        className={`px-2 py-2 text-muted-foreground hover:text-foreground transition-colors rounded-l-md ${
+                          selectedPathId === path.id ? "bg-primary/10" : "hover:bg-muted"
+                        }`}
+                        title={expandedPathIds.has(path.id) ? "收起" : "展开"}
+                      >
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform duration-200 ${
+                            expandedPathIds.has(path.id) ? "transform rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                      <button
+                        data-testid={`path-item-${path.id}`}
+                        onClick={() => setSelectedPathId(path.id)}
+                        className={`flex-1 min-w-0 text-left pr-3 py-2 text-sm flex items-center gap-2 transition-colors ${
+                          selectedPathId === path.id 
+                            ? "bg-primary/10 text-primary font-medium" 
+                            : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <FileText className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{path.title || "未命名路径"}</span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPathToDelete(path.id);
+                        }}
+                        className={`px-2 py-2 text-muted-foreground hover:text-destructive transition-colors rounded-r-md ${
+                          selectedPathId === path.id ? "bg-primary/10" : "hover:bg-muted"
+                        }`}
+                        title="删除"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        )}
       </div>
 
       {/* Main Canvas Area */}

@@ -2,9 +2,7 @@ import { fail, ok } from "@/lib/server/response";
 import { auth } from "@/auth";
 import { z } from "zod";
 import {
-  getAllPacks,
-  putAllPacks,
-  updatePackTitleTopic,
+  updatePackFull,
   deleteLearningPack,
 } from "@/lib/server/learning-pack-store";
 
@@ -13,8 +11,21 @@ export const runtime = "nodejs";
 const updateSchema = z.object({
   title: z.string().min(1).optional(),
   topic: z.string().min(1).optional(),
-}).refine((data) => data.title !== undefined || data.topic !== undefined, {
-  message: "At least one of title or topic must be provided",
+  tasks: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string(),
+    estimatedTime: z.string(),
+    progress: z.number(),
+    status: z.string(),
+    dependencies: z.array(z.string()),
+    resources: z.array(z.any()),
+    notes: z.string(),
+    createdAt: z.string().optional(),
+  })).optional(),
+  milestones: z.array(z.any()).optional(),
+}).refine((data) => data.title !== undefined || data.topic !== undefined || data.tasks !== undefined, {
+  message: "At least one of title, topic, or tasks must be provided",
 });
 
 export async function PATCH(
@@ -39,7 +50,11 @@ export async function PATCH(
       });
     }
 
-    await updatePackTitleTopic(packId, userId, parsed.data);
+    await updatePackFull(packId, userId, {
+      title: parsed.data.title,
+      topic: parsed.data.topic,
+      tasks: parsed.data.tasks,
+    });
     return ok({ success: true, packId });
   } catch (error) {
     if (error instanceof Error && error.message === "Pack not found") {

@@ -260,6 +260,7 @@ describe("path storage scope", () => {
           body: JSON.stringify({
             title: "Advanced Java",
             topic: "programming-fundamentals",
+            tasks: learningPackPath.tasks,
           }),
         })
       );

@@ -832,9 +832,10 @@ export class PathStorageManager {
           const res = await fetch(`/api/graph/learning-pack/${updated.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              title: updated.title,
-              topic: updated.tags?.[0] ?? (updated as any).topic ?? undefined,
+           body: JSON.stringify({
+             title: updated.title,
+             topic: updated.tags?.[0] ?? (updated as any).topic ?? undefined,
+              tasks: updated.tasks,
             }),
           });
           if (!res.ok) {
