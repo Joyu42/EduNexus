@@ -263,6 +263,9 @@ export async function POST(request: Request) {
 
       let usedExistingDocs = plannerOutput.usedExistingDocs;
 
+      // Track document bindings as they are set (setPackKbDocument updates server store, not local pack.modules)
+      const moduleDocBindings = new Map<string, string>();
+
       for (const module of pack.modules) {
         const planned = plannerOutput.modules.find((pm) => pm.title === module.title);
         const existingDocId = planned?.existingDocId;
@@ -273,6 +276,7 @@ export async function POST(request: Request) {
         if (canReuseExistingDoc) {
           usedExistingDocs = true;
           await setPackKbDocument(pack.packId, module.moduleId, existingDocId, userId);
+          moduleDocBindings.set(module.moduleId, existingDocId);
           continue;
         }
 
@@ -283,6 +287,7 @@ export async function POST(request: Request) {
         if (typeof exactMatchDocId === "string" && reusableDocIds.has(exactMatchDocId)) {
           usedExistingDocs = true;
           await setPackKbDocument(pack.packId, module.moduleId, exactMatchDocId, userId);
+          moduleDocBindings.set(module.moduleId, exactMatchDocId);
         } else {
           const doc = await createDocument({
             title: module.title,
@@ -290,38 +295,38 @@ export async function POST(request: Request) {
             authorId: userId,
           });
           await setPackKbDocument(pack.packId, module.moduleId, doc.id, userId);
+          moduleDocBindings.set(module.moduleId, doc.id);
         }
       }
 
-      try {
-        const boundPathTasks = pack.modules.map((module) => ({
+      const boundPathTasks = pack.modules.map((module) => {
+        const docId = moduleDocBindings.get(module.moduleId);
+        return {
           taskId: module.moduleId,
           title: module.title,
           status: "not_started" as const,
           progress: 0,
-          ...(module.kbDocumentId
+          ...(docId
             ? {
                 documentBinding: {
-                  documentId: module.kbDocumentId,
+                  documentId: docId,
                   boundAt: new Date().toISOString(),
                 },
               }
             : {}),
-        }));
+        };
+      });
 
-        await upsertSyncedPath({
-          pathId: pack.packId,
-          userId,
-          title: pack.title,
-          description: `AI 规划的学习路径：${learningTopic}`,
-          status: "not_started",
-          progress: 0,
-          tags: [learningTopic],
-          tasks: boundPathTasks,
-        });
-      } catch (error) {
-        console.error("Failed to sync learning path", error);
-      }
+      await upsertSyncedPath({
+        pathId: pack.packId,
+        userId,
+        title: pack.title,
+        description: `AI 规划的学习路径：${learningTopic}`,
+        status: "not_started",
+        progress: 0,
+        tags: [learningTopic],
+        tasks: boundPathTasks,
+      });
 
       await setActivePack(pack.packId, userId);
 
