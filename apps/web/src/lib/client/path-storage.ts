@@ -827,20 +827,21 @@ export class PathStorageManager {
       emitPathSyncEvent(SyncEventType.PATH_UPDATED, updated);
       emitPathProgressEvent(updated);
       if (updated.id.startsWith('lp_')) {
-        void (async () => {
-          try {
-            await fetch(`/api/graph/learning-pack/${updated.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                title: updated.title,
-                topic: updated.tags?.[0] ?? (updated as any).topic ?? undefined,
-              }),
-            });
-          } catch (e) {
-            console.warn('[PathStorage] Pack PATCH failed:', e);
+        try {
+          const res = await fetch(`/api/graph/learning-pack/${updated.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: updated.title,
+              topic: updated.tags?.[0] ?? (updated as any).topic ?? undefined,
+            }),
+          });
+          if (!res.ok) {
+            throw new Error(`Pack PATCH failed: ${res.status}`);
           }
-        })();
+        } catch (e) {
+          console.warn('[PathStorage] Pack PATCH failed:', e);
+        }
       } else {
         void syncPathToServerGraph(updated);
       }
