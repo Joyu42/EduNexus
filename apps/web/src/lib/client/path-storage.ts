@@ -826,7 +826,24 @@ export class PathStorageManager {
 
       emitPathSyncEvent(SyncEventType.PATH_UPDATED, updated);
       emitPathProgressEvent(updated);
-      void syncPathToServerGraph(updated);
+      if (updated.id.startsWith('lp_')) {
+        void (async () => {
+          try {
+            await fetch(`/api/graph/learning-pack/${updated.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                title: updated.title,
+                topic: (updated as any).topic,
+              }),
+            });
+          } catch (e) {
+            console.warn('[PathStorage] Pack PATCH failed:', e);
+          }
+        })();
+      } else {
+        void syncPathToServerGraph(updated);
+      }
       return updated;
     } catch (error) {
       console.error('[PathStorage] 更新路径失败:', error);
@@ -847,13 +864,33 @@ export class PathStorageManager {
     if (this.useLocalStorage) {
       localStoragePathManager.deletePath(id);
       emitPathDeletedEvent(id);
-      void deletePathFromServerGraph(id);
+      if (id.startsWith('lp_')) {
+        void (async () => {
+          try {
+            await fetch(`/api/graph/learning-pack/${id}`, { method: 'DELETE' });
+          } catch (e) {
+            console.warn('[PathStorage] Pack DELETE failed:', e);
+          }
+        })();
+      } else {
+        void deletePathFromServerGraph(id);
+      }
       return;
     }
 
     await this.db!.delete('paths', id);
     emitPathDeletedEvent(id);
-    void deletePathFromServerGraph(id);
+    if (id.startsWith('lp_')) {
+      void (async () => {
+        try {
+          await fetch(`/api/graph/learning-pack/${id}`, { method: 'DELETE' });
+        } catch (e) {
+          console.warn('[PathStorage] Pack DELETE failed:', e);
+        }
+      })();
+    } else {
+      void deletePathFromServerGraph(id);
+    }
   }
 
   /**

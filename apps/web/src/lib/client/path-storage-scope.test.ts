@@ -232,4 +232,90 @@ describe("path storage scope", () => {
     expect(reloaded.tasks[0].documentBinding?.boundAt).toBeInstanceOf(Date);
     expect(reloaded.deletedDocumentDrafts).toBeUndefined();
   });
+
+  describe("updatePath routing", () => {
+    it("calls PATCH /api/graph/learning-pack/[id] for lp_* paths", async () => {
+      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValueOnce({ ok: true } as Response);
+      const putMock = vi.fn().mockResolvedValue(undefined);
+      const learningPackPath = {
+        ...basePath,
+        id: "lp_abc123",
+      };
+
+      vi.spyOn(pathStorage, "initialize").mockResolvedValue();
+      vi.spyOn(pathStorage, "getPath").mockResolvedValue(learningPackPath as any);
+      vi.spyOn(pathStorage, "getAllPaths").mockResolvedValue([learningPackPath as any]);
+      (pathStorage as any).db = { put: putMock };
+
+      await pathStorage.updatePath("lp_abc123", {
+        title: "Advanced Java",
+        topic: "programming-fundamentals",
+      } as any);
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "/api/graph/learning-pack/lp_abc123",
+        expect.objectContaining({
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: "Advanced Java",
+            topic: "programming-fundamentals",
+          }),
+        })
+      );
+    });
+
+    it("calls POST /api/path/sync for non-lp_* paths", async () => {
+      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValueOnce({ ok: true } as Response);
+      const putMock = vi.fn().mockResolvedValue(undefined);
+
+      vi.spyOn(pathStorage, "initialize").mockResolvedValue();
+      vi.spyOn(pathStorage, "getPath").mockResolvedValue(basePath as any);
+      vi.spyOn(pathStorage, "getAllPaths").mockResolvedValue([basePath as any]);
+      (pathStorage as any).db = { put: putMock };
+
+      await pathStorage.updatePath("path_xyz", {
+        title: "Advanced Java",
+        topic: "programming-fundamentals",
+      } as any);
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "/api/path/sync",
+        expect.objectContaining({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+    });
+  });
+
+  describe("deletePath routing", () => {
+    it("calls DELETE /api/graph/learning-pack/[id] for lp_* paths", async () => {
+      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValueOnce({ ok: true } as Response);
+
+      vi.spyOn(pathStorage, "initialize").mockResolvedValue();
+      (pathStorage as any).db = { delete: vi.fn().mockResolvedValue(undefined) };
+
+      await pathStorage.deletePath("lp_abc123");
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "/api/graph/learning-pack/lp_abc123",
+        expect.objectContaining({ method: "DELETE" })
+      );
+    });
+
+    it("calls DELETE /api/path/sync for non-lp_* paths", async () => {
+      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValueOnce({ ok: true } as Response);
+
+      vi.spyOn(pathStorage, "initialize").mockResolvedValue();
+      (pathStorage as any).db = { delete: vi.fn().mockResolvedValue(undefined) };
+
+      await pathStorage.deletePath("path_xyz");
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "/api/path/sync?pathId=path_xyz",
+        expect.objectContaining({ method: "DELETE" })
+      );
+    });
+  });
 });
