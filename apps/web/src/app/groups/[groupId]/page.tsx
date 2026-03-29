@@ -68,6 +68,17 @@ type GroupSharedResource = {
   createdAt: string;
 };
 
+type GroupResource = {
+  id: string;
+  groupId: string;
+  title: string;
+  description: string;
+  url: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 function formatDate(dateString?: string | null) {
   if (!dateString) return "未知时间";
   try {
@@ -147,12 +158,23 @@ export default function GroupDetailsPage({
     }
   });
 
+  const groupResourcesQuery = useQuery({
+    queryKey: ["group-resources", groupId],
+    queryFn: async () => {
+      const response = await fetch(`/api/groups/${groupId}/resources`);
+      if (!response.ok) throw new Error("获取小组资源失败");
+      const payload = await response.json();
+      return (payload.data?.groupResources ?? []) as GroupResource[];
+    }
+  });
+
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["group", groupId] });
     queryClient.invalidateQueries({ queryKey: ["group-members", groupId] });
     queryClient.invalidateQueries({ queryKey: ["group-posts", groupId] });
     queryClient.invalidateQueries({ queryKey: ["group-tasks", groupId] });
     queryClient.invalidateQueries({ queryKey: ["group-shared-resources", groupId] });
+    queryClient.invalidateQueries({ queryKey: ["group-resources", groupId] });
   };
 
   const deleteMutation = useMutation({
@@ -294,6 +316,29 @@ export default function GroupDetailsPage({
     onError: (error: Error) => toast.error(error.message)
   });
 
+  const createGroupResourceMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const title = String(formData.get("title") ?? "").trim();
+      const description = String(formData.get("description") ?? "").trim();
+      const url = String(formData.get("url") ?? "").trim();
+      const res = await fetch(`/api/groups/${groupId}/resources`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, url })
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload?.error?.message ?? "创建小组资源失败");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("小组资源已创建");
+      queryClient.invalidateQueries({ queryKey: ["group-resources", groupId] });
+    },
+    onError: (error: Error) => toast.error(error.message)
+  });
+
   const members = membersQuery.data ?? [];
   const isJoined = Boolean(currentUserId && members.some((item) => item.userId === currentUserId && item.status === "active"));
   const isOwner = Boolean(
@@ -415,6 +460,42 @@ export default function GroupDetailsPage({
                 <Link key={item.id} href={`/resources/${item.resourceId}`} className="block rounded-md border px-3 py-2 text-sm hover:bg-muted/50">
                   资源 {item.resourceId}
                 </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>小组资源</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {isJoined && (
+              <form
+                className="space-y-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  createGroupResourceMutation.mutate(new FormData(e.currentTarget));
+                  e.currentTarget.reset();
+                }}
+              >
+                <Input name="title" placeholder="资源标题" required />
+                <Input name="url" placeholder="资源链接 https://..." type="url" required />
+                <Textarea name="description" placeholder="资源描述（可选）" />
+                <Button type="submit" size="sm">创建资源</Button>
+              </form>
+            )}
+            <div className="space-y-2">
+              {(groupResourcesQuery.data ?? []).map((item) => (
+                <div key={item.id} className="rounded-md border px-3 py-2 text-sm hover:bg-muted/50">
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:underline">
+                    {item.title}
+                  </a>
+                  {item.description && (
+                    <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    创建于 {formatDate(item.createdAt)}
+                  </p>
+                </div>
               ))}
             </div>
           </CardContent>
