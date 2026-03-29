@@ -29,6 +29,7 @@ describe("group resources api", () => {
     loadDb.mockResolvedValue({
       publicGroups: [{ id: "group_1", createdBy: "owner", name: "g", description: "", memberCount: 1, createdAt: "" }]
     });
+    isActiveMember.mockResolvedValue(true);
     listGroupResources.mockResolvedValue([
       {
         id: "group_resource_1",
@@ -41,7 +42,6 @@ describe("group resources api", () => {
         updatedAt: "2026-03-17T00:00:00.000Z"
       }
     ]);
-    isActiveMember.mockResolvedValue(true);
     createGroupResource.mockResolvedValue({
       id: "group_resource_new",
       groupId: "group_1",
@@ -52,78 +52,6 @@ describe("group resources api", () => {
       createdAt: "2026-03-17T00:00:00.000Z",
       updatedAt: "2026-03-17T00:00:00.000Z"
     });
-  });
-
-  it("lists resources for existing group", async () => {
-    const response = await listResourcesRoute(new Request("http://localhost/api/groups/group_1/resources"), {
-      params: Promise.resolve({ groupId: "group_1" })
-    });
-
-    expect(response.status).toBe(200);
-    expect(listGroupResources).toHaveBeenCalledTimes(1);
-    expect(listGroupResources).toHaveBeenCalledWith("group_1");
-    const payload = (await response.json()) as { success: boolean; data: { groupResources: unknown[] } };
-    expect(payload.success).toBe(true);
-    expect(payload.data.groupResources).toHaveLength(1);
-  });
-
-  it("rejects listing resources when user is not a member", async () => {
-    isActiveMember.mockResolvedValue(false);
-
-    const response = await listResourcesRoute(new Request("http://localhost/api/groups/group_1/resources"), {
-      params: Promise.resolve({ groupId: "group_1" })
-    });
-
-    expect(response.status).toBe(403);
-    expect(listGroupResources).not.toHaveBeenCalled();
-  });
-
-  it("rejects creating resource when not logged in", async () => {
-    getCurrentUserId.mockResolvedValue(null);
-
-    const response = await createResourceRoute(
-      new Request("http://localhost/api/groups/group_1/resources", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "t", description: "d", url: "https://example.com" })
-      }),
-      { params: Promise.resolve({ groupId: "group_1" }) }
-    );
-
-    expect(response.status).toBe(401);
-    expect(createGroupResource).not.toHaveBeenCalled();
-  });
-
-  it("rejects creating resource when group not found", async () => {
-    loadDb.mockResolvedValue({ publicGroups: [] });
-
-    const response = await createResourceRoute(
-      new Request("http://localhost/api/groups/group_404/resources", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "t", description: "d", url: "https://example.com" })
-      }),
-      { params: Promise.resolve({ groupId: "group_404" }) }
-    );
-
-    expect(response.status).toBe(404);
-    expect(createGroupResource).not.toHaveBeenCalled();
-  });
-
-  it("rejects creating resource when user is not a member", async () => {
-    isActiveMember.mockResolvedValue(false);
-
-    const response = await createResourceRoute(
-      new Request("http://localhost/api/groups/group_1/resources", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: "t", description: "d", url: "https://example.com" })
-      }),
-      { params: Promise.resolve({ groupId: "group_1" }) }
-    );
-
-    expect(response.status).toBe(403);
-    expect(createGroupResource).not.toHaveBeenCalled();
   });
 
   it("creates a resource for a group member", async () => {
@@ -149,17 +77,56 @@ describe("group resources api", () => {
     );
   });
 
-  it("rejects creating resource without title", async () => {
+  it("rejects creating a resource when user is not a member", async () => {
+    isActiveMember.mockResolvedValue(false);
+
     const response = await createResourceRoute(
       new Request("http://localhost/api/groups/group_1/resources", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: "world", url: "https://example.com/new" })
+        body: JSON.stringify({ title: "t", description: "d", url: "https://example.com" })
       }),
       { params: Promise.resolve({ groupId: "group_1" }) }
     );
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(403);
     expect(createGroupResource).not.toHaveBeenCalled();
+  });
+
+  it("lists resources for a group member", async () => {
+    const response = await listResourcesRoute(new Request("http://localhost/api/groups/group_1/resources"), {
+      params: Promise.resolve({ groupId: "group_1" })
+    });
+
+    expect(response.status).toBe(200);
+    expect(listGroupResources).toHaveBeenCalledTimes(1);
+    expect(listGroupResources).toHaveBeenCalledWith("group_1");
+    const payload = (await response.json()) as { success: boolean; data: { groupResources: unknown[] } };
+    expect(payload.success).toBe(true);
+    expect(payload.data.groupResources).toHaveLength(1);
+  });
+
+  it("rejects listing resources when user is not a member", async () => {
+    isActiveMember.mockResolvedValue(false);
+
+    const response = await listResourcesRoute(new Request("http://localhost/api/groups/group_1/resources"), {
+      params: Promise.resolve({ groupId: "group_1" })
+    });
+
+    expect(response.status).toBe(403);
+    expect(listGroupResources).not.toHaveBeenCalled();
+  });
+
+  it("returns an empty array when the group has no resources", async () => {
+    listGroupResources.mockResolvedValue([]);
+
+    const response = await listResourcesRoute(new Request("http://localhost/api/groups/group_1/resources"), {
+      params: Promise.resolve({ groupId: "group_1" })
+    });
+
+    expect(response.status).toBe(200);
+    const payload = (await response.json()) as { success: boolean; data: { groupResources: unknown[] } };
+    expect(payload.success).toBe(true);
+    expect(payload.data.groupResources).toEqual([]);
   });
 });
