@@ -592,6 +592,7 @@ export type ServerResourceRecord = {
   description: string;
   url: string;
   createdBy: string;
+  createdByName?: string;
   createdAt: string;
 };
 
