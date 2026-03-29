@@ -272,7 +272,7 @@ function buildPathEdges(userPaths: unknown[], existingNodeIds: Set<string>): Gra
 }
 
 function buildLearningPackEdges(
-  packs: Array<{ modules: Array<{ kbDocumentId: string; order: number }> }>,
+  packs: Array<{ packId: string; modules: Array<{ moduleId: string; kbDocumentId: string; order: number }> }>,
   existingNodeIds: Set<string>
 ): GraphEdge[] {
   const edgeMap = new Map<string, GraphEdge>();
@@ -281,8 +281,11 @@ function buildLearningPackEdges(
     const orderedNodeIds = pack.modules
       .slice()
       .sort((a, b) => a.order - b.order)
-      .map((module) => module.kbDocumentId.trim())
-      .filter((nodeId) => nodeId.length > 0 && existingNodeIds.has(nodeId));
+      .map((module) => {
+        const docId = module.kbDocumentId?.trim();
+        return docId?.length ? docId : `lp_task:${pack.packId}:${module.moduleId}`;
+      })
+      .filter((nodeId) => nodeId.length > 0);
 
     for (let index = 0; index < orderedNodeIds.length - 1; index += 1) {
       const source = orderedNodeIds[index];
@@ -432,7 +435,33 @@ export async function getGraphView(
     };
   });
 
-  const existingNodeIds = new Set(contentNodes.map((node) => node.id));
+  // Add learning pack task nodes as graph nodes (even without kbDocumentId)
+  const packTaskNodes: WorkspaceGraphNode[] = [];
+  for (const pack of packs) {
+    for (const module of pack.modules) {
+      const docId = module.kbDocumentId?.trim();
+      if (!docId?.length) {
+        const nodeId = `lp_task:${pack.packId}:${module.moduleId}`;
+        const membership = packCompatibilityMembershipMap.get(nodeId) ?? [];
+        packTaskNodes.push({
+          id: nodeId,
+          label: module.title,
+          mastery: 0,
+          risk: 0.5,
+          domain: pack.topic,
+          masteryStage: "seen",
+          needsReview: false,
+          pathMemberships: membership,
+          category: pack.topic,
+          kbDocumentId: "",
+          documentIds: [],
+        });
+      }
+    }
+  }
+
+  const allNodes = [...contentNodes, ...packTaskNodes];
+  const existingNodeIds = new Set(allNodes.map((node) => node.id));
   const pathEdges = buildPathEdges(legacyUserPaths, existingNodeIds);
   const learningPackEdges = buildLearningPackEdges(packs, existingNodeIds);
 
@@ -447,7 +476,7 @@ export async function getGraphView(
   const edges = Array.from(mergedEdgesByKey.values());
 
   return {
-    nodes: domain ? contentNodes.filter((node) => node.domain === domain) : contentNodes,
+    nodes: domain ? allNodes.filter((node) => node.domain === domain) : allNodes,
     edges,
   };
 }
