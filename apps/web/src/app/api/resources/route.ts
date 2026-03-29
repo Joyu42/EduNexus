@@ -1,6 +1,7 @@
 import { fail, ok } from "@/lib/server/response";
 import { createResource, listResources } from "@/lib/server/resources-service";
 import { getCurrentUserId } from "@/lib/server/auth-utils";
+import { getUserById } from "@/lib/server/user-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,7 +41,17 @@ export async function GET(req: Request) {
     }
 
     const resources = sorted.slice(0, limit);
-    return ok({ resources, total: filtered.length });
+
+    // Resolve createdBy userId to username for each resource
+    const resourcesWithCreatorName = await Promise.all(
+      resources.map(async (resource) => {
+        const creator = await getUserById(resource.createdBy);
+        const createdByName = creator?.name ?? creator?.email ?? "未知用户";
+        return { ...resource, createdByName };
+      })
+    );
+
+    return ok({ resources: resourcesWithCreatorName, total: filtered.length });
   } catch (error) {
     return fail(
       {

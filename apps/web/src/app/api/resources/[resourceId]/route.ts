@@ -1,5 +1,6 @@
 import { fail, ok } from "@/lib/server/response";
 import { getCurrentUserId } from "@/lib/server/auth-utils";
+import { getUserById } from "@/lib/server/user-service";
 import {
   deleteResource,
   deleteResourceBookmark,
@@ -45,7 +46,10 @@ export async function GET(_request: Request, context: { params: Promise<{ resour
       );
     }
 
-    return ok({ resource });
+    const creator = await getUserById(resource.createdBy);
+    const createdByName = creator?.name ?? creator?.email ?? "未知用户";
+
+    return ok({ resource: { ...resource, createdByName } });
   } catch (error) {
     return fail(
       {

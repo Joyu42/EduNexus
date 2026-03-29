@@ -157,7 +157,7 @@ export default function ResourceDetailsPage({
                   <div className="flex items-center gap-1.5">
                     <User className="h-4 w-4 shrink-0" />
                     <span>
-                      分享者: <span className="font-medium text-foreground">{resource.createdBy}</span>
+                      分享者: <span className="font-medium text-foreground">{resource.createdByName ?? resource.createdBy}</span>
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">

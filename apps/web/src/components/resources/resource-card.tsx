@@ -69,7 +69,7 @@ export function ResourceCard({
       </div>
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>分享者：{resource.createdBy}</span>
+        <span>分享者：{resource.createdByName ?? resource.createdBy}</span>
       </div>
 
       <div className="flex gap-2">
