@@ -161,17 +161,17 @@ function mixCategoryWithMastery(categoryHex: string, masteryHex: string): string
 // 主题配置
 const THEMES = {
   tech: {
-    background: "radial-gradient(circle at center, #1e3a8a 0%, #312e81 40%, #0f172a 100%)",
+    background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e3a8a 100%)",
     particleColor: "#ffffff",
     glowColor: "#818cf8",
   },
   nature: {
-    background: "radial-gradient(circle at center, #7c3aed 0%, #4c1d95 40%, #2e1065 100%)",
+    background: "linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a855f7 100%)",
     particleColor: "#ffffff",
     glowColor: "#c084fc",
   },
   minimal: {
-    background: "radial-gradient(circle at center, #334155 0%, #1e293b 40%, #0f172a 100%)",
+    background: "linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%)",
     particleColor: "#ffffff",
     glowColor: "#94a3b8",
   },
@@ -294,6 +294,7 @@ export function InteractiveGraph({
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const graphNode = node as GraphNode;
       const label = graphNode.name;
+      const fontSize = 11 / globalScale;
 
       const masteryStage = graphNode.masteryStage ?? "seen";
       const masteryColor = MASTERY_COLORS[masteryStage];
@@ -303,18 +304,28 @@ export function InteractiveGraph({
         : masteryColor;
       const nodeSize = getNodeSize(graphNode);
 
-      // 绘制外层光晕 - 替换为原生 shadow 发光以支持所有颜色格式
-      ctx.shadowColor = nodeColor;
-      ctx.shadowBlur = nodeSize * 2.5;
+      // 绘制外层光晕 - 更柔和
+      const gradient = ctx.createRadialGradient(
+        graphNode.x || 0,
+        graphNode.y || 0,
+        nodeSize * 0.3,
+        graphNode.x || 0,
+        graphNode.y || 0,
+        nodeSize * 1.8
+      );
+      gradient.addColorStop(0, nodeColor);
+      gradient.addColorStop(0.4, nodeColor + "60");
+      gradient.addColorStop(1, nodeColor + "00");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(graphNode.x || 0, graphNode.y || 0, nodeSize * 1.8, 0, 2 * Math.PI);
+      ctx.fill();
 
       // 绘制节点主体
       ctx.beginPath();
       ctx.arc(graphNode.x || 0, graphNode.y || 0, nodeSize, 0, 2 * Math.PI);
       ctx.fillStyle = nodeColor;
       ctx.fill();
-      
-      // 重置阴影
-      ctx.shadowBlur = 0;
 
       if (graphNode.needsReview) {
         const time = Date.now() / 1000;
@@ -362,7 +373,6 @@ export function InteractiveGraph({
 
       // 绘制标签 - Obsidian 风格
       if (globalScale > 0.5) {
-        const fontSize = 12 / globalScale;
         ctx.font = `500 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -371,25 +381,19 @@ export function InteractiveGraph({
         const textWidth = ctx.measureText(label).width;
         const padding = 4 / globalScale;
         const bgHeight = fontSize + padding * 2;
-        const bgY = (graphNode.y || 0) + nodeSize + fontSize / 2 + 8 / globalScale;
+        const bgY = (graphNode.y || 0) + nodeSize + fontSize / 2 + 6;
 
-        ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
-        ctx.beginPath();
-        ctx.roundRect(
+        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.fillRect(
           (graphNode.x || 0) - textWidth / 2 - padding,
           bgY - bgHeight / 2,
           textWidth + padding * 2,
-          bgHeight,
-          4 / globalScale
+          bgHeight
         );
-        ctx.fill();
 
-        // 标签文字带阴影以提升可读性
+        // 标签文字
         ctx.fillStyle = "#ffffff";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-        ctx.shadowBlur = 4 / globalScale;
         ctx.fillText(label, graphNode.x || 0, bgY);
-        ctx.shadowBlur = 0;
       }
     },
     [selectedNode, hoveredNode]
@@ -406,7 +410,7 @@ export function InteractiveGraph({
       }
 
       const [r, g, b] = RELATION_BASE_COLOR[graphLink.type] ?? RELATION_BASE_COLOR.related;
-      const alpha = 0.1 + clampStrength(graphLink.strength) * 0.2; // 调整为更透明
+      const alpha = 0.16 + clampStrength(graphLink.strength) * 0.28;
       return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
     },
     [showLearningPath, pathNodes]
@@ -418,7 +422,7 @@ export function InteractiveGraph({
     if (isLearningPathEdge(graphLink, showLearningPath, pathNodes)) {
       return 1.4;
     }
-    return 0.3 + clampStrength(graphLink.strength) * 0.5; // 更细的线条
+    return 0.55 + clampStrength(graphLink.strength) * 0.85;
   }, [showLearningPath, pathNodes]);
 
   const linkDirectionalParticles = useCallback((link: any) => {
@@ -499,7 +503,6 @@ export function InteractiveGraph({
         nodePointerAreaPaint={nodePointerAreaPaint}
         linkColor={linkColor}
         linkWidth={linkWidth}
-        linkCurvature={0.15}
         linkDirectionalParticles={linkDirectionalParticles}
         linkDirectionalParticleWidth={linkDirectionalParticleWidth}
         linkDirectionalParticleSpeed={linkDirectionalParticleSpeed}

@@ -825,27 +825,29 @@ export class PathStorageManager {
 
       await this.db!.put('paths', this.serializePath(updated));
 
-      emitPathSyncEvent(SyncEventType.PATH_UPDATED, updated);
-      emitPathProgressEvent(updated);
       if (updated.id.startsWith('lp_')) {
         try {
           const res = await fetch(`/api/graph/learning-pack/${updated.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({
-             title: updated.title,
-             topic: updated.tags?.[0] ?? (updated as any).topic ?? undefined,
+            body: JSON.stringify({
+              title: updated.title,
+              topic: updated.tags?.[0] ?? (updated as any).topic ?? undefined,
               tasks: updated.tasks,
             }),
           });
           if (!res.ok) {
             throw new Error(`Pack PATCH failed: ${res.status}`);
           }
+          emitPathSyncEvent(SyncEventType.PATH_UPDATED, updated);
+          emitPathProgressEvent(updated);
         } catch (e) {
           console.warn('[PathStorage] Pack PATCH failed:', e);
         }
       } else {
-        void syncPathToServerGraph(updated);
+        await syncPathToServerGraph(updated);
+        emitPathSyncEvent(SyncEventType.PATH_UPDATED, updated);
+        emitPathProgressEvent(updated);
       }
       return updated;
     } catch (error) {
