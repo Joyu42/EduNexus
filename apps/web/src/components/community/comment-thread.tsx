@@ -66,7 +66,7 @@ export function CommentThread({
                     <div className="bg-secondary/50 p-1.5 rounded-full">
                       <User className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <span className="text-sm font-medium">{comment.authorId}</span>
+                    <span className="text-sm font-medium">{comment.authorName ?? comment.authorId}</span>
                     <span className="text-xs text-muted-foreground">
                       {new Date(comment.createdAt).toLocaleDateString("zh-CN")}
                     </span>

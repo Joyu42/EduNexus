@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentUserId } from "@/lib/server/auth-utils";
+import { getUserById } from "@/lib/server/user-service";
 import { createCommunityComment, listCommunityComments } from "@/lib/server/community-service";
 import { fail, ok } from "@/lib/server/response";
 import { loadDb } from "@/lib/server/store";
@@ -48,7 +49,16 @@ export async function GET(_request: Request, context: { params: Promise<{ postId
     }
 
     const comments = await listCommunityComments(id);
-    return ok({ comments });
+
+    const commentsWithAuthorName = await Promise.all(
+      comments.map(async (comment) => {
+        const author = await getUserById(comment.authorId);
+        const authorName = author?.name ?? author?.email ?? "未知用户";
+        return { ...comment, authorName };
+      })
+    );
+
+    return ok({ comments: commentsWithAuthorName });
   } catch (error) {
     return fail(
       {
