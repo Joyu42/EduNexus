@@ -16,6 +16,10 @@ export type UpsertSyncedPathInput = {
     status?: "not_started" | "in_progress" | "completed";
     progress?: number;
     dependencies?: string[];
+    documentBinding?: {
+      documentId: string;
+      boundAt: string;
+    };
   }>;
 };
 
@@ -28,6 +32,15 @@ function normalizeTask(task: NonNullable<UpsertSyncedPathInput["tasks"]>[number]
     status: task.status,
     progress: typeof task.progress === "number" ? Math.max(0, Math.min(100, Math.round(task.progress))) : undefined,
     dependencies: Array.isArray(task.dependencies) ? task.dependencies.filter(Boolean) : [],
+    documentBinding:
+      task.documentBinding &&
+      typeof task.documentBinding.documentId === "string" &&
+      typeof task.documentBinding.boundAt === "string"
+        ? {
+            documentId: task.documentBinding.documentId,
+            boundAt: task.documentBinding.boundAt,
+          }
+        : undefined,
   };
 }
 

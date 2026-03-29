@@ -53,6 +53,10 @@ type SyncedPathTaskRecord = {
   status?: "not_started" | "in_progress" | "completed";
   progress?: number;
   dependencies?: string[];
+  documentBinding?: {
+    documentId: string;
+    boundAt: string;
+  };
 };
 
 type SyncedPathRecord = {
@@ -446,6 +450,15 @@ function normalizeSyncedPathTaskRecord(input: unknown): SyncedPathTaskRecord | n
     status: normalizedStatus,
     progress: typeof input.progress === "number" ? input.progress : undefined,
     dependencies: dependencies.length > 0 ? dependencies : undefined,
+    documentBinding:
+      isRecord(input.documentBinding) &&
+      typeof input.documentBinding.documentId === "string" &&
+      typeof input.documentBinding.boundAt === "string"
+        ? {
+            documentId: input.documentBinding.documentId,
+            boundAt: input.documentBinding.boundAt,
+          }
+        : undefined,
   };
 }
 

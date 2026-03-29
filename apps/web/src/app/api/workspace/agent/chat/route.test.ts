@@ -24,6 +24,7 @@ const createDocumentMock = vi.fn();
 const planLearningPackMock = vi.fn();
 const buildLearningPackKbContextMock = vi.fn();
 const findPacksByTopicMock = vi.fn();
+const upsertSyncedPathMock = vi.fn();
 
 vi.mock("@/lib/server/learning-pack-store", () => ({
   createLearningPack: createLearningPackMock,
@@ -42,6 +43,10 @@ vi.mock("@/lib/server/learning-pack-kb-context", () => ({
 
 vi.mock("@/lib/server/document-service", () => ({
   createDocument: createDocumentMock,
+}));
+
+vi.mock("@/lib/server/path-sync-service", () => ({
+  upsertSyncedPath: upsertSyncedPathMock,
 }));
 
 const { isWordsProgressQuery, POST } = await import("./route");
@@ -83,6 +88,7 @@ describe("learning-pack quick creation", () => {
     planLearningPackMock.mockReset();
     buildLearningPackKbContextMock.mockReset();
     findPacksByTopicMock.mockReset();
+    upsertSyncedPathMock.mockReset();
   });
 
   it("creates and returns learningPack for '我想学习 java'", async () => {
@@ -171,7 +177,7 @@ describe("learning-pack quick creation", () => {
     });
     findPacksByTopicMock.mockResolvedValueOnce([]);
 
-    createLearningPackMock.mockResolvedValueOnce({
+    const aiPack = {
       packId: "lp_ai_1",
       userId: "u1",
       title: "Java 系统性学习路线",
@@ -186,6 +192,14 @@ describe("learning-pack quick creation", () => {
       currentModuleId: "m1",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+    };
+
+    createLearningPackMock.mockResolvedValueOnce(aiPack);
+    setPackKbDocumentMock.mockImplementation(async (_packId, moduleId, kbDocumentId) => {
+      const module = aiPack.modules.find((item) => item.moduleId === moduleId);
+      if (module) {
+        module.kbDocumentId = kbDocumentId;
+      }
     });
 
     // 3 docs created for 3 modules
@@ -215,6 +229,47 @@ describe("learning-pack quick creation", () => {
     );
     expect(createDocumentMock).toHaveBeenCalledTimes(3);
     expect(setPackKbDocumentMock).toHaveBeenCalledTimes(3);
+    expect(upsertSyncedPathMock).toHaveBeenCalledWith({
+      pathId: "lp_ai_1",
+      userId: "u1",
+      title: "Java 系统性学习路线",
+      description: "AI 规划的学习路径：java",
+      status: "not_started",
+      progress: 0,
+      tags: ["java"],
+        tasks: [
+          {
+            taskId: "m1",
+            title: "Java 环境搭建与工具链",
+            status: "not_started",
+            progress: 0,
+            documentBinding: {
+              documentId: "doc_1",
+              boundAt: expect.any(String),
+            },
+          },
+          {
+            taskId: "m2",
+            title: "Java 语法基础与数据类型",
+            status: "not_started",
+            progress: 0,
+            documentBinding: {
+              documentId: "doc_2",
+              boundAt: expect.any(String),
+            },
+          },
+          {
+            taskId: "m3",
+            title: "面向对象编程与设计模式",
+            status: "not_started",
+            progress: 0,
+            documentBinding: {
+              documentId: "doc_3",
+              boundAt: expect.any(String),
+            },
+          },
+        ],
+      });
     expect(payload.learningPack.packId).toBe("lp_ai_1");
   });
 
@@ -347,12 +402,14 @@ describe("learning-pack quick creation", () => {
     expect(setPackKbDocumentMock).toHaveBeenCalledWith(
       "lp_fallback_reuse_1",
       "m1",
-      "doc_exact_match"
+      "doc_exact_match",
+      "u1"
     );
     expect(setPackKbDocumentMock).toHaveBeenCalledWith(
       "lp_fallback_reuse_1",
       "m2",
-      "doc_created_1"
+      "doc_created_1",
+      "u1"
     );
   });
 
@@ -544,8 +601,8 @@ describe("learning-pack quick creation", () => {
     expect(payload.success).toBe(true);
     expect(createDocumentMock).toHaveBeenCalledTimes(1);
     expect(setPackKbDocumentMock).toHaveBeenCalledTimes(2);
-    expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_ai_reuse_1", "m1", "doc_java_env");
-    expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_ai_reuse_1", "m2", "doc_new");
+    expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_ai_reuse_1", "m1", "doc_java_env", "u1");
+    expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_ai_reuse_1", "m2", "doc_new", "u1");
   });
 
   it("creates new docs when planner returns unknown existingDocId", async () => {
@@ -602,6 +659,6 @@ describe("learning-pack quick creation", () => {
     expect(response.status).toBe(200);
     expect(payload.success).toBe(true);
     expect(createDocumentMock).toHaveBeenCalledTimes(1);
-    expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_py_1", "m1", "doc_created_py");
+    expect(setPackKbDocumentMock).toHaveBeenCalledWith("lp_py_1", "m1", "doc_created_py", "u1");
   });
 });

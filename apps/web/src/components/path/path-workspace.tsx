@@ -8,6 +8,7 @@ import { Loader2, Plus, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Edge, Node } from "reactflow";
 import type { PathNodeData } from "@/lib/path/path-types";
+import { PathCreateDialog } from "./path-create-dialog";
 
 function createEmptyTask(id: string, title: string): Task {
   return {
@@ -64,6 +65,7 @@ export function PathWorkspace() {
   const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   useEffect(() => {
     async function loadPaths() {
@@ -147,7 +149,7 @@ export function PathWorkspace() {
       <div className="w-64 border-r flex flex-col bg-muted/20">
         <div className="p-4 border-b flex items-center justify-between">
           <h2 className="font-semibold text-lg">我的学习路径</h2>
-          <Button variant="ghost" size="icon" title="新建路径">
+          <Button variant="ghost" size="icon" title="新建路径" onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="h-4 w-4" />
           </Button>
         </div>
@@ -193,6 +195,26 @@ export function PathWorkspace() {
           </div>
         )}
       </div>
+
+      <PathCreateDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSubmit={async ({ title, description, tags, goalId }) => {
+          const newPath = await pathStorage.createPath({
+            title,
+            description,
+            tags,
+            goalId,
+            status: "not_started",
+            progress: 0,
+            tasks: [],
+            milestones: []
+          });
+          setPaths((current) => [...current, newPath]);
+          setSelectedPathId(newPath.id);
+          setIsCreateDialogOpen(false);
+        }}
+      />
     </div>
   );
 }

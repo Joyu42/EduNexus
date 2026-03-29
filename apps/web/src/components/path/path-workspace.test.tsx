@@ -7,11 +7,18 @@ import { pathStorage } from '@/lib/client/path-storage';
 // @vitest-environment jsdom
 
 // Mock dependencies
+vi.mock('@/lib/goals/goal-storage', () => ({
+  goalStorage: {
+    getGoals: vi.fn().mockReturnValue([]),
+  },
+}));
+
 vi.mock('@/lib/client/path-storage', () => ({
   pathStorage: {
     getAllPaths: vi.fn(),
     getPath: vi.fn(),
     updatePath: vi.fn(),
+    createPath: vi.fn(),
   },
 }));
 
@@ -251,5 +258,47 @@ describe('PathWorkspace', () => {
         }),
       ]),
     }));
+  });
+
+  it('opens create dialog, creates a new path and selects it', async () => {
+    vi.mocked(pathStorage.getAllPaths).mockResolvedValue([]);
+    const newPath = makePath('new-path-1', 'New Test Path');
+    vi.mocked(pathStorage.createPath).mockImplementation(async (data) => {
+      vi.mocked(pathStorage.getAllPaths).mockResolvedValue([newPath as any]);
+      return newPath as any;
+    });
+
+    render(<PathWorkspace />);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('path-workspace-loaded')).toBeTruthy();
+    });
+
+    const newPathBtn = screen.getByTitle('新建路径');
+    fireEvent.click(newPathBtn);
+
+    const titleInput = await screen.findByLabelText('路径名称 *');
+    expect(titleInput).toBeTruthy();
+
+    fireEvent.change(titleInput, { target: { value: 'New Test Path' } });
+    
+    const submitBtn = screen.getByRole('button', { name: '创建路径' });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(pathStorage.createPath).toHaveBeenCalledWith(expect.objectContaining({
+        title: 'New Test Path',
+        status: 'not_started',
+        progress: 0,
+        tasks: [],
+        milestones: []
+      }));
+    });
+
+    await waitFor(() => {
+      const selectedItem = screen.getByTestId('path-item-new-path-1');
+      expect(selectedItem).toBeTruthy();
+      expect(selectedItem.className).toContain('bg-primary/10');
+    });
   });
 });
