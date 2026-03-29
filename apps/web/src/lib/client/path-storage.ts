@@ -834,7 +834,7 @@ export class PathStorageManager {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 title: updated.title,
-                topic: (updated as any).topic,
+                topic: updated.tags?.[0] ?? (updated as any).topic ?? undefined,
               }),
             });
           } catch (e) {
