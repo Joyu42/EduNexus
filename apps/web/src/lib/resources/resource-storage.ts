@@ -703,6 +703,8 @@ export async function createResourceOnServer(input: {
   title: string;
   description?: string;
   url?: string;
+  type?: ResourceType;
+  tags?: string[];
 }) {
   const response = await fetch("/api/resources", {
     method: "POST",
@@ -721,6 +723,8 @@ export async function updateResourceOnServer(
     title?: string;
     description?: string;
     url?: string;
+    type?: ResourceType;
+    tags?: string[];
   },
 ) {
   const response = await fetch(`/api/resources/${resourceId}`, {

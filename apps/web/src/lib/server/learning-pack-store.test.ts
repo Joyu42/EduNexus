@@ -6,6 +6,9 @@ import { loadDb } from "./store";
 import {
   detachDocumentFromLearningPacks,
   setPackKbDocument,
+  createLearningPack,
+  getPackById,
+  reorderLearningPackModules,
   LearningPackDocumentBindingConflictError,
 } from "./learning-pack-store";
 
@@ -213,5 +216,23 @@ describe("learning-pack-store", () => {
     ).rejects.toBeInstanceOf(LearningPackDocumentBindingConflictError);
 
     await fs.promises.rm(dataDir, { recursive: true, force: true });
+  });
+
+  it("reorderLearningPackModules updates the module order", async () => {
+    const pack = await createLearningPack("u1", "Reorder Test", "topic", ["M1", "M2", "M3"]);
+    const m1 = pack.modules[0].moduleId;
+    const m2 = pack.modules[1].moduleId;
+    const m3 = pack.modules[2].moduleId;
+
+    await reorderLearningPackModules(pack.packId, [m3, m1, m2], "u1");
+
+    const read = await getPackById(pack.packId, "u1");
+    expect(read).toBeDefined();
+    expect(read!.modules[0].moduleId).toBe(m3);
+    expect(read!.modules[0].order).toBe(0);
+    expect(read!.modules[1].moduleId).toBe(m1);
+    expect(read!.modules[1].order).toBe(1);
+    expect(read!.modules[2].moduleId).toBe(m2);
+    expect(read!.modules[2].order).toBe(2);
   });
 });

@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { ServerResourceRecord } from "@/lib/resources/resource-storage";
+import type { ServerResourceRecord, ResourceType } from "@/lib/resources/resource-storage";
 
 type FolderOption = {
   id: string;
   name: string;
+};
+
+const RESOURCE_TYPE_LABELS: Record<string, string> = {
+  document: "文档",
+  video: "视频",
+  tool: "工具",
+  website: "网站",
+  book: "书籍",
 };
 
 type ResourceCardProps = {
@@ -44,6 +53,21 @@ export function ResourceCard({
         <p className="text-sm text-muted-foreground leading-relaxed">
           {resource.description || <span className="italic opacity-70">该资源暂未提供描述。</span>}
         </p>
+
+        {(resource.type || (resource.tags && resource.tags.length > 0)) && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {resource.type && (
+              <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200">
+                {RESOURCE_TYPE_LABELS[resource.type] || resource.type}
+              </Badge>
+            )}
+            {resource.tags?.map((tag) => (
+              <Badge key={tag} variant="outline" className="text-muted-foreground">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">

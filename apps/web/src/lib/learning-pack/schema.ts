@@ -71,6 +71,15 @@ export function derivePackStage(modules: LearningPackModuleRecord[]): MasterySta
   return highest;
 }
 
+export function normalizeLearningPackModuleOrder(modules: LearningPackModuleRecord[]): LearningPackModuleRecord[] {
+  return modules
+    .map((module) => ({
+      ...module,
+      kbDocumentId: module.kbDocumentId.trim(),
+    }))
+    .sort((a, b) => a.order - b.order);
+}
+
 export function isLearningPackRecord(value: unknown): value is LearningPackRecord {
   return LearningPackSchema.safeParse(value).success;
 }
@@ -80,7 +89,12 @@ export function isLearningPackModuleRecord(value: unknown): value is LearningPac
 }
 
 export function normalizeLearningPackRecord(input: unknown): LearningPackRecord | null {
-  return LearningPackSchema.safeParse(input).success ? LearningPackSchema.parse(input) : null;
+  if (!LearningPackSchema.safeParse(input).success) return null;
+  const parsed = LearningPackSchema.parse(input);
+  return {
+    ...parsed,
+    modules: normalizeLearningPackModuleOrder(parsed.modules),
+  };
 }
 
 export function normalizeLearningPackModuleRecord(input: unknown): LearningPackModuleRecord | null {

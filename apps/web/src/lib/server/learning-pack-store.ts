@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { loadDb, saveDb } from "./store";
 import type { LearningPackRecord, LearningPackModuleRecord } from "../learning-pack/schema";
-import { deriveModuleStage, derivePackStage } from "../learning-pack/schema";
+import { deriveModuleStage, derivePackStage, normalizeLearningPackModuleOrder } from "../learning-pack/schema";
 
 export type { LearningPackRecord, LearningPackModuleRecord, MasteryStage } from "../learning-pack/schema";
 export { MASTERY_STAGES } from "../learning-pack/schema";
@@ -42,11 +42,15 @@ function normalizeBindingDocId(value: string | undefined): string {
 
 export async function upsertLearningPack(pack: LearningPackRecord): Promise<void> {
   const packs = await getAllPacks();
+  const normalizedPack = {
+    ...pack,
+    modules: normalizeLearningPackModuleOrder(pack.modules),
+  };
   const idx = packs.findIndex((p) => p.packId === pack.packId && p.userId === pack.userId);
   if (idx >= 0) {
-    packs[idx] = pack;
+    packs[idx] = normalizedPack;
   } else {
-    packs.push(pack);
+    packs.push(normalizedPack);
   }
   await putAllPacks(packs);
 }
@@ -361,4 +365,51 @@ export async function findPacksByTopic(
   return packs
     .filter((p) => p.userId === userId && normalizeTopic(p.topic) === normalized)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function reorderLearningPackModules(
+  packId: string,
+  orderedModuleIds: string[],
+  userId: string
+): Promise<void> {
+  const packs = await getAllPacks();
+  const now = new Date().toISOString();
+  let changed = false;
+
+  const updated = packs.map((p) => {
+    if (p.packId !== packId || p.userId !== userId) return p;
+
+    // reorder
+    const currentModules = [...p.modules];
+    const newModules: typeof currentModules = [];
+    const orderedSet = new Set<string>();
+
+    for (let i = 0; i < orderedModuleIds.length; i++) {
+      const mId = orderedModuleIds[i];
+      const m = currentModules.find(x => x.moduleId === mId);
+      if (m) {
+        newModules.push({ ...m, order: i });
+        orderedSet.add(mId);
+      }
+    }
+
+    // append any missing modules at the end
+    let orderIndex = newModules.length;
+    for (const m of currentModules) {
+      if (!orderedSet.has(m.moduleId)) {
+        newModules.push({ ...m, order: orderIndex++ });
+      }
+    }
+
+    changed = true;
+    return {
+      ...p,
+      modules: newModules,
+      updatedAt: now,
+    };
+  });
+
+  if (changed) {
+    await putAllPacks(updated);
+  }
 }

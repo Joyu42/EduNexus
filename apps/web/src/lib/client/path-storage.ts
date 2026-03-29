@@ -71,6 +71,36 @@ export type LearningPath = {
   deletedDocumentDrafts?: TaskDocumentDraft[];
 };
 
+type PackSummary = {
+  packId: string;
+  title: string;
+  topic: string;
+  updatedAt: string;
+  active?: boolean;
+};
+
+type PackGraphNode = {
+  id: string;
+  label: string;
+  kbDocumentId?: string;
+};
+
+type PackGraphEdge = {
+  source: string;
+  target: string;
+};
+
+type PackGraphViewResponse = {
+  data?: {
+    nodes?: PackGraphNode[];
+    edges?: PackGraphEdge[];
+    packId?: string;
+  };
+  nodes?: PackGraphNode[];
+  edges?: PackGraphEdge[];
+  packId?: string;
+};
+
 // IndexedDB Schema
 interface PathDB extends DBSchema {
   paths: {
@@ -337,6 +367,23 @@ const syncPathToServerGraph = async (path: LearningPath): Promise<void> => {
   }
 
   try {
+    if (path.id.startsWith('lp_')) {
+      await fetch('/api/graph/learning-pack/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packId: path.id,
+          tasks: path.tasks.map((task) => ({
+            taskId: task.id,
+            documentBinding: task.documentBinding
+              ? { documentId: task.documentBinding.documentId }
+              : null,
+          })),
+        }),
+      });
+      return;
+    }
+
     await fetch('/api/path/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -444,6 +491,89 @@ export class PathStorageManager {
     }
   }
 
+  private async hydrateFromPackBacked(packId?: string): Promise<LearningPath[]> {
+    try {
+      const listResponse = await fetch("/api/graph/learning-pack/list", { credentials: "include" });
+      if (!listResponse.ok) {
+        return [];
+      }
+
+      const listJson = (await listResponse.json()) as { packs?: PackSummary[] };
+      const packs = Array.isArray(listJson.packs) ? listJson.packs : [];
+      if (packs.length === 0) {
+        return [];
+      }
+
+      const summary = packId
+        ? packs.find((pack) => pack.packId === packId)
+        : packs.find((pack) => pack.active) ?? packs[0];
+      if (!summary) {
+        return [];
+      }
+
+      const graphResponse = await fetch(`/api/graph/view?packId=${encodeURIComponent(summary.packId)}`, {
+        credentials: "include",
+      });
+      if (!graphResponse.ok) {
+        return [];
+      }
+
+      const graphJson = (await graphResponse.json()) as PackGraphViewResponse;
+      const nodes = graphJson.data?.nodes ?? graphJson.nodes ?? [];
+      const edges = graphJson.data?.edges ?? graphJson.edges ?? [];
+      if (!Array.isArray(nodes) || nodes.length === 0) {
+        return [];
+      }
+
+      const createdAt = new Date(summary.updatedAt);
+      const path: LearningPath = {
+        id: summary.packId,
+        title: summary.title,
+        description: `基于学习包「${summary.title}」生成的学习路径`,
+        status: "not_started",
+        progress: 0,
+        tags: [summary.topic],
+        createdAt,
+        updatedAt: createdAt,
+        tasks: nodes.map((node, index) => ({
+          id: node.id,
+          title: node.label,
+          description: "",
+          estimatedTime: "30m",
+          progress: 0,
+          status: "not_started",
+          dependencies: edges.filter((edge) => edge.target === node.id).map((edge) => edge.source),
+          resources: [],
+          notes: "",
+          createdAt,
+          documentBinding: node.kbDocumentId
+            ? {
+                documentId: node.kbDocumentId,
+                boundAt: createdAt,
+              }
+            : undefined,
+        })),
+        milestones: [],
+      };
+
+      if (this.db && !this.useLocalStorage) {
+        await this.db.put("paths", this.serializePath(path));
+      } else {
+        const existingPath = localStoragePathManager.getPath(path.id);
+        if (existingPath) {
+          localStoragePathManager.updatePath(path.id, path as never);
+        } else {
+          localStoragePathManager.createPath(path as never);
+        }
+      }
+
+      return [path];
+    } catch (error) {
+      console.warn("[PathStorage] 从学习包路径同步失败:", error);
+      return [];
+    }
+  }
+
   /**
    * 将服务器 SyncedPathRecord 转换为 LearningPath
    */
@@ -527,7 +657,7 @@ export class PathStorageManager {
   /**
    * 获取所有学习路径
    */
-  async getAllPaths(): Promise<LearningPath[]> {
+  async getAllPaths(packId?: string): Promise<LearningPath[]> {
     if (!getDBName()) {
       return [];
     }
@@ -544,9 +674,16 @@ export class PathStorageManager {
       const localPaths = await this.db!.getAll('paths');
       const deserializedLocal = localPaths.map(this.deserializePath);
 
+      const packPaths = await this.hydrateFromPackBacked(packId);
+      if (packPaths.length > 0) {
+        const merged = this.mergePaths(packPaths, deserializedLocal);
+        console.log('[PathStorage] 获取学习包路径:', merged.length, '个');
+        return merged;
+      }
+
       // 从服务器 hydrate 并合并（去重，服务器数据优先更新）
       const serverPaths = await this.hydrateFromServer();
-      const merged = this.mergePaths(deserializedLocal, serverPaths);
+      const merged = this.mergePaths(serverPaths, deserializedLocal);
 
       console.log('[PathStorage] 获取所有路径:', merged.length, '个');
       return merged;

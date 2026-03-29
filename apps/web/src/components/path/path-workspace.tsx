@@ -60,7 +60,11 @@ function toEditorEdges(path: LearningPath): Edge[] {
   return edges;
 }
 
-export function PathWorkspace() {
+type PathWorkspaceProps = {
+  packId?: string;
+};
+
+export function PathWorkspace({ packId }: PathWorkspaceProps) {
   const [paths, setPaths] = useState<LearningPath[]>([]);
   const [selectedPathId, setSelectedPathId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +75,7 @@ export function PathWorkspace() {
     async function loadPaths() {
       try {
         setIsLoading(true);
-        const allPaths = await pathStorage.getAllPaths();
+        const allPaths = await pathStorage.getAllPaths(packId);
         setPaths(allPaths);
         if (allPaths.length > 0 && !selectedPathId) {
           setSelectedPathId(allPaths[0].id);
@@ -83,7 +87,7 @@ export function PathWorkspace() {
       }
     }
     loadPaths();
-  }, [selectedPathId]);
+  }, [packId, selectedPathId]);
 
   const selectedPath = paths.find((path) => path.id === selectedPathId) ?? null;
 

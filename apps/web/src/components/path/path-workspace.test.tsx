@@ -120,6 +120,20 @@ describe('PathWorkspace', () => {
     expect(screen.getByTestId('path-workspace-loading')).toBeTruthy();
   });
 
+  it('prefers pack-backed paths when packId is provided', async () => {
+    vi.mocked(pathStorage.getAllPaths).mockResolvedValue([
+      makePath('legacy-path', 'Legacy Path') as any,
+    ]);
+
+    render(<PathWorkspace packId="lp_java_001" />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('path-workspace-loaded')).toBeTruthy();
+    });
+
+    expect(pathStorage.getAllPaths).toHaveBeenCalledWith('lp_java_001');
+  });
+
   it('renders empty state when no paths exist', async () => {
     vi.mocked(pathStorage.getAllPaths).mockResolvedValue([]);
     

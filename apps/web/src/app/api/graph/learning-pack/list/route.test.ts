@@ -135,6 +135,32 @@ describe("GET /api/graph/learning-pack/list", () => {
     expect(Array.from(validDocIds)).toEqual(["doc1", "doc2"]);
   });
 
+  it("keeps current module bindings consistent with pack order", async () => {
+    getCurrentUserIdMock.mockResolvedValueOnce("u1");
+    listDocumentsMock.mockResolvedValueOnce([{ id: "doc1" }, { id: "doc2" }]);
+    pruneStaleLearningPacksMock.mockResolvedValueOnce({ updatedPackIds: [], removedPackIds: [] });
+    getActivePackMock.mockResolvedValueOnce(mockPacks[0]);
+    getPacksByUserMock.mockResolvedValueOnce([
+      {
+        ...mockPacks[0],
+        modules: [
+          { moduleId: "m2", title: "Java 进阶", kbDocumentId: "doc2", stage: "seen" as const, order: 1, studyMinutes: 0, lastStudiedAt: null },
+          { moduleId: "m1", title: "Java 基础", kbDocumentId: "doc1", stage: "seen" as const, order: 0, studyMinutes: 30, lastStudiedAt: null },
+        ],
+        currentModule: undefined,
+      } as never,
+    ]);
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.packs[0].currentModule).toMatchObject({
+      moduleId: "m1",
+      kbDocumentId: "doc1",
+    });
+  });
+
   it("still returns pack summaries when pruning step fails", async () => {
     getCurrentUserIdMock.mockResolvedValueOnce("u1");
     listDocumentsMock.mockRejectedValueOnce(new Error("list failed"));

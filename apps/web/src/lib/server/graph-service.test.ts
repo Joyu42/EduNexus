@@ -17,7 +17,6 @@ vi.mock("./prisma", () => ({
 
 const { loadDb, saveDb } = await import("./store");
 const { getGraphView } = await import("./graph-service");
-const { upsertSyncedPath } = await import("./path-sync-service");
 
 const originalDataDir = process.env.EDUNEXUS_DATA_DIR;
 
@@ -99,6 +98,74 @@ describe("graph service projection", () => {
     expect(graph.edges).toEqual([
       { source: "doc_java_1", target: "doc_java_2", weight: 0.9 },
       { source: "doc_java_2", target: "doc_java_3", weight: 0.9 },
+    ]);
+
+    await fs.rm(dataDir, { recursive: true, force: true });
+  });
+
+  it("projects pack bindings into graph path memberships without synced paths", async () => {
+    const dataDir = await createDataDir();
+    process.env.EDUNEXUS_DATA_DIR = dataDir;
+
+    const db = await loadDb();
+    const now = new Date().toISOString();
+    db.learningPacks.push({
+      packId: "lp_java_compat",
+      userId: "pack-user",
+      title: "Java 学习路线图",
+      topic: "java",
+      activeModuleId: "mod_1",
+      stage: "seen",
+      totalStudyMinutes: 0,
+      createdAt: now,
+      updatedAt: now,
+      modules: [
+        {
+          moduleId: "mod_2",
+          title: "Java OOP",
+          kbDocumentId: "doc_java_2",
+          stage: "seen",
+          order: 1,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+        {
+          moduleId: "mod_1",
+          title: "Java 基础",
+          kbDocumentId: "doc_java_1",
+          stage: "seen",
+          order: 0,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+      ],
+    });
+    await saveDb(db);
+
+    findMany.mockResolvedValueOnce([
+      { id: "doc_java_1", title: "Java 基础" },
+      { id: "doc_java_2", title: "Java OOP" },
+    ]);
+
+    const graph = await getGraphView("pack-user", { packId: "lp_java_compat" });
+
+    expect(graph.nodes).toHaveLength(2);
+    expect(graph.nodes.map((node) => node.id)).toEqual(["doc_java_1", "doc_java_2"]);
+    expect(graph.nodes[0]?.pathMemberships).toEqual([
+      {
+        pathId: "lp_java_compat",
+        pathName: "Java 学习路线图",
+        stage: "lp_java_compat",
+        orderWithinStage: 0,
+      },
+    ]);
+    expect(graph.nodes[1]?.pathMemberships).toEqual([
+      {
+        pathId: "lp_java_compat",
+        pathName: "Java 学习路线图",
+        stage: "lp_java_compat",
+        orderWithinStage: 1,
+      },
     ]);
 
     await fs.rm(dataDir, { recursive: true, force: true });

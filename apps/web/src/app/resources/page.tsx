@@ -28,6 +28,8 @@ export default function ResourcesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "title">("newest");
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string>("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<ServerResourceRecord | null>(null);
 
@@ -63,16 +65,30 @@ export default function ResourcesPage() {
   }, [folders]);
 
   const filteredResources = useMemo(() => {
-    if (!selectedFolderId) {
-      return resources;
+    let result = resources;
+
+    if (selectedFolderId) {
+      const folder = folders.find((item) => item.id === selectedFolderId);
+      if (folder) {
+        const folderResourceIds = new Set(folder.resourceIds);
+        result = result.filter((resource) => folderResourceIds.has(resource.id));
+      } else {
+        result = [];
+      }
     }
-    const folder = folders.find((item) => item.id === selectedFolderId);
-    if (!folder) {
-      return [];
+
+    if (selectedType) {
+      result = result.filter((resource) => resource.type === selectedType);
     }
-    const folderResourceIds = new Set(folder.resourceIds);
-    return resources.filter((resource) => folderResourceIds.has(resource.id));
-  }, [folders, resources, selectedFolderId]);
+
+    if (selectedTags.length > 0) {
+      result = result.filter((resource) => 
+        selectedTags.every(tag => resource.tags?.includes(tag))
+      );
+    }
+
+    return result;
+  }, [folders, resources, selectedFolderId, selectedType, selectedTags]);
 
   const requireAuthenticated = () => {
     if (status !== "unauthenticated") {
@@ -97,7 +113,7 @@ export default function ResourcesPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ resourceId, input }: { resourceId: string; input: { title?: string; description?: string; url?: string } }) =>
+    mutationFn: ({ resourceId, input }: { resourceId: string; input: { title?: string; description?: string; url?: string; type?: "document" | "video" | "tool" | "website" | "book"; tags?: string[] } }) =>
       updateResourceOnServer(resourceId, input),
     onSuccess: () => {
       toast.success("资源更新成功");

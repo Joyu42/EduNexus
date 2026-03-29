@@ -13,11 +13,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import type { ResourceType } from "@/lib/resources/resource-storage";
 
 type ResourceEditorValue = {
   title: string;
   description?: string;
   url?: string;
+  type?: ResourceType;
+  tags?: string[];
 };
 
 type ResourceEditorDialogProps = {
@@ -40,6 +43,8 @@ export function ResourceEditorDialog({
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
+  const [type, setType] = useState<ResourceType | "">("");
+  const [tags, setTags] = useState("");
 
   useEffect(() => {
     if (!open) {
@@ -48,6 +53,8 @@ export function ResourceEditorDialog({
     setTitle(initialValue?.title ?? "");
     setUrl(initialValue?.url ?? "");
     setDescription(initialValue?.description ?? "");
+    setType(initialValue?.type ?? "");
+    setTags(initialValue?.tags?.join(", ") ?? "");
   }, [open, initialValue]);
 
   const submitLabel = mode === "create" ? "发布资源" : "保存修改";
@@ -77,6 +84,8 @@ export function ResourceEditorDialog({
               title: nextTitle,
               description: description.trim() || undefined,
               url: url.trim() || undefined,
+              type: (type as ResourceType) || undefined,
+              tags: tags ? tags.split(",").map(t => t.trim()).filter(Boolean) : undefined,
             });
           }}
         >
@@ -104,6 +113,36 @@ export function ResourceEditorDialog({
               onChange={(event) => setUrl(event.target.value)}
               type="url"
               placeholder="https://"
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="resource-editor-type">资源类型</Label>
+            <select
+              id="resource-editor-type"
+              name="type"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              value={type}
+              onChange={(event) => setType(event.target.value as ResourceType | "")}
+            >
+              <option value="">未选择</option>
+              <option value="document">文档</option>
+              <option value="video">视频</option>
+              <option value="tool">工具</option>
+              <option value="website">网站</option>
+              <option value="book">书籍</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="resource-editor-tags">标签</Label>
+            <Input
+              id="resource-editor-tags"
+              name="tags"
+              value={tags}
+              onChange={(event) => setTags(event.target.value)}
+              placeholder="使用逗号分隔多个标签，例如: React, Frontend"
               autoComplete="off"
             />
           </div>

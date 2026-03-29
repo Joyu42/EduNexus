@@ -91,6 +91,11 @@ describe("path storage scope", () => {
     expect(resolvePathLocalStorageKey(null)).toBeNull();
   });
 
+  it("keeps pack hydration separate from storage scope resolution", () => {
+    expect(resolvePathDatabaseName("user_1")).toBe("EduNexusPath_user_1");
+    expect(resolvePathLocalStorageKey("user_1")).toBe("edunexus_learning_paths_user_1");
+  });
+
   it("preserves binding lifecycle state through local storage round-trips", () => {
     const bound = bindDocumentToTask(basePath, "task_1", {
       documentId: "doc_1",

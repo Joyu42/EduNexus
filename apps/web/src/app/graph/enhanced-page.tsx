@@ -831,7 +831,7 @@ function GraphPageContent() {
         </div>
 
         <div className="flex-1 flex min-h-0 gap-4 relative">
-          {(activeMode as string) === "path" ? <PathWorkspace /> : <>
+          {(activeMode as string) === "path" ? <PathWorkspace packId={urlPackId} /> : <>
           {isSidebarCollapsed ? (
             <div className="absolute top-4 left-4 z-10">
               <Button
