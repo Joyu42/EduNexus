@@ -14,6 +14,12 @@ export async function GET(req: Request) {
     const q = (searchParams.get("q") ?? "").trim();
     const sort = (searchParams.get("sort") ?? "newest").trim();
     const rawLimit = (searchParams.get("limit") ?? "").trim();
+    const type = (searchParams.get("type") ?? "").trim();
+    const category = (searchParams.get("category") ?? "").trim();
+    const tags = (searchParams.get("tags") ?? "")
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
 
     const limitParsed = rawLimit ? Number.parseInt(rawLimit, 10) : Number.NaN;
     const limit = Number.isFinite(limitParsed) ? Math.min(100, Math.max(1, limitParsed)) : 20;
@@ -23,9 +29,29 @@ export async function GET(req: Request) {
       ? allResources.filter((resource) => {
           const title = resource.title?.toLowerCase?.() ?? "";
           const description = resource.description?.toLowerCase?.() ?? "";
-          return title.includes(keyword) || description.includes(keyword);
+          const resourceTags = Array.isArray(resource.tags) ? resource.tags : [];
+          return (
+            title.includes(keyword) ||
+            description.includes(keyword) ||
+            resourceTags.some((tag) => tag.toLowerCase().includes(keyword))
+          );
         })
       : allResources;
+
+    const typed = type
+      ? filtered.filter((resource) => resource.type === type)
+      : filtered;
+
+    const categorized = category
+      ? typed.filter((resource) => (resource.category ?? "") === category)
+      : typed;
+
+    const tagged = tags.length
+      ? categorized.filter((resource) => {
+          const resourceTags = Array.isArray(resource.tags) ? resource.tags : [];
+          return tags.some((tag) => resourceTags.includes(tag));
+        })
+      : categorized;
 
     const sorted = filtered.slice();
     if (sort === "oldest") {
@@ -40,18 +66,32 @@ export async function GET(req: Request) {
       });
     }
 
-    const resources = sorted.slice(0, limit);
+    const resources = tagged.slice();
+
+    if (sort === "oldest") {
+      resources.sort((a, b) => {
+        return Date.parse(a.createdAt) - Date.parse(b.createdAt);
+      });
+    } else if (sort === "title") {
+      resources.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+    } else {
+      resources.sort((a, b) => {
+        return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+      });
+    }
+
+    const limitedResources = resources.slice(0, limit);
 
     // Resolve createdBy userId to username for each resource
     const resourcesWithCreatorName = await Promise.all(
-      resources.map(async (resource) => {
+      limitedResources.map(async (resource) => {
         const creator = await getUserById(resource.createdBy);
         const createdByName = creator?.name ?? creator?.email ?? "未知用户";
         return { ...resource, createdByName };
       })
     );
 
-    return ok({ resources: resourcesWithCreatorName, total: filtered.length });
+    return ok({ resources: resourcesWithCreatorName, total: tagged.length });
   } catch (error) {
     return fail(
       {
@@ -105,16 +145,31 @@ export async function POST(req: Request) {
     );
   }
 
-  const description = typeof payload.description === "string" ? payload.description : undefined;
-  const url = typeof payload.url === "string" ? payload.url : undefined;
+    const description = typeof payload.description === "string" ? payload.description : undefined;
+    const url = typeof payload.url === "string" ? payload.url : undefined;
+    const type =
+      payload.type === "document" ||
+      payload.type === "video" ||
+      payload.type === "tool" ||
+      payload.type === "website" ||
+      payload.type === "book"
+        ? payload.type
+        : undefined;
+    const tags = Array.isArray(payload.tags)
+      ? payload.tags.filter((tag): tag is string => typeof tag === "string").map((tag) => tag.trim()).filter(Boolean)
+      : undefined;
+    const category = typeof payload.category === "string" ? payload.category.trim() : undefined;
 
-  try {
-    const resource = await createResource({
-      title,
-      description,
-      url,
-      createdBy: userId
-    });
+    try {
+      const resource = await createResource({
+        title,
+        description,
+        url,
+        createdBy: userId,
+        type,
+        tags,
+        category
+      });
     return ok({ resource });
   } catch (error) {
     return fail(

@@ -7,8 +7,8 @@ export interface Resource {
   id: string;
   title: string;
   description: string;
-  type: ResourceType;
-  status: ResourceStatus;
+  type?: ResourceType;
+  status?: ResourceStatus;
 
   // 资源内容
   url?: string; // 外部链接
@@ -18,16 +18,16 @@ export interface Resource {
   mimeType?: string;
 
   // 元数据
-  tags: string[];
+  tags?: string[];
   category?: string;
   author?: string;
   source?: string;
 
   // 统计
-  viewCount: number;
-  bookmarkCount: number;
-  rating: number; // 平均评分 0-5
-  ratingCount: number;
+  viewCount?: number;
+  bookmarkCount?: number;
+  rating?: number; // 平均评分 0-5
+  ratingCount?: number;
 
   // 时间
   createdAt: string;

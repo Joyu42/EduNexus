@@ -107,6 +107,14 @@ type PublicResourceRecord = {
   url: string;
   createdBy: string;
   createdAt: string;
+  type?: "document" | "video" | "tool" | "website" | "book";
+  tags?: string[];
+  category?: string;
+  status?: "active" | "archived";
+  viewCount?: number;
+  bookmarkCount?: number;
+  rating?: number;
+  ratingCount?: number;
 };
 
 type ResourceBookmarkRecord = {
@@ -537,6 +545,37 @@ function normalizeSyncedPathRecord(input: unknown): SyncedPathRecord | null {
   };
 }
 
+export function projectLearningPackCompatibilityPath(pack: LearningPackRecord): SyncedPathRecord {
+  const now = pack.updatedAt;
+  return {
+    userId: pack.userId,
+    pathId: pack.packId,
+    title: pack.title,
+    description: `AI 规划的学习路径：${pack.topic}`,
+    status: "not_started",
+    progress: 0,
+    tags: [pack.topic],
+    tasks: pack.modules
+      .slice()
+      .sort((a, b) => a.order - b.order)
+      .map((module) => ({
+        taskId: module.moduleId,
+        title: module.title,
+        status: "not_started",
+        progress: 0,
+        ...(module.kbDocumentId.trim().length > 0
+          ? {
+              documentBinding: {
+                documentId: module.kbDocumentId.trim(),
+                boundAt: now,
+              },
+            }
+          : {}),
+      })),
+    updatedAt: now,
+  };
+}
+
 function normalizePublicPostRecord(input: unknown): PublicPostRecord | null {
   if (!isRecord(input)) return null;
   const now = new Date().toISOString();
@@ -602,13 +641,30 @@ function normalizePublicResourceRecord(input: unknown): PublicResourceRecord | n
     return null;
   }
 
+  const tags = normalizeStringArray(input.tags);
+
   return {
     id,
     title,
     description: typeof input.description === "string" ? input.description : "",
     url: typeof input.url === "string" ? input.url : "",
     createdBy: typeof input.createdBy === "string" ? input.createdBy : "",
-    createdAt: typeof input.createdAt === "string" ? input.createdAt : new Date().toISOString()
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : new Date().toISOString(),
+    type:
+      input.type === "document" ||
+      input.type === "video" ||
+      input.type === "tool" ||
+      input.type === "website" ||
+      input.type === "book"
+        ? input.type
+        : undefined,
+    tags,
+    category: typeof input.category === "string" ? input.category : "",
+    status: input.status === "active" || input.status === "archived" ? input.status : "active",
+    viewCount: typeof input.viewCount === "number" ? input.viewCount : 0,
+    bookmarkCount: typeof input.bookmarkCount === "number" ? input.bookmarkCount : 0,
+    rating: typeof input.rating === "number" ? input.rating : 0,
+    ratingCount: typeof input.ratingCount === "number" ? input.ratingCount : 0
   };
 }
 

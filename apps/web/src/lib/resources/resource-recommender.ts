@@ -9,6 +9,18 @@ export interface RecommendationResult {
   reason: string;
 }
 
+function getTags(resource: Resource): string[] {
+  return resource.tags ?? [];
+}
+
+function getCount(value: number | undefined): number {
+  return value ?? 0;
+}
+
+function getType(resource: Resource): NonNullable<Resource["type"]> {
+  return resource.type ?? "document";
+}
+
 // ==================== 基于标签的推荐 ====================
 
 export function recommendByTags(
@@ -21,7 +33,7 @@ export function recommendByTags(
   );
 
   const results: RecommendationResult[] = resources.map((resource) => {
-    const matchedTags = resource.tags.filter((tag) => tags.includes(tag));
+    const matchedTags = getTags(resource).filter((tag) => tags.includes(tag));
     const score = matchedTags.length / tags.length;
 
     return {
@@ -54,7 +66,7 @@ export function recommendByType(
   );
 
   return resources
-    .sort((a, b) => b.rating - a.rating || b.bookmarkCount - a.bookmarkCount)
+    .sort((a, b) => getCount(b.rating) - getCount(a.rating) || getCount(b.bookmarkCount) - getCount(a.bookmarkCount))
     .slice(0, limit)
     .map((resource) => ({
       resource,
@@ -77,8 +89,8 @@ export function recommendPopular(
 
   return filtered
     .sort((a, b) => {
-      const scoreA = a.bookmarkCount * 0.5 + a.rating * 10 + a.viewCount * 0.1;
-      const scoreB = b.bookmarkCount * 0.5 + b.rating * 10 + b.viewCount * 0.1;
+      const scoreA = getCount(a.bookmarkCount) * 0.5 + getCount(a.rating) * 10 + getCount(a.viewCount) * 0.1;
+      const scoreB = getCount(b.bookmarkCount) * 0.5 + getCount(b.rating) * 10 + getCount(b.viewCount) * 0.1;
       return scoreB - scoreA;
     })
     .slice(0, limit)
@@ -108,7 +120,7 @@ export function recommendByUserHistory(
     .map((b) => resources.find((r) => r.id === b.resourceId))
     .filter((r): r is Resource => r !== undefined);
 
-  const allTags = bookmarkedResources.flatMap((r) => r.tags);
+  const allTags = bookmarkedResources.flatMap((r) => getTags(r));
   const tagFrequency = new Map<string, number>();
 
   allTags.forEach((tag) => {
@@ -152,7 +164,7 @@ export function recommendSimilar(
     }
 
     // 标签匹配
-    const matchedTags = r.tags.filter((tag) => resource.tags.includes(tag));
+    const matchedTags = getTags(r).filter((tag) => getTags(resource).includes(tag));
     if (matchedTags.length > 0) {
       score += matchedTags.length * 0.2;
       reasons.push(`相似标签：${matchedTags.slice(0, 3).join(", ")}`);
@@ -214,8 +226,9 @@ export function recommendPersonalized(
   const authorPreference = new Map<string, number>();
 
   bookmarkedResources.forEach((r) => {
-    typePreference.set(r.type, (typePreference.get(r.type) || 0) + 1);
-    r.tags.forEach((tag) => {
+    const type = getType(r);
+    typePreference.set(type, (typePreference.get(type) || 0) + 1);
+    getTags(r).forEach((tag) => {
       tagPreference.set(tag, (tagPreference.get(tag) || 0) + 1);
     });
     if (r.author) {
@@ -230,14 +243,14 @@ export function recommendPersonalized(
     let reasons: string[] = [];
 
     // 类型偏好匹配 (权重: 0.25)
-    const typeScore = (typePreference.get(resource.type) || 0) / bookmarkedResources.length;
+    const typeScore = (typePreference.get(getType(resource)) || 0) / bookmarkedResources.length;
     score += typeScore * 0.25;
     if (typeScore > 0.3) {
       reasons.push("符合你的类型偏好");
     }
 
     // 标签偏好匹配 (权重: 0.35)
-    const matchedTags = resource.tags.filter((tag) => tagPreference.has(tag));
+    const matchedTags = getTags(resource).filter((tag) => tagPreference.has(tag));
     if (matchedTags.length > 0) {
       const tagScore = matchedTags.reduce(
         (sum, tag) => sum + (tagPreference.get(tag) || 0),
@@ -259,7 +272,7 @@ export function recommendPersonalized(
       const topicMatch =
         resource.title.toLowerCase().includes(context.currentTopic.toLowerCase()) ||
         resource.description.toLowerCase().includes(context.currentTopic.toLowerCase()) ||
-        resource.tags.some(tag => tag.toLowerCase().includes(context.currentTopic!.toLowerCase()));
+        getTags(resource).some(tag => tag.toLowerCase().includes(context.currentTopic!.toLowerCase()));
       if (topicMatch) {
         score += 0.15;
         reasons.push("与当前主题相关");
@@ -269,7 +282,7 @@ export function recommendPersonalized(
     // 上下文匹配 - 知识节点 (权重: 0.1)
     if (context?.knowledgeNodes && context.knowledgeNodes.length > 0) {
       const nodeMatch = context.knowledgeNodes.some((node) =>
-        resource.tags.some((tag) => tag.toLowerCase().includes(node.toLowerCase()))
+        getTags(resource).some((tag) => tag.toLowerCase().includes(node.toLowerCase()))
       );
       if (nodeMatch) {
         score += 0.1;
@@ -281,7 +294,7 @@ export function recommendPersonalized(
     if (context?.recentSearches && context.recentSearches.length > 0) {
       const searchMatch = context.recentSearches.some((search) =>
         resource.title.toLowerCase().includes(search.toLowerCase()) ||
-        resource.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase()))
+        getTags(resource).some(tag => tag.toLowerCase().includes(search.toLowerCase()))
       );
       if (searchMatch) {
         score += 0.08;
@@ -296,7 +309,7 @@ export function recommendPersonalized(
         intermediate: ["进阶", "中级", "实战", "项目"],
         advanced: ["高级", "深入", "源码", "架构", "专家"]
       };
-      const levelMatch = resource.tags.some(tag =>
+      const levelMatch = getTags(resource).some(tag =>
         levelTags[context.skillLevel!].some(levelTag =>
           tag.includes(levelTag)
         )
@@ -308,14 +321,14 @@ export function recommendPersonalized(
     }
 
     // 质量分数 (权重: 0.15)
-    const qualityScore = (resource.rating / 5) * 0.6 +
-      Math.min(resource.bookmarkCount / 100, 1) * 0.3 +
-      Math.min(resource.viewCount / 1000, 1) * 0.1;
+    const qualityScore = (getCount(resource.rating) / 5) * 0.6 +
+      Math.min(getCount(resource.bookmarkCount) / 100, 1) * 0.3 +
+      Math.min(getCount(resource.viewCount) / 1000, 1) * 0.1;
     score += qualityScore * 0.15;
 
-    if (resource.rating >= 4.5) {
+    if (getCount(resource.rating) >= 4.5) {
       reasons.push("高评分资源");
-    } else if (resource.bookmarkCount >= 50) {
+    } else if (getCount(resource.bookmarkCount) >= 50) {
       reasons.push("热门收藏");
     }
 
@@ -342,12 +355,12 @@ export function recommendPersonalized(
 // ==================== 工具函数 ====================
 
 function getTypeLabel(type: Resource["type"]): string {
-  const labels: Record<Resource["type"], string> = {
+  const labels: Record<NonNullable<Resource["type"]>, string> = {
     document: "文档",
     video: "视频",
     tool: "工具",
     website: "网站",
     book: "书籍",
   };
-  return labels[type];
+  return labels[type ?? "document"];
 }

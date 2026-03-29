@@ -22,6 +22,9 @@ export async function createResource(input: {
   description?: string;
   url?: string;
   createdBy: string;
+  type?: "document" | "video" | "tool" | "website" | "book";
+  tags?: string[];
+  category?: string;
 }) {
   const db = await loadDb();
   const record: PublicResourceRecord = {
@@ -30,7 +33,15 @@ export async function createResource(input: {
     description: input.description ?? "",
     url: input.url ?? "",
     createdBy: input.createdBy,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    type: input.type,
+    tags: input.tags?.filter(Boolean),
+    category: input.category ?? "",
+    status: "active",
+    viewCount: 0,
+    bookmarkCount: 0,
+    rating: 0,
+    ratingCount: 0
   };
 
   db.publicResources.unshift(record);
@@ -40,7 +51,12 @@ export async function createResource(input: {
 
 export async function updateResource(
   resourceId: string,
-  input: Partial<Pick<PublicResourceRecord, "title" | "description" | "url">>
+  input: Partial<
+    Pick<
+      PublicResourceRecord,
+      "title" | "description" | "url" | "type" | "tags" | "category" | "status" | "viewCount" | "bookmarkCount" | "rating" | "ratingCount"
+    >
+  >
 ) {
   const db = await loadDb();
   const record = db.publicResources.find((item) => item.id === resourceId);
@@ -56,6 +72,39 @@ export async function updateResource(
   }
   if (typeof input.url === "string") {
     record.url = input.url;
+  }
+  if (
+    input.type === undefined ||
+    input.type === "document" ||
+    input.type === "video" ||
+    input.type === "tool" ||
+    input.type === "website" ||
+    input.type === "book"
+  ) {
+    if (input.type !== undefined) {
+      record.type = input.type;
+    }
+  }
+  if (Array.isArray(input.tags)) {
+    record.tags = input.tags.filter((tag): tag is string => typeof tag === "string" && tag.length > 0);
+  }
+  if (typeof input.category === "string") {
+    record.category = input.category;
+  }
+  if (input.status === "active" || input.status === "archived") {
+    record.status = input.status;
+  }
+  if (typeof input.viewCount === "number") {
+    record.viewCount = input.viewCount;
+  }
+  if (typeof input.bookmarkCount === "number") {
+    record.bookmarkCount = input.bookmarkCount;
+  }
+  if (typeof input.rating === "number") {
+    record.rating = input.rating;
+  }
+  if (typeof input.ratingCount === "number") {
+    record.ratingCount = input.ratingCount;
   }
 
   await saveDb(db);

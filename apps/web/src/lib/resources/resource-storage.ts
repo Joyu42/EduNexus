@@ -38,6 +38,18 @@ function getStorageKeys() {
   };
 }
 
+function getResourceTags(resource: Resource): string[] {
+  return resource.tags ?? [];
+}
+
+function getResourceType(resource: Resource): ResourceType {
+  return resource.type ?? "document";
+}
+
+function getResourceCount(value: number | undefined): number {
+  return value ?? 0;
+}
+
 // ==================== 资源管理 ====================
 
 export function getAllResources(): Resource[] {
@@ -163,7 +175,7 @@ export function deleteResource(id: string): boolean {
 export function incrementViewCount(id: string): void {
   const resource = getResourceById(id);
   if (resource) {
-    updateResource(id, { viewCount: resource.viewCount + 1 });
+    updateResource(id, { viewCount: getResourceCount(resource.viewCount) + 1 });
   }
 }
 
@@ -184,7 +196,7 @@ export function searchResources(query: {
       (r) =>
         r.title.toLowerCase().includes(kw) ||
         r.description.toLowerCase().includes(kw) ||
-        r.tags.some((t) => t.toLowerCase().includes(kw))
+        getResourceTags(r).some((t) => t.toLowerCase().includes(kw))
     );
   }
 
@@ -196,7 +208,7 @@ export function searchResources(query: {
   // 标签筛选
   if (query.tags && query.tags.length > 0) {
     results = results.filter((r) =>
-      query.tags!.some((tag) => r.tags.includes(tag))
+      query.tags!.some((tag) => getResourceTags(r).includes(tag))
     );
   }
 
@@ -210,18 +222,26 @@ export function searchResources(query: {
   const sortOrder = query.sortOrder || "desc";
 
   results.sort((a, b) => {
-    let aVal: number;
-    let bVal: number;
+    let aVal = 0;
+    let bVal = 0;
 
-    const aRaw = a[sortBy];
-    const bRaw = b[sortBy];
-
-    if (typeof aRaw === "string") {
-      aVal = new Date(aRaw).getTime();
-      bVal = new Date(bRaw as string).getTime();
-    } else {
-      aVal = aRaw as number;
-      bVal = bRaw as number;
+    switch (sortBy) {
+      case "createdAt":
+        aVal = new Date(a.createdAt).getTime();
+        bVal = new Date(b.createdAt).getTime();
+        break;
+      case "viewCount":
+        aVal = getResourceCount(a.viewCount);
+        bVal = getResourceCount(b.viewCount);
+        break;
+      case "bookmarkCount":
+        aVal = getResourceCount(a.bookmarkCount);
+        bVal = getResourceCount(b.bookmarkCount);
+        break;
+      case "rating":
+        aVal = getResourceCount(a.rating);
+        bVal = getResourceCount(b.rating);
+        break;
     }
 
     return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
@@ -264,7 +284,7 @@ export function createBookmark(
   const resource = getResourceById(data.resourceId);
   if (resource) {
     updateResource(data.resourceId, {
-      bookmarkCount: resource.bookmarkCount + 1,
+      bookmarkCount: getResourceCount(resource.bookmarkCount) + 1,
     });
   }
 
@@ -293,7 +313,7 @@ export function createBookmarksBatch(
     resourceIdToCount.forEach((count, resourceId) => {
       const idx = resources.findIndex((r) => r.id === resourceId);
       if (idx >= 0) {
-        resources[idx].bookmarkCount += count;
+        resources[idx].bookmarkCount = getResourceCount(resources[idx].bookmarkCount) + count;
       }
     });
     localStorage.setItem(getStorageKeys().RESOURCES, JSON.stringify(resources));
@@ -339,7 +359,7 @@ export function deleteBookmark(id: string): boolean {
   const resource = getResourceById(bookmark.resourceId);
   if (resource) {
     updateResource(bookmark.resourceId, {
-      bookmarkCount: Math.max(0, resource.bookmarkCount - 1),
+      bookmarkCount: Math.max(0, getResourceCount(resource.bookmarkCount) - 1),
     });
   }
 
@@ -553,7 +573,7 @@ export function exportFolderToMarkdown(folderId: string): string {
 
     markdown += `## ${resource.title}\n\n`;
     markdown += `- **类型**：${getResourceTypeLabel(resource.type)}\n`;
-    markdown += `- **标签**：${resource.tags.join(", ")}\n`;
+    markdown += `- **标签**：${getResourceTags(resource).join(", ")}\n`;
 
     if (resource.url) {
       markdown += `- **链接**：${resource.url}\n`;
@@ -575,7 +595,7 @@ export function exportFolderToMarkdown(folderId: string): string {
   return markdown;
 }
 
-function getResourceTypeLabel(type: ResourceType): string {
+function getResourceTypeLabel(type?: ResourceType): string {
   const labels: Record<ResourceType, string> = {
     document: "文档",
     video: "视频",
@@ -583,7 +603,7 @@ function getResourceTypeLabel(type: ResourceType): string {
     website: "网站",
     book: "书籍",
   };
-  return labels[type];
+  return labels[type ?? "document"];
 }
 
 export type ServerResourceRecord = {
@@ -594,6 +614,14 @@ export type ServerResourceRecord = {
   createdBy: string;
   createdByName?: string;
   createdAt: string;
+  type?: ResourceType;
+  tags?: string[];
+  category?: string;
+  status?: ResourceStatus;
+  viewCount?: number;
+  bookmarkCount?: number;
+  rating?: number;
+  ratingCount?: number;
 };
 
 export type ServerResourceFolderRecord = {
@@ -645,11 +673,17 @@ export async function fetchResourcesFromServer(params: {
   q?: string;
   sort?: "newest" | "oldest" | "title";
   limit?: number;
+  type?: ResourceType;
+  tags?: string[];
+  category?: string;
 } = {}) {
   const searchParams = new URLSearchParams();
   if (params.q) searchParams.set("q", params.q);
   if (params.sort) searchParams.set("sort", params.sort);
   if (typeof params.limit === "number") searchParams.set("limit", String(params.limit));
+  if (params.type) searchParams.set("type", params.type);
+  if (params.tags && params.tags.length > 0) searchParams.set("tags", params.tags.join(","));
+  if (params.category) searchParams.set("category", params.category);
   const query = searchParams.toString();
   const url = query ? `/api/resources?${query}` : "/api/resources";
   const response = await fetch(url, undefined);
