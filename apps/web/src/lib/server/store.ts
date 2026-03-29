@@ -184,10 +184,22 @@ type GroupSharedResourceRecord = {
   createdAt: string;
 };
 
+type GroupResourceRecord = {
+  id: string;
+  groupId: string;
+  title: string;
+  description: string;
+  url: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 type CommunityCommentRecord = {
   id: string;
   postId: string;
   authorId: string;
+  authorName?: string;
   content: string;
   parentCommentId: string | null;
   createdAt: string;
@@ -257,6 +269,7 @@ type DbSchema = {
   groupPosts: GroupPostRecord[];
   groupTasks: GroupTaskRecord[];
   groupSharedResources: GroupSharedResourceRecord[];
+  groupResources: GroupResourceRecord[];
   communityComments: CommunityCommentRecord[];
   communityReactions: CommunityReactionRecord[];
   communityFollows: CommunityFollowRecord[];
@@ -284,6 +297,7 @@ const DEFAULT_DB: DbSchema = {
   groupPosts: [],
   groupTasks: [],
   groupSharedResources: [],
+  groupResources: [],
   communityComments: [],
   communityReactions: [],
   communityFollows: [],
@@ -772,6 +786,26 @@ function normalizeGroupSharedResourceRecord(input: unknown): GroupSharedResource
   };
 }
 
+function normalizeGroupResourceRecord(input: unknown): GroupResourceRecord | null {
+  if (!isRecord(input)) return null;
+  const id = typeof input.id === "string" ? input.id : "";
+  const groupId = typeof input.groupId === "string" ? input.groupId : "";
+  const createdBy = typeof input.createdBy === "string" ? input.createdBy.trim() : "";
+  if (!id || !groupId || !createdBy) {
+    return null;
+  }
+  return {
+    id,
+    groupId,
+    title: typeof input.title === "string" ? input.title : "",
+    description: typeof input.description === "string" ? input.description : "",
+    url: typeof input.url === "string" ? input.url : "",
+    createdBy,
+    createdAt: typeof input.createdAt === "string" ? input.createdAt : new Date().toISOString(),
+    updatedAt: typeof input.updatedAt === "string" ? input.updatedAt : new Date().toISOString()
+  };
+}
+
 function normalizeCommunityCommentRecord(input: unknown): CommunityCommentRecord | null {
   if (!isRecord(input)) return null;
   const now = new Date().toISOString();
@@ -963,6 +997,7 @@ export async function loadDb(): Promise<DbSchema> {
     const groupSharedResourcesSource = Array.isArray(parsed.groupSharedResources)
       ? parsed.groupSharedResources
       : [];
+    const groupResourcesSource = Array.isArray(parsed.groupResources) ? parsed.groupResources : [];
     const communityCommentsSource = Array.isArray(parsed.communityComments) ? parsed.communityComments : [];
     const communityReactionsSource = Array.isArray(parsed.communityReactions) ? parsed.communityReactions : [];
     const communityFollowsSource = Array.isArray(parsed.communityFollows) ? parsed.communityFollows : [];
@@ -1013,6 +1048,9 @@ export async function loadDb(): Promise<DbSchema> {
       groupSharedResources: groupSharedResourcesSource
         .map((resource) => normalizeGroupSharedResourceRecord(resource))
         .filter((resource): resource is GroupSharedResourceRecord => resource !== null),
+      groupResources: groupResourcesSource
+        .map((resource) => normalizeGroupResourceRecord(resource))
+        .filter((resource): resource is GroupResourceRecord => resource !== null),
       communityComments: communityCommentsSource
         .map((comment) => normalizeCommunityCommentRecord(comment))
         .filter((comment): comment is CommunityCommentRecord => comment !== null),
@@ -1058,6 +1096,7 @@ export type {
   DbSchema,
   GroupMemberRecord,
   GroupPostRecord,
+  GroupResourceRecord,
   GroupSharedResourceRecord,
   GroupTaskRecord,
   JsonScalar,
