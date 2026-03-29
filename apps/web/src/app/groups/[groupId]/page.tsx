@@ -61,13 +61,6 @@ type GroupTask = {
   status: "todo" | "in_progress" | "done";
 };
 
-type GroupSharedResource = {
-  id: string;
-  resourceId: string;
-  sharedBy: string;
-  createdAt: string;
-};
-
 type GroupResource = {
   id: string;
   groupId: string;
@@ -148,16 +141,6 @@ export default function GroupDetailsPage({
     }
   });
 
-  const resourcesQuery = useQuery({
-    queryKey: ["group-shared-resources", groupId],
-    queryFn: async () => {
-      const response = await fetch(`/api/groups/${groupId}/shared-resources`);
-      if (!response.ok) throw new Error("获取共享资源失败");
-      const payload = await response.json();
-      return (payload.data?.sharedResources ?? []) as GroupSharedResource[];
-    }
-  });
-
   const groupResourcesQuery = useQuery({
     queryKey: ["group-resources", groupId],
     queryFn: async () => {
@@ -173,7 +156,6 @@ export default function GroupDetailsPage({
     queryClient.invalidateQueries({ queryKey: ["group-members", groupId] });
     queryClient.invalidateQueries({ queryKey: ["group-posts", groupId] });
     queryClient.invalidateQueries({ queryKey: ["group-tasks", groupId] });
-    queryClient.invalidateQueries({ queryKey: ["group-shared-resources", groupId] });
     queryClient.invalidateQueries({ queryKey: ["group-resources", groupId] });
   };
 
@@ -295,27 +277,6 @@ export default function GroupDetailsPage({
     onError: (error: Error) => toast.error(error.message)
   });
 
-  const createResourceMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const resourceId = String(formData.get("resourceId") ?? "").trim();
-      const res = await fetch(`/api/groups/${groupId}/shared-resources`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resourceId })
-      });
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        throw new Error(payload?.error?.message ?? "分享资源失败");
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      toast.success("资源已分享到小组");
-      queryClient.invalidateQueries({ queryKey: ["group-shared-resources", groupId] });
-    },
-    onError: (error: Error) => toast.error(error.message)
-  });
-
   const createGroupResourceMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       const title = String(formData.get("title") ?? "").trim();
@@ -334,6 +295,24 @@ export default function GroupDetailsPage({
     },
     onSuccess: () => {
       toast.success("小组资源已创建");
+      queryClient.invalidateQueries({ queryKey: ["group-resources", groupId] });
+    },
+    onError: (error: Error) => toast.error(error.message)
+  });
+
+  const deleteGroupResourceMutation = useMutation({
+    mutationFn: async (resourceId: string) => {
+      const res = await fetch(`/api/groups/${groupId}/resources/${resourceId}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload?.error?.message ?? "删除小组资源失败");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("小组资源已删除");
       queryClient.invalidateQueries({ queryKey: ["group-resources", groupId] });
     },
     onError: (error: Error) => toast.error(error.message)
@@ -440,32 +419,6 @@ export default function GroupDetailsPage({
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>共享资源</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {isJoined && (
-              <form
-                className="flex gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  createResourceMutation.mutate(new FormData(e.currentTarget));
-                  e.currentTarget.reset();
-                }}
-              >
-                <Input name="resourceId" placeholder="输入资源 ID" required />
-                <Button type="submit" size="sm">分享</Button>
-              </form>
-            )}
-            <div className="space-y-2">
-              {(resourcesQuery.data ?? []).map((item) => (
-                <Link key={item.id} href={`/resources/${item.resourceId}`} className="block rounded-md border px-3 py-2 text-sm hover:bg-muted/50">
-                  资源 {item.resourceId}
-                </Link>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
           <CardHeader><CardTitle>小组资源</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {isJoined && (
@@ -484,19 +437,37 @@ export default function GroupDetailsPage({
               </form>
             )}
             <div className="space-y-2">
-              {(groupResourcesQuery.data ?? []).map((item) => (
-                <div key={item.id} className="rounded-md border px-3 py-2 text-sm hover:bg-muted/50">
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:underline">
-                    {item.title}
-                  </a>
-                  {item.description && (
-                    <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    创建于 {formatDate(item.createdAt)}
-                  </p>
-                </div>
-              ))}
+              {(groupResourcesQuery.data ?? []).map((item) => {
+                const canDelete = currentUserId && (item.createdBy === currentUserId || isOwner);
+                return (
+                  <div key={item.id} className="rounded-md border px-3 py-2 text-sm hover:bg-muted/50">
+                    <div className="flex items-start justify-between gap-2">
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:underline">
+                        {item.title}
+                      </a>
+                      {canDelete && (
+                        <button
+                          onClick={() => {
+                            if (confirm("确定要删除这个资源吗？")) {
+                              deleteGroupResourceMutation.mutate(item.id);
+                            }
+                          }}
+                          className="text-red-500 hover:text-red-700 shrink-0"
+                          title="删除资源"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      创建于 {formatDate(item.createdAt)}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
