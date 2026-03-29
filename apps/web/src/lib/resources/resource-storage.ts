@@ -786,6 +786,13 @@ export async function updateResourceFolderOnServer(
   return data.folder;
 }
 
+export async function deleteResourceFolderOnServer(folderId: string) {
+  const response = await fetch(`/api/resources/folders?folderId=${encodeURIComponent(folderId)}`, {
+    method: "DELETE",
+  });
+  await readApiEnvelope<{ deleted: boolean }>(response, "删除文件夹失败");
+}
+
 export async function fetchResourceNotesFromServer(resourceId: string) {
   const response = await fetch(`/api/resources/notes?resourceId=${encodeURIComponent(resourceId)}`, undefined);
   return readApiEnvelope<{ notes: ServerResourceNoteRecord[] }>(response, "获取笔记失败");

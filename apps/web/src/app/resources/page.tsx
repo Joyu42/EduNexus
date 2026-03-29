@@ -22,6 +22,7 @@ import {
   type ServerResourceRecord,
   updateResourceFolderOnServer,
   updateResourceOnServer,
+  deleteResourceFolderOnServer,
 } from "@/lib/resources/resource-storage";
 
 export default function ResourcesPage() {
@@ -150,6 +151,34 @@ export default function ResourcesPage() {
     },
   });
 
+  const editFolderMutation = useMutation({
+    mutationFn: ({ folderId, name }: { folderId: string; name: string }) =>
+      updateResourceFolderOnServer(folderId, { name }),
+    onSuccess: () => {
+      toast.success("文件夹已重命名");
+      queryClient.invalidateQueries({ queryKey: ["resource-folders"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const deleteFolderMutation = useMutation({
+    mutationFn: deleteResourceFolderOnServer,
+    onSuccess: () => {
+      toast.success("文件夹已删除");
+      queryClient.invalidateQueries({ queryKey: ["resource-folders"] });
+      if (selectedFolderId) {
+        // Check if the deleted folder is currently selected, but we don't have the id here directly
+        // So we just reset it to be safe, or we could pass folderId to onSuccess. Let's do it via variables.
+      }
+      setSelectedFolderId(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
   const assignFolderMutation = useMutation({
     mutationFn: async ({ resourceId, folderId }: { resourceId: string; folderId: string | null }) => {
       const updates: Array<Promise<ServerResourceFolderRecord>> = [];
@@ -265,11 +294,19 @@ export default function ResourcesPage() {
               resourceIds: folder.resourceIds,
             }))}
             selectedFolderId={selectedFolderId}
-            pending={createFolderMutation.isPending || assignFolderMutation.isPending}
+            pending={createFolderMutation.isPending || assignFolderMutation.isPending || editFolderMutation.isPending || deleteFolderMutation.isPending}
             onSelectFolder={setSelectedFolderId}
             onCreateFolder={(input) => {
               if (!requireAuthenticated()) return;
               createFolderMutation.mutate(input);
+            }}
+            onEditFolder={(folderId, name) => {
+              if (!requireAuthenticated()) return;
+              editFolderMutation.mutate({ folderId, name });
+            }}
+            onDeleteFolder={(folderId) => {
+              if (!requireAuthenticated()) return;
+              deleteFolderMutation.mutate(folderId);
             }}
           />
 
