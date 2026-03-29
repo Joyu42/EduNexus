@@ -124,7 +124,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ resou
 
     const payload = (body ?? {}) as Record<string, unknown>;
 
-    const input: { title?: string; description?: string; url?: string; type?: string; tags?: string[] } = {};
+    const input: { title?: string; description?: string; url?: string; type?: "document" | "video" | "tool" | "website" | "book"; tags?: string[] } = {};
     if (typeof payload.title === "string") {
       const title = payload.title.trim();
       if (!title) {
