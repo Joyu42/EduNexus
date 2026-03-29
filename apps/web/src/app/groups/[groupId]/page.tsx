@@ -140,7 +140,7 @@ export default function GroupDetailsPage({
   const resourcesQuery = useQuery({
     queryKey: ["group-shared-resources", groupId],
     queryFn: async () => {
-      const response = await fetch(`/api/groups/${groupId}/resources`);
+      const response = await fetch(`/api/groups/${groupId}/shared-resources`);
       if (!response.ok) throw new Error("获取共享资源失败");
       const payload = await response.json();
       return (payload.data?.sharedResources ?? []) as GroupSharedResource[];
@@ -276,7 +276,7 @@ export default function GroupDetailsPage({
   const createResourceMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       const resourceId = String(formData.get("resourceId") ?? "").trim();
-      const res = await fetch(`/api/groups/${groupId}/resources`, {
+      const res = await fetch(`/api/groups/${groupId}/shared-resources`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resourceId })
