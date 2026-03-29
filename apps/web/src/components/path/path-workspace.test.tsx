@@ -19,12 +19,13 @@ vi.mock('@/lib/client/path-storage', () => ({
     getPath: vi.fn(),
     updatePath: vi.fn(),
     createPath: vi.fn(),
+    deletePath: vi.fn(),
   },
 }));
 
 vi.mock('./enhanced-path-editor', () => ({
   __esModule: true,
-  default: ({ initialNodes = [], initialEdges = [], onSave }: any) => (
+  default: ({ initialNodes = [], initialEdges = [], onSave, onSettingsClick, onDeleteClick }: any) => (
     <div data-testid="mock-enhanced-editor">
       <div data-testid="mock-node-count">{initialNodes.length}</div>
       <div data-testid="mock-edge-count">{initialEdges.length}</div>
@@ -61,6 +62,12 @@ vi.mock('./enhanced-path-editor', () => ({
         }
       >
         save
+      </button>
+      <button data-testid="mock-settings" onClick={onSettingsClick}>
+        settings
+      </button>
+      <button data-testid="mock-delete" onClick={onDeleteClick}>
+        delete
       </button>
     </div>
   ),
@@ -272,6 +279,114 @@ describe('PathWorkspace', () => {
         }),
       ]),
     }));
+  });
+
+  describe('Settings dialog', () => {
+    it('opens the edit dialog when the editor settings button is clicked', async () => {
+      vi.mocked(pathStorage.getAllPaths).mockResolvedValue([
+        makePath('path-1', 'Path 1') as any,
+      ]);
+
+      render(<PathWorkspace />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('mock-enhanced-editor')).toBeTruthy();
+      });
+
+      fireEvent.click(screen.getByTestId('mock-settings'));
+
+      expect(screen.getByRole('dialog', { name: '编辑学习路径' })).toBeTruthy();
+    });
+
+    it('saves edited title and topic through pathStorage.updatePath', async () => {
+      const mockPaths = [
+        {
+          ...makePath('path-1', 'Path 1'),
+          description: 'Old topic',
+          tags: ['Old topic'],
+        },
+      ] as any[];
+
+      vi.mocked(pathStorage.getAllPaths).mockResolvedValue(mockPaths);
+      const updatePathMock = vi.mocked(pathStorage.updatePath).mockResolvedValue({
+        ...mockPaths[0],
+        title: 'Updated Path',
+        tags: ['New Topic'],
+      } as any);
+
+      render(<PathWorkspace />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('mock-enhanced-editor')).toBeTruthy();
+      });
+
+      fireEvent.click(screen.getByTestId('mock-settings'));
+
+      fireEvent.change(screen.getByLabelText('路径名称 *'), {
+        target: { value: 'Updated Path' },
+      });
+      fireEvent.change(screen.getByLabelText('主题'), {
+        target: { value: 'New Topic' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: '保存修改' }));
+
+      expect(updatePathMock).toHaveBeenCalledWith(
+        'path-1',
+        expect.objectContaining({
+          title: 'Updated Path',
+          tags: ['New Topic'],
+        })
+      );
+    });
+  });
+
+  describe('Delete action', () => {
+    it('shows a confirmation dialog before deleting the selected path', async () => {
+      vi.mocked(pathStorage.getAllPaths).mockResolvedValue([
+        makePath('path-1', 'Path 1') as any,
+      ]);
+      const deletePathMock = vi.mocked(pathStorage.deletePath).mockResolvedValue(undefined);
+
+      render(<PathWorkspace />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('mock-enhanced-editor')).toBeTruthy();
+      });
+
+      fireEvent.click(screen.getByTestId('mock-delete'));
+
+      expect(screen.getByRole('dialog', { name: '删除学习路径' })).toBeTruthy();
+      expect(deletePathMock).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: '确认删除' }));
+
+      expect(deletePathMock).toHaveBeenCalledWith('path-1');
+    });
+
+    it('selects another path or shows an empty state after deleting the selected path', async () => {
+      vi.mocked(pathStorage.getAllPaths).mockResolvedValue([
+        makePath('path-1', 'Path 1') as any,
+        makePath('2', 'Path 2') as any,
+      ]);
+      vi.mocked(pathStorage.deletePath).mockResolvedValue(undefined);
+
+      render(<PathWorkspace />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('path-item-path-1')).toBeTruthy();
+      });
+
+      fireEvent.click(screen.getByTestId('path-item-path-1'));
+      fireEvent.click(screen.getByTestId('mock-delete'));
+      fireEvent.click(screen.getByRole('button', { name: '确认删除' }));
+
+      await waitFor(() => {
+        const emptyState = screen.queryByTestId('path-workspace-empty');
+        const secondPath = screen.queryByTestId('path-item-2');
+
+        expect(emptyState || secondPath?.className.includes('bg-primary/10')).toBeTruthy();
+      });
+    });
   });
 
   it('opens create dialog, creates a new path and selects it', async () => {

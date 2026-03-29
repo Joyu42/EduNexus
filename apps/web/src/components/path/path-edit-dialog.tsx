@@ -38,7 +38,6 @@ export function PathEditDialog({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
 
   useEffect(() => {
     if (path) {
@@ -57,18 +56,6 @@ export function PathEditDialog({
       description: description.trim(),
       tags,
     });
-  };
-
-  const addTag = () => {
-    const tag = tagInput.trim();
-    if (tag && !tags.includes(tag)) {
-      setTags([...tags, tag]);
-      setTagInput("");
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
   return (
@@ -108,50 +95,13 @@ export function PathEditDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tags">标签</Label>
-            <div className="flex gap-2">
-              <Input
-                id="tags"
-                placeholder="添加标签..."
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addTag();
-                  }
-                }}
-              />
-              <Button type="button" size="icon" onClick={addTag}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {tags.map((tag) => (
-                  <motion.div
-                    key={tag}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                  >
-                    <Badge
-                      variant="outline"
-                      className="gap-1 border-orange-300"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="ml-1 hover:text-red-500"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  </motion.div>
-                ))}
-              </div>
-            )}
+            <Label htmlFor="tags">主题</Label>
+            <Input
+              id="tags"
+              placeholder="输入主题..."
+              value={tags.join(', ')}
+              onChange={(e) => setTags(e.target.value ? [e.target.value] : [])}
+            />
           </div>
 
           <DialogFooter>

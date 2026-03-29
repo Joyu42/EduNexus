@@ -66,6 +66,8 @@ interface EnhancedPathEditorProps {
   initialNodes?: Node<PathNodeData>[];
   initialEdges?: Edge[];
   onSave?: (nodes: Node<PathNodeData>[], edges: Edge[]) => void;
+  onSettingsClick?: () => void;
+  onDeleteClick?: () => void;
 }
 
 const nodeTemplates: Array<{
@@ -101,7 +103,7 @@ const nodeTemplates: Array<{
   { type: 'end', icon: Trophy, label: '完成节点', gradient: 'from-yellow-500 to-orange-500', description: '学习路径的终点', category: '特殊' },
 ];
 
-function EnhancedPathEditorInner({ initialNodes = [], initialEdges = [], onSave }: EnhancedPathEditorProps) {
+function EnhancedPathEditorInner({ initialNodes = [], initialEdges = [], onSave, onSettingsClick }: EnhancedPathEditorProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<PathNodeData>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node<PathNodeData> | null>(null);
@@ -316,6 +318,7 @@ function EnhancedPathEditorInner({ initialNodes = [], initialEdges = [], onSave 
               variant="outline"
               size="sm"
               className="bg-white shadow-md"
+              onClick={onSettingsClick}
             >
               <Settings className="w-4 h-4 mr-2" />
               设置

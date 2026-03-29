@@ -4,11 +4,20 @@ import { useEffect, useState } from "react";
 import EnhancedPathEditor from "@/components/path/enhanced-path-editor";
 import { pathStorage, type LearningPath, type Task } from "@/lib/client/path-storage";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus, FileText } from "lucide-react";
+import { Loader2, Plus, FileText, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Edge, Node } from "reactflow";
 import type { PathNodeData } from "@/lib/path/path-types";
 import { PathCreateDialog } from "./path-create-dialog";
+import { PathEditDialog } from "./path-edit-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 function createEmptyTask(id: string, title: string): Task {
   return {
@@ -70,6 +79,8 @@ export function PathWorkspace({ packId }: PathWorkspaceProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [pathToDelete, setPathToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadPaths() {
@@ -165,19 +176,32 @@ export function PathWorkspace({ packId }: PathWorkspaceProps) {
           ) : (
             <div className="p-2 space-y-1" data-testid="path-workspace-list">
               {paths.map(path => (
-                <button
-                  key={path.id}
-                  data-testid={`path-item-${path.id}`}
-                  onClick={() => setSelectedPathId(path.id)}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-md flex items-center gap-2 transition-colors ${
-                    selectedPathId === path.id 
-                      ? "bg-primary/10 text-primary font-medium" 
-                      : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <FileText className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{path.title || "未命名路径"}</span>
-                </button>
+                <div key={path.id} className="flex items-center group">
+                  <button
+                    data-testid={`path-item-${path.id}`}
+                    onClick={() => setSelectedPathId(path.id)}
+                    className={`flex-1 text-left px-3 py-2 text-sm rounded-l-md flex items-center gap-2 transition-colors ${
+                      selectedPathId === path.id 
+                        ? "bg-primary/10 text-primary font-medium" 
+                        : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <FileText className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{path.title || "未命名路径"}</span>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPathToDelete(path.id);
+                    }}
+                    className={`px-2 py-2 text-muted-foreground hover:text-destructive transition-colors rounded-r-md ${
+                      selectedPathId === path.id ? "bg-primary/10" : "hover:bg-muted"
+                    }`}
+                    title="删除"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -192,6 +216,8 @@ export function PathWorkspace({ packId }: PathWorkspaceProps) {
             initialNodes={toEditorNodes(selectedPath)}
             initialEdges={toEditorEdges(selectedPath)}
             onSave={handleSave}
+            onSettingsClick={() => setIsSettingsDialogOpen(true)}
+            onDeleteClick={() => selectedPathId && setPathToDelete(selectedPathId)}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -219,6 +245,47 @@ export function PathWorkspace({ packId }: PathWorkspaceProps) {
           setIsCreateDialogOpen(false);
         }}
       />
+
+      <PathEditDialog
+        open={isSettingsDialogOpen}
+        onOpenChange={setIsSettingsDialogOpen}
+        path={selectedPath}
+        onSubmit={async ({ title, description, tags }) => {
+          if (!selectedPath) return;
+          const nextPath = await pathStorage.updatePath(selectedPath.id, {
+            title,
+            description,
+            tags,
+          });
+          setPaths((current) => current.map((p) => (p.id === nextPath.id ? nextPath : p)));
+          setIsSettingsDialogOpen(false);
+        }}
+      />
+
+      <Dialog open={!!pathToDelete} onOpenChange={(open) => !open && setPathToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>删除学习路径</DialogTitle>
+            <DialogDescription>
+              确定要删除这个学习路径吗？此操作不可恢复。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPathToDelete(null)}>取消</Button>
+            <Button variant="destructive" onClick={async () => {
+              if (pathToDelete) {
+                await pathStorage.deletePath(pathToDelete);
+                setPaths(paths.filter(p => p.id !== pathToDelete));
+                if (selectedPathId === pathToDelete) {
+                  const remaining = paths.filter(p => p.id !== pathToDelete);
+                  setSelectedPathId(remaining.length > 0 ? remaining[0].id : null);
+                }
+                setPathToDelete(null);
+              }
+            }}>确认删除</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
