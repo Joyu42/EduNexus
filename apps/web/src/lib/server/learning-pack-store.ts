@@ -106,6 +106,35 @@ export async function getActivePack(userId: string): Promise<LearningPackRecord 
   return userPacks.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
 }
 
+/**
+ * Update pack title and topic atomically.
+ * Throws if pack not found or belongs to different user.
+ */
+export async function updatePackTitleTopic(
+  packId: string,
+  userId: string,
+  updates: { title?: string; topic?: string }
+): Promise<void> {
+  const packs = await getAllPacks();
+  const idx = packs.findIndex((p) => p.packId === packId && p.userId === userId);
+  if (idx < 0) throw new Error("Pack not found");
+  const now = new Date().toISOString();
+  packs[idx] = {
+    ...packs[idx],
+    ...(updates.title !== undefined ? { title: updates.title } : {}),
+    ...(updates.topic !== undefined ? { topic: updates.topic } : {}),
+    updatedAt: now,
+  };
+  await putAllPacks(packs);
+}
+export async function deleteLearningPack(packId: string, userId: string): Promise<void> {
+  const packs = await getAllPacks();
+  const idx = packs.findIndex((p) => p.packId === packId && p.userId === userId);
+  if (idx < 0) throw new Error("Pack not found");
+  packs.splice(idx, 1);
+  await putAllPacks(packs);
+}
+
 export async function setActivePack(packId: string, userId: string): Promise<void> {
   const packs = await getAllPacks();
   const now = new Date().toISOString();
