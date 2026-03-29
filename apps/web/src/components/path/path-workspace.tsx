@@ -234,6 +234,16 @@ export function PathWorkspace({ packId }: PathWorkspaceProps) {
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
+                    {expandedPathIds.has(path.id) && (
+                      <div className="pl-10 pr-3 pb-2 text-xs text-muted-foreground">
+                        {path.description && <div className="mb-1">{path.description}</div>}
+                        <div className="flex items-center gap-2">
+                          <span>{path.tasks?.length || 0} 个任务</span>
+                          <span>·</span>
+                          <span>{path.progress || 0}% 完成</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

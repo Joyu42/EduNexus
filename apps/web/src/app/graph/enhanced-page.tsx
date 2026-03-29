@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +42,7 @@ import { ProgressTracker } from "@/lib/graph/progress-tracker";
 import { cn } from "@/lib/utils";
 import { getGraphViewState, loadPrivateGraphView } from "./view-state";
 import { toast } from "@/lib/toast";
+import { usePathSync } from "@/lib/sync";
 import { pathStorage } from "@/lib/client/path-storage";
 import type {
   GraphNode,
@@ -237,6 +237,21 @@ function GraphPageContent() {
     };
   }, [selectedNode?.kbDocumentId]);
 
+  async function refreshGraphDataImpl(nodeId?: string) {
+    const data = await loadPrivateGraphView(urlPackId);
+    setGraphData(data);
+    if (!nodeId) {
+      return;
+    }
+
+    const nextSelectedNode = data.nodes.find((node) => node.id === nodeId) ?? null;
+    setSelectedNode(nextSelectedNode);
+  }
+
+  const refreshGraphData = useCallback(refreshGraphDataImpl, [urlPackId]);
+
+  usePathSync(refreshGraphData);
+
   useEffect(() => {
     if (status !== 'authenticated') {
       setGraphData({ nodes: [], edges: [] });
@@ -381,17 +396,6 @@ function GraphPageContent() {
     setCurrentPath(null);
     setShowLearningPath(false);
   };
-
-  const refreshGraphData = useCallback(async (nodeId?: string) => {
-    const data = await loadPrivateGraphView(urlPackId);
-    setGraphData(data);
-    if (!nodeId) {
-      return;
-    }
-
-    const nextSelectedNode = data.nodes.find((node) => node.id === nodeId) ?? null;
-    setSelectedNode(nextSelectedNode);
-  }, [urlPackId]);
 
   const buildPathTaskFromNode = useCallback((node: GraphNode): StoredPathTask => {
     return {
@@ -900,6 +904,7 @@ function GraphPageContent() {
                         <SelectItem value="force">力导向布局</SelectItem>
                         <SelectItem value="hierarchical">层次布局</SelectItem>
                         <SelectItem value="radial">径向布局</SelectItem>
+                        <SelectItem value="concentric">同心圆布局</SelectItem>
                         <SelectItem value="timeline">时间轴布局</SelectItem>
                       </SelectContent>
                     </Select>

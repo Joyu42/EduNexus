@@ -3,7 +3,7 @@
 export type NodeStatus = "unlearned" | "learning" | "mastered" | "review";
 export type NodeType = "concept" | "topic" | "resource" | "skill";
 export type EdgeType = "prerequisite" | "related" | "contains" | "applies";
-export type LayoutType = "force" | "hierarchical" | "radial" | "timeline";
+export type LayoutType = "force" | "hierarchical" | "radial" | "timeline" | "concentric";
 export type ThemeType = "tech" | "nature" | "minimal";
 export type MasteryStage = "seen" | "understood" | "applied" | "mastered";
 

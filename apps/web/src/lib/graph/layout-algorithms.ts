@@ -372,6 +372,73 @@ export class LayoutAlgorithms {
   }
 
   /**
+   * 同心圆布局
+   */
+  static concentric(nodes: GraphNode[], edges: GraphEdge[]): GraphNode[] {
+    const degreeMap = new Map<string, number>();
+    nodes.forEach((n) => degreeMap.set(n.id, 0));
+    edges.forEach((e) => {
+      const sourceId = typeof e.source === "string" ? e.source : e.source.id;
+      const targetId = typeof e.target === "string" ? e.target : e.target.id;
+      if (degreeMap.has(sourceId)) degreeMap.set(sourceId, degreeMap.get(sourceId)! + 1);
+      if (degreeMap.has(targetId)) degreeMap.set(targetId, degreeMap.get(targetId)! + 1);
+    });
+
+    const sortedNodes = [...nodes].sort((a, b) => {
+      const degA = degreeMap.get(a.id) || 0;
+      const degB = degreeMap.get(b.id) || 0;
+      return degB - degA;
+    });
+
+    const levels: GraphNode[][] = [];
+    let currentLevel: GraphNode[] = [];
+    let nodesInCurrentLevel = 1;
+    let count = 0;
+
+    for (const node of sortedNodes) {
+      currentLevel.push(node);
+      count++;
+      if (count >= nodesInCurrentLevel) {
+        levels.push(currentLevel);
+        currentLevel = [];
+        count = 0;
+        nodesInCurrentLevel = Math.floor(nodesInCurrentLevel * 1.8) + 3;
+      }
+    }
+    if (currentLevel.length > 0) {
+      levels.push(currentLevel);
+    }
+
+    const radiusStep = 100;
+    return nodes.map((node) => {
+      let levelIndex = 0;
+      let nodeIndexInLevel = 0;
+      for (let i = 0; i < levels.length; i++) {
+        const idx = levels[i].indexOf(node);
+        if (idx !== -1) {
+          levelIndex = i;
+          nodeIndexInLevel = idx;
+          break;
+        }
+      }
+
+      if (levelIndex === 0 && levels[0].length === 1) {
+        return { ...node, fx: 0, fy: 0 };
+      }
+
+      const radius = levelIndex * radiusStep + 20;
+      const angleStep = (2 * Math.PI) / Math.max(1, levels[levelIndex].length);
+      const angle = nodeIndexInLevel * angleStep;
+
+      return {
+        ...node,
+        fx: Math.cos(angle) * radius,
+        fy: Math.sin(angle) * radius,
+      };
+    });
+  }
+
+  /**
    * 应用布局
    */
   static applyLayout(
@@ -387,6 +454,8 @@ export class LayoutAlgorithms {
         return this.radial(nodes, edges, centerNodeId);
       case "timeline":
         return this.timeline(nodes);
+      case "concentric":
+        return this.concentric(nodes, edges);
       case "force":
       default:
         return this.forceDirected(nodes, edges);
