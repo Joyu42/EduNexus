@@ -35,6 +35,7 @@ import {
 import {
   Plus,
   Save,
+  Trash2,
   Sparkles,
   Play,
   Settings,
@@ -111,6 +112,17 @@ function EnhancedPathEditorInner({ initialNodes = [], initialEdges = [], onSave 
   const [isGenerating, setIsGenerating] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+
+  const removeSelectedNode = useCallback(() => {
+    if (!selectedNode) {
+      return;
+    }
+
+    setNodes((nds) => nds.filter((node) => node.id !== selectedNode.id));
+    setEdges((eds) => eds.filter((edge) => edge.source !== selectedNode.id && edge.target !== selectedNode.id));
+    setSelectedNode(null);
+    toast.success('节点已删除');
+  }, [edges, selectedNode, setEdges, setNodes]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -388,6 +400,42 @@ function EnhancedPathEditorInner({ initialNodes = [], initialEdges = [], onSave 
                 }}
                 className="mt-1"
               />
+            </div>
+            <div>
+              <Label>绑定知识文档 ID</Label>
+              <Input
+                value={(selectedNode.data.metadata?.documentBinding as { documentId?: string } | undefined)?.documentId ?? ''}
+                onChange={(e) => {
+                  const documentId = e.target.value;
+                  setNodes((nds) =>
+                    nds.map((n) =>
+                      n.id === selectedNode.id
+                        ? {
+                            ...n,
+                            data: {
+                              ...n.data,
+                              metadata: {
+                                ...(n.data.metadata ?? {}),
+                                documentBinding: {
+                                  ...((n.data.metadata?.documentBinding as Record<string, unknown>) ?? {}),
+                                  documentId,
+                                },
+                              },
+                            },
+                          }
+                        : n
+                    )
+                  );
+                }}
+                placeholder="留空表示星球占位节点"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={removeSelectedNode} className="flex-1">
+                <Trash2 className="w-4 h-4 mr-2" />
+                删除节点
+              </Button>
             </div>
           </div>
         </div>

@@ -38,6 +38,7 @@ type GraphViewStateInput = {
   nodes: GraphNode[];
   packId?: string;
   packMissing?: boolean;
+  activeMode?: string;
 };
 
 type GraphViewState =
@@ -164,6 +165,11 @@ export async function loadPrivateGraphView(
 export function getGraphViewState(input: GraphViewStateInput): GraphViewState {
   if (input.isLoading) {
     return { kind: "loading" };
+  }
+
+  // Path mode has its own empty/loading states in PathWorkspace
+  if (input.activeMode === "path") {
+    return { kind: "content" };
   }
 
   if (input.nodes.length === 0) {

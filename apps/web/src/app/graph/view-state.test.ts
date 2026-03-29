@@ -61,6 +61,16 @@ describe("graph view state", () => {
     });
   });
 
+  it("skips the graph empty state and returns content when activeMode is path", () => {
+    expect(
+      getGraphViewState({
+        isLoading: false,
+        nodes: [],
+        activeMode: "path",
+      })
+    ).toEqual({ kind: "content" });
+  });
+
 it("normalizes graph api nodes with KB identity and path memberships", async () => {
     const fetcher = vi.fn().mockResolvedValue({
       ok: true,

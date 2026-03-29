@@ -1,12 +1,63 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import EnhancedPathEditor from "@/components/path/enhanced-path-editor";
-import { pathStorage, LearningPath } from "@/lib/client/path-storage";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { pathStorage, type LearningPath, type Task } from "@/lib/client/path-storage";
 import { Button } from "@/components/ui/button";
 import { Loader2, Plus, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Edge, Node } from "reactflow";
+import type { PathNodeData } from "@/lib/path/path-types";
+
+function createEmptyTask(id: string, title: string): Task {
+  return {
+    id,
+    title,
+    description: "",
+    estimatedTime: "30m",
+    progress: 0,
+    status: "not_started",
+    dependencies: [],
+    resources: [],
+    notes: "",
+    createdAt: new Date(),
+  };
+}
+
+function toEditorNodes(path: LearningPath): Node<PathNodeData>[] {
+  return (path.tasks ?? []).map((task, index) => ({
+    id: task.id,
+    type: "default",
+    position: { x: 100 + index * 220, y: 160 },
+    data: {
+      label: task.title,
+      type: "document",
+      description: task.description,
+      estimatedTime: Number.parseInt(task.estimatedTime, 10) || 30,
+      difficulty: "beginner",
+      status: task.status,
+      metadata: {
+        documentBinding: task.documentBinding,
+      },
+    },
+  }));
+}
+
+function toEditorEdges(path: LearningPath): Edge[] {
+  const edges: Edge[] = [];
+  (path.tasks ?? []).forEach((task) => {
+    task.dependencies.forEach((sourceId) => {
+      edges.push({
+        id: `${sourceId}->${task.id}`,
+        source: sourceId,
+        target: task.id,
+        animated: true,
+        type: "smoothstep",
+      });
+    });
+  });
+  return edges;
+}
 
 export function PathWorkspace() {
   const [paths, setPaths] = useState<LearningPath[]>([]);
@@ -31,6 +82,47 @@ export function PathWorkspace() {
     }
     loadPaths();
   }, [selectedPathId]);
+
+  const selectedPath = paths.find((path) => path.id === selectedPathId) ?? null;
+
+  const handleSave = async (nodes: Node<PathNodeData>[], edges: Edge[]) => {
+    if (!selectedPath) {
+      return;
+    }
+
+    const removedTasks = (selectedPath.tasks ?? []).filter((task) => !nodes.some((node) => node.id === task.id));
+    const orderedTasks = nodes.map((node, index) => {
+      const existingTask = (selectedPath.tasks ?? []).find((task) => task.id === node.id);
+      const binding = node.data.metadata?.documentBinding as Task["documentBinding"] | undefined;
+      return {
+        ...(existingTask ?? createEmptyTask(node.id, node.data.label?.trim() || `学习节点 ${index + 1}`)),
+        id: node.id,
+        title: node.data.label?.trim() || `学习节点 ${index + 1}`,
+        description: node.data.description?.trim() || "",
+        estimatedTime: `${Number(node.data.estimatedTime ?? 30)}分钟`,
+        progress: node.data.status === "completed" ? 100 : node.data.status === "in_progress" ? 50 : 0,
+        status: node.data.status ?? "not_started",
+        dependencies: edges.filter((edge) => edge.target === node.id).map((edge) => edge.source),
+        documentBinding: binding && binding.documentId ? binding : undefined,
+      };
+    });
+
+    const nextPath = await pathStorage.updatePath(selectedPath.id, {
+      title: selectedPath.title,
+      description: selectedPath.description,
+      tags: selectedPath.tags,
+      tasks: orderedTasks,
+      milestones: selectedPath.milestones,
+      deletedDocumentDrafts: [
+        ...(selectedPath.deletedDocumentDrafts ?? []),
+        ...removedTasks
+          .map((task) => task.documentBinding?.draft)
+          .filter((draft): draft is NonNullable<typeof draft> => Boolean(draft)),
+      ],
+    });
+
+    setPaths((current) => current.map((path) => (path.id === nextPath.id ? nextPath : path)));
+  };
 
   if (isLoading) {
     return (
@@ -88,10 +180,12 @@ export function PathWorkspace() {
 
       {/* Main Canvas Area */}
       <div className="flex-1 min-w-0 h-full relative" data-testid="path-workspace-editor">
-        {selectedPathId ? (
+        {selectedPath ? (
           <EnhancedPathEditor 
-            key={selectedPathId} // Force remount on path change for now to reset state
-            // In a real integration, we might want to pass initialNodes/initialEdges here based on the selected path.
+            key={selectedPathId}
+            initialNodes={toEditorNodes(selectedPath)}
+            initialEdges={toEditorEdges(selectedPath)}
+            onSave={handleSave}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">

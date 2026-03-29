@@ -33,6 +33,21 @@ export type Task = {
   startedAt?: Date;
   completedAt?: Date;
   actualTime?: number; // 实际学习时长（分钟）
+  documentBinding?: TaskDocumentBinding;
+};
+
+export type TaskDocumentDraft = {
+  draftId: string;
+  draftTitle: string;
+  draftContent: string;
+  updatedAt: Date;
+};
+
+export type TaskDocumentBinding = {
+  documentId: string;
+  documentTitle?: string;
+  boundAt: Date;
+  draft?: TaskDocumentDraft;
 };
 
 export type Milestone = {
@@ -53,6 +68,7 @@ export type LearningPath = {
   updatedAt: Date;
   tasks: Task[];
   milestones: Milestone[];
+  deletedDocumentDrafts?: TaskDocumentDraft[];
 };
 
 // IndexedDB Schema
@@ -129,6 +145,191 @@ const emitPathProgressEvent = (path: LearningPath): void => {
     'client-path-storage'
   );
 };
+
+export class TaskDocumentBindingConflictError extends Error {
+  constructor(documentId: string, pathId: string, taskId: string) {
+    super(`Document ${documentId} is already bound to task ${taskId} in path ${pathId}`);
+    this.name = 'TaskDocumentBindingConflictError';
+  }
+}
+
+const cloneBinding = (binding?: TaskDocumentBinding): TaskDocumentBinding | undefined => {
+  if (!binding) {
+    return undefined;
+  }
+
+  return {
+    ...binding,
+    boundAt: new Date(binding.boundAt),
+    draft: binding.draft
+      ? {
+          ...binding.draft,
+          updatedAt: new Date(binding.draft.updatedAt),
+        }
+      : undefined,
+  };
+};
+
+const cloneTask = (task: Task): Task => ({
+  ...task,
+  createdAt: new Date(task.createdAt),
+  startedAt: task.startedAt ? new Date(task.startedAt) : undefined,
+  completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
+  documentBinding: cloneBinding(task.documentBinding),
+  resources: task.resources.map((resource) => ({ ...resource })),
+  dependencies: [...task.dependencies],
+});
+
+const cloneDraft = (draft: TaskDocumentDraft): TaskDocumentDraft => ({
+  ...draft,
+  updatedAt: new Date(draft.updatedAt),
+});
+
+const clonePath = (path: LearningPath): LearningPath => ({
+  ...path,
+  createdAt: new Date(path.createdAt),
+  updatedAt: new Date(path.updatedAt),
+  tasks: path.tasks.map(cloneTask),
+  milestones: path.milestones.map((milestone) => ({ ...milestone, taskIds: [...milestone.taskIds] })),
+  deletedDocumentDrafts: path.deletedDocumentDrafts?.map(cloneDraft),
+});
+
+const normalizeTaskOrder = (tasks: Task[], orderedTaskIds: string[]): Task[] => {
+  const taskById = new Map(tasks.map((task) => [task.id, task] as const));
+  const orderedTasks = orderedTaskIds
+    .map((taskId) => taskById.get(taskId))
+    .filter((task): task is Task => !!task);
+  const remainingTasks = tasks.filter((task) => !orderedTaskIds.includes(task.id));
+  return [...orderedTasks, ...remainingTasks].map(cloneTask);
+};
+
+const findDocumentBindingConflict = (
+  paths: LearningPath[],
+  documentId: string,
+  excludePathId: string,
+  excludeTaskId: string
+): { pathId: string; taskId: string } | null => {
+  for (const path of paths) {
+    if (path.id !== excludePathId) {
+      const conflict = path.tasks.find((task) => task.documentBinding?.documentId === documentId);
+      if (conflict) {
+        return { pathId: path.id, taskId: conflict.id };
+      }
+      continue;
+    }
+
+    const conflict = path.tasks.find(
+      (task) => task.id !== excludeTaskId && task.documentBinding?.documentId === documentId
+    );
+    if (conflict) {
+      return { pathId: path.id, taskId: conflict.id };
+    }
+  }
+
+  return null;
+};
+
+const validateCandidateBindings = (
+  candidateTasks: Task[],
+  allPaths: LearningPath[],
+  currentPathId: string
+): void => {
+  const seenDocumentIds = new Map<string, string>();
+
+  for (const candidateTask of candidateTasks) {
+    const documentId = candidateTask.documentBinding?.documentId?.trim() ?? "";
+    if (!documentId) {
+      continue;
+    }
+
+    const duplicateTaskId = seenDocumentIds.get(documentId);
+    if (duplicateTaskId) {
+      throw new TaskDocumentBindingConflictError(documentId, currentPathId, duplicateTaskId);
+    }
+    seenDocumentIds.set(documentId, candidateTask.id);
+
+    const conflict = findDocumentBindingConflict(allPaths, documentId, currentPathId, candidateTask.id);
+    if (conflict) {
+      throw new TaskDocumentBindingConflictError(documentId, conflict.pathId, conflict.taskId);
+    }
+  }
+};
+
+export function addTaskToPath(path: LearningPath, task: Task): LearningPath {
+  return {
+    ...clonePath(path),
+    tasks: [...clonePath(path).tasks, cloneTask(task)],
+    updatedAt: new Date(),
+  };
+}
+
+export function renameTaskInPath(path: LearningPath, taskId: string, title: string): LearningPath {
+  const nextPath = clonePath(path);
+  nextPath.tasks = nextPath.tasks.map((task) =>
+    task.id === taskId ? { ...task, title, documentBinding: cloneBinding(task.documentBinding) } : task
+  );
+  nextPath.updatedAt = new Date();
+  return nextPath;
+}
+
+export function reorderTasksInPath(path: LearningPath, orderedTaskIds: string[]): LearningPath {
+  const nextPath = clonePath(path);
+  nextPath.tasks = normalizeTaskOrder(nextPath.tasks, orderedTaskIds);
+  nextPath.updatedAt = new Date();
+  return nextPath;
+}
+
+export function deleteTaskFromPath(
+  path: LearningPath,
+  taskId: string
+): { path: LearningPath; removedTask?: Task } {
+  const nextPath = clonePath(path);
+  const removedTask = nextPath.tasks.find((task) => task.id === taskId);
+  nextPath.tasks = nextPath.tasks.filter((task) => task.id !== taskId);
+  if (removedTask?.documentBinding?.draft) {
+    nextPath.deletedDocumentDrafts = [
+      ...(nextPath.deletedDocumentDrafts ?? []),
+      cloneDraft(removedTask.documentBinding.draft),
+    ];
+  }
+  nextPath.updatedAt = new Date();
+  return { path: nextPath, removedTask: removedTask ? cloneTask(removedTask) : undefined };
+}
+
+export function bindDocumentToTask(
+  path: LearningPath,
+  taskId: string,
+  binding: TaskDocumentBinding,
+  allPaths: LearningPath[] = []
+): LearningPath {
+  const nextPath = clonePath(path);
+  nextPath.tasks = nextPath.tasks.map((task) =>
+    task.id === taskId
+      ? {
+          ...task,
+          documentBinding: {
+            ...binding,
+            boundAt: new Date(binding.boundAt),
+            draft: binding.draft
+              ? { ...binding.draft, updatedAt: new Date(binding.draft.updatedAt) }
+              : undefined,
+          },
+        }
+      : task
+  );
+  validateCandidateBindings(nextPath.tasks, allPaths.length > 0 ? allPaths : [path], path.id);
+  nextPath.updatedAt = new Date();
+  return nextPath;
+}
+
+export function unbindDocumentFromTask(path: LearningPath, taskId: string): LearningPath {
+  const nextPath = clonePath(path);
+  nextPath.tasks = nextPath.tasks.map((task) =>
+    task.id === taskId ? { ...task, documentBinding: undefined } : task
+  );
+  nextPath.updatedAt = new Date();
+  return nextPath;
+}
 
 const syncPathToServerGraph = async (path: LearningPath): Promise<void> => {
   if (typeof window === 'undefined') {
@@ -366,6 +567,10 @@ export class PathStorageManager {
         throw new Error(`Path ${id} not found`);
       }
 
+      const candidateTasks = updates.tasks ?? existing.tasks;
+      const allPaths = (await this.getAllPaths()).filter((path) => path.id !== existing.id);
+      validateCandidateBindings(candidateTasks, allPaths, existing.id);
+
       const updated: LearningPath = {
         ...existing,
         ...updates,
@@ -519,6 +724,18 @@ export class PathStorageManager {
         createdAt: task.createdAt.toISOString(),
         startedAt: task.startedAt?.toISOString(),
         completedAt: task.completedAt?.toISOString(),
+        documentBinding: task.documentBinding
+          ? {
+              ...task.documentBinding,
+              boundAt: task.documentBinding.boundAt.toISOString(),
+              draft: task.documentBinding.draft
+                ? {
+                    ...task.documentBinding.draft,
+                    updatedAt: task.documentBinding.draft.updatedAt.toISOString(),
+                  }
+                : undefined,
+            }
+          : undefined,
       })),
     };
   }
@@ -536,6 +753,18 @@ export class PathStorageManager {
         createdAt: new Date(task.createdAt),
         startedAt: task.startedAt ? new Date(task.startedAt) : undefined,
         completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
+        documentBinding: task.documentBinding
+          ? {
+              ...task.documentBinding,
+              boundAt: new Date(task.documentBinding.boundAt),
+              draft: task.documentBinding.draft
+                ? {
+                    ...task.documentBinding.draft,
+                    updatedAt: new Date(task.documentBinding.draft.updatedAt),
+                  }
+                : undefined,
+            }
+          : undefined,
       })),
     };
   }

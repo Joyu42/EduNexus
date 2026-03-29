@@ -3,7 +3,7 @@
  * 当 IndexedDB 不可用时使用 LocalStorage
  */
 
-import type { LearningPath, Task, Milestone, PathStatus, TaskStatus } from './path-storage';
+import type { LearningPath } from './path-storage';
 import { getClientUserIdentity } from '@/lib/auth/client-user-cache';
 
 export function resolvePathLocalStorageKey(userId: string | null): string | null {
@@ -106,6 +106,31 @@ export class LocalStoragePathManager {
       updatedAt: new Date(),
     };
 
+    const candidateTasks = updated.tasks ?? [];
+    const seenDocumentIds = new Map<string, string>();
+    for (const task of candidateTasks) {
+      const documentId = task.documentBinding?.documentId?.trim() ?? '';
+      if (!documentId) {
+        continue;
+      }
+
+      const existingTaskId = seenDocumentIds.get(documentId);
+      if (existingTaskId) {
+        throw new Error(`Document ${documentId} is already bound to task ${existingTaskId} in path ${id}`);
+      }
+
+      seenDocumentIds.set(documentId, task.id);
+      const conflict = paths.find((path) =>
+        path.id !== id && path.tasks.some((candidate) => candidate.documentBinding?.documentId === documentId)
+      );
+      if (conflict) {
+        const conflictTask = conflict.tasks.find((candidate) => candidate.documentBinding?.documentId === documentId);
+        throw new Error(
+          `Document ${documentId} is already bound to task ${conflictTask?.id ?? 'unknown'} in path ${conflict.id}`
+        );
+      }
+    }
+
     // 自动计算进度
     if (updated.tasks.length > 0) {
       const totalProgress = updated.tasks.reduce((sum, task) => sum + task.progress, 0);
@@ -164,11 +189,27 @@ export class LocalStoragePathManager {
       ...path,
       createdAt: path.createdAt.toISOString(),
       updatedAt: path.updatedAt.toISOString(),
+      deletedDocumentDrafts: path.deletedDocumentDrafts?.map((draft) => ({
+        ...draft,
+        updatedAt: draft.updatedAt.toISOString(),
+      })),
       tasks: path.tasks.map(task => ({
         ...task,
         createdAt: task.createdAt.toISOString(),
         startedAt: task.startedAt?.toISOString(),
         completedAt: task.completedAt?.toISOString(),
+        documentBinding: task.documentBinding
+          ? {
+              ...task.documentBinding,
+              boundAt: task.documentBinding.boundAt.toISOString(),
+              draft: task.documentBinding.draft
+                ? {
+                    ...task.documentBinding.draft,
+                    updatedAt: task.documentBinding.draft.updatedAt.toISOString(),
+                  }
+                : undefined,
+            }
+          : undefined,
       })),
     };
   }
@@ -181,11 +222,27 @@ export class LocalStoragePathManager {
       ...data,
       createdAt: new Date(data.createdAt),
       updatedAt: new Date(data.updatedAt),
+      deletedDocumentDrafts: data.deletedDocumentDrafts?.map((draft: any) => ({
+        ...draft,
+        updatedAt: new Date(draft.updatedAt),
+      })),
       tasks: data.tasks.map((task: any) => ({
         ...task,
         createdAt: new Date(task.createdAt),
         startedAt: task.startedAt ? new Date(task.startedAt) : undefined,
         completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
+        documentBinding: task.documentBinding
+          ? {
+              ...task.documentBinding,
+              boundAt: new Date(task.documentBinding.boundAt),
+              draft: task.documentBinding.draft
+                ? {
+                    ...task.documentBinding.draft,
+                    updatedAt: new Date(task.documentBinding.draft.updatedAt),
+                  }
+                : undefined,
+            }
+          : undefined,
       })),
     };
   }

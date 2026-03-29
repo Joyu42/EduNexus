@@ -639,6 +639,7 @@ function GraphPageContent() {
     nodes: graphData.nodes,
     packId: graphData.packId,
     packMissing: graphData.packMissing,
+    activeMode: activeMode as string,
   });
 
   if (viewState.kind === "loading") {

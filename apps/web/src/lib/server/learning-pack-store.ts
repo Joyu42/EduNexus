@@ -6,6 +6,15 @@ import { deriveModuleStage, derivePackStage } from "../learning-pack/schema";
 export type { LearningPackRecord, LearningPackModuleRecord, MasteryStage } from "../learning-pack/schema";
 export { MASTERY_STAGES } from "../learning-pack/schema";
 
+export class LearningPackDocumentBindingConflictError extends Error {
+  constructor(message = "知识文档已绑定到其他路径节点。") {
+    super(message);
+    this.name = "LearningPackDocumentBindingConflictError";
+  }
+}
+
+export type LearningPackModuleInput = Pick<LearningPackModuleRecord, "moduleId" | "title" | "kbDocumentId" | "order">;
+
 function generatePackId(): string {
   return `lp_${randomUUID()}`;
 }
@@ -24,6 +33,12 @@ async function putAllPacks(packs: LearningPackRecord[]): Promise<void> {
   db.learningPacks = packs;
   await saveDb(db);
 }
+
+function normalizeBindingDocId(value: string | undefined): string {
+  return (value ?? "").trim();
+}
+
+
 
 export async function upsertLearningPack(pack: LearningPackRecord): Promise<void> {
   const packs = await getAllPacks();
@@ -99,14 +114,32 @@ export async function setActivePack(packId: string, userId: string): Promise<voi
   await putAllPacks(updated);
 }
 
-export async function setPackKbDocument(packId: string, moduleId: string, kbDocumentId: string): Promise<void> {
+export async function setPackKbDocument(packId: string, moduleId: string, kbDocumentId: string, userId: string): Promise<void> {
   const packs = await getAllPacks();
+  const normalizedDocId = normalizeBindingDocId(kbDocumentId);
+  const now = new Date().toISOString();
+
+  if (normalizedDocId.length > 0) {
+    const conflict = packs.find(
+      (item) =>
+        item.userId === userId &&
+        item.modules.some(
+          (m) =>
+            m.kbDocumentId === normalizedDocId &&
+            (item.packId !== packId || m.moduleId !== moduleId)
+        )
+    );
+    if (conflict) {
+      throw new LearningPackDocumentBindingConflictError();
+    }
+  }
+
   const updated = packs.map((p) => {
     if (p.packId !== packId) return p;
     return {
       ...p,
-      modules: p.modules.map((m) => (m.moduleId === moduleId ? { ...m, kbDocumentId } : m)),
-      updatedAt: new Date().toISOString(),
+      modules: p.modules.map((m) => (m.moduleId === moduleId ? { ...m, kbDocumentId: normalizedDocId } : m)),
+      updatedAt: now,
     };
   });
   await putAllPacks(updated);
