@@ -4,7 +4,16 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const { loadDb, saveDb } = await import("./store");
-const { isActiveMember, isActiveOwner, getActiveMembership } = await import("./groups-service");
+const {
+  isActiveMember,
+  isActiveOwner,
+  getActiveMembership,
+  createGroupResource,
+  getGroupResource,
+  updateGroupResource,
+  deleteGroupResource,
+  listGroupResources
+} = await import("./groups-service");
 
 const originalDataDir = process.env.EDUNEXUS_DATA_DIR;
 
@@ -244,5 +253,118 @@ describe("group permission helpers", () => {
       const result = await isActiveOwner("group_gamma", "user_owner_inactive");
       expect(result).toBe(false);
     });
+  });
+});
+
+describe("group resource CRUD", () => {
+  let dataDir: string;
+
+  beforeEach(async () => {
+    dataDir = await createDataDir();
+    process.env.EDUNEXUS_DATA_DIR = dataDir;
+  });
+
+  afterEach(async () => {
+    if (dataDir) {
+      await fs.rm(dataDir, { recursive: true, force: true });
+    }
+    if (originalDataDir) {
+      process.env.EDUNEXUS_DATA_DIR = originalDataDir;
+    } else {
+      delete process.env.EDUNEXUS_DATA_DIR;
+    }
+  });
+
+  it("creates a group resource record", async () => {
+    const record = await createGroupResource({
+      groupId: "group_alpha",
+      title: "Resource title",
+      description: "Resource description",
+      url: "https://example.com/resource",
+      createdBy: "user_creator"
+    });
+
+    expect(record.groupId).toBe("group_alpha");
+    expect(record.title).toBe("Resource title");
+    expect(record.description).toBe("Resource description");
+    expect(record.url).toBe("https://example.com/resource");
+    expect(record.createdBy).toBe("user_creator");
+
+    const db = await loadDb();
+    expect(db.groupResources[0]).toEqual(record);
+  });
+
+  it("returns a group resource by id", async () => {
+    const created = await createGroupResource({
+      groupId: "group_alpha",
+      title: "Lookup title",
+      description: "Lookup description",
+      url: "https://example.com/lookup",
+      createdBy: "user_creator"
+    });
+
+    const result = await getGroupResource(created.id);
+    expect(result).toEqual(created);
+  });
+
+  it("updates a group resource record", async () => {
+    const created = await createGroupResource({
+      groupId: "group_alpha",
+      title: "Original title",
+      description: "Original description",
+      url: "https://example.com/original",
+      createdBy: "user_creator"
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 2));
+
+    const updated = await updateGroupResource(created.id, {
+      title: "Updated title",
+      description: "Updated description",
+      url: "https://example.com/updated"
+    });
+
+    expect(updated).not.toBeNull();
+    expect(updated?.title).toBe("Updated title");
+    expect(updated?.description).toBe("Updated description");
+    expect(updated?.url).toBe("https://example.com/updated");
+    expect(updated?.updatedAt).not.toBe(created.updatedAt);
+  });
+
+  it("deletes a group resource record", async () => {
+    const created = await createGroupResource({
+      groupId: "group_alpha",
+      title: "Delete title",
+      description: "Delete description",
+      url: "https://example.com/delete",
+      createdBy: "user_creator"
+    });
+
+    const deleted = await deleteGroupResource(created.id);
+    expect(deleted).toBe(true);
+    expect(await getGroupResource(created.id)).toBeNull();
+  });
+
+  it("lists group resources with optional group filtering", async () => {
+    const first = await createGroupResource({
+      groupId: "group_alpha",
+      title: "Alpha resource",
+      description: "Alpha description",
+      url: "https://example.com/alpha",
+      createdBy: "user_creator"
+    });
+    const second = await createGroupResource({
+      groupId: "group_beta",
+      title: "Beta resource",
+      description: "Beta description",
+      url: "https://example.com/beta",
+      createdBy: "user_creator"
+    });
+
+    const filtered = await listGroupResources("group_alpha");
+    expect(filtered).toEqual([first]);
+
+    const all = await listGroupResources();
+    expect(all).toEqual([second, first]);
   });
 });

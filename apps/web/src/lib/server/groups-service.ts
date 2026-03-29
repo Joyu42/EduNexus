@@ -3,6 +3,7 @@ import {
   saveDb,
   type GroupMemberRecord,
   type GroupPostRecord,
+  type GroupResourceRecord,
   type GroupSharedResourceRecord,
   type GroupTaskRecord,
   type PublicGroupRecord
@@ -366,4 +367,78 @@ export async function isActiveMember(groupId: string, userId: string): Promise<b
 export async function isActiveOwner(groupId: string, userId: string): Promise<boolean> {
   const membership = await getActiveMembership(groupId, userId);
   return membership?.role === "owner";
+}
+
+export async function createGroupResource(input: {
+  groupId: string;
+  title: string;
+  description: string;
+  url: string;
+  createdBy: string;
+}) {
+  const db = await loadDb();
+  const now = new Date().toISOString();
+  const record: GroupResourceRecord = {
+    id: createId("group_resource"),
+    groupId: input.groupId,
+    title: input.title,
+    description: input.description,
+    url: input.url,
+    createdBy: input.createdBy,
+    createdAt: now,
+    updatedAt: now
+  };
+
+  db.groupResources.unshift(record);
+  await saveDb(db);
+  return record;
+}
+
+export async function getGroupResource(resourceId: string) {
+  const db = await loadDb();
+  return db.groupResources.find((item) => item.id === resourceId) ?? null;
+}
+
+export async function updateGroupResource(
+  resourceId: string,
+  input: Partial<Pick<GroupResourceRecord, "title" | "description" | "url">>
+) {
+  const db = await loadDb();
+  const record = db.groupResources.find((item) => item.id === resourceId);
+  if (!record) {
+    return null;
+  }
+
+  if (typeof input.title === "string") {
+    record.title = input.title;
+  }
+  if (typeof input.description === "string") {
+    record.description = input.description;
+  }
+  if (typeof input.url === "string") {
+    record.url = input.url;
+  }
+  record.updatedAt = new Date().toISOString();
+
+  await saveDb(db);
+  return record;
+}
+
+export async function deleteGroupResource(resourceId: string) {
+  const db = await loadDb();
+  const before = db.groupResources.length;
+  db.groupResources = db.groupResources.filter((item) => item.id !== resourceId);
+  if (db.groupResources.length === before) {
+    return false;
+  }
+
+  await saveDb(db);
+  return true;
+}
+
+export async function listGroupResources(groupId?: string) {
+  const db = await loadDb();
+  return groupId
+    ? db.groupResources.filter((resource) => resource.groupId === groupId)
+    : db.groupResources.slice();
 }
