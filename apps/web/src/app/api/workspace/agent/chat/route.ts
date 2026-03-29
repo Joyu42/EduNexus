@@ -271,7 +271,7 @@ export async function POST(request: Request) {
 
         if (canReuseExistingDoc) {
           usedExistingDocs = true;
-          await setPackKbDocument(pack.packId, module.moduleId, existingDocId);
+          await setPackKbDocument(pack.packId, module.moduleId, existingDocId, userId);
           continue;
         }
 
@@ -281,14 +281,14 @@ export async function POST(request: Request) {
 
         if (typeof exactMatchDocId === "string" && reusableDocIds.has(exactMatchDocId)) {
           usedExistingDocs = true;
-          await setPackKbDocument(pack.packId, module.moduleId, exactMatchDocId);
+          await setPackKbDocument(pack.packId, module.moduleId, exactMatchDocId, userId);
         } else {
           const doc = await createDocument({
             title: module.title,
             content: `# ${module.title}\n\n## 学习目标\n- 理解 ${learningTopic} 在本模块的核心概念\n\n## 今日任务\n- 阅读并完成本节示例\n- 记录 3 个关键知识点\n\n## 练习建议\n- 写 1-2 个最小可运行示例\n`,
             authorId: userId,
           });
-          await setPackKbDocument(pack.packId, module.moduleId, doc.id);
+          await setPackKbDocument(pack.packId, module.moduleId, doc.id, userId);
         }
       }
 
