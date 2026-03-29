@@ -547,22 +547,57 @@ function normalizeSyncedPathRecord(input: unknown): SyncedPathRecord | null {
 
 export function projectLearningPackCompatibilityPath(pack: LearningPackRecord): SyncedPathRecord {
   const now = pack.updatedAt;
+  const modules = pack.modules.slice().sort((a, b) => a.order - b.order);
+  const totalModules = modules.length;
+  const activeModuleIndex = totalModules > 0 ? modules.findIndex((module) => module.moduleId === pack.activeModuleId) : -1;
+  const activeModuleProgress =
+    activeModuleIndex >= 0 && totalModules > 0
+      ? Math.max(0, Math.min(100, Math.round((activeModuleIndex / totalModules) * 100)))
+      : 0;
+  const pathStatus =
+    pack.stage === "mastered"
+      ? "completed"
+      : pack.stage === "understood" || pack.stage === "applied"
+        ? "in_progress"
+        : "not_started";
+  const pathProgress =
+    pack.stage === "mastered"
+      ? 100
+      : pack.activeModuleId
+          ? activeModuleProgress
+          : pack.stage === "applied"
+            ? 67
+            : pack.stage === "understood"
+              ? 33
+              : 0;
+
+  function getTaskStatus(stage: LearningPackRecord["stage"]): SyncedPathTaskRecord["status"] {
+    if (stage === "mastered") return "completed";
+    if (stage === "understood" || stage === "applied") return "in_progress";
+    return "not_started";
+  }
+
+  function getTaskProgress(stage: LearningPackRecord["stage"]): number {
+    if (stage === "mastered") return 100;
+    if (stage === "applied") return 67;
+    if (stage === "understood") return 33;
+    return 0;
+  }
+
   return {
     userId: pack.userId,
     pathId: pack.packId,
     title: pack.title,
     description: `AI 规划的学习路径：${pack.topic}`,
-    status: "not_started",
-    progress: 0,
+    status: pathStatus,
+    progress: pathProgress,
     tags: [pack.topic],
-    tasks: pack.modules
-      .slice()
-      .sort((a, b) => a.order - b.order)
-      .map((module) => ({
+    tasks: modules.map((module) => {
+      return {
         taskId: module.moduleId,
         title: module.title,
-        status: "not_started",
-        progress: 0,
+        status: getTaskStatus(module.stage),
+        progress: getTaskProgress(module.stage),
         ...(module.kbDocumentId.trim().length > 0
           ? {
               documentBinding: {
@@ -571,7 +606,8 @@ export function projectLearningPackCompatibilityPath(pack: LearningPackRecord): 
               },
             }
           : {}),
-      })),
+      };
+    }),
     updatedAt: now,
   };
 }

@@ -444,12 +444,10 @@ export class PathStorageManager {
     }
 
     try {
-      console.log('[PathStorage] 初始化数据库...');
       this.db = await openDB<PathDB>(dbName, DB_VERSION, {
         upgrade(db) {
           // 创建路径存储
           if (!db.objectStoreNames.contains('paths')) {
-            console.log('[PathStorage] 创建 paths 对象存储');
             const pathStore = db.createObjectStore('paths', { keyPath: 'id' });
             pathStore.createIndex('by-status', 'status');
             pathStore.createIndex('by-updated', 'updatedAt');
@@ -458,7 +456,6 @@ export class PathStorageManager {
       });
 
       await this.hydrateFromLocalStorage();
-      console.log('[PathStorage] 数据库初始化成功');
     } catch (error) {
       console.error('[PathStorage] 数据库初始化失败，切换到 LocalStorage:', error);
       this.useLocalStorage = true;
@@ -485,7 +482,6 @@ export class PathStorageManager {
       await Promise.all(
         fallbackPaths.map((path) => this.db!.put('paths', this.serializePath(path)))
       );
-      console.log('[PathStorage] 已从 LocalStorage 迁移路径:', fallbackPaths.length, '个');
     } catch (error) {
       console.error('[PathStorage] 从 LocalStorage 迁移失败:', error);
     }
@@ -646,7 +642,6 @@ export class PathStorageManager {
           serverPaths.map((path) => this.db!.put("paths", this.serializePath(path)))
         );
       }
-      console.log("[PathStorage] 从服务器合并路径:", serverPaths.length, "个");
       return serverPaths;
     } catch (error) {
       console.warn("[PathStorage] 从服务器同步路径失败:", error);
@@ -667,7 +662,6 @@ export class PathStorageManager {
 
       // 使用 LocalStorage 备用方案
       if (this.useLocalStorage) {
-        console.log('[PathStorage] 使用 LocalStorage 获取路径');
         return localStoragePathManager.getAllPaths();
       }
 
@@ -677,7 +671,6 @@ export class PathStorageManager {
       const packPaths = await this.hydrateFromPackBacked(packId);
       if (packPaths.length > 0) {
         const merged = this.mergePaths(packPaths, deserializedLocal);
-        console.log('[PathStorage] 获取学习包路径:', merged.length, '个');
         return merged;
       }
 
@@ -685,7 +678,6 @@ export class PathStorageManager {
       const serverPaths = await this.hydrateFromServer();
       const merged = this.mergePaths(serverPaths, deserializedLocal);
 
-      console.log('[PathStorage] 获取所有路径:', merged.length, '个');
       return merged;
     } catch (error) {
       console.error('[PathStorage] 获取路径失败，尝试 LocalStorage:', error);
@@ -730,7 +722,6 @@ export class PathStorageManager {
 
       // 使用 LocalStorage 备用方案
       if (this.useLocalStorage) {
-        console.log('[PathStorage] 使用 LocalStorage 创建路径');
         const created = localStoragePathManager.createPath(data);
         emitPathSyncEvent(SyncEventType.PATH_CREATED, created);
         emitPathProgressEvent(created);
@@ -745,17 +736,14 @@ export class PathStorageManager {
         updatedAt: data.updatedAt ?? new Date(),
       };
 
-      console.log('[PathStorage] 创建路径:', path.id, path.title);
       const serialized = this.serializePath(path);
       await this.db!.put('paths', serialized);
-      console.log('[PathStorage] 路径已保存到 IndexedDB');
 
       // 验证保存
       const saved = await this.db!.get('paths', path.id);
       if (!saved) {
         throw new Error('路径保存后无法读取');
       }
-      console.log('[PathStorage] 验证成功，路径已保存');
 
       emitPathSyncEvent(SyncEventType.PATH_CREATED, path);
       emitPathProgressEvent(path);
@@ -834,9 +822,7 @@ export class PathStorageManager {
         updated.status = 'in_progress';
       }
 
-      console.log('[PathStorage] 更新路径:', id, '进度:', updated.progress);
       await this.db!.put('paths', this.serializePath(updated));
-      console.log('[PathStorage] 路径已更新');
 
       emitPathSyncEvent(SyncEventType.PATH_UPDATED, updated);
       emitPathProgressEvent(updated);

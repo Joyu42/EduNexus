@@ -264,4 +264,63 @@ describe("server store", () => {
 
     await fs.rm(dataDir, { recursive: true, force: true });
   });
+
+  it("derives synced path status and progress from learning pack stage and active module", async () => {
+    const dataDir = await createDataDir();
+    process.env.EDUNEXUS_DATA_DIR = dataDir;
+
+    const now = new Date().toISOString();
+    const pack = {
+      packId: "lp_progress_projection",
+      userId: "u1",
+      title: "Python 学习路线",
+      topic: "python",
+      activeModuleId: "mod_mid",
+      stage: "understood" as const,
+      totalStudyMinutes: 0,
+      createdAt: now,
+      updatedAt: now,
+      modules: [
+        {
+          moduleId: "mod_intro",
+          title: "Python 入门",
+          kbDocumentId: "doc_py_1",
+          stage: "seen" as const,
+          order: 0,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+        {
+          moduleId: "mod_mid",
+          title: "Python 进阶",
+          kbDocumentId: "doc_py_2",
+          stage: "applied" as const,
+          order: 1,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+        {
+          moduleId: "mod_end",
+          title: "Python 实战",
+          kbDocumentId: "doc_py_3",
+          stage: "mastered" as const,
+          order: 2,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+      ],
+    };
+
+    const projectedPath = projectLearningPackCompatibilityPath(pack);
+
+    expect(projectedPath.status).toBe("in_progress");
+    expect(projectedPath.progress).toBe(33);
+    expect(projectedPath.tasks).toEqual([
+      expect.objectContaining({ taskId: "mod_intro", status: "not_started", progress: 0 }),
+      expect.objectContaining({ taskId: "mod_mid", status: "in_progress", progress: 67 }),
+      expect.objectContaining({ taskId: "mod_end", status: "completed", progress: 100 }),
+    ]);
+
+    await fs.rm(dataDir, { recursive: true, force: true });
+  });
 });

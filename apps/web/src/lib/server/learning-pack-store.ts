@@ -23,12 +23,12 @@ function generateModuleId(): string {
   return `mod_${randomUUID()}`;
 }
 
-async function getAllPacks(): Promise<LearningPackRecord[]> {
+export async function getAllPacks(): Promise<LearningPackRecord[]> {
   const db = await loadDb();
   return db.learningPacks;
 }
 
-async function putAllPacks(packs: LearningPackRecord[]): Promise<void> {
+export async function putAllPacks(packs: LearningPackRecord[]): Promise<void> {
   const db = await loadDb();
   db.learningPacks = packs;
   await saveDb(db);
