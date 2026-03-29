@@ -9,7 +9,6 @@ import { planLearningPack } from "@/lib/server/learning-pack-planner";
 import { buildLearningPackKbContext } from "@/lib/server/learning-pack-kb-context";
 import { normalizeApiKey } from "@/lib/model-api-key";
 import { getStoredModelConfig } from "@/lib/server/model-config-store";
-import { upsertSyncedPath } from "@/lib/server/path-sync-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -298,35 +297,6 @@ export async function POST(request: Request) {
           moduleDocBindings.set(module.moduleId, doc.id);
         }
       }
-
-      const boundPathTasks = pack.modules.map((module) => {
-        const docId = moduleDocBindings.get(module.moduleId);
-        return {
-          taskId: module.moduleId,
-          title: module.title,
-          status: "not_started" as const,
-          progress: 0,
-          ...(docId
-            ? {
-                documentBinding: {
-                  documentId: docId,
-                  boundAt: new Date().toISOString(),
-                },
-              }
-            : {}),
-        };
-      });
-
-      await upsertSyncedPath({
-        pathId: pack.packId,
-        userId,
-        title: pack.title,
-        description: `AI 规划的学习路径：${learningTopic}`,
-        status: "not_started",
-        progress: 0,
-        tags: [learningTopic],
-        tasks: boundPathTasks,
-      });
 
       await setActivePack(pack.packId, userId);
 

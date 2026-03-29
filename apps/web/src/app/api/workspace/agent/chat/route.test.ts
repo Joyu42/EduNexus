@@ -229,47 +229,7 @@ describe("learning-pack quick creation", () => {
     );
     expect(createDocumentMock).toHaveBeenCalledTimes(3);
     expect(setPackKbDocumentMock).toHaveBeenCalledTimes(3);
-    expect(upsertSyncedPathMock).toHaveBeenCalledWith({
-      pathId: "lp_ai_1",
-      userId: "u1",
-      title: "Java 系统性学习路线",
-      description: "AI 规划的学习路径：java",
-      status: "not_started",
-      progress: 0,
-      tags: ["java"],
-        tasks: [
-          {
-            taskId: "m1",
-            title: "Java 环境搭建与工具链",
-            status: "not_started",
-            progress: 0,
-            documentBinding: {
-              documentId: "doc_1",
-              boundAt: expect.any(String),
-            },
-          },
-          {
-            taskId: "m2",
-            title: "Java 语法基础与数据类型",
-            status: "not_started",
-            progress: 0,
-            documentBinding: {
-              documentId: "doc_2",
-              boundAt: expect.any(String),
-            },
-          },
-          {
-            taskId: "m3",
-            title: "面向对象编程与设计模式",
-            status: "not_started",
-            progress: 0,
-            documentBinding: {
-              documentId: "doc_3",
-              boundAt: expect.any(String),
-            },
-          },
-        ],
-      });
+    expect(upsertSyncedPathMock).not.toHaveBeenCalled();
     expect(payload.learningPack.packId).toBe("lp_ai_1");
   });
 

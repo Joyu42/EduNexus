@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { loadDb } from './store';
+import { loadDb, projectLearningPackCompatibilityPath } from './store';
 import { getPackById, getPacksByUser } from './learning-pack-store';
 
 const MAX_NODES_PER_USER = 200;
@@ -123,6 +123,54 @@ function buildPathMembershipMap(paths: unknown[]): Map<string, PathMembership[]>
         pathId,
         pathName,
         stage,
+        orderWithinStage: index,
+      });
+    }
+  }
+
+  return membershipMap;
+}
+
+function collectPackBackedPathIds(packs: Array<{ packId: string }>): Set<string> {
+  return new Set(packs.map((pack) => pack.packId));
+}
+
+function filterLegacyPaths(paths: unknown[], packBackedPathIds: Set<string>): unknown[] {
+  return paths.filter((path) => {
+    if (!isRecord(path)) {
+      return true;
+    }
+
+    const pathId = typeof path.pathId === "string" ? path.pathId : "";
+    return !pathId || !packBackedPathIds.has(pathId);
+  });
+}
+
+function projectPackCompatibilityPaths(
+  packs: Array<{ packId: string; userId: string; title: string; topic: string; modules: Array<{ moduleId: string; title: string; kbDocumentId: string; order: number }> }>
+): unknown[] {
+  return packs.map((pack) => projectLearningPackCompatibilityPath(pack as never));
+}
+
+function buildPackCompatibilityPathMembershipMap(
+  packs: Array<{ packId: string; title: string; modules: Array<{ moduleId: string; title: string; kbDocumentId: string; order: number }> }>
+): Map<string, PathMembership[]> {
+  const membershipMap = new Map<string, PathMembership[]>();
+
+  for (const pack of packs) {
+    const compatibilityPath = projectLearningPackCompatibilityPath(pack as never);
+    for (const [index, task] of compatibilityPath.tasks.entries()) {
+      const docId = task.documentBinding?.documentId?.trim() ?? "";
+      if (!docId) continue;
+
+      if (!membershipMap.has(docId)) {
+        membershipMap.set(docId, []);
+      }
+
+      membershipMap.get(docId)?.push({
+        pathId: pack.packId,
+        pathName: pack.title,
+        stage: compatibilityPath.pathId,
         orderWithinStage: index,
       });
     }
@@ -291,7 +339,10 @@ export async function getGraphView(
     const packDocsById = new Map(packDocs.map((doc) => [doc.id, doc]));
     const db = await loadDb();
     const userPaths = db.syncedPaths.filter((p) => p.userId === userId);
-    const pathMembershipMap = buildPathMembershipMap(userPaths);
+    const packBackedPathIds = collectPackBackedPathIds([pack]);
+    const legacyUserPaths = filterLegacyPaths(userPaths, packBackedPathIds);
+    const pathMembershipMap = buildPathMembershipMap(legacyUserPaths);
+    const packCompatibilityMembershipMap = buildPackCompatibilityPathMembershipMap([pack]);
     const needsReviewSet = new Set(db.needsReviewNodes ?? []);
 
     const moduleNodeIdMap = new Map<string, string>();
@@ -303,7 +354,9 @@ export async function getGraphView(
 
       const masteryKey = linkedDoc?.id ?? module.moduleId;
       const mastery = db.masteryByNode[masteryKey] ?? 0;
-      const pathMemberships = linkedDoc ? pathMembershipMap.get(linkedDoc.id) ?? [] : [];
+      const pathMemberships = linkedDoc
+        ? [...(pathMembershipMap.get(linkedDoc.id) ?? []), ...(packCompatibilityMembershipMap.get(linkedDoc.id) ?? [])]
+        : [];
       const kbDocumentId = linkedDoc?.id ?? linkedDocId;
       const documentIds = linkedDoc?.id ? [linkedDoc.id] : [];
 
@@ -337,7 +390,12 @@ export async function getGraphView(
 
   const db = await loadDb();
   const userPaths = db.syncedPaths.filter((path) => path.userId === userId);
-  const pathMembershipMap = buildPathMembershipMap(userPaths);
+  const packs = await getPacksByUser(userId);
+  const packBackedPathIds = collectPackBackedPathIds(packs);
+  const legacyUserPaths = filterLegacyPaths(userPaths, packBackedPathIds);
+  const packCompatibilityPaths = projectPackCompatibilityPaths(packs);
+  const pathMembershipMap = buildPathMembershipMap(legacyUserPaths);
+  const packCompatibilityMembershipMap = buildPackCompatibilityPathMembershipMap(packs);
   const needsReviewSet = new Set(db.needsReviewNodes ?? []);
 
   const documents = await prisma.document.findMany({
@@ -349,11 +407,14 @@ export async function getGraphView(
   const contentNodes: WorkspaceGraphNode[] = documents.map((doc) => {
     const mastery = db.masteryByNode[doc.id] ?? 0;
     const domainValue = "general";
-    const pathMemberships = pathMembershipMap.get(doc.id) ?? [];
+    const pathMemberships = [
+      ...(pathMembershipMap.get(doc.id) ?? []),
+      ...(packCompatibilityMembershipMap.get(doc.id) ?? []),
+    ];
     const category = resolveNodeCategory({
       defaultDomain: domainValue,
       pathMemberships,
-      userPaths,
+      userPaths: [...legacyUserPaths, ...packCompatibilityPaths],
     });
 
     return {
@@ -372,8 +433,8 @@ export async function getGraphView(
   });
 
   const existingNodeIds = new Set(contentNodes.map((node) => node.id));
-  const pathEdges = buildPathEdges(userPaths, existingNodeIds);
-  const learningPackEdges = buildLearningPackEdges(await getPacksByUser(userId), existingNodeIds);
+  const pathEdges = buildPathEdges(legacyUserPaths, existingNodeIds);
+  const learningPackEdges = buildLearningPackEdges(packs, existingNodeIds);
 
   const mergedEdgesByKey = new Map<string, GraphEdge>();
   for (const edge of [...pathEdges, ...learningPackEdges]) {

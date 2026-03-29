@@ -1,8 +1,22 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
-import { loadDb } from "./store";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const { findMany } = vi.hoisted(() => ({
+  findMany: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("./prisma", () => ({
+  prisma: {
+    document: {
+      findMany,
+    },
+  },
+}));
+
+const { getGraphView } = await import("./graph-service");
+const { loadDb, projectLearningPackCompatibilityPath } = await import("./store");
 
 const originalDataDir = process.env.EDUNEXUS_DATA_DIR;
 
@@ -160,6 +174,92 @@ describe("server store", () => {
 
     expect(db.sessions).toEqual([
       expect.objectContaining({ id: "ws_user_scoped", userId: "user-1" })
+    ]);
+
+    await fs.rm(dataDir, { recursive: true, force: true });
+  });
+
+  it("treats pack-backed synced paths as derived projections from learning packs", async () => {
+    const dataDir = await createDataDir();
+    process.env.EDUNEXUS_DATA_DIR = dataDir;
+
+    const db = await loadDb();
+    const now = new Date().toISOString();
+    const pack = {
+      packId: "lp_python_projection",
+      userId: "u1",
+      title: "Python 学习路线",
+      topic: "python",
+      activeModuleId: "mod_intro",
+      stage: "seen" as const,
+      totalStudyMinutes: 0,
+      createdAt: now,
+      updatedAt: now,
+      modules: [
+        {
+          moduleId: "mod_intro",
+          title: "Python 入门",
+          kbDocumentId: "doc_py_1",
+          stage: "seen" as const,
+          order: 0,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+        {
+          moduleId: "mod_advanced",
+          title: "Python 进阶",
+          kbDocumentId: "doc_py_2",
+          stage: "seen" as const,
+          order: 1,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+      ],
+    };
+
+    db.learningPacks.push(pack);
+    db.syncedPaths.push({
+      userId: "u1",
+      pathId: "lp_python_projection",
+      title: "旧版 Python 路径",
+      description: "stale synced path",
+      status: "completed",
+      progress: 100,
+      tags: ["legacy"],
+      stages: [
+        {
+          stageId: "legacy_stage",
+          nodeIds: ["doc_py_1", "doc_py_2"],
+        },
+      ],
+      tasks: [],
+      updatedAt: now,
+    });
+    await writeDbFile(dataDir, db);
+
+    findMany.mockResolvedValueOnce([
+      { id: "doc_py_1", title: "Python 入门" },
+      { id: "doc_py_2", title: "Python 进阶" },
+    ]);
+
+    const graph = await getGraphView("u1", { packId: "lp_python_projection" });
+    const projectedPath = projectLearningPackCompatibilityPath(pack);
+
+    expect(graph.nodes[0]?.pathMemberships).toEqual([
+      {
+        pathId: projectedPath.pathId,
+        pathName: projectedPath.title,
+        stage: projectedPath.pathId,
+        orderWithinStage: 0,
+      },
+    ]);
+    expect(graph.nodes[1]?.pathMemberships).toEqual([
+      {
+        pathId: projectedPath.pathId,
+        pathName: projectedPath.title,
+        stage: projectedPath.pathId,
+        orderWithinStage: 1,
+      },
     ]);
 
     await fs.rm(dataDir, { recursive: true, force: true });

@@ -1,4 +1,4 @@
-import { loadDb, saveDb, type SyncedPathRecord, type SyncedPathTaskRecord } from "./store";
+import { loadDb, saveDb, projectLearningPackCompatibilityPath, type SyncedPathRecord, type SyncedPathTaskRecord } from "./store";
 
 export type UpsertSyncedPathInput = {
   userId: string;
@@ -44,11 +44,20 @@ function normalizeTask(task: NonNullable<UpsertSyncedPathInput["tasks"]>[number]
   };
 }
 
-export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
-  const db = await loadDb();
-  const now = new Date().toISOString();
+export { projectLearningPackCompatibilityPath as projectLearningPackToCompatibilityPath };
 
-  const normalized: SyncedPathRecord = {
+export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
+  console.warn("[path-sync-service] upsertSyncedPath is compatibility-only; direct writes are ignored.");
+  const db = await loadDb();
+  const pack = db.learningPacks.find(
+    (item) => item.packId === input.pathId && item.userId === input.userId
+  );
+
+  if (pack) {
+    return projectLearningPackCompatibilityPath(pack);
+  }
+
+  return {
     userId: input.userId,
     pathId: input.pathId,
     title: input.title,
@@ -57,25 +66,16 @@ export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
     progress: Math.max(0, Math.min(100, Math.round(input.progress))),
     tags: Array.isArray(input.tags) ? input.tags.filter(Boolean) : [],
     tasks: Array.isArray(input.tasks) ? input.tasks.map(normalizeTask) : [],
-    updatedAt: now,
-  };
-
-  const existingIndex = db.syncedPaths.findIndex(
-    (item) => item.pathId === input.pathId && item.userId === input.userId
-  );
-  if (existingIndex >= 0) {
-    db.syncedPaths[existingIndex] = normalized;
-  } else {
-    db.syncedPaths.unshift(normalized);
-  }
-
-  await saveDb(db);
-  return normalized;
+    updatedAt: new Date().toISOString(),
+  } satisfies SyncedPathRecord;
 }
 
 export async function loadSyncedPaths(userId: string): Promise<SyncedPathRecord[]> {
   const db = await loadDb();
-  return db.syncedPaths.filter((p) => p.userId === userId);
+  const legacyPaths = db.syncedPaths.filter((p) => p.userId === userId && !p.pathId.startsWith("lp_"));
+  const packs = db.learningPacks.filter((p) => p.userId === userId);
+  const projectedPacks = packs.map(projectLearningPackCompatibilityPath);
+  return [...legacyPaths, ...projectedPacks];
 }
 
 export async function deleteSyncedPath(pathId: string, userId: string) {
