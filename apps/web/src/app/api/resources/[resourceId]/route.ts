@@ -124,7 +124,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ resou
 
     const payload = (body ?? {}) as Record<string, unknown>;
 
-    const input: { title?: string; description?: string; url?: string } = {};
+    const input: { title?: string; description?: string; url?: string; type?: string; tags?: string[] } = {};
     if (typeof payload.title === "string") {
       const title = payload.title.trim();
       if (!title) {
@@ -144,12 +144,24 @@ export async function PATCH(request: Request, context: { params: Promise<{ resou
     if (typeof payload.url === "string") {
       input.url = payload.url.trim();
     }
+    if (
+      payload.type === "document" ||
+      payload.type === "video" ||
+      payload.type === "tool" ||
+      payload.type === "website" ||
+      payload.type === "book"
+    ) {
+      input.type = payload.type;
+    }
+    if (Array.isArray(payload.tags)) {
+      input.tags = payload.tags.filter((tag): tag is string => typeof tag === "string").map((tag) => tag.trim()).filter(Boolean);
+    }
 
-    if (!input.title && input.description === undefined && input.url === undefined) {
+    if (!input.title && input.description === undefined && input.url === undefined && input.type === undefined && input.tags === undefined) {
       return fail(
         {
           code: "RESOURCE_UPDATE_VALIDATION_FAILED",
-          message: "至少提供一个可更新字段：title/description/url。"
+          message: "至少提供一个可更新字段：title/description/url/type/tags。"
         },
         400
       );

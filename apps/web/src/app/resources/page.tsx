@@ -29,7 +29,8 @@ export default function ResourcesPage() {
   const [sort, setSort] = useState<"newest" | "oldest" | "title">("newest");
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string>("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagsFilterInput, setTagsFilterInput] = useState("");
+  const selectedTags = useMemo(() => tagsFilterInput.split(",").map(t => t.trim()).filter(Boolean), [tagsFilterInput]);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<ServerResourceRecord | null>(null);
 
@@ -207,14 +208,33 @@ export default function ResourcesPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-card p-4 rounded-xl border shadow-sm">
-          <div className="w-full lg:max-w-md">
+          <div className="w-full lg:max-w-md flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
-              placeholder="搜索资源名称、描述或分享者..."
-              className="w-full bg-background"
+              placeholder="搜索资源..."
+              className="w-full sm:w-64 bg-background"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
             />
+            <Input
+              placeholder="输入标签 (逗号分隔)..."
+              className="w-full sm:w-48 bg-background"
+              value={tagsFilterInput}
+              onChange={(event) => setTagsFilterInput(event.target.value)}
+            />
           </div>
+          <div className="flex items-center gap-2">
+            <select
+            className="h-10 rounded-md border bg-background px-3 text-sm"
+            value={selectedType}
+            onChange={(event) => setSelectedType(event.target.value)}
+          >
+            <option value="">所有类型</option>
+            <option value="document">文档</option>
+            <option value="video">视频</option>
+            <option value="tool">工具</option>
+            <option value="website">网站</option>
+            <option value="book">书籍</option>
+          </select>
           <select
             className="h-10 rounded-md border bg-background px-3 text-sm"
             value={sort}
@@ -224,6 +244,7 @@ export default function ResourcesPage() {
             <option value="oldest">按最早</option>
             <option value="title">按标题</option>
           </select>
+          </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
             <span>公共资源总数</span>
             <Badge variant="secondary" className="px-2 py-0.5">
@@ -285,6 +306,8 @@ export default function ResourcesPage() {
                 title: editingResource.title,
                 description: editingResource.description,
                 url: editingResource.url,
+                type: editingResource.type,
+                tags: editingResource.tags,
               }
             : null
         }
