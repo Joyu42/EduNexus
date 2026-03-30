@@ -746,6 +746,27 @@ export class PathStorageManager {
         throw new Error('路径保存后无法读取');
       }
 
+      // For lp_* paths, also create the pack on the server so it appears as a star
+      if (path.id.startsWith('lp_')) {
+        try {
+          const res = await fetch('/api/graph/learning-pack', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              packId: path.id,
+              title: path.title,
+              topic: path.tags?.[0] ?? (path as any).topic ?? undefined,
+              tasks: path.tasks ?? [],
+            }),
+          });
+          if (!res.ok) {
+            throw new Error(`Pack POST failed: ${res.status}`);
+          }
+        } catch (e) {
+          console.warn('[PathStorage] Pack POST failed:', e);
+        }
+      }
+
       emitPathSyncEvent(SyncEventType.PATH_CREATED, path);
       emitPathProgressEvent(path);
       void syncPathToServerGraph(path);
