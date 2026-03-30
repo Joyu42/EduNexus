@@ -1,240 +1,53 @@
 "use client";
 
-import { type Editor } from "@tiptap/react";
-import {
-  Bold,
-  Italic,
-  Strikethrough,
-  Code,
-  Heading1,
-  Heading2,
-  Heading3,
-  List,
-  ListOrdered,
-  Quote,
-  Undo,
-  Redo,
-  Link,
-  Image,
-  Table,
-  CheckSquare,
-  Loader2,
-  Check,
-  FileText,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
-import { zhCN } from "date-fns/locale";
-import { KeyboardShortcutsDialog } from "./keyboard-shortcuts-dialog";
+import { SaveStatusIndicator } from "./save-status-indicator";
 
 interface EditorToolbarProps {
-  editor: Editor;
+  mode: "source" | "render";
+  onModeChange: (mode: "source" | "render") => void;
   isSaving: boolean;
   lastSaved: Date | null;
   wordCount: number;
 }
 
-export function EditorToolbar({ editor, isSaving, lastSaved, wordCount }: EditorToolbarProps) {
-  const ToolbarButton = ({
-    onClick,
-    isActive,
-    disabled,
-    children,
-    title,
-  }: {
-    onClick: () => void;
-    isActive?: boolean;
-    disabled?: boolean;
-    children: React.ReactNode;
-    title: string;
-  }) => (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "h-8 w-8",
-        isActive && "bg-accent"
-      )}
-      title={title}
-    >
-      {children}
-    </Button>
-  );
-
+export function EditorToolbar({ mode, onModeChange, isSaving, lastSaved, wordCount }: EditorToolbarProps) {
   return (
     <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
-      <div className="flex items-center gap-1 px-4 py-2 overflow-x-auto">
-        {/* 撤销/重做 */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          title="撤销"
-        >
-          <Undo className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          title="重做"
-        >
-          <Redo className="h-4 w-4" />
-        </ToolbarButton>
+      <div className="flex items-center gap-2 px-4 py-2">
+        <div className="inline-flex items-center rounded-md border bg-muted/30 p-1">
+          <Button
+            type="button"
+            variant={mode === "source" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onModeChange("source")}
+            aria-pressed={mode === "source"}
+            className={cn("h-8 rounded-sm px-3", mode === "source" && "shadow-sm")}
+          >
+            源码
+          </Button>
+          <Button
+            type="button"
+            variant={mode === "render" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => onModeChange("render")}
+            aria-pressed={mode === "render"}
+            className={cn("h-8 rounded-sm px-3", mode === "render" && "shadow-sm")}
+          >
+            渲染
+          </Button>
+        </div>
 
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        {/* 文本格式 */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          isActive={editor.isActive("bold")}
-          title="粗体"
-        >
-          <Bold className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          isActive={editor.isActive("italic")}
-          title="斜体"
-        >
-          <Italic className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          isActive={editor.isActive("strike")}
-          title="删除线"
-        >
-          <Strikethrough className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          isActive={editor.isActive("code")}
-          title="行内代码"
-        >
-          <Code className="h-4 w-4" />
-        </ToolbarButton>
-
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        {/* 标题 */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          isActive={editor.isActive("heading", { level: 1 })}
-          title="标题 1"
-        >
-          <Heading1 className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          isActive={editor.isActive("heading", { level: 2 })}
-          title="标题 2"
-        >
-          <Heading2 className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          isActive={editor.isActive("heading", { level: 3 })}
-          title="标题 3"
-        >
-          <Heading3 className="h-4 w-4" />
-        </ToolbarButton>
-
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        {/* 列表 */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          isActive={editor.isActive("bulletList")}
-          title="无序列表"
-        >
-          <List className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          isActive={editor.isActive("orderedList")}
-          title="有序列表"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleTaskList().run()}
-          isActive={editor.isActive("taskList")}
-          title="任务列表"
-        >
-          <CheckSquare className="h-4 w-4" />
-        </ToolbarButton>
-
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        {/* 其他 */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          isActive={editor.isActive("blockquote")}
-          title="引用"
-        >
-          <Quote className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => {
-            const url = window.prompt("输入链接地址:");
-            if (url) {
-              editor.chain().focus().setLink({ href: url }).run();
-            }
-          }}
-          isActive={editor.isActive("link")}
-          title="插入链接"
-        >
-          <Link className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => {
-            const url = window.prompt("输入图片地址:");
-            if (url) {
-              editor.chain().focus().setImage({ src: url }).run();
-            }
-          }}
-          title="插入图片"
-        >
-          <Image className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-          title="插入表格"
-        >
-          <Table className="h-4 w-4" />
-        </ToolbarButton>
-
-        <Separator orientation="vertical" className="h-6 mx-1" />
-
-        {/* 快捷键帮助 */}
-        <KeyboardShortcutsDialog />
-
-        {/* 保存状态和字数统计 */}
-        <div className="ml-auto flex items-center gap-4 text-sm text-muted-foreground">
-          {/* 字数统计 */}
-          <div className="flex items-center gap-1">
-            <FileText className="h-3.5 w-3.5" />
-            <span>{wordCount.toLocaleString()} 字</span>
-          </div>
-
+        <div className="ml-auto flex items-center gap-3 text-sm text-muted-foreground">
+          <span>{wordCount.toLocaleString()} 字</span>
           <Separator orientation="vertical" className="h-4" />
-
-          {/* 保存状态 */}
-          {isSaving ? (
-            <div className="flex items-center gap-1.5">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              <span>保存中</span>
-            </div>
-          ) : lastSaved ? (
-            <div className="flex items-center gap-1.5">
-              <Check className="h-3.5 w-3.5 text-green-500" />
-              <span>
-                {formatDistanceToNow(lastSaved, { addSuffix: true, locale: zhCN })}
-              </span>
-            </div>
-          ) : null}
+          <SaveStatusIndicator
+            status={isSaving ? "saving" : lastSaved ? "saved" : "idle"}
+            lastSaved={lastSaved}
+            showDetails={false}
+          />
         </div>
       </div>
     </div>

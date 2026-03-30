@@ -100,6 +100,10 @@ vi.mock("@/components/kb/kb-layout", async () => {
   };
 });
 
+vi.mock("@/components/markdown-renderer", () => ({
+  MarkdownRenderer: ({ content }: any) => <div data-testid="markdown-renderer" data-content={content} />,
+}));
+
 vi.mock("@/lib/client/kb-storage", () => ({
   fetchDocumentsFromServer: vi.fn(),
   createDocumentOnServer: vi.fn(),
@@ -210,7 +214,6 @@ describe("KnowledgeBasePage server workspace docs visibility", () => {
   });
 
   it("shows error toast and no documents when fetchDocumentsFromServer rejects", async () => {
-    const { toast } = await import("sonner");
     (fetchDocumentsFromServer as any).mockRejectedValue(
       new Error("获取文档列表失败。")
     );
