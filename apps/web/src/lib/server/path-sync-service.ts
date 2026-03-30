@@ -96,6 +96,8 @@ export async function backfillSyncedPathsToLearningPacks(): Promise<{ backfilled
     }
 
     db.learningPacks.push(syncedPathToLearningPack(path));
+    // Remove the legacy row so loadSyncedPaths doesn't return duplicates
+    db.syncedPaths = db.syncedPaths.filter((p) => p.pathId !== path.pathId);
     backfilled++;
   }
 
@@ -151,6 +153,9 @@ export async function deleteSyncedPath(pathId: string, userId: string) {
   const db = await loadDb();
   db.syncedPaths = db.syncedPaths.filter(
     (item) => !(item.pathId === pathId && item.userId === userId)
+  );
+  db.learningPacks = db.learningPacks.filter(
+    (item) => !(item.packId === pathId && item.userId === userId)
   );
   await saveDb(db);
 }

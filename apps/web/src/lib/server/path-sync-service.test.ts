@@ -35,7 +35,7 @@ vi.mock("./store", () => ({
   }),
 }));
 
-const { backfillSyncedPathsToLearningPacks, loadSyncedPaths, upsertSyncedPath } = await import("./path-sync-service");
+const { backfillSyncedPathsToLearningPacks, deleteSyncedPath, loadSyncedPaths, upsertSyncedPath } = await import("./path-sync-service");
 
 describe("backfillSyncedPathsToLearningPacks", () => {
   beforeEach(() => {
@@ -212,5 +212,55 @@ describe("loadSyncedPaths", () => {
 
     expect(paths).toHaveLength(2);
     expect(paths.map((p) => p.pathId)).toEqual(["legacy_path", "lp_pack"]);
+  });
+});
+
+describe("deleteSyncedPath", () => {
+  beforeEach(() => {
+    loadDbMock.mockReset();
+    saveDbMock.mockReset();
+  });
+
+  it("removes path from both syncedPaths and learningPacks", async () => {
+    loadDbMock.mockResolvedValue({
+      syncedPaths: [
+        { userId: "u1", pathId: "path_x", title: "Legacy", description: "", status: "in_progress", progress: 50, tags: [], tasks: [], updatedAt: "2026-01-01T00:00:00.000Z" },
+      ],
+      learningPacks: [
+        { packId: "path_x", userId: "u1", title: "Pack", topic: "python", modules: [], activeModuleId: null, stage: "seen", totalStudyMinutes: 0, createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" },
+      ],
+    });
+    saveDbMock.mockResolvedValue(undefined);
+
+    await deleteSyncedPath("path_x", "u1");
+
+    expect(saveDbMock).toHaveBeenCalledTimes(1);
+    const savedDb = saveDbMock.mock.calls[0]?.[0] as any;
+    const remainingSynced = savedDb.syncedPaths.filter((p: any) => p.pathId === "path_x");
+    const remainingPacks = savedDb.learningPacks.filter((p: any) => p.packId === "path_x");
+    expect(remainingSynced).toHaveLength(0);
+    expect(remainingPacks).toHaveLength(0);
+  });
+
+  it("only removes matching userId", async () => {
+    loadDbMock.mockResolvedValue({
+      syncedPaths: [
+        { userId: "u1", pathId: "path_x", title: "U1 Legacy", description: "", status: "in_progress", progress: 50, tags: [], tasks: [], updatedAt: "2026-01-01T00:00:00.000Z" },
+        { userId: "u2", pathId: "path_x", title: "U2 Legacy", description: "", status: "in_progress", progress: 50, tags: [], tasks: [], updatedAt: "2026-01-01T00:00:00.000Z" },
+      ],
+      learningPacks: [
+        { packId: "path_x", userId: "u1", title: "U1 Pack", topic: "python", modules: [], activeModuleId: null, stage: "seen", totalStudyMinutes: 0, createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" },
+        { packId: "path_x", userId: "u2", title: "U2 Pack", topic: "python", modules: [], activeModuleId: null, stage: "seen", totalStudyMinutes: 0, createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" },
+      ],
+    });
+    saveDbMock.mockResolvedValue(undefined);
+
+    await deleteSyncedPath("path_x", "u1");
+
+    const savedDb = saveDbMock.mock.calls[0]?.[0] as any;
+    expect(savedDb.syncedPaths).toHaveLength(1);
+    expect(savedDb.syncedPaths[0].userId).toBe("u2");
+    expect(savedDb.learningPacks).toHaveLength(1);
+    expect(savedDb.learningPacks[0].userId).toBe("u2");
   });
 });
