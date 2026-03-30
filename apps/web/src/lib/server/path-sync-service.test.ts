@@ -118,6 +118,61 @@ describe("backfillSyncedPathsToLearningPacks", () => {
     expect(result).toEqual({ backfilled: 0, skipped: 1 });
     expect(saveDbMock).not.toHaveBeenCalled();
   });
+
+  it("backfills matching pathIds independently per user", async () => {
+    const dbState = {
+      syncedPaths: [
+        {
+          userId: "u1",
+          pathId: "legacy_path_shared",
+          title: "Legacy U1",
+          description: "",
+          status: "in_progress",
+          progress: 50,
+          tags: [],
+          tasks: [],
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+        {
+          userId: "u2",
+          pathId: "legacy_path_shared",
+          title: "Legacy U2",
+          description: "",
+          status: "completed",
+          progress: 100,
+          tags: [],
+          tasks: [],
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+      learningPacks: [
+        {
+          packId: "legacy_path_shared",
+          userId: "u2",
+          title: "Pack U2",
+          topic: "python",
+          modules: [],
+          activeModuleId: null,
+          stage: "mastered",
+          totalStudyMinutes: 0,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+    };
+    loadDbMock.mockResolvedValue(dbState);
+    saveDbMock.mockResolvedValue(undefined);
+
+    const result = await backfillSyncedPathsToLearningPacks();
+
+    expect(result).toEqual({ backfilled: 1, skipped: 1 });
+    expect(saveDbMock).toHaveBeenCalledTimes(1);
+    const savedDb = saveDbMock.mock.calls[0]?.[0] as any;
+    expect(savedDb.learningPacks).toHaveLength(2);
+    expect(savedDb.syncedPaths).toEqual([
+      expect.objectContaining({ userId: "u2", pathId: "legacy_path_shared" }),
+    ]);
+  });
 });
 
 describe("upsertSyncedPath", () => {

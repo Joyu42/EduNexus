@@ -83,21 +83,23 @@ function syncedPathToLearningPack(syncedPath: SyncedPathRecord): LearningPackRec
 
 export async function backfillSyncedPathsToLearningPacks(): Promise<{ backfilled: number; skipped: number }> {
   const db = await loadDb();
-  const existingPackIds = new Set(db.learningPacks.map((pack) => pack.packId));
+  const existingPackKeys = new Set(db.learningPacks.map((pack) => `${pack.userId}::${pack.packId}`));
   const legacyPaths = db.syncedPaths.filter((path) => !path.pathId.startsWith("lp_"));
 
   let backfilled = 0;
   let skipped = 0;
 
   for (const path of legacyPaths) {
-    if (existingPackIds.has(path.pathId)) {
+    const packKey = `${path.userId}::${path.pathId}`;
+    if (existingPackKeys.has(packKey)) {
       skipped++;
       continue;
     }
 
     db.learningPacks.push(syncedPathToLearningPack(path));
     // Remove the legacy row so loadSyncedPaths doesn't return duplicates
-    db.syncedPaths = db.syncedPaths.filter((p) => p.pathId !== path.pathId);
+    db.syncedPaths = db.syncedPaths.filter((p) => !(p.userId === path.userId && p.pathId === path.pathId));
+    existingPackKeys.add(packKey);
     backfilled++;
   }
 
