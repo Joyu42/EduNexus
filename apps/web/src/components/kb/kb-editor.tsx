@@ -16,10 +16,10 @@ interface KBEditorProps {
 export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [wordCount, setWordCount] = useState(0);
+  const [charCount, setCharCount] = useState(0);
   const [mode, setMode] = useState<"source" | "render">("source");
   const [content, setContent] = useState("");
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useKBDocumentSync(() => {
     if (onDocumentChange) {
@@ -30,7 +30,7 @@ export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps
   useEffect(() => {
     setMode("source");
     setContent(document?.content || "");
-    setWordCount((document?.content || "").replace(/<[^>]+>/g, "").length);
+    setCharCount((document?.content || "").replace(/<[^>]+>/g, "").length);
   }, [document?.id]);
 
   useEffect(() => {
@@ -95,13 +95,13 @@ export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps
 
   return (
     <div className="flex flex-col h-full">
-      <EditorToolbar
-        mode={mode}
-        onModeChange={setMode}
-        isSaving={isSaving}
-        lastSaved={lastSaved}
-        wordCount={wordCount}
-      />
+        <EditorToolbar
+          mode={mode}
+          onModeChange={setMode}
+          isSaving={isSaving}
+          lastSaved={lastSaved}
+          wordCount={charCount}
+        />
 
       <div className="px-8 pt-8 pb-4">
         <input
@@ -111,6 +111,8 @@ export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps
             void onUpdate({
               ...document,
               title: e.target.value,
+            }).catch((err) => {
+              console.error("Failed to update title:", err);
             });
           }}
           className="text-4xl font-bold w-full bg-transparent border-none outline-none placeholder:text-muted-foreground"
@@ -126,7 +128,7 @@ export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps
             onChange={(event) => {
               const nextContent = event.target.value;
               setContent(nextContent);
-              setWordCount(nextContent.length);
+              setCharCount(nextContent.length);
               handleSave(nextContent);
             }}
             className="min-h-full w-full resize-none rounded-xl border border-border bg-background p-6 font-mono text-sm leading-6 outline-none focus:ring-2 focus:ring-primary/20"

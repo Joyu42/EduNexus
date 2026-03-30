@@ -41,7 +41,7 @@ export function EditorToolbar({ mode, onModeChange, isSaving, lastSaved, wordCou
         </div>
 
         <div className="ml-auto flex items-center gap-3 text-sm text-muted-foreground">
-          <span>{wordCount.toLocaleString()} 字</span>
+          <span>{wordCount.toLocaleString()} 字符</span>
           <Separator orientation="vertical" className="h-4" />
           <SaveStatusIndicator
             status={isSaving ? "saving" : lastSaved ? "saved" : "idle"}
