@@ -1,10 +1,39 @@
-import { describe, expect, it } from "vitest";
+// @vitest-environment jsdom
+import React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import {
   mapLegacyNodeIdToDocumentId,
   normalizeGraphToKbHandoff,
   resolveRequestedKbDocument,
 } from "./handoff";
+import { KBEditor } from "../../components/kb/kb-editor";
+
+const markdownPreviewRenderSpy = vi.hoisted(() => vi.fn());
+
+vi.mock("../../components/kb/kb-markdown-preview", () => ({
+  KBMarkdownPreview: (props: any) => {
+    markdownPreviewRenderSpy(props);
+    return React.createElement("div", {
+      "data-testid": "markdown-preview",
+      "data-content": props.content,
+    });
+  },
+}));
+
+vi.mock("@/lib/sync", () => ({
+  useKBDocumentSync: vi.fn(),
+}));
+
+vi.mock("lucide-react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("lucide-react")>();
+
+  return {
+    ...actual,
+    FileText: () => React.createElement("svg", { "data-testid": "file-text-icon" }),
+  };
+});
 
 describe("normalizeGraphToKbHandoff", () => {
   it("prioritizes the document-centric doc param", () => {
@@ -75,5 +104,64 @@ describe("resolveRequestedKbDocument", () => {
 
     expect(resolveRequestedKbDocument(scopedDocs, "doc-1")?.id).toBe("doc-1");
     expect(resolveRequestedKbDocument(scopedDocs, "doc")).toBeNull();
+  });
+});
+
+describe("KBEditor persistence wiring", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it("preserves unsaved markdown across mode switches and debounces save", async () => {
+    const onUpdate = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      React.createElement(KBEditor, {
+        document: {
+          id: "doc-1",
+          title: "Doc",
+          content: "# Title\n\nHello",
+          tags: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          vaultId: "vault-1",
+        },
+        onUpdate,
+      })
+    );
+
+    const sourceArea = screen.getByRole("textbox", { name: "Markdown source" }) as HTMLTextAreaElement;
+    expect(sourceArea.value).toBe("# Title\n\nHello");
+    expect(screen.getByText("未保存")).toBeDefined();
+
+    fireEvent.change(sourceArea, { target: { value: "# Title\n\nHello\n\nDraft" } });
+    expect(onUpdate).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "渲染" }));
+    expect(screen.getByTestId("markdown-preview").getAttribute("data-content")).toBe(
+      "# Title\n\nHello\n\nDraft"
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "源码" }));
+    expect((screen.getByRole("textbox", { name: "Markdown source" }) as HTMLTextAreaElement).value).toBe(
+      "# Title\n\nHello\n\nDraft"
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+      await Promise.resolve();
+    });
+
+    expect(onUpdate).toHaveBeenCalledTimes(1);
+    expect(onUpdate).toHaveBeenLastCalledWith(
+      expect.objectContaining({ content: "# Title\n\nHello\n\nDraft" })
+    );
+    expect(screen.getByText("已保存")).toBeDefined();
   });
 });
