@@ -260,6 +260,111 @@ describe("useWorkspaceSessionController", () => {
     expect(result.current.messages.at(-1)?.content).toBe("Agent unavailable");
   });
 
+  it("sends only selected KB documents to KB QA and keeps the full corpus available", async () => {
+    const deps = createDependencies({
+      createSession: vi.fn().mockResolvedValue({
+        id: "ws_kbqa",
+        title: "Selected docs",
+        userId: "user-1",
+        createdAt: "2026-03-17T10:00:00.000Z",
+        updatedAt: "2026-03-17T10:00:00.000Z",
+        lastLevel: 1,
+        messages: [],
+      }),
+      runKBQAChat: vi.fn().mockResolvedValue({ content: "selected only" }),
+      appendMessage: vi.fn().mockResolvedValue({
+        id: "ws_kbqa",
+        updatedAt: "2026-03-17T10:00:00.000Z",
+        messageCount: 2,
+      }),
+    });
+
+    const fullCorpus = [
+      { id: "doc-1", title: "Doc 1", content: "one" },
+      { id: "doc-2", title: "Doc 2", content: "two" },
+    ];
+    const selectedCorpus = [fullCorpus[1]];
+
+    const { result } = renderHook(() =>
+      useWorkspaceSessionController({
+        enabled: true,
+        dependencies: deps,
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.sendMessage({
+        inputValue: "Explain doc 2",
+        uploadedImages: [],
+        kbQAMode: true,
+        kbDocuments: fullCorpus,
+        selectedKBDocuments: selectedCorpus,
+        modelConfig: {
+          apiKey: "test-key",
+          apiEndpoint: "https://example.com",
+          model: "qwen-test",
+          temperature: 0.3,
+        },
+        currentTeacher: null,
+        taskContext: null,
+      });
+    });
+
+    expect(deps.runKBQAChat).toHaveBeenCalledTimes(1);
+    expect(deps.runKBQAChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kbDocuments: fullCorpus,
+        selectedKBDocuments: selectedCorpus,
+      })
+    );
+  });
+
+  it("blocks KB QA when no documents are selected before any network call", async () => {
+    const deps = createDependencies({
+      runKBQAChat: vi.fn(),
+      createSession: vi.fn(),
+      appendMessage: vi.fn(),
+    });
+
+    const { result } = renderHook(() =>
+      useWorkspaceSessionController({
+        enabled: true,
+        dependencies: deps,
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.sendMessage({
+        inputValue: "Explain selected docs",
+        uploadedImages: [],
+        kbQAMode: true,
+        kbDocuments: [{ id: "doc-1", title: "Doc 1", content: "one" }],
+        selectedKBDocuments: [],
+        modelConfig: {
+          apiKey: "test-key",
+          apiEndpoint: "https://example.com",
+          model: "qwen-test",
+          temperature: 0.3,
+        },
+        currentTeacher: null,
+        taskContext: null,
+      });
+    });
+
+    expect(deps.runKBQAChat).not.toHaveBeenCalled();
+    expect(deps.createSession).not.toHaveBeenCalled();
+    expect(deps.appendMessage).not.toHaveBeenCalled();
+    expect(result.current.messages.at(-1)?.content).not.toBe("selected only");
+  });
+
   it("restores seeded demo sessions from the server for demo users", async () => {
     const demoDetail = {
       id: "ws_demo_frontend_intro",

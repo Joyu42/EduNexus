@@ -116,6 +116,17 @@ vi.mock("@/lib/client/model-config", () => ({
   getModelConfig: () => ({}),
 }));
 
+vi.mock("@/components/workspace/kb-document-picker", () => ({
+  KBDocumentPicker: ({ documents, selectedDocIds, onChange }: any) => (
+    <div>
+      <button type="button" onClick={() => onChange(documents.slice(1, 2).map((doc: any) => doc.id))}>
+        select-subset
+      </button>
+      <span>{selectedDocIds.join(",")}</span>
+    </div>
+  ),
+}));
+
 vi.mock("@/lib/client/workspace-kb-adapter", () => ({
   saveReplyAsKBDocument: vi.fn(),
 }));
@@ -123,10 +134,13 @@ vi.mock("@/lib/client/workspace-kb-adapter", () => ({
 vi.mock("@/lib/client/kb-storage", () => ({
   getKBStorage: () => ({
     initialize: vi.fn().mockResolvedValue(undefined),
-    getCurrentVaultId: vi.fn().mockReturnValue(null),
+    getCurrentVaultId: vi.fn().mockReturnValue("vault-1"),
     setCurrentVault: vi.fn(),
     createVault: vi.fn().mockResolvedValue({ id: "vault_new", name: "工作区保存", path: "workspace://saved-replies" }),
-    getDocumentsByVault: vi.fn().mockResolvedValue([]),
+    getDocumentsByVault: vi.fn().mockResolvedValue([
+      { id: "kb_doc_1", title: "Doc 1", content: "one", tags: [] },
+      { id: "kb_doc_2", title: "Doc 2", content: "two", tags: [] },
+    ]),
     createDocument: vi.fn().mockResolvedValue({ id: "doc_new", title: "Test", content: "", tags: [], vaultId: "vault_new", createdAt: new Date(), updatedAt: new Date() }),
   }),
 }));
@@ -222,6 +236,50 @@ describe("WorkspacePage KB save button behavior", () => {
     await waitFor(() => {
       expect(screen.getAllByText("保存到知识库")).toHaveLength(1);
     });
+  });
+
+  it("passes the full KB corpus separately from the selected docs when sending KB QA", async () => {
+    controller.sendMessage = vi.fn().mockResolvedValue(undefined);
+
+    render(<WorkspacePage />);
+
+    fireEvent.click(screen.getByLabelText("kb-qa-mode"));
+
+    await waitFor(() => {
+      expect(screen.getByText(/知识库问答模式/)).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText("select-subset"));
+
+    await waitFor(() => {
+      expect(screen.getByText("kb_doc_2")).toBeDefined();
+    });
+
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "Explain the selected docs" } });
+
+    const sendButton = screen
+      .getAllByRole("button")
+      .find((button) => button.querySelector("svg.lucide-send"));
+    expect(sendButton).toBeDefined();
+    fireEvent.click(sendButton!);
+
+    await waitFor(() => {
+      expect(controller.sendMessage).toHaveBeenCalledTimes(1);
+    });
+
+    expect(controller.sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kbQAMode: true,
+        kbDocuments: expect.arrayContaining([
+          expect.objectContaining({ id: "kb_doc_1" }),
+          expect.objectContaining({ id: "kb_doc_2" }),
+        ]),
+        selectedKBDocuments: expect.arrayContaining([
+          expect.objectContaining({ id: "kb_doc_2" }),
+        ]),
+      })
+    );
   });
 
   it("does not show save button when kbQAMode=true", async () => {

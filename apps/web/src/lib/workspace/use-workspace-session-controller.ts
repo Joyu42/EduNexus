@@ -58,6 +58,7 @@ export type SendWorkspaceMessageInput = {
   uploadedImages: string[];
   kbQAMode: boolean;
   kbDocuments: WorkspaceControllerKBDocument[];
+  selectedKBDocuments?: WorkspaceControllerKBDocument[];
   modelConfig: WorkspaceControllerModelConfig;
   currentTeacher?: WorkspaceControllerTeacher;
   taskContext?: unknown;
@@ -205,12 +206,14 @@ function resolveApiErrorMessage(raw: unknown, status: number, fallback: string):
 }
 
 async function runWorkspaceKBQAChat(input: SendWorkspaceMessageInput): Promise<KBQAChatResult> {
+  const selectedKBDocuments = input.selectedKBDocuments ?? input.kbDocuments;
+
   const response = await fetch("/api/kb/qa", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       question: input.inputValue || "请分析这些图片",
-      documents: input.kbDocuments.map((doc) => ({
+      documents: selectedKBDocuments.map((doc) => ({
         id: doc.id,
         title: doc.title,
         content: doc.content,
@@ -352,6 +355,10 @@ export function useWorkspaceSessionController({
     async (input: SendWorkspaceMessageInput) => {
       const effectiveMessage = input.inputValue.trim();
       if ((!effectiveMessage && input.uploadedImages.length === 0) || isLoading) {
+        return;
+      }
+
+      if (input.kbQAMode && (input.selectedKBDocuments?.length ?? input.kbDocuments.length) === 0) {
         return;
       }
 

@@ -51,6 +51,7 @@ import { LearningPlanner } from "@/components/kb/learning-planner";
 import { KBQAAssistant } from "@/components/kb/kb-qa-assistant";
 import { TeacherManager } from "@/components/workspace/teacher-manager";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
+import { KBDocumentPicker } from "@/components/workspace/kb-document-picker";
 import { getKBStorage, type KBDocument } from "@/lib/client/kb-storage";
 import { getModelConfig } from "@/lib/client/model-config";
 import { saveReplyAsKBDocument } from "@/lib/client/workspace-kb-adapter";
@@ -108,6 +109,7 @@ function WorkspacePageContent() {
     setWorkspaceRightCollapsed,
   } = useSidebarStore();
   const [kbDocuments, setKbDocuments] = useState<KBDocument[]>([]);
+  const [selectedKBDocIds, setSelectedKBDocIds] = useState<string[]>([]);
   const [currentTeacher, setCurrentTeacher] = useState<AITeacher | null>(null);
   const [kbQAMode, setKbQAMode] = useState(false); // 知识库问答模式开关
   const [inputValue, setInputValue] = useState("");
@@ -159,6 +161,7 @@ function WorkspacePageContent() {
         if (vaultId) {
           const docs = await storage.getDocumentsByVault(vaultId);
           setKbDocuments(docs);
+          setSelectedKBDocIds(docs.map(d => d.id));
         }
       } catch (error) {
         console.error("加载知识库文档失败:", error);
@@ -489,16 +492,25 @@ function WorkspacePageContent() {
   const handleSendMessage = useCallback(
     async (overrideMessage?: string) => {
       const effectiveMessage = overrideMessage ?? inputValue;
+      if (kbQAMode && selectedKBDocIds.length === 0) {
+        toast.error("请至少选择一篇文档进行知识库问答");
+        return;
+      }
       if (kbQAMode && kbDocuments.length === 0) {
         toast.error("知识库中没有文档，请先添加文档或切换到普通对话模式");
         return;
       }
+
+      const activeKBDocuments = kbQAMode 
+        ? kbDocuments.filter(doc => selectedKBDocIds.includes(doc.id))
+        : kbDocuments;
 
       await sendMessage({
         inputValue: effectiveMessage,
         uploadedImages,
         kbQAMode,
         kbDocuments,
+        selectedKBDocuments: activeKBDocuments,
         modelConfig,
         currentTeacher,
         taskContext,
@@ -507,7 +519,7 @@ function WorkspacePageContent() {
       setInputValue("");
       setUploadedImages([]);
     },
-    [currentTeacher, inputValue, kbDocuments, kbQAMode, modelConfig, sendMessage, syncTaskFocusFeedback, taskContext, uploadedImages]
+    [currentTeacher, inputValue, kbDocuments, selectedKBDocIds, kbQAMode, modelConfig, sendMessage, syncTaskFocusFeedback, taskContext, uploadedImages]
   );
 
   useEffect(() => {
@@ -1128,7 +1140,7 @@ function WorkspacePageContent() {
             </AnimatePresence>
 
             {/* Input */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-end">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1137,7 +1149,7 @@ function WorkspacePageContent() {
                 onChange={handleImageUpload}
                 className="hidden"
               />
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="mb-1">
                 <Button
                   variant="outline"
                   size="icon"
@@ -1149,6 +1161,16 @@ function WorkspacePageContent() {
                   <ImageIcon className="h-4 w-4" />
                 </Button>
               </motion.div>
+              {kbQAMode && (
+                <div className="mb-1">
+                  <KBDocumentPicker
+                    documents={kbDocuments}
+                    selectedDocIds={selectedKBDocIds}
+                    onChange={setSelectedKBDocIds}
+                    className="h-10 flex-shrink-0"
+                  />
+                </div>
+              )}
               <Textarea
                 ref={textareaRef}
                 value={inputValue}
@@ -1156,7 +1178,7 @@ function WorkspacePageContent() {
                 onKeyDown={handleKeyDown}
                 placeholder={
                   kbQAMode
-                    ? `基于知识库提问（${kbDocuments.length} 个文档）...`
+                    ? `基于知识库提问（已选 ${selectedKBDocIds.length} 篇文档）...`
                     : currentTeacher
                     ? `向${currentTeacher.name}提问...`
                     : "输入你的问题..."
@@ -1172,10 +1194,11 @@ function WorkspacePageContent() {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                className="mb-1"
               >
                 <Button
                   onClick={() => void handleSendMessage()}
-                  disabled={(!inputValue.trim() && uploadedImages.length === 0) || isLoading}
+                  disabled={(!inputValue.trim() && uploadedImages.length === 0) || isLoading || (kbQAMode && selectedKBDocIds.length === 0)}
                   className={cn(
                     "shadow-md hover:shadow-lg transition-all",
                     kbQAMode
@@ -1201,7 +1224,7 @@ function WorkspacePageContent() {
               {kbQAMode ? (
                 <>
                   <BookOpen className="h-3 w-3" />
-                  <span>知识库问答模式 · {kbDocuments.length} 个文档</span>
+                  <span>知识库问答模式 · 已选 {selectedKBDocIds.length} / {kbDocuments.length} 个文档</span>
                 </>
               ) : currentTeacher ? (
                 <>
