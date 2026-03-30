@@ -131,21 +131,6 @@ function buildPathMembershipMap(paths: unknown[]): Map<string, PathMembership[]>
   return membershipMap;
 }
 
-function collectPackBackedPathIds(packs: Array<{ packId: string }>): Set<string> {
-  return new Set(packs.map((pack) => pack.packId));
-}
-
-function filterLegacyPaths(paths: unknown[], packBackedPathIds: Set<string>): unknown[] {
-  return paths.filter((path) => {
-    if (!isRecord(path)) {
-      return true;
-    }
-
-    const pathId = typeof path.pathId === "string" ? path.pathId : "";
-    return !pathId || !packBackedPathIds.has(pathId);
-  });
-}
-
 function projectPackCompatibilityPaths(
   packs: Array<{ packId: string; userId: string; title: string; topic: string; modules: Array<{ moduleId: string; title: string; kbDocumentId: string; order: number }> }>
 ): unknown[] {
@@ -341,10 +326,8 @@ export async function getGraphView(
 
     const packDocsById = new Map(packDocs.map((doc) => [doc.id, doc]));
     const db = await loadDb();
-    const userPaths = db.syncedPaths.filter((p) => p.userId === userId);
-    const packBackedPathIds = collectPackBackedPathIds([pack]);
-    const legacyUserPaths = filterLegacyPaths(userPaths, packBackedPathIds);
-    const pathMembershipMap = buildPathMembershipMap(legacyUserPaths);
+    const packCompatibilityPaths = projectPackCompatibilityPaths([pack]);
+    const pathMembershipMap = buildPathMembershipMap(packCompatibilityPaths);
     const packCompatibilityMembershipMap = buildPackCompatibilityPathMembershipMap([pack]);
     const needsReviewSet = new Set(db.needsReviewNodes ?? []);
 
@@ -392,12 +375,9 @@ export async function getGraphView(
   }
 
   const db = await loadDb();
-  const userPaths = db.syncedPaths.filter((path) => path.userId === userId);
   const packs = await getPacksByUser(userId);
-  const packBackedPathIds = collectPackBackedPathIds(packs);
-  const legacyUserPaths = filterLegacyPaths(userPaths, packBackedPathIds);
   const packCompatibilityPaths = projectPackCompatibilityPaths(packs);
-  const pathMembershipMap = buildPathMembershipMap(legacyUserPaths);
+  const pathMembershipMap = buildPathMembershipMap(packCompatibilityPaths);
   const packCompatibilityMembershipMap = buildPackCompatibilityPathMembershipMap(packs);
   const needsReviewSet = new Set(db.needsReviewNodes ?? []);
 
@@ -417,7 +397,7 @@ export async function getGraphView(
     const category = resolveNodeCategory({
       defaultDomain: domainValue,
       pathMemberships,
-      userPaths: [...legacyUserPaths, ...packCompatibilityPaths],
+      userPaths: packCompatibilityPaths,
     });
 
     return {
@@ -462,7 +442,7 @@ export async function getGraphView(
 
   const allNodes = [...contentNodes, ...packTaskNodes];
   const existingNodeIds = new Set(allNodes.map((node) => node.id));
-  const pathEdges = buildPathEdges(legacyUserPaths, existingNodeIds);
+  const pathEdges = buildPathEdges(packCompatibilityPaths, existingNodeIds);
   const learningPackEdges = buildLearningPackEdges(packs, existingNodeIds);
 
   const mergedEdgesByKey = new Map<string, GraphEdge>();

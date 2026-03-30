@@ -3,6 +3,61 @@ import { z } from "zod";
 export const MASTERY_STAGES = ["seen", "understood", "applied", "mastered"] as const;
 export type MasteryStage = (typeof MASTERY_STAGES)[number];
 
+export type LearningDataOwnershipMode = "canonical" | "derived" | "ephemeral";
+
+export type LearningDataOwnershipSurface = {
+  owner: string;
+  mode: LearningDataOwnershipMode;
+  fields: readonly string[];
+  notes: string;
+};
+
+/**
+ * Canonical ownership matrix for the learning content stack.
+ *
+ * - canonical: authoritative server state
+ * - derived: compatibility/read model only
+ * - ephemeral: client-only draft state
+ */
+export const LEARNING_DATA_OWNERSHIP = {
+  kbDocument: {
+    owner: "knowledge-base",
+    mode: "canonical",
+    fields: ["title", "content", "references", "tags", "updatedAt"],
+    notes: "Knowledge-base documents remain the content authority and are only referenced by learning packs.",
+  },
+  learningPack: {
+    owner: "learning-pack-store",
+    mode: "canonical",
+    fields: ["packId", "userId", "title", "topic", "modules", "activeModuleId", "stage", "totalStudyMinutes", "createdAt", "updatedAt"],
+    notes: "Pack-level learning path structure and publish/progress state live here.",
+  },
+  learningPackModule: {
+    owner: "learning-pack-store",
+    mode: "canonical",
+    fields: ["moduleId", "title", "kbDocumentId", "stage", "order", "studyMinutes", "lastStudiedAt"],
+    notes: "Module identity, ordering, and KB binding are canonical; kbDocumentId may be empty during draft binding.",
+  },
+  publishState: {
+    owner: "learning-pack-store",
+    mode: "canonical",
+    fields: ["stage"],
+    notes: "Pack stage is the persisted publish/progress axis used by graph and compatibility views.",
+  },
+  compatibilitySyncedPath: {
+    owner: "server-store",
+    mode: "derived",
+    fields: ["userId", "pathId", "title", "description", "status", "progress", "tags", "stages", "tasks", "updatedAt"],
+    notes: "Legacy synced-path data is a read-only projection derived from the canonical learning pack.",
+  },
+  localDraft: {
+    owner: "path-workspace",
+    mode: "ephemeral",
+    fields: ["unsavedTitle", "unsavedOrder", "unsavedBinding"],
+    notes: "Editor-only transient state that must not be treated as persisted business data.",
+  },
+} as const satisfies Record<string, LearningDataOwnershipSurface>;
+
 export const LearningPackModuleSchema = z.object({
   moduleId: z.string().min(1),
   title: z.string().min(1),

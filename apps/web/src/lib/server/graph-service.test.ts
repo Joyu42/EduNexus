@@ -240,31 +240,52 @@ describe("graph service projection", () => {
     await fs.rm(dataDir, { recursive: true, force: true });
   });
 
-  it("builds explore edges from synced path stages", async () => {
+  it("builds explore edges from learning-pack compatibility stages", async () => {
     const dataDir = await createDataDir();
     process.env.EDUNEXUS_DATA_DIR = dataDir;
 
     const db = await loadDb();
     const now = new Date().toISOString();
 
-    db.syncedPaths.push({
+    db.learningPacks.push({
+      packId: "lp_frontend_1",
       userId: "user-path",
-      pathId: "path_frontend_1",
       title: "前端路径",
-      description: "",
-      status: "in_progress",
-      progress: 20,
-      tags: ["frontend"],
-      tasks: [],
+      topic: "frontend",
+      activeModuleId: "stage_1",
+      stage: "seen",
+      totalStudyMinutes: 0,
+      createdAt: now,
       updatedAt: now,
-      stages: [
+      modules: [
         {
-          stageId: "stage_1",
-          nodeIds: ["doc_html", "doc_css", "doc_js"],
+          moduleId: "stage_1",
+          title: "HTML → CSS → JavaScript",
+          kbDocumentId: "doc_html",
+          stage: "seen",
+          order: 0,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+        {
+          moduleId: "stage_2",
+          title: "CSS 进阶",
+          kbDocumentId: "doc_css",
+          stage: "seen",
+          order: 1,
+          studyMinutes: 0,
+          lastStudiedAt: null,
+        },
+        {
+          moduleId: "stage_3",
+          title: "JavaScript 进阶",
+          kbDocumentId: "doc_js",
+          stage: "seen",
+          order: 2,
+          studyMinutes: 0,
+          lastStudiedAt: null,
         },
       ],
-    } as (typeof db.syncedPaths)[number] & {
-      stages: Array<{ stageId: string; nodeIds: string[] }>;
     });
     await saveDb(db);
 
@@ -289,9 +310,14 @@ describe("graph service projection", () => {
     const graph = await getGraphView("user-path");
 
     expect(graph.nodes).toHaveLength(3);
+    expect(graph.nodes.map((node) => node.pathMemberships[0]?.pathId)).toEqual([
+      "lp_frontend_1",
+      "lp_frontend_1",
+      "lp_frontend_1",
+    ]);
     expect(graph.edges).toEqual([
-      { source: "doc_html", target: "doc_css", weight: 0.7 },
-      { source: "doc_css", target: "doc_js", weight: 0.7 },
+      { source: "doc_html", target: "doc_css", weight: 0.9 },
+      { source: "doc_css", target: "doc_js", weight: 0.9 },
     ]);
 
     await fs.rm(dataDir, { recursive: true, force: true });

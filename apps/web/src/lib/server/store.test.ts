@@ -16,7 +16,7 @@ vi.mock("./prisma", () => ({
 }));
 
 const { getGraphView } = await import("./graph-service");
-const { loadDb, projectLearningPackCompatibilityPath } = await import("./store");
+const { LEARNING_PACK_STORE_BOUNDARIES, loadDb, projectLearningPackCompatibilityPath } = await import("./store");
 
 const originalDataDir = process.env.EDUNEXUS_DATA_DIR;
 
@@ -30,6 +30,14 @@ async function writeDbFile(dataDir: string, payload: unknown) {
 }
 
 describe("server store", () => {
+  it("exposes canonical and compatibility boundaries explicitly", () => {
+    expect(LEARNING_PACK_STORE_BOUNDARIES).toEqual({
+      canonicalCollection: "learningPacks",
+      compatibilityCollection: "syncedPaths",
+      compatibilityProjection: "projectLearningPackCompatibilityPath",
+    });
+  });
+
   afterEach(async () => {
     if (originalDataDir) {
       process.env.EDUNEXUS_DATA_DIR = originalDataDir;

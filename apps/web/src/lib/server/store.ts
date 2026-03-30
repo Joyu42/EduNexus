@@ -4,6 +4,12 @@ import path from "node:path";
 import { normalizeLearningPackRecord } from "../learning-pack/schema";
 import type { LearningPackRecord } from "../learning-pack/schema";
 
+export const LEARNING_PACK_STORE_BOUNDARIES = {
+  canonicalCollection: "learningPacks",
+  compatibilityCollection: "syncedPaths",
+  compatibilityProjection: "projectLearningPackCompatibilityPath",
+} as const;
+
 type SessionRecord = {
   id: string;
   title: string;

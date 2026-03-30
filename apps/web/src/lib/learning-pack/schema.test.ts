@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   MASTERY_STAGES,
+  LEARNING_DATA_OWNERSHIP,
   LearningPackModuleSchema,
   LearningPackSchema,
   stageOrder,
@@ -152,6 +153,24 @@ describe("LearningPackSchema", () => {
   it("rejects missing required fields", () => {
     const result = LearningPackSchema.safeParse({});
     expect(result.success).toBe(false);
+  });
+});
+
+describe("LEARNING_DATA_OWNERSHIP", () => {
+  it("declares canonical, derived, and ephemeral surfaces explicitly", () => {
+    expect(LEARNING_DATA_OWNERSHIP.kbDocument.mode).toBe("canonical");
+    expect(LEARNING_DATA_OWNERSHIP.learningPack.mode).toBe("canonical");
+    expect(LEARNING_DATA_OWNERSHIP.learningPackModule.mode).toBe("canonical");
+    expect(LEARNING_DATA_OWNERSHIP.publishState.mode).toBe("canonical");
+    expect(LEARNING_DATA_OWNERSHIP.compatibilitySyncedPath.mode).toBe("derived");
+    expect(LEARNING_DATA_OWNERSHIP.localDraft.mode).toBe("ephemeral");
+  });
+
+  it("keeps binding and compatibility scopes separate", () => {
+    expect(LEARNING_DATA_OWNERSHIP.learningPackModule.fields).toContain("kbDocumentId");
+    expect(LEARNING_DATA_OWNERSHIP.publishState.fields).toEqual(["stage"]);
+    expect(LEARNING_DATA_OWNERSHIP.compatibilitySyncedPath.fields).toContain("tasks");
+    expect(LEARNING_DATA_OWNERSHIP.compatibilitySyncedPath.fields).not.toContain("kbDocumentId");
   });
 });
 
