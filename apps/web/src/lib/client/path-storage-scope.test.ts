@@ -234,6 +234,58 @@ describe("path storage scope", () => {
   });
 
   describe("updatePath routing", () => {
+    it("returns pack-backed lp_* paths when packId is provided", async () => {
+      const fakeDb = {
+        getAll: vi.fn().mockResolvedValue([]),
+        put: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.spyOn(pathStorage, "initialize").mockResolvedValue();
+      (pathStorage as any).db = fakeDb;
+
+      const fetchSpy = vi.spyOn(global, "fetch")
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            packs: [
+              {
+                packId: "lp_java_001",
+                title: "Java 学习路线图",
+                topic: "java",
+                updatedAt: "2026-03-30T00:00:00.000Z",
+                active: true,
+              },
+            ],
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: {
+              nodes: [
+                { id: "node_1", label: "Java 语法基础", kbDocumentId: "doc_1" },
+              ],
+              edges: [],
+            },
+          }),
+        } as Response);
+
+      const paths = await pathStorage.getAllPaths("lp_java_001");
+
+      expect(fetchSpy).toHaveBeenNthCalledWith(
+        1,
+        "/api/graph/learning-pack/list",
+        { credentials: "include" }
+      );
+      expect(fetchSpy).toHaveBeenNthCalledWith(
+        2,
+        "/api/graph/view?packId=lp_java_001",
+        { credentials: "include" }
+      );
+      expect(paths).toHaveLength(1);
+      expect(paths[0]?.id).toBe("lp_java_001");
+      expect(paths[0]?.tasks[0]?.documentBinding?.documentId).toBe("doc_1");
+    });
+
     it("calls PATCH /api/graph/learning-pack/[id] for lp_* paths", async () => {
       const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValueOnce({ ok: true } as Response);
       const putMock = vi.fn().mockResolvedValue(undefined);

@@ -674,9 +674,8 @@ export class PathStorageManager {
       const deserializedLocal = localPaths.map(this.deserializePath);
 
       const packPaths = await this.hydrateFromPackBacked(packId);
-      const filteredPackPaths = packPaths.filter((p) => !p.id.startsWith('lp_'));
-      if (filteredPackPaths.length > 0) {
-        const merged = this.mergePaths(filteredPackPaths, deserializedLocal);
+      if (packId && packPaths.length > 0) {
+        const merged = this.mergePaths(packPaths, deserializedLocal);
         return merged;
       }
 
