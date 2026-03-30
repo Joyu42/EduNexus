@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { z } from "zod";
-import { upsertLearningPack, normalizeLearningPackModuleOrder } from "@/lib/server/learning-pack-store";
+import { upsertLearningPack } from "@/lib/server/learning-pack-store";
 import { ok, fail } from "@/lib/server/response";
 
 export const runtime = "nodejs";
@@ -42,17 +42,15 @@ export async function POST(request: Request) {
     const { packId, title, topic, tasks } = parsed.data;
 
     const now = new Date().toISOString();
-    const modules = normalizeLearningPackModuleOrder(
-      (tasks ?? []).map((task, index) => ({
-        moduleId: `lp_module_${packId}_${task.id}`,
-        title: task.title,
-        kbDocumentId: "",
-        stage: "seen" as const,
-        order: index,
-        studyMinutes: 0,
-        lastStudiedAt: null,
-      }))
-    );
+    const modules = (tasks ?? []).map((task, index) => ({
+      moduleId: `lp_module_${packId}_${task.id}`,
+      title: task.title,
+      kbDocumentId: "",
+      stage: "seen" as const,
+      order: index,
+      studyMinutes: 0,
+      lastStudiedAt: null,
+    }));
 
     await upsertLearningPack({
       packId,
