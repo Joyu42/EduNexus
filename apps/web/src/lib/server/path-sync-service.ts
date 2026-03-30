@@ -1,4 +1,5 @@
 import { loadDb, saveDb, projectLearningPackCompatibilityPath, type SyncedPathRecord, type SyncedPathTaskRecord } from "./store";
+import type { LearningPackRecord } from "../learning-pack/schema";
 
 export type UpsertSyncedPathInput = {
   userId: string;
@@ -46,18 +47,79 @@ function normalizeTask(task: NonNullable<UpsertSyncedPathInput["tasks"]>[number]
 
 export { projectLearningPackCompatibilityPath as projectLearningPackToCompatibilityPath };
 
-export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
-  console.warn("[path-sync-service] upsertSyncedPath is compatibility-only; direct writes are ignored.");
+function syncedPathToLearningPack(syncedPath: SyncedPathRecord): LearningPackRecord {
+  const now = new Date().toISOString();
+  return {
+    packId: syncedPath.pathId,
+    userId: syncedPath.userId,
+    title: syncedPath.title,
+    topic: syncedPath.tags[0] ?? "general",
+    modules: syncedPath.tasks.map((task, index) => ({
+      moduleId: task.taskId,
+      title: task.title,
+      kbDocumentId: task.documentBinding?.documentId ?? "",
+      stage:
+        task.status === "completed"
+          ? "mastered"
+          : task.status === "in_progress"
+            ? "understood"
+            : "seen",
+      order: index,
+      studyMinutes: 0,
+      lastStudiedAt: null,
+    })),
+    activeModuleId: syncedPath.tasks[0]?.taskId ?? null,
+    stage:
+      syncedPath.status === "completed"
+        ? "mastered"
+        : syncedPath.status === "in_progress"
+          ? "applied"
+          : "seen",
+    totalStudyMinutes: 0,
+    createdAt: syncedPath.updatedAt,
+    updatedAt: now,
+  };
+}
+
+export async function backfillSyncedPathsToLearningPacks(): Promise<{ backfilled: number; skipped: number }> {
   const db = await loadDb();
-  const pack = db.learningPacks.find(
+  const existingPackIds = new Set(db.learningPacks.map((pack) => pack.packId));
+  const legacyPaths = db.syncedPaths.filter((path) => !path.pathId.startsWith("lp_"));
+
+  let backfilled = 0;
+  let skipped = 0;
+
+  for (const path of legacyPaths) {
+    if (existingPackIds.has(path.pathId)) {
+      skipped++;
+      continue;
+    }
+
+    db.learningPacks.push(syncedPathToLearningPack(path));
+    backfilled++;
+  }
+
+  if (backfilled > 0) {
+    await saveDb(db);
+    console.log(`[backfill] Backfilled ${backfilled} legacy syncedPaths, skipped ${skipped}`);
+  } else {
+    console.log(`[backfill] No legacy syncedPaths to backfill (skipped ${skipped})`);
+  }
+
+  return { backfilled, skipped };
+}
+
+export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
+  const db = await loadDb();
+  const existingPack = db.learningPacks.find(
     (item) => item.packId === input.pathId && item.userId === input.userId
   );
 
-  if (pack) {
-    return projectLearningPackCompatibilityPath(pack);
+  if (existingPack) {
+    return projectLearningPackCompatibilityPath(existingPack);
   }
 
-  return {
+  const syncedRecord: SyncedPathRecord = {
     userId: input.userId,
     pathId: input.pathId,
     title: input.title,
@@ -67,7 +129,14 @@ export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
     tags: Array.isArray(input.tags) ? input.tags.filter(Boolean) : [],
     tasks: Array.isArray(input.tasks) ? input.tasks.map(normalizeTask) : [],
     updatedAt: new Date().toISOString(),
-  } satisfies SyncedPathRecord;
+  };
+
+  const pack = syncedPathToLearningPack(syncedRecord);
+  db.learningPacks.push(pack);
+  await saveDb(db);
+  console.log(`[upsertSyncedPath] Backfilled legacy path ${input.pathId} to learningPacks`);
+
+  return projectLearningPackCompatibilityPath(pack);
 }
 
 export async function loadSyncedPaths(userId: string): Promise<SyncedPathRecord[]> {
