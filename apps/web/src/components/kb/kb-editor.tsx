@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FileText } from "lucide-react";
 import { EditorToolbar } from "./editor-toolbar";
-import { MarkdownRenderer } from "@/components/markdown-renderer";
+import { KBMarkdownPreview } from "./kb-markdown-preview";
 import type { KBDocument } from "@/lib/client/kb-storage";
 import { useKBDocumentSync } from "@/lib/sync";
 
@@ -132,7 +132,7 @@ export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps
             className="min-h-full w-full resize-none rounded-xl border border-border bg-background p-6 font-mono text-sm leading-6 outline-none focus:ring-2 focus:ring-primary/20"
           />
         ) : (
-          <MarkdownRenderer content={content} className="prose prose-sm sm:prose lg:prose-lg max-w-none" />
+          <KBMarkdownPreview content={content} className="prose prose-sm sm:prose lg:prose-lg max-w-none" />
         )}
       </div>
     </div>
