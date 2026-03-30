@@ -143,8 +143,21 @@ export async function upsertSyncedPath(input: UpsertSyncedPathInput) {
 
 export async function loadSyncedPaths(userId: string): Promise<SyncedPathRecord[]> {
   const db = await loadDb();
-  const legacyPaths = db.syncedPaths.filter((p) => p.userId === userId && !p.pathId.startsWith("lp_"));
   const packs = db.learningPacks.filter((p) => p.userId === userId);
+  const packIds = new Set(packs.map((p) => p.packId));
+
+  // Clean up lp_* entries from syncedPaths that have been migrated to learningPacks
+  const hasMigrated = db.syncedPaths.some(
+    (p) => p.userId === userId && p.pathId.startsWith("lp_") && packIds.has(p.pathId)
+  );
+  if (hasMigrated) {
+    db.syncedPaths = db.syncedPaths.filter(
+      (p) => !(p.userId === userId && p.pathId.startsWith("lp_") && packIds.has(p.pathId))
+    );
+    await saveDb(db);
+  }
+
+  const legacyPaths = db.syncedPaths.filter((p) => p.userId === userId && !p.pathId.startsWith("lp_"));
   const projectedPacks = packs.map(projectLearningPackCompatibilityPath);
   return [...legacyPaths, ...projectedPacks];
 }
