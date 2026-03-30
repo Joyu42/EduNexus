@@ -1,6 +1,7 @@
 import { prisma } from './prisma';
 import { loadDb, projectLearningPackCompatibilityPath } from './store';
 import { getPackById, getPacksByUser } from './learning-pack-store';
+import type { LearningPackRecord } from '../learning-pack/schema';
 
 const MAX_NODES_PER_USER = 200;
 
@@ -132,18 +133,18 @@ function buildPathMembershipMap(paths: unknown[]): Map<string, PathMembership[]>
 }
 
 function projectPackCompatibilityPaths(
-  packs: Array<{ packId: string; userId: string; title: string; topic: string; modules: Array<{ moduleId: string; title: string; kbDocumentId: string; order: number }> }>
-): unknown[] {
-  return packs.map((pack) => projectLearningPackCompatibilityPath(pack as never));
+  packs: LearningPackRecord[]
+) {
+  return packs.map((pack) => projectLearningPackCompatibilityPath(pack));
 }
 
 function buildPackCompatibilityPathMembershipMap(
-  packs: Array<{ packId: string; title: string; modules: Array<{ moduleId: string; title: string; kbDocumentId: string; order: number }> }>
+  packs: LearningPackRecord[]
 ): Map<string, PathMembership[]> {
   const membershipMap = new Map<string, PathMembership[]>();
 
   for (const pack of packs) {
-    const compatibilityPath = projectLearningPackCompatibilityPath(pack as never);
+    const compatibilityPath = projectLearningPackCompatibilityPath(pack);
     for (const [index, task] of compatibilityPath.tasks.entries()) {
       const docId = task.documentBinding?.documentId?.trim() ?? "";
       if (!docId) continue;
@@ -257,8 +258,7 @@ function buildPathEdges(userPaths: unknown[], existingNodeIds: Set<string>): Gra
 }
 
 function buildLearningPackEdges(
-  packs: Array<{ packId: string; modules: Array<{ moduleId: string; kbDocumentId: string; order: number }> }>,
-  existingNodeIds: Set<string>
+  packs: Array<{ packId: string; modules: Array<{ moduleId: string; kbDocumentId: string; order: number }> }>
 ): GraphEdge[] {
   const edgeMap = new Map<string, GraphEdge>();
 
@@ -443,7 +443,7 @@ export async function getGraphView(
   const allNodes = [...contentNodes, ...packTaskNodes];
   const existingNodeIds = new Set(allNodes.map((node) => node.id));
   const pathEdges = buildPathEdges(packCompatibilityPaths, existingNodeIds);
-  const learningPackEdges = buildLearningPackEdges(packs, existingNodeIds);
+  const learningPackEdges = buildLearningPackEdges(packs);
 
   const mergedEdgesByKey = new Map<string, GraphEdge>();
   for (const edge of [...pathEdges, ...learningPackEdges]) {

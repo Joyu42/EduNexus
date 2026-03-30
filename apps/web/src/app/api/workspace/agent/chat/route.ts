@@ -298,6 +298,9 @@ export async function POST(request: Request) {
           topic: learningTopic,
           moduleTitle: module.title,
           kbContext: kbContext ?? undefined,
+          apiKey: plannerApiKey,
+          apiEndpoint: plannerApiEndpoint,
+          modelName: plannerModelName,
         }).catch((err) => {
           console.warn(`[Stage2] Failed for module ${module.moduleId}:`, err);
         });

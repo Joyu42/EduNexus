@@ -84,7 +84,14 @@ describe("learning-pack two-stage flow", () => {
     const response = await POST(new Request("http://localhost/api/workspace/agent/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ message: "我想学习 java" }),
+      body: JSON.stringify({
+        message: "我想学习 java",
+        config: {
+          apiKey: "stage2-key",
+          apiEndpoint: "https://modelscope.example/v1",
+          modelName: "stage2-model",
+        },
+      }),
     }));
 
     const payload = await response.json();
@@ -94,6 +101,18 @@ describe("learning-pack two-stage flow", () => {
     expect(payload.learningPack.packId).toBe("lp_1");
     expect(setActivePackMock).toHaveBeenCalledWith("lp_1", "u1");
     expect(generateModuleDetailedContentMock).toHaveBeenCalledTimes(1);
+    expect(generateModuleDetailedContentMock).toHaveBeenCalledWith(
+      "lp_1",
+      "m1",
+      "u1",
+      expect.objectContaining({
+        topic: "java",
+        moduleTitle: "Java 语法基础",
+        apiKey: "stage2-key",
+        apiEndpoint: "https://modelscope.example/v1",
+        modelName: "stage2-model",
+      })
+    );
   });
 
   it("keeps other modules going when one stage 2 call fails", async () => {

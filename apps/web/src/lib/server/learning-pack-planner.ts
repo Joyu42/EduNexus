@@ -42,6 +42,9 @@ export interface GenerateModuleContentContext {
     existingDocs: Array<{ docId: string; title: string; snippet: string }>;
     topicMatches: number;
   };
+  apiKey?: string;
+  apiEndpoint?: string;
+  modelName?: string;
 }
 
 const LearningPackPlannerInputInternalSchema = z.object({
@@ -369,16 +372,19 @@ ${kbSection}
 
     let detailedContent: string | null = null;
 
-    const apiKey = process.env.MODELSCOPE_API_KEY ?? "";
+    const apiKey = context.apiKey ?? process.env.MODELSCOPE_API_KEY ?? "";
+    const apiEndpoint =
+      context.apiEndpoint ?? process.env.MODELSCOPE_BASE_URL ?? "https://api-inference.modelscope.cn/v1";
+    const modelName = context.modelName ?? process.env.MODELSCOPE_CHAT_MODEL ?? "Qwen/Qwen3.5-122B-A10B";
     if (apiKey?.trim()) {
       try {
         const OpenAIProvider = (await import("openai")).default;
         const client = new OpenAIProvider({
           apiKey,
-          baseURL: process.env.MODELSCOPE_BASE_URL ?? "https://api-inference.modelscope.cn/v1",
+          baseURL: apiEndpoint,
         });
         const completion = await client.chat.completions.create({
-          model: process.env.MODELSCOPE_CHAT_MODEL ?? "Qwen/Qwen3.5-122B-A10B",
+          model: modelName,
           messages: [
             { role: "system", content: "你是一个专业的学习内容生成专家。" },
             { role: "user", content: contentPrompt },
