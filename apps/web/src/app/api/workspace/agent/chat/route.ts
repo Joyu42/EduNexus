@@ -3,9 +3,8 @@ import { runAgentConversation, createChatHistory } from "@/lib/agent/learning-ag
 import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
 import { getWordsProgressSummary } from "@/lib/server/words-service";
 import { createLearningPack, setActivePack, setPackKbDocument, findPacksByTopic } from "@/lib/server/learning-pack-store";
-import { createDocument } from "@/lib/server/document-service";
 import { auth } from "@/auth";
-import { planLearningPack } from "@/lib/server/learning-pack-planner";
+import { generateModuleDetailedContent, planLearningPack } from "@/lib/server/learning-pack-planner";
 import { buildLearningPackKbContext } from "@/lib/server/learning-pack-kb-context";
 import { normalizeApiKey } from "@/lib/model-api-key";
 import { getStoredModelConfig } from "@/lib/server/model-config-store";
@@ -287,15 +286,21 @@ export async function POST(request: Request) {
           usedExistingDocs = true;
           await setPackKbDocument(pack.packId, module.moduleId, exactMatchDocId, userId);
           moduleDocBindings.set(module.moduleId, exactMatchDocId);
-        } else {
-          const doc = await createDocument({
-            title: module.title,
-            content: `# ${module.title}\n\n## 学习目标\n- 理解 ${learningTopic} 在本模块的核心概念\n\n## 今日任务\n- 阅读并完成本节示例\n- 记录 3 个关键知识点\n\n## 练习建议\n- 写 1-2 个最小可运行示例\n`,
-            authorId: userId,
-          });
-          await setPackKbDocument(pack.packId, module.moduleId, doc.id, userId);
-          moduleDocBindings.set(module.moduleId, doc.id);
         }
+      }
+
+      for (const module of pack.modules) {
+        if (moduleDocBindings.has(module.moduleId)) {
+          continue;
+        }
+
+        void generateModuleDetailedContent(pack.packId, module.moduleId, userId, {
+          topic: learningTopic,
+          moduleTitle: module.title,
+          kbContext: kbContext ?? undefined,
+        }).catch((err) => {
+          console.warn(`[Stage2] Failed for module ${module.moduleId}:`, err);
+        });
       }
 
       await setActivePack(pack.packId, userId);

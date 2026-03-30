@@ -1,5 +1,6 @@
 import { z } from "zod";
 import OpenAI from "openai";
+import { createDocument, setPackKbDocument } from "./document-service";
 
 /**
 
@@ -33,6 +34,15 @@ export const LearningPackPlannerOutputSchema = z.object({
 });
 
 export type LearningPackPlannerOutput = z.infer<typeof LearningPackPlannerOutputSchema>;
+
+export interface GenerateModuleContentContext {
+  topic: string;
+  moduleTitle: string;
+  kbContext?: {
+    existingDocs: Array<{ docId: string; title: string; snippet: string }>;
+    topicMatches: number;
+  };
+}
 
 const LearningPackPlannerInputInternalSchema = z.object({
   topic: z.string().min(1),
@@ -326,5 +336,76 @@ export async function planLearningPack(
       return buildFallbackPlan(input.topic, "response_format_unsupported");
     }
     return buildFallbackPlan(input.topic, "request_failed");
+  }
+}
+
+export async function generateModuleDetailedContent(
+  packId: string,
+  moduleId: string,
+  userId: string,
+  context: GenerateModuleContentContext
+): Promise<void> {
+  try {
+    const kbSection =
+      context.kbContext?.existingDocs && context.kbContext.existingDocs.length > 0
+        ? `\n\n## 知识宝库已有内容\n${context.kbContext.existingDocs
+            .map((d) => `- ${d.title} (id=${d.docId})\n  摘要：${d.snippet}`)
+            .join("\n")}`
+        : "";
+
+    const contentPrompt = `你是一个专业的学习内容生成专家。请为学习主题 "${context.topic}" 中的模块 "${context.moduleTitle}" 生成详细的学习内容。
+
+请生成一个结构良好的 Markdown 文档，包括：
+1. 模块概述和学习目标
+2. 核心概念和原理
+3. 详细知识点解析
+4. 实践示例和练习
+5. 常见问题和解答
+6. 总结和延伸学习
+
+${kbSection}
+
+请直接返回 Markdown 格式的内容。`;
+
+    let detailedContent: string | null = null;
+
+    const apiKey = process.env.MODELSCOPE_API_KEY ?? "";
+    if (apiKey?.trim()) {
+      try {
+        const OpenAIProvider = (await import("openai")).default;
+        const client = new OpenAIProvider({
+          apiKey,
+          baseURL: process.env.MODELSCOPE_BASE_URL ?? "https://api-inference.modelscope.cn/v1",
+        });
+        const completion = await client.chat.completions.create({
+          model: process.env.MODELSCOPE_CHAT_MODEL ?? "Qwen/Qwen3.5-122B-A10B",
+          messages: [
+            { role: "system", content: "你是一个专业的学习内容生成专家。" },
+            { role: "user", content: contentPrompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 2000,
+          stream: false,
+        });
+        detailedContent = completion.choices[0]?.message?.content ?? null;
+      } catch (err) {
+        console.warn(`[Stage2] AI generation failed for module ${moduleId}:`, err);
+      }
+    }
+
+    const documentContent =
+      detailedContent ??
+      `# ${context.moduleTitle}\n\n## 学习目标\n- 理解 ${context.topic} 在本模块的核心概念\n\n## 今日任务\n- 阅读并完成本节示例\n- 记录 3 个关键知识点\n\n## 练习建议\n- 写 1-2 个最小可运行示例\n`;
+
+    const doc = await createDocument({
+      title: context.moduleTitle,
+      content: documentContent,
+      authorId: userId,
+    });
+
+    await setPackKbDocument(packId, moduleId, doc.id, userId);
+    console.log(`[Stage2] Document ${doc.id} bound to module ${moduleId} in pack ${packId}`);
+  } catch (err) {
+    console.warn(`[Stage2] Failed for module ${moduleId}:`, err);
   }
 }
