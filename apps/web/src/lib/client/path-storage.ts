@@ -1,6 +1,11 @@
 /**
  * 学习路径本地存储模块
- * 使用 IndexedDB 存储学习路径和任务数据
+ *
+ * 重要: IndexedDB 中的路径数据为临时草稿态（ephemeral draft），不是权威业务数据。
+ * - lp_* 路径的权威来源: /api/graph/learning-pack/* (canonical learning-pack store)
+ * - 非 lp_* 路径的权威来源: /api/path/sync (legacy compatibility, read-only projection)
+ * - savePath/updatePath 成功后会自动同步到对应服务器端点
+ * - 未保存的草稿在页面刷新后会丢失
  */
 
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
