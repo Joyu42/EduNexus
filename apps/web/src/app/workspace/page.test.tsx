@@ -7,6 +7,7 @@ import WorkspacePage from "./page";
 
 import { useSession } from "next-auth/react";
 import { useWorkspaceSessionController } from "@/lib/workspace/use-workspace-session-controller";
+import { fetchDocumentsFromServer } from "@/lib/client/kb-storage";
 import { saveReplyAsKBDocument } from "@/lib/client/workspace-kb-adapter";
 import { toast } from "sonner";
 
@@ -132,17 +133,10 @@ vi.mock("@/lib/client/workspace-kb-adapter", () => ({
 }));
 
 vi.mock("@/lib/client/kb-storage", () => ({
-  getKBStorage: () => ({
-    initialize: vi.fn().mockResolvedValue(undefined),
-    getCurrentVaultId: vi.fn().mockReturnValue("vault-1"),
-    setCurrentVault: vi.fn(),
-    createVault: vi.fn().mockResolvedValue({ id: "vault_new", name: "工作区保存", path: "workspace://saved-replies" }),
-    getDocumentsByVault: vi.fn().mockResolvedValue([
-      { id: "kb_doc_1", title: "Doc 1", content: "one", tags: [] },
-      { id: "kb_doc_2", title: "Doc 2", content: "two", tags: [] },
-    ]),
-    createDocument: vi.fn().mockResolvedValue({ id: "doc_new", title: "Test", content: "", tags: [], vaultId: "vault_new", createdAt: new Date(), updatedAt: new Date() }),
-  }),
+  fetchDocumentsFromServer: vi.fn().mockResolvedValue([
+    { id: "kb_doc_1", title: "Doc 1", content: "one", tags: [], createdAt: "2026-03-17T10:00:00.000Z", updatedAt: "2026-03-17T10:00:00.000Z" },
+    { id: "kb_doc_2", title: "Doc 2", content: "two", tags: [], createdAt: "2026-03-17T10:01:00.000Z", updatedAt: "2026-03-17T10:01:00.000Z" },
+  ]),
 }));
 
 vi.mock("@/lib/workspace/teacher-storage", () => ({
@@ -236,6 +230,18 @@ describe("WorkspacePage KB save button behavior", () => {
     await waitFor(() => {
       expect(screen.getAllByText("保存到知识库")).toHaveLength(1);
     });
+  });
+
+  it("loads KB docs from the server for KB QA mode", async () => {
+    render(<WorkspacePage />);
+
+    fireEvent.click(screen.getByLabelText("kb-qa-mode"));
+
+    await waitFor(() => {
+      expect(screen.getByText("kb_doc_1,kb_doc_2")).toBeDefined();
+    });
+
+    expect(fetchDocumentsFromServer).toHaveBeenCalledTimes(1);
   });
 
   it("passes the full KB corpus separately from the selected docs when sending KB QA", async () => {

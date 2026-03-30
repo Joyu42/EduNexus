@@ -52,7 +52,7 @@ import { KBQAAssistant } from "@/components/kb/kb-qa-assistant";
 import { TeacherManager } from "@/components/workspace/teacher-manager";
 import { useSidebarStore } from "@/lib/stores/sidebar-store";
 import { KBDocumentPicker } from "@/components/workspace/kb-document-picker";
-import { getKBStorage, type KBDocument } from "@/lib/client/kb-storage";
+import { fetchDocumentsFromServer, type KBDocument } from "@/lib/client/kb-storage";
 import { getModelConfig } from "@/lib/client/model-config";
 import { saveReplyAsKBDocument } from "@/lib/client/workspace-kb-adapter";
 import { exportChatSessionAsMarkdown, type ChatSession } from "@/lib/workspace/chat-history-storage";
@@ -101,7 +101,6 @@ const teachingStyleLabels = {
 function WorkspacePageContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
-  const storage = getKBStorage();
   const {
     workspaceLeftCollapsed,
     workspaceRightCollapsed,
@@ -155,16 +154,30 @@ function WorkspacePageContent() {
     setIsMounted(true);
 
     const loadKBDocuments = async () => {
+      if (status !== "authenticated") {
+        setKbDocuments([]);
+        setSelectedKBDocIds([]);
+        return;
+      }
+
       try {
-        await storage.initialize();
-        const vaultId = storage.getCurrentVaultId();
-        if (vaultId) {
-          const docs = await storage.getDocumentsByVault(vaultId);
-          setKbDocuments(docs);
-          setSelectedKBDocIds(docs.map(d => d.id));
-        }
+        const serverDocs = await fetchDocumentsFromServer();
+        const docs = serverDocs.map((doc) => ({
+          id: doc.id,
+          title: doc.title,
+          content: doc.content,
+          tags: doc.tags ?? [],
+          createdAt: new Date(doc.createdAt),
+          updatedAt: new Date(doc.updatedAt),
+          vaultId: "server-vault",
+        }));
+
+        setKbDocuments(docs);
+        setSelectedKBDocIds(docs.map((doc) => doc.id));
       } catch (error) {
         console.error("加载知识库文档失败:", error);
+        setKbDocuments([]);
+        setSelectedKBDocIds([]);
       }
     };
 
@@ -182,7 +195,7 @@ function WorkspacePageContent() {
 
     loadKBDocuments();
     loadTeachers();
-  }, [currentTeacher, storage]);
+  }, [status]);
 
   useEffect(() => {
     const source = searchParams.get("source") || "";
