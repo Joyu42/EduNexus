@@ -11,17 +11,17 @@ import {
   BookOpen,
   Network,
   Database,
-  Settings,
   ArrowRight,
   Target,
   Lightbulb,
   Sparkles,
   Zap,
-  TrendingUp
+  TrendingUp,
+  Library
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
-const coreEntries = [
+const coreModules = [
   {
     href: "/workspace",
     title: "学习工作区",
@@ -30,28 +30,32 @@ const coreEntries = [
     icon: BookOpen
   },
   {
-    href: "/graph",
-    title: "🌌 知识星图",
-    description: "定位高风险关系链，并把批次直接推送到学习执行面。",
-    tag: "风险链路联动",
-    icon: Network
-  }
-];
-
-const supportEntries = [
-  {
     href: "/kb",
-    title: "📚 知识宝库",
+    title: "知识宝库",
     description: "用双链与检索组织长期知识资产，形成个人学习语境。",
     tag: "轻量沉淀复用",
     icon: Database
   },
   {
-    href: "/settings",
-    title: "配置中心",
-    description: "统一管理策略模板、导入审计与系统参数。",
-    tag: "可控可回滚",
-    icon: Settings
+    href: "/graph",
+    title: "知识星图",
+    description: "定位高风险关系链，并把批次直接推送到学习执行面。",
+    tag: "风险链路联动",
+    icon: Network
+  },
+  {
+    href: "/analytics",
+    title: "学习分析",
+    description: "基于真实学习记录，多维度分析学习效果与进度。",
+    tag: "数据驱动",
+    icon: TrendingUp
+  },
+  {
+    href: "/resources",
+    title: "资源中心",
+    description: "发现和管理公共学习资源，支持多类型学习材料。",
+    tag: "公共资源集市",
+    icon: Library
   }
 ];
 
@@ -92,7 +96,7 @@ export default function HomePage() {
       <motion.div variants={itemVariants}>
         <PageHeader
           title="AI 教育生态平台"
-          description="统一学习引导、知识沉淀、图谱分析与路径干预。全部能力围绕「先学会，再答题」构建。"
+          description="统一学习引导、知识沉淀、图谱分析与资源管理。全部能力围绕「先学会，再答题」构建。"
           tags={["纯 Web", "LangGraph", "ModelScope", "本地优先知识库"]}
           actions={
             <>
@@ -138,11 +142,11 @@ export default function HomePage() {
           badge="学习生态主入口"
           title="从「会做题」升级为「会学习、会迁移、会复盘」"
           description="工作区负责引导，星图负责定位与执行，宝库负责沉淀。每次学习都会进入可检索、可回放、可复用的长期资产。"
-          quote="同一套界面里完成「问题理解 -> 结构化思考 -> 证据沉淀 -> 路径回写」，避免碎片化跳转。"
+          quote="同一套界面里完成「问题理解 -> 结构化思考 -> 证据沉淀 -> 知识应用」，避免碎片化跳转。"
             chips={["LangGraph 工作流", "ModelScope 模型接入", "本地优先沉淀", "Web 全链路"]}
             metrics={[
-              { label: "核心工作台", value: "2", hint: "工作区 / 星图" },
-              { label: "生态模块", value: "2", hint: "知识库 / 配置中心" },
+              { label: "核心工作台", value: "3", hint: "工作区 / 星图 / 分析" },
+              { label: "生态支撑", value: "2", hint: "知识库 / 资源中心" },
               { label: "上线形态", value: "Web", hint: "可直接部署到 Vercel" }
             ]}
           actions={
@@ -186,16 +190,16 @@ export default function HomePage() {
             </div>
             <div>
               <h2 className="text-2xl font-bold">核心学习链路</h2>
-              <p className="text-muted-foreground">按学习闭环顺序组织，建议从左到右逐步使用</p>
+              <p className="text-muted-foreground">按学习闭环顺序组织，涵盖全流程学习与管理</p>
             </div>
           </div>
         </div>
 
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           variants={containerVariants}
         >
-          {coreEntries.map((item) => {
+          {coreModules.map((item) => {
             const Icon = item.icon;
             return (
               <motion.div key={item.href} variants={itemVariants}>
@@ -223,66 +227,6 @@ export default function HomePage() {
                       <Button variant="ghost" className="w-full justify-between group-hover:bg-primary/10">
                         进入 {item.title}
                         <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      </motion.div>
-
-      {/* 生态支撑模块 */}
-      <motion.div className="space-y-6" variants={itemVariants}>
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-secondary/50">
-              <Database className="h-5 w-5 text-secondary-foreground" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">生态支撑模块</h2>
-              <p className="text-muted-foreground">围绕教学、治理与知识管理提供配套能力</p>
-            </div>
-          </div>
-        </div>
-
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-          variants={containerVariants}
-        >
-          {supportEntries.map((item) => {
-            const Icon = item.icon;
-            return (
-              <motion.div key={item.href} variants={itemVariants}>
-                <Card className="card-hover group h-full">
-                  <CardHeader className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <motion.div
-                        className="p-2 rounded-lg bg-secondary/50 text-secondary-foreground"
-                        whileHover={{ scale: 1.1, rotate: -5 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                      >
-                        <Icon className="w-5 h-5" />
-                      </motion.div>
-                      <Badge variant="secondary" className="text-xs">
-                        {item.tag}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-lg">{item.title}</CardTitle>
-                    <CardDescription className="text-sm line-clamp-2">
-                      {item.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Link href={item.href}>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full text-xs group-hover:bg-secondary/70"
-                      >
-                        查看详情
-                        <ArrowRight className="ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </Link>
                   </CardContent>
