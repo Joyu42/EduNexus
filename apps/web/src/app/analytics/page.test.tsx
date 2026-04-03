@@ -62,7 +62,17 @@ test("renders analytics dashboard mapping response envelope correctly when authe
               },
               timeline: [],
               topEvents: [],
-              topCategories: []
+              topCategories: [],
+              streakDays: 99, // We use 99 for streakDays to test mapping
+              learnedToday: 0,
+              reviewedToday: 0,
+              relearnedToday: 0,
+              accuracyToday: 0,
+              recentProgress: {
+                activeDays: 0,
+                learnedWordsInRange: 0,
+                averageDailyLearnedWords: 0,
+              }
             }
           }
         })
@@ -99,7 +109,7 @@ test("renders analytics dashboard mapping response envelope correctly when authe
   
   // Wait for the data to load and render the values mapped from the envelope
   await waitFor(() => {
-    // 99 comes from eventCount inside the `{ success: true, data: { report: ... } }` payload
+    // 99 comes from streakDays inside the payload
     expect(screen.getByText("99")).toBeDefined();
     expect(screen.getByText("Mock Insight")).toBeDefined();
   });
