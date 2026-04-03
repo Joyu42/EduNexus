@@ -19,6 +19,14 @@ export default defineConfig({
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        browserName: "chromium",
+      },
+    },
+  ],
   webServer: {
     command: `pnpm dev --webpack --port ${PORT}`,
     url: BASE_URL,
