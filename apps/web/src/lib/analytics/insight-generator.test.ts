@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { generateAnalyticsInsights } from "./insight-generator";
-import type { AnalyticsReport } from "./report-builder";
+import type { ExtendedAnalyticsReport } from "./insight-generator";
 
-function createBaseReport(overrides: Partial<AnalyticsReport> = {}): AnalyticsReport {
+function createBaseReport(overrides: Partial<ExtendedAnalyticsReport> = {}): ExtendedAnalyticsReport {
   return {
     range: "weekly",
     window: {
@@ -30,6 +30,17 @@ function createBaseReport(overrides: Partial<AnalyticsReport> = {}): AnalyticsRe
     ],
     topEvents: [],
     topCategories: [],
+    streakDays: 0,
+    dueToday: 0,
+    totalWords: 0,
+    learnedWords: 0,
+    masteredWords: 0,
+    accuracyToday: 0,
+    recentProgress: {
+      activeDays: 0,
+      averageDailyLearnedWords: 0
+    },
+    bookProgress: [],
     ...overrides
   };
 }
@@ -39,58 +50,48 @@ describe("generateAnalyticsInsights", () => {
     const insights = generateAnalyticsInsights(createBaseReport());
 
     expect(insights.map((item) => item.id)).toEqual([
-      "activity-volume",
-      "study-consistency",
-      "snapshot-coverage"
+      "study-streak",
+      "due-pressure",
+      "focus-book"
     ]);
     expect(insights[0]).toMatchObject({
       severity: "warning",
-      title: "暂无学习行为数据"
+      title: "暂无连续学习"
     });
     expect(insights[1]).toMatchObject({
-      severity: "warning"
+      severity: "positive",
+      title: "复习压力轻松"
     });
     expect(insights[2]).toMatchObject({
-      severity: "neutral"
+      severity: "neutral",
+      title: "尚未开始词书"
     });
   });
 
   it("returns deterministic positive insights when activity is stable", () => {
     const insights = generateAnalyticsInsights(
       createBaseReport({
-        totals: {
-          eventCount: 14,
-          snapshotCount: 4,
-          uniqueEventNames: 3,
-          uniqueEventCategories: 2,
-          latestSnapshotMetrics: { studyMinutes: 35 },
-          aggregateSnapshotMetrics: { studyMinutes: 150 }
-        },
-        timeline: [
-          { day: "2026-03-14", events: 2, snapshots: 0 },
-          { day: "2026-03-15", events: 1, snapshots: 1 },
-          { day: "2026-03-16", events: 0, snapshots: 0 },
-          { day: "2026-03-17", events: 3, snapshots: 1 },
-          { day: "2026-03-18", events: 2, snapshots: 1 },
-          { day: "2026-03-19", events: 3, snapshots: 1 },
-          { day: "2026-03-20", events: 3, snapshots: 0 }
-        ],
-        topEvents: [{ name: "practice", count: 8 }]
+        streakDays: 7,
+        dueToday: 15,
+        bookProgress: [
+          { bookName: "CET-4", progressPercent: 45, dueToday: 15 }
+        ]
       })
     );
 
     expect(insights[0]).toMatchObject({
-      id: "activity-volume",
+      id: "study-streak",
       severity: "positive"
     });
-    expect(insights[0].description).toContain("practice");
+    expect(insights[0].description).toContain("7 天");
     expect(insights[1]).toMatchObject({
-      id: "study-consistency",
-      severity: "positive"
+      id: "due-pressure",
+      severity: "neutral"
     });
     expect(insights[2]).toMatchObject({
-      id: "snapshot-coverage",
+      id: "focus-book",
       severity: "positive"
     });
+    expect(insights[2].title).toContain("CET-4");
   });
 });
