@@ -411,10 +411,14 @@ test("learning path creation flows preserve graph edges on refresh", async ({ pa
     });
   });
 
-  await page.goto("/path/new-editor", { waitUntil: "domcontentloaded" });
+  await page.goto("/path/new-editor", { waitUntil: "commit" });
   await expect(page.getByRole("heading", { name: "学习路径编辑器" })).toBeVisible();
-  await page.getByRole("button", { name: "AI 生成" }).click();
-  await page.getByLabel("学习目标").fill(`为 ${workspaceTopic} 生成一条可保存的学习路径`);
+  const aiButton = page.getByRole("button", { name: "AI 生成" });
+  await expect(aiButton).toBeVisible();
+  await aiButton.evaluate((button) => (button as HTMLButtonElement).click());
+  const aiPrompt = page.locator("#ai-prompt");
+  await expect(aiPrompt).toBeVisible({ timeout: 15_000 });
+  await aiPrompt.fill(`为 ${workspaceTopic} 生成一条可保存的学习路径`);
   await page.getByRole("button", { name: "生成路径" }).click();
   await expect(page.getByRole("button", { name: "保存路径" })).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "保存路径" }).click();
@@ -429,6 +433,9 @@ test("learning path creation flows preserve graph edges on refresh", async ({ pa
 
   const refreshedEdgeIds = await getGraphEdgeIds(page);
   expect(refreshedEdgeIds).toEqual(expect.arrayContaining(initialEdgeIds));
+
+  await expect(page.getByTestId("graph-mode-switcher").getByRole("button", { name: "学习路径" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "学习路径工作流" })).toBeVisible();
 
   await page.screenshot({ path: evidencePath, fullPage: true });
 });

@@ -125,6 +125,14 @@ it("normalizes graph api nodes with KB identity and path memberships", async () 
     expect(content).toContain("返回探索");
   });
 
+  it("keeps /path surface redirected away from the old editor entry", async () => {
+    const file = path.resolve(process.cwd(), "src/app/path/page.tsx");
+    const content = await fs.readFile(file, "utf8");
+
+    expect(content).toContain('redirect("/graph?view=path")');
+    expect(content).not.toContain("/path/new-editor");
+  });
+
   it("returns empty graph for 401 unauthorized response", async () => {
     const fetcher = vi.fn().mockResolvedValue({
       ok: false,
