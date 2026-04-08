@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PanelLeftClose, PanelRightClose, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,31 @@ export function KBLayout({
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editorMode, setEditorMode] = useState<"source" | "render">("source");
+  const [draftContent, setDraftContent] = useState("");
+  const [pendingAnchorId, setPendingAnchorId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDraftContent(currentDoc?.content ?? "");
+  }, [currentDoc?.id, currentDoc?.content]);
+
+  useEffect(() => {
+    if (!pendingAnchorId || editorMode !== "render") {
+      return;
+    }
+
+    const heading = document.getElementById(pendingAnchorId);
+    if (!heading) {
+      return;
+    }
+
+    const yOffset = -100;
+    const y = heading.getBoundingClientRect().top + window.pageYOffset + yOffset;
+    window.scrollTo({ top: y, behavior: "smooth" });
+    heading.classList.add("outline-highlight");
+    window.setTimeout(() => heading.classList.remove("outline-highlight"), 2000);
+    setPendingAnchorId(null);
+  }, [editorMode, pendingAnchorId]);
 
   const handleDeleteCurrentDocument = async () => {
     if (!currentDoc || isDeleting) {
@@ -163,6 +188,9 @@ export function KBLayout({
           <KBEditor
             document={currentDoc}
             onUpdate={onUpdateDocument}
+            onDraftChange={({ content }) => setDraftContent(content)}
+            mode={editorMode}
+            onModeChange={setEditorMode}
           />
         </div>
       </div>
@@ -179,8 +207,13 @@ export function KBLayout({
           >
             <KBRightPanel
               document={currentDoc}
+              draftContent={draftContent}
               allDocuments={documents}
               onDocumentClick={onSelectDocument}
+              onOutlineNavigate={(headingId) => {
+                setPendingAnchorId(headingId);
+                setEditorMode("render");
+              }}
             />
           </motion.div>
         )}
