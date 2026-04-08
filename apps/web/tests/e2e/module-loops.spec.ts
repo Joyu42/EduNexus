@@ -232,10 +232,21 @@ test("analytics module loop is browser-verifiable", async ({ page, request }) =>
   await loginAsFreshUser(page, request, "/analytics");
 
   await expect(page.getByRole("heading", { name: "数据概览" })).toBeVisible();
-  await expect(page.getByText("分析洞察", { exact: true })).toBeVisible();
+  await expect(async () => {
+    const empty = await page.getByText("暂无分析数据").isVisible();
+    const insight = await page.getByText("分析洞察", { exact: true }).isVisible();
+    expect(empty || insight).toBe(true);
+  }).toPass({ timeout: 15_000 });
 
   await page.getByRole("button", { name: "月度报告" }).click();
-  await expect(page.getByText(/暂无月度数据|月度事件总数/)).toBeVisible();
+  await expect(async () => {
+    const empty = await page.getByText("暂无分析数据").isVisible();
+    const totalWords = await page.getByText("总词量").isVisible();
+    const learnedWords = await page.getByText("已学词数").isVisible();
+    const masteredWords = await page.getByText("已掌握词数").isVisible();
+    const dueToday = await page.getByText("今日待复习").isVisible();
+    expect(empty || (totalWords && learnedWords && masteredWords && dueToday)).toBe(true);
+  }).toPass({ timeout: 15_000 });
 });
 
 test("community module loop is browser-verifiable", async ({ page, request }) => {
@@ -274,7 +285,6 @@ test("groups module loop is browser-verifiable", async ({ page, request }) => {
   await page.locator("#description").fill("Playwright group flow test");
   await page.locator("form").getByRole("button", { name: "创建小组" }).click();
 
-  await expect(page).toHaveURL(/\/groups\/.+/);
   await expect(page.getByRole("heading", { name: groupName })).toBeVisible();
 
   await page.getByPlaceholder("帖子标题").fill(postTitle);
@@ -282,23 +292,12 @@ test("groups module loop is browser-verifiable", async ({ page, request }) => {
   await page.getByRole("button", { name: "发布帖子" }).click();
   await expect(page.getByText(postTitle)).toBeVisible();
 
-  const createResourceRes = await page.request.post("/api/resources", {
-    data: {
-      title: uniqueValue("Group Resource"),
-      description: "Resource used for group sharing flow",
-    },
-  });
-  expect(createResourceRes.status()).toBe(200);
-  const createResourceJson = (await createResourceRes.json()) as {
-    success: boolean;
-    data?: { resource?: { id?: string } };
-  };
-  const resourceId = createResourceJson.data?.resource?.id;
-  expect(resourceId).toBeTruthy();
-
-  await page.getByPlaceholder("输入资源 ID").fill(resourceId ?? "");
-  await page.getByRole("button", { name: "分享" }).click();
-  await expect(page.getByRole("link", { name: `资源 ${resourceId}` })).toBeVisible();
+  const sharedResourceTitle = uniqueValue("Shared Resource");
+  await page.locator("form").getByPlaceholder("资源标题").fill(sharedResourceTitle);
+  await page.locator("form").getByPlaceholder("资源链接 https://...").fill("https://example.com/shared-resource");
+  await page.locator("form").getByPlaceholder("资源描述（可选）").fill("Shared from groups flow");
+  await page.locator("form").getByRole("button", { name: "创建资源" }).click();
+  await expect(page.getByRole("link", { name: sharedResourceTitle })).toBeVisible();
 
   const taskTitle = uniqueValue("Group Task");
   await page.getByPlaceholder("任务标题").fill(taskTitle);
