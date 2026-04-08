@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
+import { generateHeadingIdFromText } from "@/lib/client/document-outline";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github-dark.css";
 
@@ -18,8 +20,31 @@ interface MarkdownRendererProps {
 export function MarkdownRenderer({ content, className = "" }: MarkdownRendererProps) {
   const linkClassName =
     "text-orange-600 hover:text-orange-700 underline decoration-orange-300 hover:decoration-orange-500 transition-colors";
+  let headingIndex = 0;
 
   const isExternalHref = (href: string) => /^(https?:)?\/\//i.test(href) || href.startsWith("mailto:") || href.startsWith("tel:");
+
+  const headingText = (children: ReactNode): string => {
+    if (typeof children === "string" || typeof children === "number") {
+      return String(children);
+    }
+
+    if (Array.isArray(children)) {
+      return children.map(headingText).join("");
+    }
+
+    if (children && typeof children === "object" && "props" in children) {
+      return headingText((children as { props?: { children?: ReactNode } }).props?.children);
+    }
+
+    return "";
+  };
+
+  const renderHeading = (Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6", className: string, children: ReactNode) => (
+    <Tag className={className} id={generateHeadingIdFromText(headingText(children), headingIndex++)}>
+      {children}
+    </Tag>
+  );
 
   return (
     <div className={`markdown-content ${className}`}>
@@ -47,21 +72,12 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
             );
           },
           // 标题样式
-          h1: ({ children }) => (
-            <h1 className="text-2xl font-bold mt-6 mb-4 text-gray-900 border-b pb-2">
-              {children}
-            </h1>
-          ),
-          h2: ({ children }) => (
-            <h2 className="text-xl font-semibold mt-5 mb-3 text-gray-800">
-              {children}
-            </h2>
-          ),
-          h3: ({ children }) => (
-            <h3 className="text-lg font-semibold mt-4 mb-2 text-gray-800">
-              {children}
-            </h3>
-          ),
+          h1: ({ children }) => renderHeading("h1", "text-2xl font-bold mt-6 mb-4 text-gray-900 border-b pb-2", children),
+          h2: ({ children }) => renderHeading("h2", "text-xl font-semibold mt-5 mb-3 text-gray-800", children),
+          h3: ({ children }) => renderHeading("h3", "text-lg font-semibold mt-4 mb-2 text-gray-800", children),
+          h4: ({ children }) => renderHeading("h4", "text-base font-semibold mt-4 mb-2 text-gray-800", children),
+          h5: ({ children }) => renderHeading("h5", "text-sm font-semibold mt-3 mb-2 text-gray-800", children),
+          h6: ({ children }) => renderHeading("h6", "text-sm font-semibold mt-3 mb-2 text-gray-700", children),
           // 段落样式
           p: ({ children }) => (
             <p className="my-3 leading-7 text-gray-700">{children}</p>
