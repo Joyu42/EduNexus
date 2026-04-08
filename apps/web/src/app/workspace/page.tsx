@@ -65,6 +65,7 @@ import {
 } from "@/lib/workspace/use-workspace-session-controller";
 import { toast } from "sonner";
 import { WorkspaceRailsLayout } from "./rails-layout";
+import { normalizeGraphToKbHandoff, resolveRequestedKbDocument } from "../kb/handoff";
 
 type WorkspaceTaskContext = {
   source: string;
@@ -149,6 +150,7 @@ function WorkspacePageContent() {
     enabled: status === "authenticated",
   });
   const socraticMode = currentTeacher?.teachingStyle === "socratic";
+  const kbHandoff = normalizeGraphToKbHandoff({ doc: searchParams.get("doc"), node: searchParams.get("node") });
 
   useEffect(() => {
     setIsMounted(true);
@@ -196,6 +198,21 @@ function WorkspacePageContent() {
     loadKBDocuments();
     loadTeachers();
   }, [status]);
+
+  useEffect(() => {
+    if (status !== "authenticated" || !kbHandoff.requestedDocumentId || kbDocuments.length === 0) {
+      return;
+    }
+
+    const requestedDoc = resolveRequestedKbDocument(kbDocuments, kbHandoff.requestedDocumentId);
+    if (!requestedDoc) {
+      return;
+    }
+
+    setSelectedKBDocIds([requestedDoc.id]);
+    setKbQAMode(true);
+    setInputValue((prev) => prev || `请基于知识宝库文档「${requestedDoc.title}」回答我的问题。`);
+  }, [kbDocuments, kbHandoff.requestedDocumentId, status]);
 
   useEffect(() => {
     const source = searchParams.get("source") || "";

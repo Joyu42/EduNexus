@@ -11,9 +11,11 @@ import { fetchDocumentsFromServer } from "@/lib/client/kb-storage";
 import { saveReplyAsKBDocument } from "@/lib/client/workspace-kb-adapter";
 import { toast } from "sonner";
 
+const searchParamsMock = vi.hoisted(() => new URLSearchParams());
+
 vi.mock("next/navigation", () => ({
   useSearchParams: () => ({
-    get: () => null,
+    get: (key: string) => searchParamsMock.get(key),
   }),
 }));
 
@@ -164,6 +166,7 @@ describe("WorkspacePage KB save button behavior", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    searchParamsMock.forEach((_, key) => searchParamsMock.delete(key));
     (useSession as any).mockReturnValue({
       status: "authenticated",
       data: { user: { name: "u" } },
@@ -229,6 +232,17 @@ describe("WorkspacePage KB save button behavior", () => {
 
     await waitFor(() => {
       expect(screen.getAllByText("保存到知识库")).toHaveLength(1);
+    });
+  });
+
+  it("preselects the handed-off KB doc and enables KB QA mode", async () => {
+    searchParamsMock.set("doc", "kb_doc_2");
+
+    render(<WorkspacePage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("kb_doc_2")).toBeDefined();
+      expect((screen.getByLabelText("kb-qa-mode") as HTMLInputElement).checked).toBe(true);
     });
   });
 
