@@ -54,3 +54,5 @@ apps/web/package-lock.json
 ecosystem.config.js
 deploy.sh
 deploy.log
+trace-output.txt
+apps/web/test-results/
