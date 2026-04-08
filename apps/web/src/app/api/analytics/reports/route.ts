@@ -1,5 +1,6 @@
-import { buildAnalyticsReport, type AnalyticsRange } from "@/lib/analytics/report-builder";
-import { listAnalyticsEvents, listAnalyticsSnapshots } from "@/lib/server/analytics-service";
+import { type AnalyticsRange } from "@/lib/analytics/report-builder";
+import { getWordsAnalyticsReport } from "@/lib/server/analytics-service";
+import { getCurrentUserId } from "@/lib/server/auth-utils";
 import { fail, ok } from "@/lib/server/response";
 
 export const runtime = "nodejs";
@@ -28,12 +29,12 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [events, snapshots] = await Promise.all([listAnalyticsEvents(), listAnalyticsSnapshots()]);
-    const report = buildAnalyticsReport({
-      range,
-      events,
-      snapshots
-    });
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return fail({ code: "UNAUTHORIZED", message: "用户未登录。" }, 401);
+    }
+
+    const report = await getWordsAnalyticsReport(userId, range);
 
     const response = ok({ report });
     response.headers.set("Cache-Control", "private, max-age=60");
