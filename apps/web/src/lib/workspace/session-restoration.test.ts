@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ChatSession } from "@/lib/workspace/chat-history-storage";
-import { resolveWorkspaceBootstrapState } from "@/lib/workspace/session-restoration";
+import { buildWelcomeMessage, resolveWorkspaceBootstrapState } from "@/lib/workspace/session-restoration";
 
 const makeSession = (id: string, updatedAt: string): ChatSession => ({
   id,
@@ -27,6 +27,12 @@ describe("workspace session restoration bootstrap", () => {
     });
 
     expect(state).toEqual({ type: "welcome" });
+  });
+
+  it("builds the required capability-led welcome message", () => {
+    expect(buildWelcomeMessage().content).toBe(
+      "你好，我是 EduNexus 学习工作区助手。这里可以：1）结合当前学习内容回答问题；2）基于知识宝库文档做总结、提炼重点；3）结合学习进度给出下一步建议。你可以直接提问，也可以先选择知识宝库文档后再发起问题。"
+    );
   });
 
   it("restores the most recent session for returning users", () => {

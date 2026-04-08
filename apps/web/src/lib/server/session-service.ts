@@ -59,7 +59,8 @@ export async function createSession(input: { title?: string; firstMessage?: stri
     messages: [
       {
         role: "system" as const,
-        content: "学习会话已创建，请先提交当前思路。",
+        content:
+          "你好，我是 EduNexus 学习工作区助手。这里可以：1）结合当前学习内容回答问题；2）基于知识宝库文档做总结、提炼重点；3）结合学习进度给出下一步建议。你可以直接提问，也可以先选择知识宝库文档后再发起问题。",
         createdAt: now
       }
     ]

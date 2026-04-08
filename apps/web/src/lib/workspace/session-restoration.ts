@@ -17,7 +17,7 @@ export function buildWelcomeMessage(): WorkspaceWelcomeMessage {
     id: "welcome",
     role: "assistant",
     content:
-      "你好！我是你的智能学习伙伴。我可以帮你：\n\n- 🔍 搜索知识宝库和星图\n- 📝 生成个性化练习题\n- 🗺️ 规划成长地图\n- 💡 解释复杂概念\n- 🤔 通过提问引导思考\n- 🖼️ 分析图片和图表（支持多模态）\n- 💻 解释和调试代码\n\n有什么想学习或探讨的吗？",
+      "你好，我是 EduNexus 学习工作区助手。这里可以：1）结合当前学习内容回答问题；2）基于知识宝库文档做总结、提炼重点；3）结合学习进度给出下一步建议。你可以直接提问，也可以先选择知识宝库文档后再发起问题。",
     timestamp: new Date(),
     mode: "normal",
   };

@@ -30,6 +30,11 @@ describe("session service", () => {
     expect(sessions.some((session) => session.id === created.id)).toBe(true);
     expect(fetched?.id).toBe(created.id);
     expect(await getSession(created.id, "u2")).toBeNull();
+    expect(created.messages[0]).toMatchObject({
+      role: "system",
+      content:
+        "你好，我是 EduNexus 学习工作区助手。这里可以：1）结合当前学习内容回答问题；2）基于知识宝库文档做总结、提炼重点；3）结合学习进度给出下一步建议。你可以直接提问，也可以先选择知识宝库文档后再发起问题。",
+    });
 
     await fs.rm(dataDir, { recursive: true, force: true });
   });
