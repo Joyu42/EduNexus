@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from "react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import { KBEditor } from "./kb-editor";
 
@@ -98,6 +98,7 @@ vi.mock("lucide-react", () => ({
 describe("KBEditor mode shell", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   afterEach(() => {
@@ -142,5 +143,84 @@ describe("KBEditor mode shell", () => {
     expect(
       (screen.getByRole("textbox", { name: "Markdown source" }) as HTMLTextAreaElement).value
     ).toBe("# Title\n\nHello **world**!");
+  });
+
+  it("initializes save status from document.updatedAt", () => {
+    const updatedAt = new Date("2026-04-03T10:15:00.000Z");
+
+    render(
+      <KBEditor
+        document={{
+          id: "doc-2",
+          title: "Doc",
+          content: "# Title\n\nHello world",
+          tags: [],
+          createdAt: new Date("2026-04-03T09:00:00.000Z"),
+          updatedAt,
+          vaultId: "vault-1",
+        }}
+        onUpdate={vi.fn()}
+      />
+    );
+
+    const toolbarProps = editorToolbarRenderSpy.mock.calls.at(-1)?.[0];
+    expect(toolbarProps).toEqual(
+      expect.objectContaining({
+        status: "saved",
+        lastSaved: updatedAt,
+        error: null,
+      })
+    );
+  });
+
+  it("queues title and content edits through a single autosave", async () => {
+    vi.useFakeTimers();
+
+    const onUpdate = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <KBEditor
+        document={{
+          id: "doc-3",
+          title: "Doc",
+          content: "# Title\n\nHello world",
+          tags: [],
+          createdAt: new Date("2026-04-03T09:00:00.000Z"),
+          updatedAt: new Date("2026-04-03T10:15:00.000Z"),
+          vaultId: "vault-1",
+        }}
+        onUpdate={onUpdate}
+      />
+    );
+
+    const titleInput = screen.getByDisplayValue("Doc");
+    const sourceArea = screen.getByRole("textbox", { name: "Markdown source" });
+
+    fireEvent.change(titleInput, { target: { value: "Doc v2" } });
+    fireEvent.change(sourceArea, { target: { value: "# Title\n\nHello world!" } });
+
+    expect(
+      editorToolbarRenderSpy.mock.calls.some(([props]) => props.status === "idle")
+    ).toBe(true);
+
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+      await Promise.resolve();
+    });
+
+    expect(onUpdate).toHaveBeenCalledTimes(1);
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Doc v2",
+        content: "# Title\n\nHello world!",
+      })
+    );
+
+    const latestToolbarProps = editorToolbarRenderSpy.mock.calls.at(-1)?.[0];
+    expect(latestToolbarProps).toEqual(
+      expect.objectContaining({
+        status: "saved",
+      })
+    );
   });
 });

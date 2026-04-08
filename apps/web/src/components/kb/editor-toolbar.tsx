@@ -4,16 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { SaveStatusIndicator } from "./save-status-indicator";
+import type { SaveStatus } from "@/lib/hooks/use-auto-save";
 
 interface EditorToolbarProps {
   mode: "source" | "render";
   onModeChange: (mode: "source" | "render") => void;
-  isSaving: boolean;
+  status: SaveStatus;
   lastSaved: Date | null;
+  error?: Error | null;
   wordCount: number;
 }
 
-export function EditorToolbar({ mode, onModeChange, isSaving, lastSaved, wordCount }: EditorToolbarProps) {
+export function EditorToolbar({ mode, onModeChange, status, lastSaved, error, wordCount }: EditorToolbarProps) {
   return (
     <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
       <div className="flex items-center gap-2 px-4 py-2">
@@ -44,8 +46,9 @@ export function EditorToolbar({ mode, onModeChange, isSaving, lastSaved, wordCou
           <span>{wordCount.toLocaleString()} 字符</span>
           <Separator orientation="vertical" className="h-4" />
           <SaveStatusIndicator
-            status={isSaving ? "saving" : lastSaved ? "saved" : "idle"}
+            status={status}
             lastSaved={lastSaved}
+            error={error}
             showDetails={false}
           />
         </div>

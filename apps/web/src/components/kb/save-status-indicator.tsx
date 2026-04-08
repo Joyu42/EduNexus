@@ -41,7 +41,7 @@ const STATUS_CONFIG = {
   },
   saving: {
     icon: Loader2,
-    text: '保存中...',
+    text: '保存中',
     color: 'text-amber-600',
     bgColor: 'bg-amber-50',
     borderColor: 'border-amber-200',

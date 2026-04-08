@@ -1,25 +1,43 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FileText } from "lucide-react";
 import { EditorToolbar } from "./editor-toolbar";
 import { KBMarkdownPreview } from "./kb-markdown-preview";
 import type { KBDocument } from "@/lib/client/kb-storage";
 import { useKBDocumentSync } from "@/lib/sync";
+import type { SaveStatus } from "@/lib/hooks/use-auto-save";
 
 interface KBEditorProps {
   document: KBDocument | null;
   onUpdate: (doc: KBDocument) => Promise<void>;
   onDocumentChange?: () => void;
+  onDraftChange?: (draft: { title: string; content: string }) => void;
+  mode?: "source" | "render";
+  onModeChange?: (mode: "source" | "render") => void;
 }
 
-export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps) {
-  const [isSaving, setIsSaving] = useState(false);
+export function KBEditor({
+  document,
+  onUpdate,
+  onDocumentChange,
+  onDraftChange,
+  mode: controlledMode,
+  onModeChange,
+}: KBEditorProps) {
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>(document ? "saved" : "idle");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [saveError, setSaveError] = useState<Error | null>(null);
   const [charCount, setCharCount] = useState(0);
-  const [mode, setMode] = useState<"source" | "render">("source");
+  const [internalMode, setInternalMode] = useState<"source" | "render">("source");
+  const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSavingRef = useRef(false);
+  const pendingSaveRef = useRef(false);
+  const draftRef = useRef({ title: "", content: "" });
+  const mode = controlledMode ?? internalMode;
+  const setMode = onModeChange ?? setInternalMode;
 
   useKBDocumentSync(() => {
     if (onDocumentChange) {
@@ -29,9 +47,26 @@ export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps
 
   useEffect(() => {
     setMode("source");
-    setContent(document?.content || "");
-    setCharCount((document?.content || "").replace(/<[^>]+>/g, "").length);
+    const nextTitle = document?.title || "";
+    const nextContent = document?.content || "";
+    setTitle(nextTitle);
+    setContent(nextContent);
+    setCharCount(nextContent.replace(/<[^>]+>/g, "").length);
+    setLastSaved(document?.updatedAt || null);
+    setSaveStatus(document ? "saved" : "idle");
+    setSaveError(null);
+    draftRef.current = { title: nextTitle, content: nextContent };
+    pendingSaveRef.current = false;
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
   }, [document?.id]);
+
+  useEffect(() => {
+    draftRef.current = { title, content };
+    onDraftChange?.({ title, content });
+  }, [title, content]);
 
   useEffect(() => {
     return () => {
@@ -41,7 +76,7 @@ export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps
     };
   }, []);
 
-  const handleSave = (nextContent: string) => {
+  const queueSave = useCallback(() => {
     if (!document) {
       return;
     }
@@ -51,21 +86,41 @@ export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps
     }
 
     saveTimeoutRef.current = setTimeout(async () => {
-      setIsSaving(true);
+      saveTimeoutRef.current = null;
+
+      if (isSavingRef.current) {
+        pendingSaveRef.current = true;
+        return;
+      }
+
+      isSavingRef.current = true;
+      pendingSaveRef.current = false;
+      setSaveStatus("saving");
+      setSaveError(null);
       try {
         await onUpdate({
           ...document,
-          content: nextContent,
+          title: draftRef.current.title,
+          content: draftRef.current.content,
           updatedAt: new Date(),
         });
         setLastSaved(new Date());
+        setSaveStatus("saved");
       } catch (error) {
-        console.error("Failed to save document:", error);
+        const nextError = error instanceof Error ? error : new Error(String(error));
+        console.error("Failed to save document:", nextError);
+        setSaveStatus("error");
+        setSaveError(nextError);
       } finally {
-        setIsSaving(false);
+        isSavingRef.current = false;
+
+        if (pendingSaveRef.current && !saveTimeoutRef.current) {
+          pendingSaveRef.current = false;
+          queueSave();
+        }
       }
     }, 2000);
-  };
+  }, [document, onUpdate]);
 
   if (!document) {
     return (
@@ -98,22 +153,23 @@ export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps
         <EditorToolbar
           mode={mode}
           onModeChange={setMode}
-          isSaving={isSaving}
+          status={saveStatus}
           lastSaved={lastSaved}
+          error={saveError}
           wordCount={charCount}
         />
 
       <div className="px-8 pt-8 pb-4">
         <input
           type="text"
-          value={document.title}
+          value={title}
           onChange={(e) => {
-            void onUpdate({
-              ...document,
-              title: e.target.value,
-            }).catch((err) => {
-              console.error("Failed to update title:", err);
-            });
+            const nextTitle = e.target.value;
+            setTitle(nextTitle);
+            draftRef.current = { ...draftRef.current, title: nextTitle };
+            setSaveStatus("idle");
+            setSaveError(null);
+            queueSave();
           }}
           className="text-4xl font-bold w-full bg-transparent border-none outline-none placeholder:text-muted-foreground"
           placeholder="无标题"
@@ -129,14 +185,17 @@ export function KBEditor({ document, onUpdate, onDocumentChange }: KBEditorProps
               const nextContent = event.target.value;
               setContent(nextContent);
               setCharCount(nextContent.length);
-              handleSave(nextContent);
+              draftRef.current = { ...draftRef.current, content: nextContent };
+              setSaveStatus("idle");
+              setSaveError(null);
+              queueSave();
             }}
             className="min-h-full w-full resize-none rounded-xl border border-border bg-background p-6 font-mono text-sm leading-6 outline-none focus:ring-2 focus:ring-primary/20"
           />
         ) : (
-          <KBMarkdownPreview content={content} className="prose prose-sm sm:prose lg:prose-lg max-w-none" />
-        )}
+            <KBMarkdownPreview content={content} className="prose prose-sm sm:prose lg:prose-lg max-w-none" />
+          )}
+        </div>
       </div>
-    </div>
   );
 }

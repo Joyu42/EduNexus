@@ -138,10 +138,11 @@ describe("KBEditor persistence wiring", () => {
 
     const sourceArea = screen.getByRole("textbox", { name: "Markdown source" }) as HTMLTextAreaElement;
     expect(sourceArea.value).toBe("# Title\n\nHello");
-    expect(screen.getByText("未保存")).toBeDefined();
+    expect(screen.getByText("已保存")).toBeDefined();
 
     fireEvent.change(sourceArea, { target: { value: "# Title\n\nHello\n\nDraft" } });
     expect(onUpdate).not.toHaveBeenCalled();
+    expect(screen.getByText("未保存")).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: "渲染" }));
     expect(screen.getByTestId("markdown-preview").getAttribute("data-content")).toBe(
