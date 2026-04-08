@@ -93,6 +93,8 @@ test.describe("Analytics Page E2E", () => {
       expect(empty || monthly).toBe(true);
     }).toPass({ timeout: 15_000 });
 
+    await expect(page.getByRole("button", { name: "月度报告" })).toBeVisible();
+
     // Verify old labels are gone
     await expect(page.getByText("事件总数")).toBeHidden();
     await expect(page.getByText("快照总数")).toBeHidden();
