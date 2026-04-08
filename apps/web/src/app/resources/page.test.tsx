@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   fetchResourceFoldersFromServer: vi.fn(),
   createResourceFolderOnServer: vi.fn(),
   updateResourceFolderOnServer: vi.fn(),
+  deleteResourceFolderOnServer: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -44,6 +45,7 @@ vi.mock("@/lib/resources/resource-storage", () => ({
   fetchResourceFoldersFromServer: mocks.fetchResourceFoldersFromServer,
   createResourceFolderOnServer: mocks.createResourceFolderOnServer,
   updateResourceFolderOnServer: mocks.updateResourceFolderOnServer,
+  deleteResourceFolderOnServer: mocks.deleteResourceFolderOnServer,
 }));
 
 describe("ResourcesPage", () => {

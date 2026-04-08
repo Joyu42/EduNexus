@@ -603,16 +603,49 @@ async function main() {
     );
     assert.equal(resourceRating.data?.rating?.rating, 5, "resource rating 写入失败");
 
-    const sharedResource = await readSuccessPayload(
+    const groupResourceTitle = `smoke-group-resource-${smokeMarker}`;
+    const groupResource = await readSuccessPayload(
       await authRequest(`/api/groups/${groupId}/resources`, {
         method: "POST",
-        body: JSON.stringify({ resourceId }),
+        body: JSON.stringify({
+          title: groupResourceTitle,
+          description: "smoke group resource description",
+          url: "https://example.com/smoke-group-resource",
+        }),
       }),
-      "groups share resource",
+      "groups create resource",
       [201]
     );
-    assert.ok(sharedResource.data?.sharedResource?.id, "group shared resource id 为空");
-    evidenceLines.push(`[MODULE_GROUPS_RESOURCES] group=${groupId} resource=${resourceId}`);
+    assert.ok(groupResource.data?.groupResource?.id, "group resource id 为空");
+
+    const groupResources = await readSuccessPayload(
+      await authRequest(`/api/groups/${groupId}/resources`),
+      "groups list resources"
+    );
+    assert.ok(
+      (groupResources.data?.groupResources ?? []).some((item) => item.id === groupResource.data.groupResource.id),
+      "groups list 未包含新建资源"
+    );
+    evidenceLines.push(`[MODULE_GROUPS_RESOURCES] group=${groupId} groupResource=${groupResource.data.groupResource.id}`);
+
+    const resourceFolderTitle = `smoke-folder-${smokeMarker}`;
+    const resourceFolderCreate = await readSuccessPayload(
+      await authRequest("/api/resources/folders", {
+        method: "POST",
+        body: JSON.stringify({ name: resourceFolderTitle, resourceIds: [resourceId] }),
+      }),
+      "resources folder create",
+      [200, 201]
+    );
+    const resourceFolderId = resourceFolderCreate.data?.folder?.id;
+    assert.ok(resourceFolderId, "resource folder id 为空");
+
+    const resourceFolderDelete = await authRequest(
+      `/api/resources/folders?folderId=${encodeURIComponent(resourceFolderId)}`,
+      { method: "DELETE" }
+    );
+    assert.equal(resourceFolderDelete.status, 200, "resources folder delete failed");
+    evidenceLines.push(`[MODULE_RESOURCES_FOLDERS] folder=${resourceFolderId}`);
 
     // ===== BUILTIN-WORDBOOK SMOKE =====
     console.log("\n[smoke] 开始内置专业词书测试...");

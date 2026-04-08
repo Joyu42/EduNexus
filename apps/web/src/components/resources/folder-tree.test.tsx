@@ -33,4 +33,31 @@ describe("FolderTree", () => {
     expect(onSelectFolder).toHaveBeenCalledWith("folder_1");
     expect(onCreateFolder).toHaveBeenCalledWith({ name: "Grammar" });
   });
+
+  it("deletes an empty folder when confirmed", () => {
+    const onDeleteFolder = vi.fn();
+    vi.stubGlobal("confirm", vi.fn(() => true));
+
+    render(
+      <FolderTree
+        folders={[
+          {
+            id: "folder_2",
+            name: "Grammar",
+            description: "",
+            resourceIds: [],
+          },
+        ]}
+        selectedFolderId={null}
+        onSelectFolder={vi.fn()}
+        onCreateFolder={vi.fn()}
+        onDeleteFolder={onDeleteFolder}
+      />,
+    );
+
+    const buttons = screen.getAllByRole("button");
+    fireEvent.click(buttons.find((button) => button.className.includes("text-destructive")) as HTMLButtonElement);
+
+    expect(onDeleteFolder).toHaveBeenCalledWith("folder_2");
+  });
 });
