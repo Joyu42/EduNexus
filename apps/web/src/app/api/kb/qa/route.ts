@@ -5,9 +5,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { getModelscopeClient } from "@/lib/server/modelscope";
 import { buildWorkspaceGraphContext } from "@/lib/server/workspace-graph-context";
 import { auth } from "@/auth";
+import { normalizeApiKey } from "@/lib/model-api-key";
+import { getStoredModelConfig } from "@/lib/server/model-config-store";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,25 +22,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let client: OpenAI;
-    try {
-      client = getModelscopeClient();
-    } catch {
-      if (!config?.apiKey || !config?.apiEndpoint) {
-        throw new Error("知识库问答缺少可用模型配置：请在设置中配置 API，或在服务端设置 MODELSCOPE_API_KEY。");
-      }
-      client = new OpenAI({
-        apiKey: config.apiKey,
-        baseURL: config.apiEndpoint,
-      });
-    }
-    const model = config?.modelName || process.env.MODELSCOPE_CHAT_MODEL || "Qwen/Qwen3.5-122B-A10B";
-
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ success: false, error: "用户未登录" }, { status: 401 });
     }
     const userId = session.user.id;
+    const storedConfig = await getStoredModelConfig(userId);
+
+    const apiKey =
+      normalizeApiKey(config?.apiKey) ||
+      normalizeApiKey(storedConfig?.apiKey) ||
+      normalizeApiKey(process.env.MODELSCOPE_API_KEY);
+    const apiEndpoint =
+      (typeof config?.apiEndpoint === "string" && config.apiEndpoint.trim()) ||
+      (typeof storedConfig?.apiEndpoint === "string" && storedConfig.apiEndpoint.trim()) ||
+      (typeof process.env.MODELSCOPE_BASE_URL === "string" && process.env.MODELSCOPE_BASE_URL.trim()) ||
+      "https://api-inference.modelscope.cn/v1";
+    const model =
+      (typeof config?.modelName === "string" && config.modelName.trim()) ||
+      (typeof config?.model === "string" && config.model.trim()) ||
+      (typeof storedConfig?.modelName === "string" && storedConfig.modelName.trim()) ||
+      process.env.MODELSCOPE_CHAT_MODEL ||
+      "Qwen/Qwen3.5-122B-A10B";
+
+    if (!apiKey) {
+      throw new Error("知识库问答缺少可用模型配置：请在设置中配置 API，或在服务端设置 MODELSCOPE_API_KEY。");
+    }
+
+    const client = new OpenAI({
+      apiKey,
+      baseURL: apiEndpoint,
+    });
 
     // 准备上下文
     const context = documents
@@ -109,7 +122,7 @@ ${context}${taskContextBlock}${graphContextBlock}
     const completion = await client.chat.completions.create({
       model,
       messages,
-      temperature: 0.3,
+      temperature: typeof config?.temperature === "number" ? config.temperature : 0.3,
       max_tokens: 1500,
     });
 
