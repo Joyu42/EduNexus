@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { MarkdownRenderer } from "@/components/markdown-renderer";
 import type { KBDocument } from "@/lib/client/kb-storage";
+import { getModelConfig } from "@/lib/client/model-config";
 
 interface Message {
   id: string;
@@ -77,6 +78,7 @@ export function KBQAAssistant({ documents }: KBQAAssistantProps) {
     setIsLoading(true);
 
     try {
+      const modelConfig = getModelConfig();
       const response = await fetch("/api/kb/qa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -92,6 +94,12 @@ export function KBQAAssistant({ documents }: KBQAAssistantProps) {
             role: m.role,
             content: m.content,
           })),
+          config: {
+            apiKey: modelConfig.apiKey,
+            apiEndpoint: modelConfig.apiEndpoint,
+            modelName: modelConfig.model,
+            temperature: modelConfig.temperature,
+          },
         }),
       });
 
